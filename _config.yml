@@ -1,0 +1,113 @@
+# ---------------- #
+#   Main Configs   #
+# ---------------- #
+baseurl:
+url: http://mritd.me
+date_format: "ordinal"
+title: 漠然
+subtitle: "Nothing is impossible to a willing heart!"
+description: "马壮的个人博客"
+keywords: 漠然
+favicon: /favicon.ico
+timezone: Asia/Shanghai
+encoding: "utf-8"
+source_code: https://github.com/mritd/mritd.github.io
+side_bar_repo_limit: 5
+
+# ---------------- #
+#      Author      #
+# ---------------- #
+author: 漠然
+organization: Mritd, Inc.
+organization_url: https://mritd.me
+location: Beijing, China
+email: mritd1234@gmail.com
+
+# ---------------- #
+#    Navigation    #
+# ---------------- #
+navs:
+  -
+    href: /
+    label: 首页
+
+  -
+    href: /categories/
+    label: 分类
+
+  -
+    href: /wiki/
+    label: 维基
+
+  -
+    href: /links/
+    label: 链接
+
+  -
+    href: /about/
+    label: 关于
+
+# ---------------- #
+#       RSS        #
+# ---------------- #
+subscribe_rss: /feed.xml
+
+# ---------------- #
+#      Jekyll      #
+# ---------------- #
+markdown: kramdown
+kramdown:
+    input: GFM
+highlighter: rouge
+paginate: 8
+lsi: false
+quiet: false
+excerpt_separator: "\n\n"
+permalink: /:year/:month/:day/:title/
+gems:
+    - rouge
+#     - jekyll-html-pipeline
+    - jekyll-paginate
+    - jekyll-sitemap
+    - jekyll-feed
+    - jemoji
+#     - jekyll-mentions
+collections:
+    wiki:
+        output: true
+        permalink: /wiki/:path/
+
+# ---------------- #
+#      Socials     #
+# ---------------- #
+github_username: mritd
+#douban_username: freedim
+facebook_username: mritd1234
+#weibo_username: mzlogin
+#zhihu_username: mzlogin
+twitter_username: mritd
+
+# ---------------- #
+#      Comments    #
+# ---------------- #
+# support provider: disqus, duoshuo
+comments_provider: disqus
+# !!!重要!!! 请修改下面两个用户名为你自己申请的
+# !!!Important!!! Please modify usernames below to yours
+duoshuo_username: mritd
+disqus_username: mritd
+# 在使用 disqus 的时候可点击显示多说评论框
+lazy_load_duoshuo: true
+
+# ---------------- #
+#    Analytics     #
+# ---------------- #
+google:
+    analytics_id: UA-82387173-1
+
+# ---------------- #
+#      Datas       #
+# ---------------- #
+skill_software_keywords: [Java, shell, Docker,Linux]
+skill_mobile_app_keywords: [Java]
+#skill_windows_keywords: []
