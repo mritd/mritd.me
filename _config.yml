@@ -111,3 +111,9 @@ google:
 skill_software_keywords: [Java, shell, Docker,Linux]
 skill_mobile_app_keywords: [Java]
 #skill_windows_keywords: []
+
+# ---------------- #
+# Github metadata  #
+# ---------------- #
+gems: ['jekyll-github-metadata','jekyll-paginate']
+
