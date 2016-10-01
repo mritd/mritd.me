@@ -8,7 +8,7 @@ menu: 维基
 permalink: /wiki/
 ---
 
-> 记多少快捷键会让脑袋爆炸呢？
+> 多看点多学点总是好的......
 
 <ul class="listing">
 {% for wiki in site.wiki %}
