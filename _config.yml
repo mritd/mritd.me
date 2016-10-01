@@ -116,4 +116,4 @@ skill_mobile_app_keywords: [Java]
 # Github metadata  #
 # ---------------- #
 gems: ['jekyll-github-metadata','jekyll-paginate']
-
+repository: mritd/mritd.github.io
