@@ -1,7 +1,7 @@
 ---
 layout: post
 title: kubernetes 双向 TLS 配置
-categories: [Docker, kubernetes]
+categories: [Docker, Kubernetes]
 description: kubernetes 双向 TLS 配置
 keywords: kubernetes,Docker,Linux
 ---
