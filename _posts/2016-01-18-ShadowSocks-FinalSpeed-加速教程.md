@@ -1,7 +1,7 @@
 ---
 layout: post
 title: ShadowSocks FinalSpeed 加速教程
-categories: [Shadowsocks, FinalSpeed]
+categories: [Shadowsocks]
 description: ShadowSocks FinalSpeed 加速教程
 keywords: ShadowSocks,FinalSpeed
 ---
