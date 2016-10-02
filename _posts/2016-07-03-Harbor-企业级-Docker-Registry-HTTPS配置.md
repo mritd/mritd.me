@@ -93,7 +93,7 @@ echo "01" > demoCA/serial
 
 自签名证书截图如下
 
-![hexo_harbor_https_createcacrt](http://cdn.mritd.me/markdown/hexo_docker_harbor_https_createcacrt.png)
+![hexo_harbor_https_createcacrt](https://cdn.mritd.me/markdown/hexo_docker_harbor_https_createcacrt.png)
 
 ### 1.3、创建证书并通过 CA 签名
 
@@ -114,7 +114,7 @@ openssl ca -in dockercrt/docker.csr -out dockercrt/docker.crt -config openssl.cn
 
 创建签名请求信息填写截图如下
 
-![hexo_harbor_https_createcsr](http://cdn.mritd.me/markdown/hexo_docker_harbor_https_createcsr.png)
+![hexo_harbor_https_createcsr](https://cdn.mritd.me/markdown/hexo_docker_harbor_https_createcsr.png)
 
 
 ## 二、配置 Harbor HTTPS

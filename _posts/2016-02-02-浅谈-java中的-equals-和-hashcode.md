@@ -6,7 +6,7 @@ description: 浅谈 java中的 equals 和 hashcode
 keywords: equals,hashcode
 ---
 
-![hexo_java_equals_hashcode.jpg](http://cdn.mritd.me/markdown/hexo_java_equals_hashcode.jpg)
+![hexo_java_equals_hashcode.jpg](https://cdn.mritd.me/markdown/hexo_java_equals_hashcode.jpg)
 
 ## equals 方法
 > equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。
