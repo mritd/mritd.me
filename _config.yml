@@ -66,12 +66,13 @@ excerpt_separator: "\n\n"
 permalink: /:year/:month/:day/:title/
 gems:
     - rouge
-#     - jekyll-html-pipeline
+    - jekyll-html-pipeline
     - jekyll-paginate
     - jekyll-sitemap
     - jekyll-feed
     - jemoji
 #     - jekyll-mentions
+    - jekyll-github-metadata
 collections:
     wiki:
         output: true
