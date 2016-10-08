@@ -2,7 +2,7 @@
 #   Main Configs   #
 # ---------------- #
 baseurl:
-url: http://mritd.me
+url: https://mritd.me
 date_format: "ordinal"
 title: 漠然
 subtitle: "Nothing is impossible to a willing heart!"
@@ -81,10 +81,10 @@ collections:
 #      Socials     #
 # ---------------- #
 github_username: mritd
-#douban_username: freedim
+#douban_username: mritd
 facebook_username: mritd1234
-#weibo_username: mzlogin
-#zhihu_username: mzlogin
+#weibo_username: mritd
+#zhihu_username: mritd
 twitter_username: mritd
 
 # ---------------- #
@@ -115,5 +115,4 @@ skill_mobile_app_keywords: [Java]
 # ---------------- #
 # Github metadata  #
 # ---------------- #
-gems: ['jekyll-github-metadata','jekyll-paginate','jekyll-feed']
 repository: mritd/mritd.github.io
