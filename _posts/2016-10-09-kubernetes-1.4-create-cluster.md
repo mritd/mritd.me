@@ -7,7 +7,7 @@ description: 记录一下 kubernetes 使用 kubeadm 搭建集群的方法
 keywords: kubernetes kubeadm
 ---
 
- 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案
+> 距离 kubernetes 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案
 
 ### 一、环境准备
 
@@ -163,7 +163,7 @@ kubeadm join --token 42354d.e1fb733ed0c9a932 192.168.1.107
 kubeadm join --token 42354d.e1fb733ed0c9a932 192.168.1.107
 ```
 
-最后稍等片刻在 master 上 get nodes 即可查看
+最后稍等片刻在 master 上 get nodes 即可查看，**如果想让 master 也运行 pod，只需在 master 上运行 `kubectl taint nodes --all dedicated-` 即可**
 
 ``` sh
 ➜  ~ kubectl get nodes                                   
@@ -174,3 +174,6 @@ node2     Ready     1m
 ```
 
 到此搭建完成
+
+**本文参考 [来自天国的 kubernetes](https://segmentfault.com/a/1190000007074726)**
+
