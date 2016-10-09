@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: Docker
+categories: Docker kubernetes
 title: kubernetes 1.4 集群搭建
 date: 2016-10-09 23:35:34 +0800
 description: 记录一下 kubernetes 使用 kubeadm 搭建集群的方法
