@@ -31,6 +31,8 @@ task :new do
     file.puts "description: #{@description}"
     file.puts "keywords: #{@keywords}"
     file.puts "---"
+    file.puts ""
+    file.puts ""
   end
   exec "vim #{@post_name}"
 end
