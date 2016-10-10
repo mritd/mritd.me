@@ -121,6 +121,7 @@ images=(kube-proxy-amd64:v1.4.0 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-
 for imageName in ${images[@]} ; do
   docker pull mritd/$imageName
   docker tag mritd/$imageName gcr.io/google_containers/$imageName
+  docker rmi mritd/$imageName
 done
 ```
 
