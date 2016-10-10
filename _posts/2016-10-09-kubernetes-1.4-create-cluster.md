@@ -173,6 +173,15 @@ node1     Ready     1m
 node2     Ready     1m
 ```
 
+#### 2.5、创建 Pod 网络
+
+创建好集群后，为了能让容器进行跨主机通讯还要部署 Pod 网络，这里使用官方推荐的 weave 方式，也可以采用 flannel，以下为 weave 示例
+
+``` sh
+# 在 master 上执行
+kubectl apply -f https://git.io/weave-kube
+```
+
 到此搭建完成
 
 **本文参考 [来自天国的 kubernetes](https://segmentfault.com/a/1190000007074726)**
