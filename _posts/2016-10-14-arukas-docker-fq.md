@@ -58,7 +58,7 @@ keywords: shadowsocks Docker
 
 ![create_detail](https://cdn.mritd.me/markdown/m093z.jpg)
 
-稍等片刻后容器变为绿色，并未 `Running` 状态表示创建完成
+稍等片刻后容器变为绿色，并为 `Running` 状态表示创建完成
 
 ![create_success](https://cdn.mritd.me/markdown/ybwqj.jpg)
 
