@@ -60,7 +60,7 @@ cd /tmp/strongswan-5.5.0 &&
 
 StrongSwan 的配置主要为 `ipsec.conf`、`strongswan.conf`、`xl2tpd.conf`、`options.xl2tpd` 这四个配置文件，以下为四个配置文件样例
 
-##### 2.3.1、ipsec.cong
+##### 2.3.1、ipsec.conf
 
 ``` sh
 # ipsec.conf - strongSwan IPsec configuration file
