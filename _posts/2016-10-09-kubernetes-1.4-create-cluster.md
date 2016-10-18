@@ -117,7 +117,7 @@ kubeadm 会 pull 相关的 image，由于 GFW 的原因会造成无法下载最�
 **实际上不用梯子可以借助于 DockerHub 的自动构建功能，实现代理下载，如下所示**
 
 ``` sh
-images=(kube-proxy-amd64:v1.4.0 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-scheduler-amd64:v1.4.0 kube-controller-manager-amd64:v1.4.0 kube-apiserver-amd64:v1.4.0 etcd-amd64:2.2.5 kube-dnsmasq-amd64:1.3 exechealthz-amd64:1.1 pause-amd64:3.0)
+images=(kube-proxy-amd64:v1.4.0 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-scheduler-amd64:v1.4.0 kube-controller-manager-amd64:v1.4.0 kube-apiserver-amd64:v1.4.0 etcd-amd64:2.2.5 kube-dnsmasq-amd64:1.3 exechealthz-amd64:1.1 pause-amd64:3.0 kubernetes-dashboard-amd64:v1.4.0)
 for imageName in ${images[@]} ; do
   docker pull mritd/$imageName
   docker tag mritd/$imageName gcr.io/google_containers/$imageName
