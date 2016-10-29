@@ -86,7 +86,7 @@ keywords: kubeadm kubernetes
 
 ![image version](https://cdn.mritd.me/markdown/uitnd.jpg)
 
-从上图中基本可以看到 `kubeadm init` 的时候会拉取那些基础镜像了，**但是还有一些镜像，仍然无法找到，比如`kubedns`、`pause` 等，至于其他的镜像版本，可以从源码中找到，源码位置是 `kubernetes/cmd/kubeadm/app/images/images.go` 这个文件中，如下所示:** 
+从上图中基本可以看到 `kubeadm init` 的时候会拉取哪些基础镜像了，**但是还有一些镜像，仍然无法找到，比如`kubedns`、`pause` 等，至于其他的镜像版本，可以从源码中找到，源码位置是 `kubernetes/cmd/kubeadm/app/images/images.go` 这个文件中，如下所示:** 
 
 ![image version](https://cdn.mritd.me/markdown/ocgu4.jpg)
 
@@ -98,7 +98,7 @@ keywords: kubeadm kubernetes
 
 ![proxy version](https://cdn.mritd.me/markdown/tienu.jpg)
 
-最后根据这些版本去 github 上准备即可相应的 Dockerfile，在利用 Docker Hub 的自动构建 build 一下即可
+最后根据这些版本去 github 上准备相应的 Dockerfile，在利用 Docker Hub 的自动构建 build 一下，再 pull 下来 tag 成对应的镜像名称即可
 
 ### 三、搭建集群
 
@@ -190,7 +190,7 @@ kubeadm init --api-advertise-addresses 192.168.1.167
 
 ![init master](https://cdn.mritd.me/markdown/rs2mw.jpg)
 
-**这里再爆料一个坑，底下的 `kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167` 保存好，没法重现的，你们老大再让你添加机器的时候如果没这个你还哭的**
+**这里再爆料一个坑，底下的 `kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167` 这条命令一定保存好，因为后期没法重现的，你们老大再让你添加机器的时候如果没这个你会哭的**
 
 #### 3.5、加入 node
 
@@ -267,17 +267,17 @@ kubectl create -f weave-kube.yaml
 
 #### 3.7、部署 dashboard
 
-**dashboard 的命令也跟 weave 的一样，不过有个大坑，默认的 yaml 中定义了无论何时都回去拉取镜像，导致即使你 load 进去也无卵用，所以还得先把 yaml 搞下来然后改一下再  `create`**
+**dashboard 的命令也跟 weave 的一样，不过有个大坑，默认的 yaml 文件中对于 image 拉取策略的定义是 无论何时都会去拉取镜像，导致即使你 load 进去也无卵用，所以还得先把 yaml 搞下来然后改一下镜像拉取策略，最后再 `create -f` 即可**
 
 ``` sh
 wget https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml -O kubernetes-dashboard.yaml
 ```
 
-**编辑 yaml 改一下 `imagePullPolicy`，把 `Always` 改成 `IfNotPresent`(本地没有采取下载) 或者 `Never`(从不去下载) 即可**
+**编辑 yaml 改一下 `imagePullPolicy`，把 `Always` 改成 `IfNotPresent`(本地没有再去拉取) 或者 `Never`(从不去拉取) 即可**
 
 ![IfNotPresent](https://cdn.mritd.me/markdown/lqvh1.jpg)
 
-最后再 Dokcer Hub 中转，然后创建(实际上 dashboard 已经有了 v1.4.1，我这里已经改了)
+最后再利用 Dokcer Hub 中转，然后创建(实际上 dashboard 已经有了 v1.4.1，我这里已经改了)
 
 ``` sh
 kubectl create -f kubernetes-dashboard.yaml
@@ -300,3 +300,4 @@ kubectl create -f kubernetes-dashboard.yaml
 ![modify kube-dns](https://cdn.mritd.me/markdown/hhozt.jpg)
 
 **其他坑欢迎大家补充**
+
