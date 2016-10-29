@@ -5,7 +5,7 @@ title: kubeadm 搭建 kubernetes 集群
 date: 2016-10-29 14:58:49 +0800
 description: kubeadm 搭建 kubernetes 集群
 keywords: kubeadm kubernetes
---n
+---
 
 > 距离上一篇 [kubernetes 1.4 集群搭建](https://mritd.me/2016/10/09/kubernetes-1.4-create-cluster/) 发布间隔不算太久，自己也不断地在生产和测试环境鼓捣，有不少 "逗比" 的经历，准备写一下具体的 kubeadm 搭建集群的一些坑和踩坑的经验，如果没有使用过 kubeadm 的同学，最好先看下上面的文章，然后鼓捣一遍，也许并不会成功，但大部分坑再来看此文会有收获
 
