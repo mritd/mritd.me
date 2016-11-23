@@ -17,16 +17,17 @@ permalink: /about/
 ### 0x2 工作状况
 
 > **Java Web Developer 1枚，目前就职龙贷；主要负责后端开发，前端基本不碰......**
+> **热爱 Devops，对新技术充满好奇心 :)......**
 
 ### 0x3 职业技能
 
-> **SSH/SSM (Struts2 or Spring MVC)、Quartz、Shiro**
+> **SSH/SSM (Struts2 or Spring MVC)、SpringBoot、Quartz、Shiro**
 >
 > **Oracle、mysql、SQL Server、Redis**
 >
 > **HTML、js、jQuery**
 >
-> **Others: Linux、Nginx、Docker**
+> **Others: Linux、Docker、Kubernetes**
 
 ### 0x4 学习计划
 
@@ -38,11 +39,11 @@ permalink: /about/
 >
 > **Redis 学习中**
 >
-> **Docker 刚接触**
+> **Docker Swarm 准备尝试**
 >
 > **bash脚本 学习中**
 >
-> **Node or python 准备尝试**
+> **Golang or python 准备尝试**
 
 ### 0x5 See You Again
 
