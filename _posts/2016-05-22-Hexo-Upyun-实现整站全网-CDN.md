@@ -70,3 +70,4 @@ copy hexo 网站的 `public` 目录下所有文件到新创建的空间，**upyu
 **最后给一张全网测试访问速度图，来自奇云测**
 
 ![hexo_upyun_testwebsite.png](https://cdn.mritd.me/markdown/hexo_upyun_testwebsite.png)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

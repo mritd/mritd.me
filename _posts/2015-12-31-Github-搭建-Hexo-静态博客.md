@@ -352,3 +352,4 @@ hexo d
 - 示例站点 ==> [漠然](http://mritd.me)
 - Github 镜像站点 ==> [mritd.github.io](https://github.com/mritd/mritd.github.io)
 - OSC@Git Hexo备份 ==> [Blog_backup](http://git.oschina.net/D.k/Blog_backup)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

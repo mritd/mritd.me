@@ -59,3 +59,4 @@ nohup python ./jetbrains_license_server/manage.py runserver localhost:9123 &
 ```
 
 **这时可以保持激活服务器后台一直运行，但无法开机启动，设置开机启动的办法有很多，最简单的就是将这条命令写到 `~/.bashrc` 等配置文件中，路子多的是，也很野.....自己找吧，我比较穷，买不起Mac......**
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

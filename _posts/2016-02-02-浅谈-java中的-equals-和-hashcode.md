@@ -232,3 +232,4 @@ public class Test1 {
 ## 最终结论
 
 > 对于重写 euqals ，要很据实际业务逻辑来，并满足上述的设计要求；一旦重写了 equals 那就必须重写 hashcode，除非你保证你的对象不会被放到 Hash 实现的容器里；不重写的话就会导致 Hash 容器认为两个属性相同的对象是2个，而不是业务上的1个。
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

@@ -222,3 +222,4 @@ DOCKER_OPTS="$DOCKER_OPTS --insecure-registry 10.211.55.17"
 
 
 **到此结束 Thanks**
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

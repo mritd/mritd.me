@@ -261,3 +261,4 @@ docker login 10.211.55.16
 # push 测试
 docker push 10.211.55.16/mritd/nginx:1.9
 ```
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

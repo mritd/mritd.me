@@ -68,3 +68,4 @@ BGM
   <source src="https://cdn.mritd.me/bgm/waved-goodbye.mp3" type="audio/mpeg" />
 Your browser does not support the audio element.
 </audio>
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

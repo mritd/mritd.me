@@ -93,3 +93,4 @@ chmod +x install_fs.sh
 - 3、切换到此服务器即可，以下为搬瓦工512，北京联通50M测试截图(以前720p卡成翔，500K顶天)。
 
 ![hexo_finalspeed_video_test.png](https://cdn.mritd.me/markdown/hexo_finalspeed_video_test.png)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

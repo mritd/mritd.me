@@ -85,3 +85,4 @@ keywords: shadowsocks Docker
 **镜像支持以环境变量的方式设置密码等，环境变量表现为一个 `key-value` (键值对) 形式，也就是说 CMD 其实可以只写 `/root/entrypoint.sh` 不加 `-k` 参数，而通过勾选 `ENV` 选项并添加一个 `PASSWORD=Your-PassWord` 环境变量来设置**
 
 **目前镜像内集成了 kcptun，但是由于 kcptun 自定义设置需要挂载配置文件，所以在樱花 Docker 中还无法使用，后期准备支持环境变量设置**
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

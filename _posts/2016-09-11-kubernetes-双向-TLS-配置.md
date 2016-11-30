@@ -275,3 +275,4 @@ reboot
 # 再看下检查下内核版本已经是 4.7.3-1.el7.elrepo.x86_64
 uname -r
 ```
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
