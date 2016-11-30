@@ -62,13 +62,13 @@ kubeadm init --api-advertise-addresses 192.168.1.101 --external-etcd-endpoints h
 kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
 
-有兴趣的可以把 yml 搞下来看下，由于他的镜像托管在 `quay.io`，所以没有墙的问题，也可以提前 load 进来；对于 yml 上面的 `ConfigMap` 中的最好与 `--pod-network-cidr` 一致(不一致没测试，想作死自己试吧)，然后稍等片刻网络便创建成功，截图如下
+有兴趣的可以把 yml 搞下来看下，由于他的镜像托管在 `quay.io`，所以没有墙的问题，也可以提前 load 进来；对于 yml 上面的 `ConfigMap` 中的 ip 段最好与 `--pod-network-cidr` 一致(不一致没测试，想作死自己试吧)，然后稍等片刻网络便创建成功，截图如下
 
 ![flannel](https://cdn.mritd.me/markdown/fh723.jpg)
 
 #### 2.3、网络测试
 
-由于环境有限(virtualbox 虚拟机)，所以暂时只测试一下网络互通是否有问题，关于性能啥的由于本人对网络部分也一直是个短板，需要大神们自己来了，如果可以给片测试报告我也看看 `:)`
+由于环境有限(virtualbox 虚拟机)，所以暂时只测试一下网络互通是否有问题，关于性能啥的由于本人对网络部分也一直是个短板，需要大神们自己来了，如果可以给篇测试报告我也看看 `:)`
 
 **rc 如下**
 
