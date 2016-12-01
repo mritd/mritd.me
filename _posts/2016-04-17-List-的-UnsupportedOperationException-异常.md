@@ -191,3 +191,4 @@ public E remove(int index) {
 ### 3、结论
 
 `Arrays.asList` 最终返回的 `ArrayList` 实质上是其内部类，`java.util.Arrays$ArrayList` 和 `java.util.ArrayList` 全部继承自 `java.util.AbstractList` 抽象类，而 `java.util.AbstractList` 中默认的 `add()` 和 `remove()` 方法默认将抛出 `UnsupportedOperationException` 异常，不巧的是 `java.util.Arrays$ArrayList` 并未重写这两个方法，导致调用后抛出此异常。
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

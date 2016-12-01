@@ -238,3 +238,4 @@ update user set user_name='用户名',email='登录邮箱', pass='密码', passw
 #### 如果本文对你有帮助，可以考虑用支付宝请我喝杯咖啡  ( ^_^ )
 
 ![支付宝](https://cdn.mritd.me/markdown/zhifubao.png)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

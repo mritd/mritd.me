@@ -51,3 +51,4 @@ search localdomain                   #搜索要找的域名，在/etc/hosts里�
 ``` bash
 service network restart
 ```
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

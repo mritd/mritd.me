@@ -176,3 +176,4 @@ echo "使用 nohup sslocal -c /etc/ss.json & 后台运行 shadowsocks!"
 echo "使用 systemctl start privoxy 启动privoxy!"
 echo "使用 proxy xxxx 代理指定应用!"
 ```
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

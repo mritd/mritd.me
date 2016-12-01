@@ -187,3 +187,4 @@ kubectl apply -f https://git.io/weave-kube
 
 **本文参考 [来自天国的 kubernetes](https://segmentfault.com/a/1190000007074726)、[Installing Kubernetes on Linux with kubeadm](http://kubernetes.io/docs/getting-started-guides/kubeadm)**
 
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

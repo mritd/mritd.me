@@ -248,3 +248,4 @@ ls /data/gfs/brick0
 ## 五、其他相关
 
 没有任何通用的文件系统，通用意味着通通不能用，关于 GlusterFS 适用场景以及缺点可参考 [换个角度看GlusterFS分布式文件系统](http://blog.sae.sina.com.cn/archives/5141) 文章，关于 GlusterFS 性能与监控可参考 [GlusterFS性能监控&配额](https://github.com/jiobxn/one/wiki/00086_GlusterFS%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7&%E9%85%8D%E9%A2%9D)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

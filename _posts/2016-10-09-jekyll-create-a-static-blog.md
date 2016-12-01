@@ -92,3 +92,4 @@ jekyll serve -H 0.0.0.0 -P 1234
 ### 四、推送到 Github
 
 **首先在 Github 上创建 `用户名.github.io` 项目，如 `mritd.github.io`，然后删除主题目录下的 `.git` 目录，在执行 `git init` 初始化一下 git 仓库，最后将 master 地址指向新建的仓库地址推送即可；Github 本身也是使用 jekyll 进行生成，所以会自动识别并生成博客；最后访问 `http://用户名.github.io` 即可；其他相关比如 sitemap 设置等可参考 [https://github.com/mritd/mritd.github.io](https://github.com/mritd/mritd.github.io)**
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

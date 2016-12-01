@@ -211,3 +211,4 @@ NAME            STATUS    AGE
 - kubernetes 通讯最好开启 SSL，尤其是使用 "联邦模式" 时(跨级群调度)
 - etcd 最好搭建集群解决单点问题，同时最好准备2台dns服务器，用于服务发现等
 - kubernetes 如果启用了 skydns 则最好在 `KUBELET_ARGS` 参数中加入 `--cluster_dns=x.x.x.x` 为 skydns，这样在每个 pod 启动后默认 dns 都会指向 skydns
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

@@ -30,3 +30,4 @@ keywords: Linux,Docker,Contianer
 然后直接修改保存即可，此时 Contianer 可恢复启动，此坑完结；目测企业级应用不会出现这种坑爹情况，一般都是编排工具......像我这么作死的应该没有
 
 **做个安静的美男(dou)子(bi)**
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

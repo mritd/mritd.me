@@ -551,3 +551,4 @@ chkconfig --add mysql
 
 > 其实树莓派感觉没必要买显示器，因为直接可以安装远程桌面，执行 `apt-get install xrdp` 安装，在 `Windows` 下可直接使用远程桌面连接，按 `Win+R` 键输入 `mstsc`，再输入树莓派地址和用户名密码   就可以，截图如下:
 ![远程桌面](http://7xoixd.com1.z0.glb.clouddn.com/raspberry_xrdp.png)
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

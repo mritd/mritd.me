@@ -69,3 +69,4 @@ rm -r -f /etc/kubernetes /var/lib/kubelet /var/lib/etcd;
 
 > 本文参考 [kubeadm reference](http://kubernetes.io/docs/admin/kubeadm/)
 
+转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
