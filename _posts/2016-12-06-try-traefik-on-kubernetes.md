@@ -57,13 +57,13 @@ Ingress 简单理解就是个规则定义；比如说某个域名对应某个 se
 
 **了解了以上内容以后，这也就很好的说明了我为什么喜欢把负载均衡器部署为 Daemon Set；因为无论如何请求首先是被负载均衡器拦截的，所以在每个 node 上都部署一下，同时 hostport 方式监听 80 端口；那么就解决了其他方式部署不确定 负载均衡器在哪的问题，同时访问每个 node 的 80 都能正确解析请求；如果前端再 放个 nginx 就又实现了一层负载均衡**
 
-### 二、traefik 使用
+### 二、Traefik 使用
 
 由于微服务架构以及 Docker 技术和 kubernetes 编排工具最近几年才开始逐渐流行，所以一开始的反向代理服务器比如 nginx、apache 并未提供其支持，毕竟他们也不是先知；所以才会出现 Ingress Controller 这种东西来做 kubernetes 和前端负载均衡器如 nginx 之间做衔接；**即 Ingress Controller 的存在就是为了能跟 kubernetes 交互，又能写 nginx 配置，还能 reload 它，这是一种折中方案**；而最近开始出现的 traefik 天生就是提供了对 kubernetes 的支持，**也就是说 traefik 本身就能跟 kubernetes API 交互，感知后端变化，因此可以得知: 在使用 traefik 时，Ingress Controller 已经无卵用了，所以整体架构如下**
 
 ![traefik](https://cdn.mritd.me/markdown/pot7r.jpg)
 
-#### 2.1、部署 traefik
+#### 2.1、部署 Traefik
 
 已经从大体上搞懂了 Ingress 和 traefik，那么部署起来就很简单
 
@@ -148,7 +148,7 @@ spec:
 
 **实际上事先集群中已经存在了相应的名为 test-www 和 test-api 的 service，对应的 service 后端也有很多 pod；所以这里就不在具体写部署实际业务容器(test-www、test-api)的过程了，各位测试时，只需要把这个 test 的 service 替换成自己业务的 service 即可**
 
-##### 2.1.3、部署 traefik UI
+##### 2.1.3、部署 Traefik UI
 
 traefik 本身还提供了一套 UI 供我们使用，其同样以 Ingress 方式暴露，只需要创建一下即可
 
