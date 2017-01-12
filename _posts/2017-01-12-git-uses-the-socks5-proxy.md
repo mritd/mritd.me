@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: Linux
+categories: Linux Git
 title: Git 使用 socks5 代理
 date: 2017-01-12 23:03:30 +0800
 description: 记录各平台下 git 使用 socks5 代理的方法
