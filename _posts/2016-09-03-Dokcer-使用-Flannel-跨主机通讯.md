@@ -58,7 +58,7 @@ set /coreos.com/network/config '{"NetWork":"10.0.0.0/16"}'
 flanneld --etcd-endpoints="http://etcd1.mritd.me:2379" --ip-masq=true >> /var/log/flanneld.log 2>&1 &
 ```
 
-![hexo_flannel_start](https://cdn.mritd.me/markdown/hexo_flannel_start.png)
+![hexo_flannel_start](https://mritd.b0.upaiyun.com/markdown/hexo_flannel_start.png)
 
 ### 2.4、配置 Docker
 
@@ -85,7 +85,7 @@ ifconfig docker0 ${FLANNEL_SUBNET}
 
 此时可以看到 docker0 的网卡 ip 地址已经处于 Flannel 网卡网段之内
 
-![hexo_flannel_modifydocker0](https://cdn.mritd.me/markdown/hexo_flannel_modifydocker0.png)
+![hexo_flannel_modifydocker0](https://mritd.b0.upaiyun.com/markdown/hexo_flannel_modifydocker0.png)
 
 **创建 Docker 运行变量**
 
@@ -117,7 +117,7 @@ systemctl restart docker
 
 **整个完成流程截图如下**
 
-![hexo_flannel_configall](https://cdn.mritd.me/markdown/hexo_flannel_configall.png)
+![hexo_flannel_configall](https://mritd.b0.upaiyun.com/markdown/hexo_flannel_configall.png)
 
 ### 2.5、测试
 

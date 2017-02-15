@@ -85,7 +85,7 @@ jekyll serve -H 0.0.0.0 -P 1234
 
 此时访问便可看到效果
 
-![jekyll_startjekyll](https://cdn.mritd.me/markdown/jekyll_startjekyll.png)
+![jekyll_startjekyll](https://mritd.b0.upaiyun.com/markdown/jekyll_startjekyll.png)
 
 **接下来只需要根据主题作者的说明修改对应配置文件即可**
 

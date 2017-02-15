@@ -17,7 +17,7 @@ keywords: kernel
 
 这世界上最伟大的 Linux 内核源码下载地址是 [kernel 官网](https://kernel.org)，选择一个稳定版本下载即可
 
-![kernel homepage](https://cdn.mritd.me/markdown/3se7u.jpg)
+![kernel homepage](https://mritd.b0.upaiyun.com/markdown/3se7u.jpg)
 
 #### 1.2、解压并清理
 
@@ -45,7 +45,7 @@ kernel 在编译时需要一个配置文件(`.config`)，用于描述开启哪�
 
 这里采用最后一种方式生成
 
-![create kernel compile param](https://cdn.mritd.me/markdown/f9j5r.jpg)
+![create kernel compile param](https://mritd.b0.upaiyun.com/markdown/f9j5r.jpg)
 
 #### 1.4、编译并安装
 

@@ -16,7 +16,7 @@ keywords: ATS nginx https
 
 服务器选择 Nginx，输入对应 Nginx 版本号和 OpenSSL 版本号；**注意：为了支持 HTTP2，OpenSSL版本必须大于等于 1.0.2**，截图如下
 
-![config](https://cdn.mritd.me/markdown/z5umu.jpg)
+![config](https://mritd.b0.upaiyun.com/markdown/z5umu.jpg)
 
 ### 二、升级 OpenSSL
 

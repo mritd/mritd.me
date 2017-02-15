@@ -6,9 +6,9 @@
 
 ### 新站点
 
-![新站点](https://cdn.mritd.me/markdown/jekyll_homepage.png)
+![新站点](https://mritd.b0.upaiyun.com/markdown/jekyll_homepage.png)
 
 ### 老站点
 
-![老站点](https://cdn.mritd.me/markdown/hexo_newblog.png)
+![老站点](https://mritd.b0.upaiyun.com/markdown/hexo_newblog.png)
 

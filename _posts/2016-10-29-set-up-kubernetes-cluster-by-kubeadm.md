@@ -29,9 +29,9 @@ keywords: kubeadm kubernetes
 
 **Kubernetes 编译的各种发行版安装包来源于 Github 上的另一个叫 release 的项目，地址 [点这里](https://github.com/kubernetes/release)，把这个项目 `clone` 下来，由于本人是 Centos 用户，所以进入 rpm 目录，在安装好 docker 的机器上执行那个 `docker-build.sh` 脚本即可编译 rpm 包，最后会生成到当前目录的 `output` 目录下,截图如下**
 
-![release](https://cdn.mritd.me/markdown/3zs7u.jpg)
+![release](https://mritd.b0.upaiyun.com/markdown/3zs7u.jpg)
 
-![rpm目录](https://cdn.mritd.me/markdown/8b3a4.jpg)
+![rpm目录](https://mritd.b0.upaiyun.com/markdown/8b3a4.jpg)
 
 #### 2.2、镜像从哪来
 
@@ -54,49 +54,49 @@ keywords: kubeadm kubernetes
 
 **首先创建一个 github 项目，可以直接 fork 我的即可**
 
-![docker-libray](https://cdn.mritd.me/markdown/2eo34.jpg)
+![docker-libray](https://mritd.b0.upaiyun.com/markdown/2eo34.jpg)
 
 其中每个 Dockerfile 只需要 `FROM` 一下即可
 
-![Dockerfile](https://cdn.mritd.me/markdown/cxva2.jpg)
+![Dockerfile](https://mritd.b0.upaiyun.com/markdown/cxva2.jpg)
 
 **最后在 Docker Hub 上创建自动构建项目**
 
-![createproject](https://cdn.mritd.me/markdown/p5khs.jpg)
+![createproject](https://mritd.b0.upaiyun.com/markdown/p5khs.jpg)
 
-![from github](https://cdn.mritd.me/markdown/gc8vl.jpg)
+![from github](https://mritd.b0.upaiyun.com/markdown/gc8vl.jpg)
 
-![selectproject](https://cdn.mritd.me/markdown/9ufnd.jpg)
+![selectproject](https://mritd.b0.upaiyun.com/markdown/9ufnd.jpg)
 
-![details](https://cdn.mritd.me/markdown/ud42y.jpg)
+![details](https://mritd.b0.upaiyun.com/markdown/ud42y.jpg)
 
 **最后要手动触发一下，然后 Docker Hub 才会开始给你编译**
 
-![Tigger](https://cdn.mritd.me/markdown/phgsg.jpg)
+![Tigger](https://mritd.b0.upaiyun.com/markdown/phgsg.jpg)
 
 **等待完成即可直接 pull 了**
 
-![success](https://cdn.mritd.me/markdown/itnw3.jpg)
+![success](https://mritd.b0.upaiyun.com/markdown/itnw3.jpg)
 
 #### 2.3、镜像版本怎么整
 
 上面已经解决了镜像获取问题，但是一大心病就是 "我特么怎么知道是哪个版本的"，为了发扬 "刨根问底" 的精神，**先进行一遍 `kubeadm init`，这时候绝对卡死，此时进入 `/etc/kubernetes/manifests` 可以看到许多 json 文件，这些文件中定义了需要哪些基础镜像**
 
-![all json](https://cdn.mritd.me/markdown/3ovg8.jpg)
+![all json](https://mritd.b0.upaiyun.com/markdown/3ovg8.jpg)
 
-![image version](https://cdn.mritd.me/markdown/uitnd.jpg)
+![image version](https://mritd.b0.upaiyun.com/markdown/uitnd.jpg)
 
 从上图中基本可以看到 `kubeadm init` 的时候会拉取哪些基础镜像了，**但是还有一些镜像，仍然无法找到，比如`kubedns`、`pause` 等，至于其他的镜像版本，可以从源码中找到，源码位置是 `kubernetes/cmd/kubeadm/app/images/images.go` 这个文件中，如下所示:** 
 
-![image version](https://cdn.mritd.me/markdown/ocgu4.jpg)
+![image version](https://mritd.b0.upaiyun.com/markdown/ocgu4.jpg)
 
 剩余的一些镜像，比如 `kube-proxy-amd64`、`kube-discovery-amd64` 两个镜像，其中 `kube-discovery-amd64` 现在一直是 1.0 版本，源码如下所示
 
-![discovery version](https://cdn.mritd.me/markdown/mp3qo.jpg)
+![discovery version](https://mritd.b0.upaiyun.com/markdown/mp3qo.jpg)
 
 `kube-proxy-amd64` 则是一直跟随基础组件的主版本，也就是说如果从 `manifests` 中看到 controller 等版本是 `v.1.4.4`，那么 `kube-proxy-amd64` 也是这个版本，源码如下
 
-![proxy version](https://cdn.mritd.me/markdown/tienu.jpg)
+![proxy version](https://mritd.b0.upaiyun.com/markdown/tienu.jpg)
 
 最后根据这些版本去 github 上准备相应的 Dockerfile，在利用 Docker Hub 的自动构建 build 一下，再 pull 下来 tag 成对应的镜像名称即可
 
@@ -143,7 +143,7 @@ name=Mritd Repository
 baseurl=https://rpm.mritd.me/centos/7/x86_64
 enabled=1
 gpgcheck=1
-gpgkey=https://cdn.mritd.me/keys/rpm.public.key
+gpgkey=https://mritd.b0.upaiyun.com/keys/rpm.public.key
 EOF
 # 刷新cache
 yum makecache
@@ -188,7 +188,7 @@ kubeadm init --api-advertise-addresses 192.168.1.167
 
 **完美截图如下**
 
-![init master](https://cdn.mritd.me/markdown/rs2mw.jpg)
+![init master](https://mritd.b0.upaiyun.com/markdown/rs2mw.jpg)
 
 **这里再爆料一个坑，底下的 `kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167` 这条命令一定保存好，因为后期没法重现的，你们老大再让你添加机器的时候如果没这个你会哭的**
 
@@ -215,7 +215,7 @@ name=Mritd Repository
 baseurl=https://rpm.mritd.me/centos/7/x86_64
 enabled=1
 gpgcheck=1
-gpgkey=https://cdn.mritd.me/keys/rpm.public.key
+gpgkey=https://mritd.b0.upaiyun.com/keys/rpm.public.key
 EOF
 yum makecache
 yum install -y kubelet kubectl kubernetes-cni kubeadm ebtables
@@ -230,15 +230,15 @@ kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167
 
 **同样完美截图**
 
-![join master](https://cdn.mritd.me/markdown/9c8eu.jpg)
+![join master](https://mritd.b0.upaiyun.com/markdown/9c8eu.jpg)
 
-![get node](https://cdn.mritd.me/markdown/ri4q9.jpg)
+![get node](https://mritd.b0.upaiyun.com/markdown/ri4q9.jpg)
 
 #### 3.6、部署 weave 网络
 
 再没部署 weave 时，dns 是启动不了的，如下
 
-![dns not work](https://cdn.mritd.me/markdown/fqjsg.jpg)
+![dns not work](https://mritd.b0.upaiyun.com/markdown/fqjsg.jpg)
 
 **官方给出的命令是这样的**
 
@@ -263,7 +263,7 @@ kubectl create -f weave-kube.yaml
 
 **完美截图**
 
-![create weave](https://cdn.mritd.me/markdown/0ja5f.jpg)
+![create weave](https://mritd.b0.upaiyun.com/markdown/0ja5f.jpg)
 
 #### 3.7、部署 dashboard
 
@@ -275,7 +275,7 @@ wget https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashbo
 
 **编辑 yaml 改一下 `imagePullPolicy`，把 `Always` 改成 `IfNotPresent`(本地没有再去拉取) 或者 `Never`(从不去拉取) 即可**
 
-![IfNotPresent](https://cdn.mritd.me/markdown/lqvh1.jpg)
+![IfNotPresent](https://mritd.b0.upaiyun.com/markdown/lqvh1.jpg)
 
 最后再利用 Dokcer Hub 中转，然后创建(实际上 dashboard 已经有了 v1.4.1，我这里已经改了)
 
@@ -285,19 +285,19 @@ kubectl create -f kubernetes-dashboard.yaml
 
 **截图如下**
 
-![create dashboard](https://cdn.mritd.me/markdown/xsn9u.jpg)
+![create dashboard](https://mritd.b0.upaiyun.com/markdown/xsn9u.jpg)
 
 **通过 describe 命令我们可以查看其暴露出的 `NodePoint`,然后便可访问**
 
-![describe dashboard](https://cdn.mritd.me/markdown/5a94q.jpg)
+![describe dashboard](https://mritd.b0.upaiyun.com/markdown/5a94q.jpg)
 
-![show dashboard](https://cdn.mritd.me/markdown/xwjvs.jpg)
+![show dashboard](https://mritd.b0.upaiyun.com/markdown/xwjvs.jpg)
 
 ### 四、其他的一些坑
 
 还有一些其他的坑等着大家去摸索，其中有一个是 DNS 解析错误，表现形式为 **POD 内的程序通过域名访问解析不了，cat 一下容器的 `/etc/resolv.conf`发现指向的 dns 服务器与 `kubectl get svc --namespace=kube-system` 中的 kube-dsn 地址不符**；解决办法就是 **编辑节点的 `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` 文件，更改 `KUBELET_DNS_ARGS` 地址为 `get svc` 中的 kube-dns 地址，然后重启 kubelet 服务，重新杀掉 POD 让 kubernetes 重建即可**
 
-![modify kube-dns](https://cdn.mritd.me/markdown/hhozt.jpg)
+![modify kube-dns](https://mritd.b0.upaiyun.com/markdown/hhozt.jpg)
 
 **其他坑欢迎大家补充**
 

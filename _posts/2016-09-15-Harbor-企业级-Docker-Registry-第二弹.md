@@ -29,7 +29,7 @@ tar -zxvf harbor-installer.tgz
 
 将其解压开后目录结构如下
 
-![hexo_harbor_install_scripts](https://cdn.mritd.me/markdown/hexo_harbor_install_scripts.png)
+![hexo_harbor_install_scripts](https://mritd.b0.upaiyun.com/markdown/hexo_harbor_install_scripts.png)
 
 其中最外层有一个 `install.sh` 脚本，用于安装 Harbor，config 目录存放了一些配置信息，如 registry 和 ui 目录中存放了相关证书用于组件间加密通讯，`harbor.cfg` 是全局配置文件，里面主要包含了一些常用设置，比如是否启用 https 等，`prepare` 是一个 python 写的预处理脚本，主要负责初始化一些 `harbor.cfg` 的相关配置，`docker-compose.yml` 顾名思义，里面顶一个各个组件的依赖关系以及配置挂载、数据持久化等设置。
 
@@ -91,7 +91,7 @@ openssl req \
     -x509 -days 365 -out ca.crt
 ```
 
-![hexo_harbor_createcacert](https://cdn.mritd.me/markdown/hexo_harbor_createcacert.png)
+![hexo_harbor_createcacert](https://mritd.b0.upaiyun.com/markdown/hexo_harbor_createcacert.png)
 
 **创建签名请求**
 
@@ -101,7 +101,7 @@ openssl req \
     -out yourdomain.com.csr
 ```
 
-![hexo_harbor_createcsr](https://cdn.mritd.me/markdown/hexo_harbor_createcsr.png)
+![hexo_harbor_createcsr](https://mritd.b0.upaiyun.com/markdown/hexo_harbor_createcsr.png)
 
 **初始化 CA 信息**
 
@@ -119,7 +119,7 @@ cd ../
 openssl ca -in yourdomain.com.csr -out yourdomain.com.crt -cert ca.crt -keyfile ca.key -outdir .
 ```
 
-![hexo_harbor_signcrt](https://cdn.mritd.me/markdown/hexo_harbor_signcrt.png)
+![hexo_harbor_signcrt](https://mritd.b0.upaiyun.com/markdown/hexo_harbor_signcrt.png)
 
 **复制证书到配置目录，并修改 nginx 配置**
 

@@ -6,7 +6,7 @@ description: CentOS上编译安装Git
 keywords: Git,CentOS
 ---
 
-![hexo_git_install_logo](https://cdn.mritd.me/markdown/hexo_git_install_logo.png)
+![hexo_git_install_logo](https://mritd.b0.upaiyun.com/markdown/hexo_git_install_logo.png)
 
 ## 一、概述
 

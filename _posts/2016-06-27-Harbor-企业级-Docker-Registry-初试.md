@@ -41,7 +41,7 @@ curl -L https://github.com/docker/compose/releases/download/1.6.2/docker-compose
 
 **经过本人测试，其文件托管在亚马逊上，伟大的防火墙成功阻止下载......**
 
-**有能力的童鞋可以使用梯子，我已经下载好了一个 [点击下载](https://cdn.mritd.me/files/docker-compose)**；下载后直接 cp 到 `/usr/local/bin` 下并给与可执行权限即可。
+**有能力的童鞋可以使用梯子，我已经下载好了一个 [点击下载](https://mritd.b0.upaiyun.com/files/docker-compose)**；下载后直接 cp 到 `/usr/local/bin` 下并给与可执行权限即可。
 
 ## 三、搭建 Harbor
 
@@ -130,7 +130,7 @@ cd harbor/Deploy/
 ./prepare
 ```
 
-![hexo_docker_harbor_prepare](https://cdn.mritd.me/markdown/hexo_docker_harbor_prepare.png)
+![hexo_docker_harbor_prepare](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_prepare.png)
 
 ### 3.4、编译 image 并启动
 
@@ -139,7 +139,7 @@ cd harbor/Deploy/
 docker-compose up -d
 ```
 
-![hexo_docker_harbor_up](https://cdn.mritd.me/markdown/hexo_docker_harbor_up.png)
+![hexo_docker_harbor_up](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_up.png)
 
 ### 3.5、启动后相关容器
 
@@ -153,7 +153,7 @@ docker-compose up -d
 
 **这几个 Contianer 通过 Docker link 的形式连接在一起，在容器之间通过容器名字互相访问。对终端用户而言，只需要暴露 proxy（即Nginx）的服务端口**
 
-![hexo_docker_harbor_contianer](https://cdn.mritd.me/markdown/hexo_docker_harbor_contianer.png)
+![hexo_docker_harbor_contianer](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_contianer.png)
 
 ## 四、访问 Web UI 并测试
 
@@ -161,7 +161,7 @@ docker-compose up -d
 
 **默认的访问地址即为 `harbor.cfg` 中 `hostname` 地址，直接访问即可，如下**
 
-![hexo_docker_harbor_homepage](https://cdn.mritd.me/markdown/hexo_docker_harbor_homepage.png)
+![hexo_docker_harbor_homepage](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_homepage.png)
 
 **如果 `harbor.cfg` 中 `self_registration` 属性设置为 `off`，那么普通用户将无法自己实现注册，只能由管理员创建用户，主页右上角的注册按钮也会消失。**
 
@@ -169,13 +169,13 @@ docker-compose up -d
 
 **Harbor 默认管理员用户为 `admin`，密码在 `harbor.cfg` 中设置过，默认的是 `Harbor12345`，可直接登陆**
 
-![hexo_docker_harbor_userspace](https://cdn.mritd.me/markdown/hexo_docker_harbor_userspace.png)
+![hexo_docker_harbor_userspace](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_userspace.png)
 
 ### 4.3、创建私有项目
 
 **Harbor 有一个项目的概念，项目名可以理解为 Docker Hub 的用户名，其下可以后很多 images，Harbor 的项目必须登录后方可 push，公有项目和私有项目的区别是对其他用户是否可见**
 
-![hexo_docker_harbor_createproject](https://cdn.mritd.me/markdown/hexo_docker_harbor_createproject.png)
+![hexo_docker_harbor_createproject](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_createproject.png)
 
 ### 4.4、push 镜像
 
@@ -191,7 +191,7 @@ DOCKER_OPTS="$DOCKER_OPTS --insecure-registry 10.211.55.17"
 
 **注意 : Docker 服务重启后，执行 `docker-compose start` 时有一定几率出现如下错误(或者目录已存在等错误)，此时在 `docker-compose stop` 一下然后在启动即可，实在不行再次重启 Dokcer 服务，千万不要手贱的去删文件(别问我怎么知道的)**
 
-![hexo_docker_harbor_composeerror](https://cdn.mritd.me/markdown/hexo_docker_harbor_composeerror.jpeg)
+![hexo_docker_harbor_composeerror](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_composeerror.jpeg)
 
 #### 4.4.2、Harbor 项目和权限(角色)
 
@@ -199,9 +199,9 @@ DOCKER_OPTS="$DOCKER_OPTS --insecure-registry 10.211.55.17"
 
 **也就是说用户是否可以向一个项目 push 镜像，取决于权限(角色)设置，如下所示，在项目中可以设置成员和其权限**
 
-![hexo_docker_harbor_projectuser](https://cdn.mritd.me/markdown/hexo_docker_harbor_projectuser.png)
+![hexo_docker_harbor_projectuser](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_projectuser.png)
 
-![hexo_docker_harbor_projectuserrole](https://cdn.mritd.me/markdown/hexo_docker_harbor_projectuserrole.png)
+![hexo_docker_harbor_projectuserrole](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_projectuserrole.png)
 
 **对于权限(角色)，`Project Admin` 和 `Developer` 可以有 push 的权限，而 `Guest` 只能查看和 pull**
 
@@ -210,15 +210,15 @@ DOCKER_OPTS="$DOCKER_OPTS --insecure-registry 10.211.55.17"
 
 首先使用一个对目标项目具有 push 权限的用户登录，以下 push 的目标是 mritd 项目，test1 用户在项目里定义为 `Developer`，所以登录后 push 即可
 
-![hexo_docker_harbor_loginmritd](https://cdn.mritd.me/markdown/hexo_docker_harbor_loginmritd.png)
+![hexo_docker_harbor_loginmritd](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_loginmritd.png)
 
 然后 `tag` 一个 image，名称一定要标准( `registryAddress[:端口]/项目/imageName[:tag]` )，最后将其 push 即可
 
-![hexo_docker_harbor_pushmritdimages](https://cdn.mritd.me/markdown/hexo_docker_harbor_pushmritdimages.png)
+![hexo_docker_harbor_pushmritdimages](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_pushmritdimages.png)
 
 最后可在 Web UI 中查看刚刚 push 的 image
 
-![hexo_docker_harbor_mritdshow](https://cdn.mritd.me/markdown/hexo_docker_harbor_mritdshow.png)
+![hexo_docker_harbor_mritdshow](https://mritd.b0.upaiyun.com/markdown/hexo_docker_harbor_mritdshow.png)
 
 
 **到此结束 Thanks**

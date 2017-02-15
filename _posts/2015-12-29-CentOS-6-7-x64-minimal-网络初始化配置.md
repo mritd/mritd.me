@@ -6,7 +6,7 @@ description: CentOS 6.7_x64 minimal 网络初始化配置
 keywords: CentOS,CentOS6,Linux,网络配置
 ---
 
-![centos6](https://cdn.mritd.me/markdown/centos6.png)
+![centos6](https://mritd.b0.upaiyun.com/markdown/centos6.png)
 
 ### CentOS 6.7_x64 网络初始化配置
 

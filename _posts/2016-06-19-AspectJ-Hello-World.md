@@ -23,15 +23,15 @@ AspectJ 是一个强大的面向切面编程框架，Spring 等 AOP 全部兼容
 
 ### 1、首先新建一个 Java 项目 :
 
-![hex_aspect_create_project](https://cdn.mritd.me/markdown/hex_aspect_create_project.png)
+![hex_aspect_create_project](https://mritd.b0.upaiyun.com/markdown/hex_aspect_create_project.png)
 
 ### 2、将其转化为 Maven 项目
 
-![hexo_aspect_add_maven](https://cdn.mritd.me/markdown/hexo_aspect_add_maven.png)
+![hexo_aspect_add_maven](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_add_maven.png)
 
 ### 3、加入相关依赖
 
-![hexo_aspect_maven_dependencies](https://cdn.mritd.me/markdown/hexo_aspect_maven_dependencies.png)
+![hexo_aspect_maven_dependencies](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_maven_dependencies.png)
 
 **POM 如下 :**
 
@@ -115,7 +115,7 @@ public class Test1 {
 
 **创建时选择 AspectJ 程序 :**
 
-![hexo_aspect_newaspect](https://cdn.mritd.me/markdown/hexo_aspect_newaspect.png)
+![hexo_aspect_newaspect](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_newaspect.png)
 
 ``` java
 package me.mritd.testaspect;
@@ -147,13 +147,13 @@ public aspect TestAspect {
 
 #### 6.1、设置项目依赖
 
-![hexo_aspect_add_ajc](https://cdn.mritd.me/markdown/hexo_aspect_add_ajc.png)
+![hexo_aspect_add_ajc](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_add_ajc.png)
 
 #### 6.2、设置编译器
 
-![hexo_aspect_set_ajc](https://cdn.mritd.me/markdown/hexo_aspect_set_ajc.png)
+![hexo_aspect_set_ajc](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_set_ajc.png)
 
 ### 7、运行测试
 
-![hexo_aspect_runtest_helloworld](https://cdn.mritd.me/markdown/hexo_aspect_runtest_helloworld.png)
+![hexo_aspect_runtest_helloworld](https://mritd.b0.upaiyun.com/markdown/hexo_aspect_runtest_helloworld.png)
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
