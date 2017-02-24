@@ -6,7 +6,13 @@ script:
   - bundle install
   - bundle exec jekyll build
 
-
+after_success:
+  - cd _site
+  - git config user.name "mritd"
+  - git config user.email "mritd1234@gmail.com"
+  - git add --all .
+  - git commit -m "Travis CI Auto Builder"
+  - git push --force https://$DEPLOY_TOKEN@github.com/mritd/mritd.me.git master
 
 branches:
     only:
