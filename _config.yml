@@ -72,9 +72,9 @@ gems:
     - rouge
 #    - jekyll-html-pipeline
     - jekyll-paginate
-    - jekyll-feed
+#    - jekyll-feed
     - jemoji
-#     - jekyll-mentions
+    - jekyll-mentions
     - jekyll-github-metadata
 collections:
     wiki:
