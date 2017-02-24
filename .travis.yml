@@ -14,7 +14,7 @@ after_success:
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
   - git push --force https://$DEPLOY_TOKEN@github.com/mritd/mritd.me.git master
-  - cd ../ && openssl enc -aes-256-ecb -salt -d -a -in cikey -out mritd.key -k $SSH-TOKEN
+  - cd ../ && openssl enc -aes-256-ecb -salt -d -a -in cikey -out mritd.key -k $SSH_TOKEN
   - ssh -i mritd.key -q -n -o root@mritd.me "docker restart mritd_jekyll_1"
   - rm -f mritd.key
 
