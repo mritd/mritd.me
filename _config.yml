@@ -1,13 +1,13 @@
 # ---------------- #
 #   Main Configs   #
 # ---------------- #
-baseurl:
-url: https://mritd.me
-date_format: "ordinal"
 title: 漠然
+author: 漠然
 subtitle: "Nothing is impossible to a willing heart!"
 description: "十字路口,繁华街头......"
 keywords: 漠然
+url: "https://mritd.me"
+date_format: "ordinal"
 favicon: /favicon.ico
 timezone: Asia/Shanghai
 encoding: "utf-8"
@@ -72,9 +72,9 @@ gems:
     - rouge
 #    - jekyll-html-pipeline
     - jekyll-paginate
-#    - jekyll-feed
+    - jekyll-feed
     - jemoji
-    - jekyll-mentions
+#    - jekyll-mentions
     - jekyll-github-metadata
 collections:
     wiki:
