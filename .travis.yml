@@ -5,7 +5,6 @@ script: ./script/cibuild
 branches:
     only:
     - master
-    - gh-pages
 env:
     global:
     - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
