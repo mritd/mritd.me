@@ -70,6 +70,7 @@ excerpt_separator: "\n\n"
 permalink: /:year/:month/:day/:title/
 gems:
     - rouge
+    - jekyll-sitemap
 #    - jekyll-html-pipeline
     - jekyll-paginate
     - jekyll-feed
