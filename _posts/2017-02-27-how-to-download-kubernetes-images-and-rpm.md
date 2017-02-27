@@ -22,7 +22,7 @@ keywords: Kubernetes gcr.io rpm
 |kubeadm|1.6.0-0.alpha.0.2074.a092d8e0f95f52.x86_64|
 |kubectl|1.5.3-0.x86_64|
 |kubelet|1.5.3-0.x86_64|
-|kubernetes|cni-0.3.0.1-0.07a8a2.x86_64|
+|kubernetes-cni|0.3.0.1-0.07a8a2.x86_64|
 
 使用方法如下
 
