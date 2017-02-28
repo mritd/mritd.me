@@ -59,7 +59,7 @@ rpm -ivh kube*.rpm
 **个人在国外服务器上维护了一个 gcr.io 的反代仓库，使用方式如下**
 
 ``` sh
-docker pull gcr.mritd.me/google_containers/k8s-dns-dnsmasq:1.10.1
+docker pull gcr.mritd.me/google_containers/kube-apiserver-amd64:v1.5.3
 ```
 
 如果对于 gcr.mritd.me 访问过慢可参考 [gcr.io 仓库代理](https://mritd.me/2017/02/09/gcr.io-registy-proxy/) 使用带有梯子的本地私服，如果使用 Docker Hub 等中转可参考 [kubeadm 搭建 kubernetes 集群](https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/#22%E9%95%9C%E5%83%8F%E4%BB%8E%E5%93%AA%E6%9D%A5)
