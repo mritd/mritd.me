@@ -23,13 +23,13 @@ keywords: Kubernetes Docker kargo HA 高可用
 |192.168.1.14|node|
 |192.168.1.15|node|
 
-同时保证部署机器对集群内节点拥有 root 免密登录权限，**由于墙的原因，部署所需镜像已经全部打包到百度云，点击 [这里](https://pan.baidu.com/s/1jHMvMn0) 下载，然后进行 load 即可；注意: 直接使用我的 `vagrant` 文件时，请删除我在 `init.sh` 脚本里对 docker 设置的本地代理，直接使用可能导致 docker 无法 pull 任何镜像；vagrant 可需要执行 `vagrant plugin install vagrant-hosts` 插件以支持自动设置 host；如果自己采用其他虚拟机请保证单台虚拟机最低 1.5G 内存，否则会导致安装失败，别问我怎么知道的**
+同时保证部署机器对集群内节点拥有 root 免密登录权限，**由于墙的原因，部署所需镜像已经全部打包到百度云，点击 [这里](https://pan.baidu.com/s/1jHMvMn0) 下载，然后进行 load 即可；注意: 直接使用我的 `vagrant` 文件时，请删除我在 `init.sh` 脚本里对 docker 设置的本地代理，直接使用可能导致 docker 无法 pull 任何镜像；vagrant 可能需要执行 `vagrant plugin install vagrant-hosts` 安装插件以支持自动设置 host；如果自己采用其他虚拟机请保证单台虚拟机最低 1.5G 内存，否则会导致安装失败，别问我怎么知道的**
 
 ### 二、搭建集群
 
 #### 2.1、获取源码
 
-**kargo 是基于 ansible 的 Playbooks 的，其官方推荐的 kargo-cli 目前只适用于各种云平台，所以我们要手动使用 Playbooks 部署，当然第一步先把源码搞下来**
+**kargo 是基于 ansible 的 Playbooks 的，其官方推荐的 kargo-cli 目前只适用于各种云平台部署安装，所以我们需要手动使用 Playbooks 部署，当然第一步先把源码搞下来**
 
 ``` sh
 git clone https://github.com/kubernetes-incubator/kargo.git
@@ -37,7 +37,7 @@ git clone https://github.com/kubernetes-incubator/kargo.git
 
 #### 2.2、安装 ansible
 
-既然 kargo 是基于 ansible 的，那么自然要安装一下，同时下面配置生成会用到 python3，所以也一并安装
+既然 kargo 是基于 ansible 的(实际上就是 Playbooks)，那么自然要先安装 ansible，同时下面配置生成会用到 python3，所以也一并安装
 
 ``` sh
 # 安装 python 及 epel
@@ -50,7 +50,7 @@ yum install -y ansible
 
 **注意：以下配置段中，所有双大括号 `{ {` 、`} }`，中间全部加了空格，因为双大括号会跟主题模板引擎产生冲突，默认应该是没有的，请自行 vim 替换**
 
-首先根据自己需要更改 kargo 的配置，配置文件位于 `inventory/group_vars/k8s-cluster.yml`，**最新稳定版本版本(2.1.0) 配置文件还未更名，全部在 `nventory/group_vars/all.yml` 中，这里采用最新版本的原因是...借着写博客我也看看更新了啥(偷笑...)**
+首先根据自己需要更改 kargo 的配置，配置文件位于 `inventory/group_vars/k8s-cluster.yml`，**最新稳定版本版本(2.1.0) 配置文件还未更名，全部在 `inventory/group_vars/all.yml` 中，这里采用最新版本的原因是...借着写博客我也看看更新了啥(偷笑...)**
 
 ``` sh
 vim inventory/group_vars/k8s-cluster.yml
