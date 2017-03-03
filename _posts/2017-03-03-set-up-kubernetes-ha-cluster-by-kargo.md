@@ -65,21 +65,21 @@ bin_dir: /usr/local/bin
 
 # Kubernetes 配置文件存放目录以及命名空间
 kube_config_dir: /etc/kubernetes
-kube_script_dir: "\{\{ bin_dir \}\}/kubernetes-scripts"
-kube_manifest_dir: "\{\{ kube_config_dir \}\}/manifests"
+kube_script_dir: "{ { bin_dir } }/kubernetes-scripts"
+kube_manifest_dir: "{ { kube_config_dir } }/manifests"
 system_namespace: kube-system
 
 # 日志存放位置
 kube_log_dir: "/var/log/kubernetes"
 
 # kubernetes 证书存放位置
-kube_cert_dir: "\{\{ kube_config_dir \}\}/ssl"
+kube_cert_dir: "{ { kube_config_dir } }/ssl"
 
 # token存放位置
-kube_token_dir: "\{\{ kube_config_dir \}\}/tokens"
+kube_token_dir: "{ { kube_config_dir } }/tokens"
 
 # basic auth 认证文件存放位置
-kube_users_dir: "\{\{ kube_config_dir \}\}/users"
+kube_users_dir: "{ { kube_config_dir } }/users"
 
 # 关闭匿名授权
 kube_api_anonymous_auth: false
@@ -102,10 +102,10 @@ kube_log_level: 2
 kube_api_pwd: "changeme"
 kube_users:
   kube:
-    pass: "\{\{kube_api_pwd\}\}"
+    pass: "{ {kube_api_pwd} }"
     role: admin
   root:
-    pass: "\{\{kube_api_pwd\}\}"
+    pass: "{ {kube_api_pwd} }"
     role: admin
 
 # 网络 CNI 组件 (calico, weave or flannel)
@@ -121,7 +121,7 @@ kube_pods_subnet: 10.233.64.0/18
 kube_network_node_prefix: 24
 
 # api server 监听地址及端口
-kube_apiserver_ip: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') \}\}"
+kube_apiserver_ip: "{ { kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') } }"
 kube_apiserver_port: 6443 # (https)
 kube_apiserver_insecure_port: 8080 # (http)
 
@@ -136,9 +136,9 @@ resolvconf_mode: docker_dns
 # 部署 netchecker 来检测 DNS 和 HTTP 状态
 deploy_netchecker: false
 # skydns service IP 配置
-skydns_server: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') \}\}"
-dns_server: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') \}\}"
-dns_domain: "\{\{ cluster_name \}\}"
+skydns_server: "{ { kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') } }"
+dns_server: "{ { kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') } }"
+dns_domain: "{ { cluster_name } }"
 
 # docker 存储目录
 docker_daemon_graph: "/var/lib/docker"
@@ -148,7 +148,7 @@ docker_daemon_graph: "/var/lib/docker"
 ## This string should be exactly as you wish it to appear.
 ## An obvious use case is allowing insecure-registry access
 ## to self hosted registries like so:
-docker_options: "--insecure-registry=\{\{ kube_service_addresses \}\} --graph=\{\{ docker_daemon_graph \}\} --iptables=false"
+docker_options: "--insecure-registry={ { kube_service_addresses } } --graph={ { docker_daemon_graph } } --iptables=false"
 docker_bin_dir: "/usr/bin"
 
 # 组件部署方式
@@ -217,7 +217,7 @@ kube-master
 首先启动 vagrant 虚拟机，**不过注意的是本文提供的 vagrant 文件默认安装了 docker，并配置了 devicemapper 和docker 代理，所以使用时上面的 docker 参数需要替换成自己的，因为默认 kargo 会覆盖 docker 的 service 文件；会导致我已经配置完的 docker devicemapper 参数失效，所以要把自己配置的参数加到配置文件中，如下**
 
 ``` sh
-docker_options: "--insecure-registry=\{\{ kube_service_addresses \}\} --graph=\{\{ docker_daemon_graph \}\} --iptables=false --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool --storage-opt dm.use_deferred_removal=true --storage-opt=dm.use_deferred_deletion=true"
+docker_options: "--insecure-registry={ { kube_service_addresses } } --graph={ { docker_daemon_graph } } --iptables=false --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool --storage-opt dm.use_deferred_removal=true --storage-opt=dm.use_deferred_deletion=true"
 ```
 
 **这个 vagrant 配置文件自动设置了主机名、host、ssh 密钥，实际生产环境仍需自己处理**
@@ -256,21 +256,21 @@ bin_dir: /usr/local/bin
 
 # Kubernetes 配置文件存放目录以及命名空间
 kube_config_dir: /etc/kubernetes
-kube_script_dir: "\{\{ bin_dir \}\}/kubernetes-scripts"
-kube_manifest_dir: "\{\{ kube_config_dir \}\}/manifests"
+kube_script_dir: "{ { bin_dir } }/kubernetes-scripts"
+kube_manifest_dir: "{ { kube_config_dir } }/manifests"
 system_namespace: kube-system
 
 # 日志存放位置
 kube_log_dir: "/var/log/kubernetes"
 
 # kubernetes 证书存放位置
-kube_cert_dir: "\{\{ kube_config_dir \}\}/ssl"
+kube_cert_dir: "{ { kube_config_dir } }/ssl"
 
 # token存放位置
-kube_token_dir: "\{\{ kube_config_dir \}\}/tokens"
+kube_token_dir: "{ { kube_config_dir } }/tokens"
 
 # basic auth 认证文件存放位置
-kube_users_dir: "\{\{ kube_config_dir \}\}/users"
+kube_users_dir: "{ { kube_config_dir } }/users"
 
 # 关闭匿名授权
 kube_api_anonymous_auth: false
@@ -293,10 +293,10 @@ kube_log_level: 2
 kube_api_pwd: "test123"
 kube_users:
   kube:
-    pass: "\{\{kube_api_pwd\}\}"
+    pass: "{ {kube_api_pwd} }"
     role: admin
   root:
-    pass: "\{\{kube_api_pwd\}\}"
+    pass: "{ {kube_api_pwd} }"
     role: admin
 
 # 网络 CNI 组件 (calico, weave or flannel)
@@ -312,7 +312,7 @@ kube_pods_subnet: 10.233.64.0/18
 kube_network_node_prefix: 24
 
 # api server 监听地址及端口
-kube_apiserver_ip: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') \}\}"
+kube_apiserver_ip: "{ { kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') } }"
 kube_apiserver_port: 6443 # (https)
 kube_apiserver_insecure_port: 8080 # (http)
 
@@ -327,9 +327,9 @@ resolvconf_mode: docker_dns
 # 部署 netchecker 来检测 DNS 和 HTTP 状态
 deploy_netchecker: true 
 # skydns service IP 配置
-skydns_server: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') \}\}"
-dns_server: "\{\{ kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') \}\}"
-dns_domain: "\{\{ cluster_name \}\}"
+skydns_server: "{ { kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') } }"
+dns_server: "{ { kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') } }"
+dns_domain: "{ { cluster_name } }"
 
 # docker 存储目录
 docker_daemon_graph: "/var/lib/docker"
@@ -339,7 +339,7 @@ docker_daemon_graph: "/var/lib/docker"
 ## This string should be exactly as you wish it to appear.
 ## An obvious use case is allowing insecure-registry access
 ## to self hosted registries like so:
-docker_options: "--insecure-registry=\{\{ kube_service_addresses \}\} --graph=\{\{ docker_daemon_graph \}\} --iptables=false --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool --storage-opt dm.use_deferred_removal=true --storage-opt=dm.use_deferred_deletion=true"
+docker_options: "--insecure-registry={ { kube_service_addresses } } --graph={ { docker_daemon_graph } } --iptables=false --storage-driver=devicemapper --storage-opt=dm.thinpooldev=/dev/mapper/docker-thinpool --storage-opt dm.use_deferred_removal=true --storage-opt=dm.use_deferred_deletion=true"
 docker_bin_dir: "/usr/bin"
 
 # 组件部署方式
