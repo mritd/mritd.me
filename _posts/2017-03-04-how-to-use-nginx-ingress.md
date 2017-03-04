@@ -88,7 +88,7 @@ daemonset "nginx-ingress-lb" created
 
 **咳咳，回到正题，从上面可以知道 Ingress 就是个规则，指定哪个域名转发到哪个 Service，所以说首先我们得有个 Service，当然 Service 去哪找这里就不管了；这里默认为已经有了两个可用的 Service，以下以 Dashboard 和 kibana 为例**
 
-**先写一个 Ingress 文件，语法格式啥的请参考 [官方文档](https://kubernetes.io/docs/user-guide/ingress)，由于我的 Dashboard 和 Kibana 都在 kube-system 这个命名空间，所以要制定 namespace**，写之前 Service 分布如下
+**先写一个 Ingress 文件，语法格式啥的请参考 [官方文档](https://kubernetes.io/docs/user-guide/ingress)，由于我的 Dashboard 和 Kibana 都在 kube-system 这个命名空间，所以要指定 namespace**，写之前 Service 分布如下
 
 ![All Service](https://mritd.b0.upaiyun.com/markdown/vtg8f.jpg)
 
