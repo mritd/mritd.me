@@ -135,7 +135,7 @@ vim roles/docker/tasks/main.yml
 #  when: ansible_distribution in ["CentOS","RedHat"]
 #
 
-# 这部 kargo 会重新安装 docker，已经装好了，所以不需要再覆盖安装
+# 这步 kargo 会重新安装 docker，已经装好了，所以不需要再覆盖安装
 
 #- name: ensure docker packages are installed
 #  action: "{ { docker_package_info.pkg_mgr } }"
@@ -175,13 +175,13 @@ vim roles/docker/tasks/main.yml
     - docker
 ```
 
-**kargo 在进行各种任务(task)时可能会释放比如 docker service 配置文件、kubernetes 配置文件等，这些文件一般位于 `roles/组件/templates` 目录，比如 docker 的 service 位于如下位置，我们可以更改，甚至直接换一个，把里面写死变成我们自己的**
+**kargo 在进行各种任务(task)时可能会释放一些配置文件，比如 docker service 配置文件、kubernetes 配置文件等；这些文件一般位于 `roles/组件/templates` 目录，比如 docker 的 service 配置位于如下位置；我们可以更改，甚至直接换一个，把里面写死变成我们自己的**
 
 ![docker service template](https://mritd.b0.upaiyun.com/markdown/f1f9g.jpg)
 
 ### 三、其他相关
 
-**以上只是介绍了自定义的大体思路，更深度的处理需要去玩转  ansible，如果玩明白了 ansible 那么基本上这个 kargo 就可以随便搞了；要写的差不多也就这么多了，感觉这东西比 kubeadm 要好的多，所有操作都是可视化的，没有莫名其妙的问题；其他的可以参考 [ansible 中文文档](http://ansible-tran.readthedocs.io/en/latest/)、[kargo 官方文档](https://github.com/kubernetes-incubator/kargo/blob/master/README.md)**
+**以上只是介绍了自定义配置的大体思路，更深度的处理需要去玩转  ansible，如果玩明白了 ansible 那么基本上这个 kargo 就可以随便搞了；要写的差不多也就这么多了，感觉这东西比 kubeadm 要好的多，所有操作都是可视化的，没有莫名其妙的问题；其他的可以参考 [ansible 中文文档](http://ansible-tran.readthedocs.io/en/latest/)、[kargo 官方文档](https://github.com/kubernetes-incubator/kargo/blob/master/README.md)**
 
 
 
