@@ -78,14 +78,14 @@ vim roles/docker/tasks/main.yml
 
 ---
 - name: gather os specific variables
-  include_vars: "{{ item }}"
+  include_vars: "{ { item } }"
   with_first_found:
     - files:
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_version|lower|replace('/', '_') }}.yml"
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_release }}.yml"
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_major_version|lower|replace('/', '_') }}.yml"
-      - "{{ ansible_distribution|lower }}.yml"
-      - "{{ ansible_os_family|lower }}.yml"
+      - "{ { ansible_distribution|lower } }-{ { ansible_distribution_version|lower|replace('/', '_') } }.yml"
+      - "{ { ansible_distribution|lower } }-{ { ansible_distribution_release } }.yml"
+      - "{ { ansible_distribution|lower } }-{ { ansible_distribution_major_version|lower|replace('/', '_') } }.yml"
+      - "{ { ansible_distribution|lower } }.yml"
+      - "{ { ansible_os_family|lower } }.yml"
       - defaults.yml
       paths:
       - ../vars
@@ -100,32 +100,32 @@ vim roles/docker/tasks/main.yml
   fail:
     msg: >
           docker requires a minimum kernel version of
-          {{ docker_kernel_min_version }} on
-          {{ ansible_distribution }}-{{ ansible_distribution_version }}
+          { { docker_kernel_min_version } } on
+          { { ansible_distribution } }-{ { ansible_distribution_version } }
   when: (not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]) and (ansible_kernel|version_compare(docker_kernel_min_version, "<"))
   tags: facts
 
 # 禁用 docker 仓库处理，因为默认 kargo 会写入国外 docker 源，我已经自己设置了清华大学的镜像源
 
 #- name: ensure docker repository public key is installed
-#  action: "{{ docker_repo_key_info.pkg_key }}"
+#  action: "{ { docker_repo_key_info.pkg_key } }"
 #  args:
-#    id: "{{item}}"
-#    keyserver: "{{docker_repo_key_info.keyserver}}"
+#    id: "{ {item} }"
+#    keyserver: "{ {docker_repo_key_info.keyserver} }"
 #    state: present
 #  register: keyserver_task_result
 #  until: keyserver_task_result|success
 #  retries: 4
-#  delay: "{{ retry_stagger | random + 3 }}"
-#  with_items: "{{ docker_repo_key_info.repo_keys }}"
+#  delay: "{ { retry_stagger | random + 3 } }"
+#  with_items: "{ { docker_repo_key_info.repo_keys } }"
 #  when: not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
 #
 #- name: ensure docker repository is enabled
-#  action: "{{ docker_repo_info.pkg_repo }}"
+#  action: "{ { docker_repo_info.pkg_repo } }"
 #  args:
-#    repo: "{{item}}"
+#    repo: "{ {item} }"
 #    state: present
-#  with_items: "{{ docker_repo_info.repos }}"
+#  with_items: "{ { docker_repo_info.repos } }"
 #  when: (not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]) and (docker_repo_info.repos|length > 0)
 #
 #- name: Configure docker repository on RedHat/CentOS
@@ -138,16 +138,16 @@ vim roles/docker/tasks/main.yml
 # 这部 kargo 会重新安装 docker，已经装好了，所以不需要再覆盖安装
 
 #- name: ensure docker packages are installed
-#  action: "{{ docker_package_info.pkg_mgr }}"
+#  action: "{ { docker_package_info.pkg_mgr } }"
 #  args:
-#    pkg: "{{item.name}}"
-#    force: "{{item.force|default(omit)}}"
+#    pkg: "{ {item.name} }"
+#    force: "{ {item.force|default(omit)} }"
 #    state: present
 #  register: docker_task_result
 #  until: docker_task_result|success
 #  retries: 4
-#  delay: "{{ retry_stagger | random + 3 }}"
-#  with_items: "{{ docker_package_info.pkgs }}"
+#  delay: "{ { retry_stagger | random + 3 } }"
+#  with_items: "{ { docker_package_info.pkgs } }"
 #  notify: restart docker
 #  when: (not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]) and (docker_package_info.pkgs|length > 0)
 #
@@ -155,7 +155,7 @@ vim roles/docker/tasks/main.yml
 # 对于 docker 版本的检查个人感觉还是有点必要的
 
 - name: check minimum docker version for docker_dns mode. You need at least docker version >= 1.12 for resolvconf_mode=docker_dns
-  command: "docker version -f '{{ '{{' }}.Client.Version{{ '}}' }}'"
+  command: "docker version -f '{ { '{ {' } }.Client.Version{ { '} }' } }'"
   register: docker_version
   failed_when: docker_version.stdout|version_compare('1.12', '<')
   changed_when: false
@@ -168,7 +168,7 @@ vim roles/docker/tasks/main.yml
 
 - name: ensure docker service is started and enabled
   service:
-    name: "{{ item }}"
+    name: "{ { item } }"
     enabled: yes
     state: started
   with_items:
