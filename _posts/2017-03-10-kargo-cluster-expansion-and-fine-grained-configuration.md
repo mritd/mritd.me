@@ -63,7 +63,7 @@ ansible-playbook -i inventory/inventory.cfg cluster.yml -b -v --private-key=~/.s
 
 对于 kargo 高度自动化的工具，可能有些东西我们已经预先处理好了，**比如事先已经安装了 docker，而且 docker 配置了一些参数(日志驱动、存储驱动等)；这时候我们可能并不希望 kargo 再去处理，因为 kargo 会进行覆盖，可能导致一些问题**
 
-**kargo 是基于 ansible 的，实际上也就是 ansible，只不过他帮我们写好了配置文件而已；按照 ansible 的规则，Play Book 首先执行 roles 目录下的 roles，在这些 roles 中定义了如何配置集群、如何初始化网络、怎么配置 docker 等等，所以只要我们去更改这些 roles 规则就可以实现一些功能的定制，roles 目录位置如下**
+**kargo 是基于 ansible 的，实际上也就是 ansible，只不过它帮我们写好了配置文件而已；按照 ansible 的规则，Play Book 首先执行 roles 目录下的 roles，在这些 roles 中定义了如何配置集群、如何初始化网络、怎么配置 docker 等等，所以只要我们去更改这些 roles 规则就可以实现一些功能的定制，roles 目录位置如下**
 
 ![roles](https://mritd.b0.upaiyun.com/markdown/jmy7o.jpg)
 
@@ -161,7 +161,7 @@ vim roles/docker/tasks/main.yml
   changed_when: false
   when: dns_mode != 'none' and resolvconf_mode == 'docker_dns'
 
-# kargo 对 docker service 的配置会在此写入，我感觉还不错，所以留着了；但是注意的是他会把原来的覆盖掉
+# kargo 对 docker service 的配置会在此写入，我感觉还不错，所以留着了；但是注意的是它会把原来的覆盖掉
 
 - name: Set docker systemd config
   include: systemd.yml
