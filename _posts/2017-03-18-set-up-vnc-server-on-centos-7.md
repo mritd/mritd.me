@@ -48,4 +48,8 @@ yum install tigervnc-server -y
 
 也就是说把这个模板文件 cp 到 `/etc/systemd/system/vncserver@.service` 然后替换用户名，执行两条命令，最后执行 `vncserver` 用于初始化密码和配置文件就行了
 
+重装了一天系统，有点烦躁，听首歌安静一下...
+
+<div style="position:relative;height:0;padding-bottom:56.25%"><iframe src="https://www.youtube.com/embed/AsC0CN2eGkY?rel=0?ecver=2" width="640" height="360" frameborder="0" style="position:absolute;width:100%;height:100%;left:0" allowfullscreen></iframe></div>
+
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
