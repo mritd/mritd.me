@@ -19,7 +19,7 @@ keywords: Docker mirror registry
 docker run -dt --privileged --restart always --name registry-mirror -p 5000:5000 mritd/registry-mirror https://gcr.io
 ```
 
-**此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 `https://gcr.io`；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)**
+**此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 `https://gcr.io`；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)；默认镜像已经上传了 Docker Hub，如果无法下载请访问 [百度云](https://pan.baidu.com/s/1o7Wye8M)**
 
 ![start up](https://mritd.b0.upaiyun.com/markdown/gwfeo.jpg)
 
