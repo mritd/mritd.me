@@ -25,6 +25,8 @@ keywords: Kubernetes Docker kargo HA 高可用
 
 同时保证部署机器对集群内节点拥有 root 免密登录权限，**由于墙的原因，部署所需镜像已经全部打包到百度云，点击 [这里](https://pan.baidu.com/s/1jHMvMn0) 下载，然后进行 load 即可；注意: 直接使用我的 `vagrant` 文件时，请删除我在 `init.sh` 脚本里对 docker 设置的本地代理，直接使用可能导致 docker 无法 pull 任何镜像；vagrant 可能需要执行 `vagrant plugin install vagrant-hosts` 安装插件以支持自动设置 host；如果自己采用其他虚拟机请保证单台虚拟机最低 1.5G 内存，否则会导致安装失败，别问我怎么知道的**
 
+**最新更新：经过测试，请使用 pip 安装 ansible，保证 `ansible >= 2.2.1` && `jinja2 >= 2.8,< 2.9`；否则可能出现安装时校验失败问题**
+
 ### 二、搭建集群
 
 #### 2.1、获取源码
