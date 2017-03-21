@@ -1,9 +1,9 @@
 ---
 layout: post
 categories: Linux
-title: vim E492: Not an editor command: Plugin xxxx
+title: vim E492 Not an editor command Plugin xxxx
 date: 2017-03-21 20:26:37 +0800
-description: vim E492: Not an editor command: Plugin xxxx
+description: vim E492 Not an editor command Plugin xxxx
 keywords: vim E492
 ---
 
