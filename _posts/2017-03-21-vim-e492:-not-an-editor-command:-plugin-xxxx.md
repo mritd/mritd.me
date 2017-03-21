@@ -7,7 +7,7 @@ description: vim E492: Not an editor command: Plugin xxxx
 keywords: vim E492
 ---
 
-> 最近自用的 vim 撞了不少插件，但是发现 `kubectl edit` 或者 `git merge` 时，调用 vim 总是会弹出各种错误，记录一下解决方法
+> 最近自用的 vim 装了不少插件，但是发现 `kubectl edit` 或者 `git merge` 时，调用 vim 总是会弹出各种错误，记录一下解决方法
 
 **出现这个错误一开始以为是 vim 没走 `.vimrc` 配置；后来翻了一堆资料，发现 `kubectl edit` 或者 `git merge` 后并非直接调用 vim，而是调用的 `/usr/bin/view`，那么看一下这个文件**
 
