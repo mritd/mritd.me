@@ -56,12 +56,12 @@ rpm -ivh vagrant_1.9.2_x86_64.rpm
 
 其他几个常用命令如下
 
-- vagrant box [list|add|remove] 查看添加删除 box 等
-- vagrant up 启动虚拟机
-- vagrant halt 关闭虚拟机
-- vagrant init 初始化一个指定系统的 Vagrantfile 文件
-- vagrant destroy 删除虚拟机
-- vagrant ssh ssh 到虚拟机里
+- `vagrant box [list|add|remove]` 查看添加删除 box 等
+- `vagrant up` 启动虚拟机
+- `vagrant halt` 关闭虚拟机
+- `vagrant init` 初始化一个指定系统的 Vagrantfile 文件
+- `vagrant destroy` 删除虚拟机
+- `vagrant ssh` ssh 到虚拟机里
 
 **特别说明一下 ssh 这个命令，一般默认的规范是 `vagrant ssh VM_NAME` 后，会以 vagrant 用户身份登录到目标虚拟机，如果当前目录的 Vagrantfile 中只有一个虚拟机那么无需指定虚拟机名称(init 后默认就是)；虚拟机内(box 封装时)vagrant这个用户拥有全局免密码 sudo 权限；root 用户一般密码为 vagrant**
 
