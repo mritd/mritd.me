@@ -2,8 +2,7 @@ language: ruby
 rvm:
   - 2.3.3
 before_install:
-  - openssl aes-256-cbc -K $encrypted_ecabfac08d8e_key -iv $encrypted_ecabfac08d8e_iv
-    -in id_rsa.enc -out ~/.ssh/id_rsa -d
+  - openssl aes-256-cbc -K $encrypted_18c18cd4d20c_key -iv $encrypted_18c18cd4d20c_iv -in travis-ci.key.enc -out ~/.ssh/id_rsa -d
   - chmod 600 ~/.ssh/id_rsa
 script:
   - bundle install
@@ -15,7 +14,7 @@ after_success:
   - git config user.email "mritd1234@gmail.com"
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
-  - git push --force https://$DEPLOY_TOKEN@github.com/mritd/mritd.me.git master
+  - git push --force https://$JEKYLL_GITHUB_TOKEN@github.com/mritd/mritd.me.git master
   - ssh root@mritd.me "docker restart mritd_jekyll_1"
 branches:
   only:
