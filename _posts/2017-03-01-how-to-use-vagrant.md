@@ -9,7 +9,7 @@ keywords: Vagrant
 
 > Vagrant 是一个开源的 基于 ruby 的开源虚拟机管理工具；最近在鼓捣 kubernetes ，常常需要做集群部署测试，由于比较穷 😂😂😂；所以日常测试全部是自己开虚拟机；每次使用 VirtualBox开5个虚拟机很烦，而且为了保证环境干净不受其他因素影响，所以每次测试都是新开.....每次都会有种 WTF 的感觉，所以研究了一下 Vagrant 这个工具，发现很好用，一下记录一下简单的使用
 
-### 一、 Vagrant 介绍
+### 一、Vagrant 介绍
 
 上面已经简单的说了一下 Vagrant，Vagrant 定位为一个虚拟机管理工具；它能够以脚本化的方式启动、停止、和和删除虚拟机，当然这些手动也没费劲；更重要的是它能够自己定义网络分配、初始化执行的脚本、添加硬盘等各种复杂的动作；最重要的是 Vagrant 提供了类似于 docker image 的 box；Vagrant Box 就是一个完整的虚拟机分发包，可以自己制作也可以从网络下载；并且 Vagrant 开源特性使得各路大神开发了很多 Vagrant 插件方便我们使用，基于以上这些特点，我们可以实现:
 
@@ -65,7 +65,7 @@ rpm -ivh vagrant_1.9.2_x86_64.rpm
 
 **特别说明一下 ssh 这个命令，一般默认的规范是 `vagrant ssh VM_NAME` 后，会以 vagrant 用户身份登录到目标虚拟机，如果当前目录的 Vagrantfile 中只有一个虚拟机那么无需指定虚拟机名称(init 后默认就是)；虚拟机内(box 封装时)vagrant这个用户拥有全局免密码 sudo 权限；root 用户一般密码为 vagrant**
 
-### 二、Vagrantfile
+### 三、Vagrantfile
 
 > 我发现基本国内所有的 Vagrant 教程都是简单的提了一嘴那几个常用命令；包括我上面也写了点，估计可能到这已经被喷了("妈的那几个命令老子 help 一下就出来了，一看一猜就知道啥意思 用得着你讲？")；个人觉得 Vagrant 最复杂的是这个配置文件，以下直接上一个目前仓库里的做示例，仓库地址 [戳这里](https://github.com/mritd/config/tree/master/vagrant)
 
