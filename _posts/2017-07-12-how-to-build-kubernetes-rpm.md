@@ -134,7 +134,7 @@ wget https://github.com/kubernetes/contrib/archive/7d344989fe6a3f11a6d84104b024a
 # 由于我是 root 用户，所以目录位置在这
 # 实际生产 强烈不推荐使用 root build(操作失误会损毁宿主机)
 # 我的是一台临时 vps，所以无所谓了
-mkdir /root/rpmbuild/SOURCES/
+mkdir -p /root/rpmbuild/SOURCES/
 mv ~/kubernetes/* /root/rpmbuild/SOURCES/
 cd /root/rpmbuild/SOURCES/
 # 执行 build
