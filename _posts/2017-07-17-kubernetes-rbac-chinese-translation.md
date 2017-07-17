@@ -7,7 +7,7 @@ description: Kubernetes RBAC Chinese translation
 keywords: Kubernetes RBAC Chinese translation
 ---
 
-c.authorization.k8s.io` API 组来实现权限控制，RBAC 允许管理员通过 Kubernetes API 动态的配置权限策略。**在 1.6 版本中 RBAC 还处于 Beat 阶段**，如果想要开启 RBAC 授权模式需要在 apiserver 组件中指定 `--authorization-mode=RBAC` 选项。
+> 基于角色的访问控制使用 `rbac.authorization.k8s.io` API 组来实现权限控制，RBAC 允许管理员通过 Kubernetes API 动态的配置权限策略。**在 1.6 版本中 RBAC 还处于 Beat 阶段**，如果想要开启 RBAC 授权模式需要在 apiserver 组件中指定 `--authorization-mode=RBAC` 选项。
 
 ### 一、API Overview
 
