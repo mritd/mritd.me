@@ -1,10 +1,10 @@
 ---
 layout: post
 categories: Kubernetes
-title: Kubernetes RBAC 文档
-date: 2017-07-17 18:00:09 +0000
-description: Kubernetes RBAC Chinese translation
-keywords: Kubernetes RBAC Chinese translation
+title: Kubernetes RBAC
+date: 2017-07-17 20:44:45 +0800
+description: Kubernetes RBAC 文档
+keywords: Kubernetes RBAC Chinese
 ---
 
 > 基于角色的访问控制使用 `rbac.authorization.k8s.io` API 组来实现权限控制，RBAC 允许管理员通过 Kubernetes API 动态的配置权限策略。**在 1.6 版本中 RBAC 还处于 Beat 阶段**，如果想要开启 RBAC 授权模式需要在 apiserver 组件中指定 `--authorization-mode=RBAC` 选项。
@@ -17,7 +17,7 @@ keywords: Kubernetes RBAC Chinese translation
 
 在 RBAC API 中，Role 表示一组规则权限，权限只会增加(累加权限)，不存在一个资源一开始就有很多权限而通过 RBAC 对其进行减少的操作；Role 可以定义在一个 namespace 中，如果想要跨 namespace 则可以创建 ClusterRole。
 
-**Role 只能用于授予对单个命名空间中的资源访问权限，**以下是一个对默认命名空间中 Pods 具有访问权限的样例:
+**Role 只能用于授予对单个命名空间中的资源访问权限，** 以下是一个对默认命名空间中 Pods 具有访问权限的样例:
 
 ``` yml
 kind: Role
@@ -304,7 +304,7 @@ subjects:
 
 ### 二、Default Roles and Role Bindings
 
-集群创建后 API Server 默认会创建一些 ClusterRole 和 ClusterRoleBinding 对象；这些对象以 `system:` 为前缀，这表明这些资源对象由集群基础设施拥有；**修改这些集群基础设施拥有的对象可能导致集群不可用。**一个简单的例子是 `system:node` ClusterRole，这个 ClusterRole 定义了 kubelet 的相关权限，如果该 ClusterRole 被修改可能导致 ClusterRole 不可用。
+集群创建后 API Server 默认会创建一些 ClusterRole 和 ClusterRoleBinding 对象；这些对象以 `system:` 为前缀，这表明这些资源对象由集群基础设施拥有；**修改这些集群基础设施拥有的对象可能导致集群不可用。** 一个简单的例子是 `system:node` ClusterRole，这个 ClusterRole 定义了 kubelet 的相关权限，如果该 ClusterRole 被修改可能导致 ClusterRole 不可用。
 
 **所有的默认 ClusterRole 和 RoleBinding 都具有 `kubernetes.io/bootstrapping=rbac-defaults` lable**
 
@@ -386,15 +386,15 @@ API Server 在每次启动后都会更新已经丢失的默认 ClusterRole 和 �
 
 RBAC API 会通过阻止用户编辑 Role 或 RoleBinding 来进行特权升级，RBAC 在 API 级别实现了这一机制，所以即使 RBAC authorizer 不被使用也适用。
 
-**用户即使在对某个 Role 拥有全部权限的情况下也仅能在其作用范围内(ClusterRole -> 集群范围内，Role -> 当前 namespace 或 集群范围)对其进行 create 和 update 操作；**例如 "user-1" 用户不具有在集群范围内列出 secrets 的权限，那么他也无法在集群范围内创建具有该权限的 ClusterRole，也就是说想传递权限必须先获得该权限；想要允许用户 cretae/update Role 有两种方式:
+**用户即使在对某个 Role 拥有全部权限的情况下也仅能在其作用范围内(ClusterRole -> 集群范围内，Role -> 当前 namespace 或 集群范围)对其进行 create 和 update 操作；** 例如 "user-1" 用户不具有在集群范围内列出 secrets 的权限，那么他也无法在集群范围内创建具有该权限的 ClusterRole，也就是说想传递权限必须先获得该权限；想要允许用户 cretae/update Role 有两种方式:
 
 - 1、授予一个该用户期望 create/update 的 Role 或者 ClusterRole
 - 2、授予一个包含该用户期望 create/update 的 Role 或者 ClusterRole 的 Role 或者 ClusterRole(有点绕...)；如果用户尝试 crate/update 一个其不拥有的 Role 或者 ClusterRole，则 API 会禁止
 
-**用户只有拥有了一个 RoleBind 引用的 Role 全部权限，或者被显示授予了对其具有 bind 的权限下，才能在其作用范围(范围同上)内对其进行 create/update 操作；**例如 "user-1" 在不具有列出集群内 secrets 权限的情况下，也不可能为具有该权限的 Role 创建 ClusterRoleBinding；如果想要用户具有 create/update ClusterRoleBinding 的权限有以下两种方式: 
+**用户只有拥有了一个 RoleBind 引用的 Role 全部权限，或者被显示授予了对其具有 bind 的权限下，才能在其作用范围(范围同上)内对其进行 create/update 操作；** 例如 "user-1" 在不具有列出集群内 secrets 权限的情况下，也不可能为具有该权限的 Role 创建 ClusterRoleBinding；如果想要用户具有 create/update ClusterRoleBinding 的权限有以下两种方式:
 
 - 1、授予一个该用户期望 create/update 的 RoleBinding 或者 ClusterRoleBinding 的 Role 或 ClusterRole 的 Role 或 ClusterRole(汉语专8)
-- 2、通过其他方式授予一个该用户 期望 create/update 的 RoleBinding 或者 ClusterRoleBinding 的权限: 
+- 2、通过其他方式授予一个该用户 期望 create/update 的 RoleBinding 或者 ClusterRoleBinding 的权限:
   - 2.1、授予一个包含用户期望 create/update 的 RoleBinding 或者 ClusterRoleBinding 的 Role 或 ClusterRole 的 Role 或 ClusterRole(我汉语10级)
   - 2.2、明确的授予用户一个在对特定 Role 或 ClusterRole 进行 bind 的权限
 
@@ -449,7 +449,7 @@ kubectl create rolebinding bob-admin-binding --clusterrole=admin --user=bob --na
 ```
 
 **在 acme namespace 中授权名称为 acme:myapp 的 service account 具有 view ClusterRole 的 RoleBinding**
-  
+
 ``` sh
 kubectl create rolebinding myapp-view-binding --clusterrole=view --serviceaccount=acme:myapp --namespace=acme
 ```
@@ -484,11 +484,11 @@ kubectl create clusterrolebinding myapp-view-binding --clusterrole=view --servic
 
 这允许你根据需要向特定的服务账户授予特定的权限；细粒度的权限角色绑定控制会更加安全，但是需要更大的精力来进行权限管理；更加宽松的权限角色绑定控制也许会给一些用户分配其不需要的权限，但是相对来说管理相对更加宽松
 
-从最安全到最不安全的权限管理如下: 
+从最安全到最不安全的权限管理如下:
 
 #### 5.1、为特定应用程序指定的服务账户授予特定的 Role(最佳实践)
 
-**这种方式需要应用在 spec 中设置 serviceAccountName，同时这个 SserviceAccount 必须已经被创建(可以通过 API、manifest 文件或者 通过命令 `kubectl create serviceaccount` 等)**。例如在 "my-namespace" namespace 下授予 "my-sa" ServiceAccount view ClusterRole 如下: 
+**这种方式需要应用在 spec 中设置 serviceAccountName，同时这个 SserviceAccount 必须已经被创建(可以通过 API、manifest 文件或者 通过命令 `kubectl create serviceaccount` 等)**。例如在 "my-namespace" namespace 下授予 "my-sa" ServiceAccount view ClusterRole 如下:
 
 ``` sh
 kubectl create rolebinding my-sa-view \
@@ -501,7 +501,7 @@ kubectl create rolebinding my-sa-view \
 
 **如果应用程序在 spec 中没有设置 serviceAccountName，那么将会使用 "default" ServiceAccount。**
 
-**注意: 如果对 default ServiceAccount 进行 RoleBinding(授权)，那么在当前命名空间内所有没有指定 serviceAccountName 的 pod 都将获得该权限。**例如在 "my-namespace" namespace 下授予 "default" ServiceAccount view ClusterRole 如下:
+**注意: 如果对 default ServiceAccount 进行 RoleBinding(授权)，那么在当前命名空间内所有没有指定 serviceAccountName 的 pod 都将获得该权限。** 例如在 "my-namespace" namespace 下授予 "default" ServiceAccount view ClusterRole 如下:
 
 ``` sh
 kubectl create rolebinding default-view \
