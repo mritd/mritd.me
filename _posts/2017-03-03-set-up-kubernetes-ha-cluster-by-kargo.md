@@ -178,7 +178,7 @@ efk_enabled: false
 IPS=(192.168.1.11 192.168.1.12 192.168.1.13 192.168.1.14 192.168.1.15)
 # 生成配置
 cd kargo
-CONFIG_FILE=inventory/inventory.cfg python3 contrib/inventory_builder/inventory.py ${IPS}
+CONFIG_FILE=inventory/inventory.cfg python3 contrib/inventory_builder/inventory.py ${IPS[@]}
 ```
 
 生成的配置如下，已经很简单了，怎么改动相信猜也能猜到
