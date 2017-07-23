@@ -811,12 +811,12 @@ After=docker.service
 [Service]
 User=root
 PermissionsStartOnly=true
-ExecStart=/usr/bin/docker run -p 127.0.0.1:6443:6443 \
-                              -v /etc/nginx:/etc/nginx \
-                              --name nginx-proxy \
-                              --net=host \
-                              --restart=on-failure:5 \
-                              --memory=512M \
+ExecStart=/usr/bin/docker run -p 127.0.0.1:6443:6443 \\
+                              -v /etc/nginx:/etc/nginx \\
+                              --name nginx-proxy \\
+                              --net=host \\
+                              --restart=on-failure:5 \\
+                              --memory=512M \\
                               nginx:1.13.3-alpine
 ExecStartPre=-/usr/bin/docker rm -f nginx-proxy
 ExecStop=/usr/bin/docker stop nginx-proxy
