@@ -920,7 +920,7 @@ kubectl certificate approve csr-z090b
 
 网路组件这里采用 Calico，Calico 目前部署也相对比较简单，只需要创建一下 yml 文件即可，具体可参考 [Calico 官方文档](http://docs.projectcalico.org/v2.3/getting-started/kubernetes/)
 
-**Cliaco 官方文档要求 kubelet 启动时要配置使用 cni 插件 `--network-plugin=cni`，同时 kube-proxy 使用 `--masquerade-all` 启动，所以需要修改所有 kubelet 和 proxy 配置文件增加这两项，以下默认为这两项已经调整完毕，这里不做演示**
+**Cliaco 官方文档要求 kubelet 启动时要配置使用 cni 插件 `--network-plugin=cni`，同时 kube-proxy 不能使用 `--masquerade-all` 启动(会与 Calico policy 冲突)，所以需要修改所有 kubelet 和 proxy 配置文件，以下默认为这两项已经调整完毕，这里不做演示**
 
 ``` sh
 # 获取相关 Cliaco.yml
