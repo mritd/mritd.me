@@ -290,11 +290,14 @@ ${BOOTSTRAP_TOKEN},kubelet-bootstrap,10001,"system:kubelet-bootstrap"
 EOF
 ```
 
-创建 kubelet bootstrapping kubeconfig 配置，**对于 node 节点，api server 地址为本地 nginx 监听的 127.0.0.1:6443，如果想把 master 也当做 node 使用，那么 master 上 api server 地址应该为 masterIP:6443，因为在 master 上没必要也无法启动 nginx 来监听 127.0.0.1:6443(6443 已经被 master 上的 api server 占用了)**
+创建 kubelet bootstrapping kubeconfig 配置(需要提前安装 kubectl 命令)，**对于 node 节点，api server 地址为本地 nginx 监听的 127.0.0.1:6443，如果想把 master 也当做 node 使用，那么 master 上 api server 地址应该为 masterIP:6443，因为在 master 上没必要也无法启动 nginx 来监听 127.0.0.1:6443(6443 已经被 master 上的 api server 占用了)**
 
 **所以以下配置只适合 node 节点，如果想把 master 也当做 node，那么需要重新生成下面的 kubeconfig 配置，并把 api server 地址修改为当前 master 的 api server 地址**
 
+**没看懂上面这段话，照着下面的操作就行，看完下面的 Master HA 示意图就懂了**
+
 ``` sh
+# Master 上该地址应为 https://MasterIP:6443
 export KUBE_APISERVER="https://127.0.0.1:6443"
 # 设置集群参数
 kubectl config set-cluster kubernetes \
@@ -829,7 +832,7 @@ WantedBy=multi-user.target
 EOF
 ```
 
-**最后启动 nginx，同时可以使用 kubectl 测试 api server 负载情况**
+**最后启动 nginx，同时在每个 node 安装 kubectl，然后使用 kubectl 测试 api server 负载情况**
 
 ``` sh
 systemctl daemon-reload
@@ -866,14 +869,16 @@ Jul 19 14:15:31 docker4.node kubelet[18213]: I0719 14:15:31.811025   18213 boots
 
 ``` sh
 # 查看 csr
-➜  kubernetes kubectl get csr
+➜  kubectl get csr
 NAME        AGE       REQUESTOR           CONDITION
 csr-l9d25   2m        kubelet-bootstrap   Pending
+
 # 签发证书
-➜  kubernetes kubectl certificate approve csr-l9d25
+➜  kubectl certificate approve csr-l9d25
 certificatesigningrequest "csr-l9d25" approved
+
 # 查看 node
-➜  kubernetes kubectl get node
+➜  kubectl get node
 NAME           STATUS    AGE       VERSION
 docker4.node   Ready     26s       v1.6.7
 ```
