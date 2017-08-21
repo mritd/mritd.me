@@ -128,7 +128,7 @@ wget https://github.com/kubernetes/contrib/archive/7d344989fe6a3f11a6d84104b024a
 
 #### 2.5、build rpm
 
-最后创建好 build 目录，并放置好源码文件开始 build 即可，当然 build 可以有不同选择
+在正式开始 build 之前，还有一点需要注意的是 **默认的 `kubernetes.spec` 文件中指定了该 rpm 依赖于 docker 这个包，在 CentOS 上可能我们会安装 docker-engine 或者 docker-ce，此时安装 kubernetes rpm 是无法安装的，因为他以来的包不存在，解决的办法就是编译之前删除 spec 文件中的 `Requires: docker` 即可**，最后创建好 build 目录，并放置好源码文件开始 build 即可，当然 build 可以有不同选择
 
 ``` sh
 # 由于我是 root 用户，所以目录位置在这
