@@ -72,7 +72,7 @@ Ingress 简单理解就是个规则定义；比如说某个域名对应某个 se
 **首先以 Daemon Set 的方式在每个 node 上启动一个 traefik，并使用 hostPort 的方式让其监听每个 node 的 80 端口(有没有感觉这就是个 NodePort? 不过区别就是这个 Port 后面有负载均衡器 -->手动微笑)**
 
 ``` sh
-kubectl create -f traefik.ds.yanl
+kubectl create -f traefik.ds.yaml
 
 # Daemon set 文件如下
 apiVersion: extensions/v1beta1
