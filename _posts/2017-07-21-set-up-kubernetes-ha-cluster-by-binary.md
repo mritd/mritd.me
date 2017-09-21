@@ -728,7 +728,7 @@ KUBELET_ARGS="--cgroup-driver=cgroupfs \
               --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \
               --require-kubeconfig \
               --cert-dir=/etc/kubernetes/ssl \
-              --cluster-domain=cluster.local \
+              --cluster-domain=cluster.local. \
               --hairpin-mode promiscuous-bridge \
               --serialize-image-pulls=false \
               --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"
