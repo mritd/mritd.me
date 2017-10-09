@@ -19,8 +19,8 @@ keywords: Kubernetes 1.8 1.8.0 HA
 |10.10.1.5|Master、Node、etcd|
 |10.10.1.6|Master、Node、etcd|
 |10.10.1.7|Master、Node、etcd|
-|10.10.1.8|Node、etcd|
-|10.10.1.9|Node、etcd|
+|10.10.1.8|Node|
+|10.10.1.9|Node|
 
 **本文尽量以实际操作为主，因为写过一篇 [Kubernetes 1.7 搭建文档](https://mritd.me/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/)，所以以下细节部分不在详细阐述，不懂得可以参考上一篇文章；本文所有安装工具均已打包上传到了 [百度云](https://pan.baidu.com/s/1nvwZCfv) 密码: `4zaz`，可直接下载重复搭建过程，搭建前请自行 load 好 images 目录下的相关 docker 镜像**
 
