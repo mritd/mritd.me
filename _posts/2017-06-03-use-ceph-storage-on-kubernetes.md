@@ -103,7 +103,7 @@ spec:
   capacity:
     storage: 2Gi
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce 
   rbd:
     monitors:
       - 192.168.1.11:6789
@@ -132,7 +132,7 @@ metadata:
   name: test-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
@@ -225,7 +225,7 @@ metadata:
     volume.beta.kubernetes.io/storage-class: test-storageclass
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce 
   resources:
     requests:
       storage: 2Gi
