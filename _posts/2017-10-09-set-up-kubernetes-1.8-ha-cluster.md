@@ -821,7 +821,7 @@ systemctl enable kube-proxy
 
 #### 4.5、Master 作为 Node
 
-如果想讲 Master 也作为 Node 的话，请在 Master 上安装 kubernete-node rpm 包，配置与上面基本一致；**区别于 Master 上不需要启动 nginx 做负载均衡，同时 `bootstrap.kubeconfig`、`bootstrap.kubeconfig` 中的 API Server 地址改成当前 Master IP 即可。**
+如果想讲 Master 也作为 Node 的话，请在 Master 上安装 kubernete-node rpm 包，配置与上面基本一致；**区别于 Master 上不需要启动 nginx 做负载均衡，同时 `bootstrap.kubeconfig`、`kube-proxy.kubeconfig` 中的 API Server 地址改成当前 Master IP 即可。**
 
 最终成功后如下图所示
 
