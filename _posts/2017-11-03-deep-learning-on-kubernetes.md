@@ -7,7 +7,7 @@ description: Kubernetes 深度学习笔记
 keywords: Kubenretes 深度学习 Tensorflow DeepLearning
 ---
 
-> 本文主要记录下 Kubernetes 下运行深度学习框架如 Tensorflow、Cafee2 等一些坑，纯总结性文档
+> 本文主要记录下 Kubernetes 下运行深度学习框架如 Tensorflow、Caffe2 等一些坑，纯总结性文档
 
 
 ### 一、先决条件
