@@ -132,6 +132,13 @@ for IP in `seq 5 7`;do
 done
 ```
 
+```sh
+# 修改 etcd 数据目录权限组
+for IP in `seq 5 7`;do
+    ssh root@10.10.1.$IP chown -R etcd:etcd /var/lib/etcd
+done
+```
+
 **然后修改配置如下(其他两个节点类似，只需要改监听地址和 Etcd Name 即可)**
 
 ``` sh
