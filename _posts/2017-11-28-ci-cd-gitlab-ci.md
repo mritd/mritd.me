@@ -7,7 +7,7 @@ description: CI/CD 之 GitLab CI
 keywords: CI/CD GitLab CI Runner
 ---
 
-> 接着上篇文章整理，这篇文章主要介绍一下 GitLab CI 相关功能，并通过 GitLab CI 实现自动化构建项目
+> 接着上篇文章整理，这篇文章主要介绍一下 GitLab CI 相关功能，并通过 GitLab CI 实现自动化构建项目；项目中所用的示例项目已经上传到了 [GitHub](https://github.com/mritd/GitLabCI-TestProject)
 
 ### 一、环境准备
 
