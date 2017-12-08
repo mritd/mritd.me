@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: Git
+categories: CI/CD Git
 title: CI/CD Git Flow
 date: 2017-09-05 14:00:55 +0800
 description: CI/CD Git Flow
