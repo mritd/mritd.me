@@ -43,7 +43,7 @@ services:
     hostname: 'git.mritd.me'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http:/git.mritd.me'
+        external_url 'http://git.mritd.me'
         # Add any other gitlab.rb configuration here, each on its own line
     ports:
       - '80:80'
