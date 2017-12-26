@@ -4,7 +4,7 @@ require 'json'
 require 'open-uri'
 versions = JSON.parse(open('https://pages.github.com/versions.json').read)
 
-versions.each do |k,v|
-    gem k,v 
+versions.each do |k|
+    gem k, versions[k]
 end
 
