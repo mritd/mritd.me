@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: Kubernetes tls-bootstrapping
+categories: Kubernetes
 title: Kubernetes TLS bootstrapping 那点事
 date: 2018-01-07 18:06:06 +0800
 description: Kubernetes TLS bootstrapping 那点事
