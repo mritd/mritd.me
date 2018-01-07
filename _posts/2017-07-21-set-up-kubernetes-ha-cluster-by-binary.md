@@ -611,6 +611,7 @@ KUBE_CONTROLLER_MANAGER_ARGS="--address=0.0.0.0 \
                               --cluster-signing-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem \
                               --service-account-private-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem \
                               --root-ca-file=/etc/kubernetes/ssl/k8s-root-ca.pem \
+                              --experimental-cluster-signing-duration=87600h0m0s \
                               --leader-elect=true \
                               --node-monitor-grace-period=40s \
                               --node-monitor-period=5s \
