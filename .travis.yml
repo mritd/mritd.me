@@ -15,7 +15,7 @@ after_success:
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
   - git push --force https://$JEKYLL_GITHUB_TOKEN@github.com/mritd/mritd.me.git master
-  - ssh root@mritd.me "docker restart mritd_jekyll_1"
+  - ssh root@mritd.me "docker restart jekyll"
 branches:
   only:
     - master
