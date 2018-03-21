@@ -4,7 +4,10 @@ categories: Kubernetes
 title: Kubernetes RBAC
 date: 2017-07-17 20:44:45 +0800
 description: Kubernetes RBAC 文档
-keywords: Kubernetes RBAC Chinese
+keywords: Kubernetes,RBAC
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 基于角色的访问控制使用 `rbac.authorization.k8s.io` API 组来实现权限控制，RBAC 允许管理员通过 Kubernetes API 动态的配置权限策略。**在 1.6 版本中 RBAC 还处于 Beat 阶段**，如果想要开启 RBAC 授权模式需要在 apiserver 组件中指定 `--authorization-mode=RBAC` 选项。

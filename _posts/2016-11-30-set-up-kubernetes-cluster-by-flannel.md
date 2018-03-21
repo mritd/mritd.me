@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Kubernetes 网络搭建-flannel
 date: 2016-11-30 22:57:48 +0800
 description: 记录一下 kubernetes 使用 flannel 搭建网络的过程
-keywords: Kubernetes flannel
+keywords: Kubernetes,Flannel
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 一直用 weave，本篇记录一下 kubernetes 使用 flannel 作为网络组件，flannel 以 pod 方式部署

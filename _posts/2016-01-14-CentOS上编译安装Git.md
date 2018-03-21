@@ -4,6 +4,9 @@ title: CentOS 上编译安装 Git
 categories: [Git, Linux]
 description: CentOS上编译安装Git
 keywords: Git,CentOS
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 ![hexo_git_install_logo](https://mritd.b0.upaiyun.com/markdown/hexo_git_install_logo.png)

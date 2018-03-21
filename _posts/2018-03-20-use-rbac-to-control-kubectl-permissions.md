@@ -4,7 +4,10 @@ categories: Kubernetes
 title: 使用 RBAC 控制 kubectl 权限
 date: 2018-03-20 23:58:37 +0800
 description: 使用 RBAC 控制 kubectl 权限
-keywords: Kubernetes RBAC Docker
+keywords: Kubernetes,RBAC,Docker,RBAC
+catalog: true
+multilingual: false
+tags: Linux Kubernetes Docker
 ---
 
 > 好久没写文章了，过年以后就有点懒... 最近也在学习 golang，再加上不断造轮子所以没太多时间；凑巧最近想控制一下 kubectl 权限，这里便记录一下。

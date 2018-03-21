@@ -4,6 +4,9 @@ title: GlusterFS 笔记
 categories: [Linux]
 description: GlusterFS 笔记
 keywords: Linux,GlusterFS
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 

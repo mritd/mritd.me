@@ -5,6 +5,9 @@ title: Jekyll 搭建静态博客
 date: 2016-10-09 00:14:31 +0800
 description: 记录一下使用 jekyll 创建静态博客的过程
 keywords: jekyll
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 最近从 Hexo 切换到了 jekyll，发现 jekyll 搭建静态博客要比 Hexo 好得多；顺便吐槽一下 node 的依赖管理，感觉很蛋疼；同样的操作步骤往往在其他机器上无法搭建成功，每次挂掉的原因都是依赖不对等等，感觉没有一个良好的依赖管理系统；而 jekyll 使用 ruby 编写，暂不论语言哪个好那个坏，至少有 Genfile 等约束可以保证每次同样的操作搭建时不会出现依赖问题

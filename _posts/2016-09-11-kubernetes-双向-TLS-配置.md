@@ -4,6 +4,9 @@ title: kubernetes 双向 TLS 配置
 categories: [Docker, Kubernetes]
 description: kubernetes 双向 TLS 配置
 keywords: kubernetes,Docker,Linux
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 

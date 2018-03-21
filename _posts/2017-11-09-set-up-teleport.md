@@ -4,7 +4,10 @@ categories: Linux
 title: Teleport 跳板机部署
 date: 2017-11-09 16:47:51 +0800
 description: Teleport 跳板机部署
-keywords: Teleport 跳板机
+keywords: Teleport,跳板机
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 由于业务需求，以前账号管理混乱，所以很多人有生产服务器的 root 权限；所以目前需要一个能 ssh 登录线上服务器的工具，同时具有简单的审计功能；找了好久找到了这个小工具，以下记录一下搭建教程

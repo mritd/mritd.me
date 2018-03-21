@@ -4,7 +4,10 @@ categories: Docker
 title: 使用 Nexus 搭建 Docker 仓库
 date: 2017-01-08 23:02:29 +0800
 description: 使用 Nexus 搭建 Docker 仓库
-keywords: Docker Nexus 私服
+keywords: Docker,Nexus,私服
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 > nexus 最初用于搭建 maven 私服，提供企业级 maven jar 包管理等功能；2.x 后续支持了 npm、rpm 等包管理；最新版本 3.x 开始支持 Docker 仓库，以下为使用 neuxs 撸一个 docker 仓库的教程

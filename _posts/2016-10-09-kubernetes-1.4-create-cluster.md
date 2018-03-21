@@ -4,7 +4,10 @@ categories: Docker Kubernetes
 title: kubernetes 1.4 集群搭建
 date: 2016-10-09 23:35:34 +0800
 description: 记录一下 kubernetes 使用 kubeadm 搭建集群的方法
-keywords: kubernetes kubeadm
+keywords: Kubernetes,kubeadm
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 距离 kubernetes 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案

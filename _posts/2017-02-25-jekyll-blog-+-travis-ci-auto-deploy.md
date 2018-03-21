@@ -4,7 +4,10 @@ categories: Linux
 title: Jekyll + Travis CI 自动化部署博客
 date: 2017-02-25 12:22:49 +0800
 description: Jekyll + Travis CI 自动化部署博客
-keywords: Jekyll Travis-CI
+keywords: Jekyll,Travis-CI
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 由于 Github 访问过慢，所以博客一直放在自己的服务器上托管；博客采用了 Jekyll 生成静态展点，最近鼓捣了一下完成了 Travis CI 自动化部署，顺便在此记录下

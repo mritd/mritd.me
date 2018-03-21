@@ -25,9 +25,9 @@ task :new do
   open(@post_name, 'a') do |file|
     file.puts "---"
     file.puts "layout: post"
-    file.puts "categories: #{@categories}"
     file.puts "title: #{@name}"
     file.puts "date: #{Time.now}"
+    file.puts "categories: #{@categories}"
     file.puts "description: #{@description}"
     file.puts "keywords: #{@keywords}"
     file.puts "---"

@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Kubernetes Nginx Ingress 教程
 date: 2017-03-04 23:16:36 +0800
 description: Kubernetes Nginx Ingress 教程
-keywords: Ingress Kubernetes Nginx
+keywords: Ingress,Kubernetes,Nginx
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 最近发现好多人问 Ingress，同时一直也没去用 Nginx 的 Ingress，索性鼓捣了一把，发现跟原来确实有了点变化，在这里写篇文章记录一下

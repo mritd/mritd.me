@@ -4,7 +4,10 @@ categories: Docker
 title: 个人维护的 Docker 加速仓库
 date: 2017-03-21 22:38:03 +0800
 description: 个人维护的 Docker 加速仓库
-keywords: Docker mirror registry
+keywords: Docker,mirror,registry
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 最近看着很多人下载镜像都很费劲，可能是网络环境越来越坑的原因吧；这里开放一个个人维护的 Docker 加速仓库，帮助扶墙下载 Docker 相关镜像

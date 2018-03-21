@@ -4,6 +4,9 @@ title: Hexo+Upyun 实现整站全网 CDN
 categories: [Hexo]
 description: Hexo+Upyun 实现整站全网 CDN
 keywords: Hexo,CDN,upyun,整站,全网
+catalog: true
+multilingual: false
+tags: GitHub
 ---
 
 ## 一、upyun 设置

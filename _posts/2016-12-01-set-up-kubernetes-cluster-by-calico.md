@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Kubernetes 网络搭建-Calico
 date: 2016-12-01 07:58:30 +0800
 description: 记录 kubernetes 使用 calico 教程
-keywords: kubernetes calico
+keywords: Kubernetes,Calico
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 接上一篇，大早上试下 Calico，从目前的各种评论上来看 Calico 的性能要更好些，不过由于是纯三层的解决方案，某些用到二层的应用可能无法使用，不过目前还没遇到过，个人理解这种情况应该不多

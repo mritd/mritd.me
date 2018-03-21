@@ -3,7 +3,10 @@ layout: post
 title: Docker mirror Registry
 categories: [Docker]
 description: Docker mirror Registry
-keywords: Linux,Docker,mirror.registry
+keywords: Linux,Docker,mirror,registry
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 

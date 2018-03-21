@@ -4,6 +4,9 @@ title: JetBrains 系列激活教程(离线 Server)
 categories: [JetBrains]
 description: JetBrains 系列激活教程(离线 Server)
 keywords: JetBrains,IDEA
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 ![JetBrains_logo](https://mritd.b0.upaiyun.com/markdown/JetBrains_Drive_to_develop.png)

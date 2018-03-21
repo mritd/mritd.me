@@ -4,6 +4,9 @@ title: AspectJ Hello World
 categories: [AspectJ]
 description: AspectJ Hello World
 keywords: Java,AspectJ
+catalog: true
+multilingual: false
+tags: Java
 ---
 
 ## 一、简介

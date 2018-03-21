@@ -4,6 +4,8 @@ title: ShadowSocks 多用户版搭建教程
 categories: [Shadowsocks]
 description: shadowsocks 多用户版搭建教程
 keywords: ShadowSocks,翻墙
+catalog: true
+multilingual: false
 ---
 
 ![ShadowSocks](https://mritd.b0.upaiyun.com/markdown/hexo_shadowsocks_logo.png)

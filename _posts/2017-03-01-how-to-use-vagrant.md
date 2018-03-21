@@ -5,6 +5,9 @@ title: Vagrant 使用
 date: 2017-03-01 22:07:59 +0800
 description: 记录下 Vagrant 使用教程
 keywords: Vagrant
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > Vagrant 是一个开源的 基于 ruby 的开源虚拟机管理工具；最近在鼓捣 kubernetes ，常常需要做集群部署测试，由于比较穷 😂😂😂；所以日常测试全部是自己开虚拟机；每次使用 VirtualBox开5个虚拟机很烦，而且为了保证环境干净不受其他因素影响，所以每次测试都是新开.....每次都会有种 WTF 的感觉，所以研究了一下 Vagrant 这个工具，发现很好用，一下记录一下简单的使用

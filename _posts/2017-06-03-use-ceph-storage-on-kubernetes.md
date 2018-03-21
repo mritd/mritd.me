@@ -4,7 +4,10 @@ categories: Kubernetes Docker Ceph
 title: Kubernetes 使用 Ceph 存储
 date: 2017-06-03 12:38:55 +0800
 description: Kubernetes 使用 Ceph 存储
-keywords: Kubernetes Docker Ceph 
+keywords: Kubernetes,Docker,Ceph
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 本文主要记录一下 Kubernetes 使用 Ceph 存储的相关配置过程，Kubernetes 集群环境采用的 kargo 部署方式，并且所有组件以容器化运行

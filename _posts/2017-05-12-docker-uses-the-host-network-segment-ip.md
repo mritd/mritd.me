@@ -4,7 +4,10 @@ categories: Docker
 title: Docker 分配宿主机网段 IP
 date: 2017-05-12 22:42:00 +0800
 description: Docker 分配宿主机网段 IP
-keywords: Docker 宿主机 IP
+keywords: Docker,宿主机IP
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 > 工作需要临时启动一个 gitlab,无奈 gitlab 需要 ssh 的 22 端口;而使用传统网桥方式映射端口则 clone 等都需要输入端口号,很麻烦;22 端口宿主机又有 sshd 监听;研究了下 docker 网络,记录一下如何分配宿主机网段 IP

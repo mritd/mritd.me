@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Kubernetes 深度学习笔记
 date: 2017-11-03 17:37:13 +0800
 description: Kubernetes 深度学习笔记
-keywords: Kubenretes 深度学习 Tensorflow DeepLearning
+keywords: Kubenretes,深度学习,Tensorflow,DeepLearning
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 本文主要记录下 Kubernetes 下运行深度学习框架如 Tensorflow、Caffe2 等一些坑，纯总结性文档

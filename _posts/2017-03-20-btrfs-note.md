@@ -5,6 +5,9 @@ title: Btrfs 笔记
 date: 2017-03-20 21:27:19 +0800
 description: Btrfs 笔记
 keywords: Btrfs
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > btrfs 是 Oracle 07 年基于 GPL 协议开源的 Linux 文件系统，其目的是替换传统的 Ext3、Ext4 系列文件系统；Ext 系列文件系统存在着诸多问题，比如反删除能力有限等；而 btrfs 在解决问题同时提供了更加强大的高级特性

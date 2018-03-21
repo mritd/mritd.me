@@ -4,7 +4,10 @@ categories: Java Linux
 title: Java 配合 mitmproxy HTTPS 抓包调试
 date: 2017-03-25 12:42:21 +0800
 description: Java 配合 mitmproxy HTTPS 抓包调试
-keywords: Java 抓包 mitmproxy
+keywords: Java,抓包,mitmproxy
+catalog: true
+multilingual: false
+tags: Java
 ---
 
 > 今天对接接口，对方给的 Demo 和已有项目用的 HTTP 工具不是一个；后来出现人家的好使，我的死活不通的情况；无奈之下开始研究 Java 抓包，所以怕忘了记录一下......

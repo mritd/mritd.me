@@ -4,7 +4,10 @@ categories: Docker Kubernetes
 title: kubeadm 续坑篇
 date: 2016-11-21 20:16:51 +0800
 description: 记录 kubeadm 一些其他的坑
-keywords: kubeadm kubernetes docker
+keywords: kubeadm,Kubernetes,Docker
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 断断续续鼓捣 kubeadm 搭建集群已经很长时间了，目前 kubeadm 已经进入了 beat 阶段，各项功能相对稳定，但是继上篇 [kubeadm 搭建 kubernetes 集群](https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/) 之后还是踩了许多坑，在此记录一下

@@ -4,7 +4,10 @@ categories: CI/CD
 title: CI/CD 之 Dockerfile
 date: 2017-11-12 22:46:53 +0800
 description: CI/CD 之 Dockerfile
-keywords: CI/CD Dockerfile
+keywords: CI/CD,Dockerfile
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 最近准备整理一下关于 CI/CD 的相关文档，写一个关于 CI/CD 的系列文章，这篇先从最基本的 Dockerfile 书写开始，本系列文章默认读者已经熟悉 Docker、Kubernetes 相关工具

@@ -4,6 +4,9 @@ title: Harbor 企业级 Docker Registry HTTPS配置
 categories: [Docker]
 description: Harbor 企业级 Docker Registry HTTPS配置
 keywords: Linux,Dokcer,Harbor,HTTPS,SSL,私服
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 > 本文参考自 [Harbor Github](https://github.com/vmware/harbor/blob/master/docs/configure_https.md)、[OpenSSL 创建 SAN 证书](http://liaoph.com/openssl-san/)

@@ -4,7 +4,10 @@ categories: Linux
 title: 利用 frp 进行内网穿透
 date: 2017-01-21 14:45:42 +0800
 description: 记录使用 frp 工具进行内网穿透的过程
-keywords: Linux frp
+keywords: Linux,frp
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 最近新入了一台小主机，家里还有个树莓派，索性想通过小主机跑点东西，然后通过外网访问家里的设备；不过鉴于大天朝内网环境，没有公网 IP 并且多层路由的情况下只能选择使用内网穿透方案，以下记录了一下使用 frp 进行内网穿透的过程

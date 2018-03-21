@@ -4,6 +4,9 @@ title: List 的 UnsupportedOperationException 异常
 categories: [J2SE]
 description: List 的 UnsupportedOperationException 异常
 keywords: List,UnsupportedOperationException
+catalog: true
+multilingual: false
+tags: Java
 ---
 
 ## 一、前言

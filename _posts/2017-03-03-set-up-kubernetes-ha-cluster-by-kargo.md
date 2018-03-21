@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: 快速部署 kubernetes 高可用集群
 date: 2017-03-03 23:16:04 +0800
 description: 记录使用 kargo 快速部署 Kubernetes 高可用集群
-keywords: Kubernetes Docker kargo HA 高可用
+keywords: Kubernetes,Docker,kargo,HA
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 鼓捣 kubernetes 好长一段时间了，kubernetes 1.5 后新增了 kubeadm 工具用于快速部署 kubernetes 集群，不过该工具尚未稳定，无法自动部署高可用集群，而且还存在一些 BUG，所以生产环境还无法使用；本文基于 kargo 工具实现一键部署 kubernetes 容器化(可选) 高可用集群

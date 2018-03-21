@@ -4,6 +4,9 @@ title: Redundent Array of Inexpensive Disks
 categories: [Linux]
 description: Redundent Array of Inexpensive Disks
 keywords: RAID,Linux
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 

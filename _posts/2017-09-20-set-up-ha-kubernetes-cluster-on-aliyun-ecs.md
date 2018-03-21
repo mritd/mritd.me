@@ -4,7 +4,10 @@ categories: Kubernetes
 title: 阿里云部署 Kubernetes
 date: 2017-09-20 11:02:24 +0800
 description: 记录阿里云部署 Kubernetes 踩坑
-keywords: Kubernetes Flannel 阿里云 aliyun
+keywords: Kubernetes,Flannel,阿里云,aliyun
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 公司有点小需求，在阿里云上开了几台机器，然后部署了一个 Kubernetes 集群，以下记录一下阿里云踩坑问题，主要是网络组件的坑。

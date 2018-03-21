@@ -4,6 +4,9 @@ title: Harbor 企业级 Docker Registry 第二弹
 categories: [Docker]
 description: Harbor 企业级 Docker Registry 第二弹
 keywords: Linux,Docker,registry,mirror,harbor
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 

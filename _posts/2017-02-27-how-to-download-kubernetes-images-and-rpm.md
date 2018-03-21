@@ -4,7 +4,10 @@ categories: Kubernetes
 title: 如何下载 Kubernetes 镜像和 rpm
 date: 2017-02-27 22:02:48 +0800
 description: 如何下载 Kubernetes 镜像和 rpm
-keywords: Kubernetes gcr.io rpm
+keywords: Kubernetes,gcr.io,rpm
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 随着 kubernetes 容器化部署逐渐推进，gcr.io 镜像、kubernetes rpm 下载由于 "伟大的" 墙的原因成为阻碍玩 kubernetes 第一道屏障，以下记录了个人维护的 yum 仓库和 gcr.io 反代仓库使用

@@ -4,7 +4,10 @@ categories: Kubernetes
 title: Kubernetes 1.8 kube-proxy 开启 ipvs
 date: 2017-10-10 17:19:04 +0800
 description: Kubernetes 1.8 kube-proxy 开启 ipvs
-keywords: Kubernetes 1.8 1.8.0 kube-proxy ipvs
+keywords: Kubernetes,1.8,1.8.0,kube-proxy,ipvs
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > Kubernetes 1.8 发布已经好几天，1.8 对于 kube-proxy 组件增加了 ipvs 支持，以下记录一下 kube-proxy ipvs 开启教程

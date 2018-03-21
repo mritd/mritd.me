@@ -3,7 +3,10 @@ layout: post
 title: Docker Contianer 挂掉强制修改文件
 categories: [Docker]
 description: Docker Contianer 挂掉强制修改文件
-keywords: Linux,Docker,Contianer
+keywords: Linux,Docker
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 ## 一、扯犊子

@@ -4,7 +4,10 @@ categories: Linux Git
 title: Git 使用 socks5 代理
 date: 2017-01-12 23:03:30 +0800
 description: 记录各平台下 git 使用 socks5 代理的方法
-keywords: git socks5
+keywords: git,socks5
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > Fuck GFW! 最近伟大的墙又开始搞事情，导致 gayhub 访问奇慢，没办法研究一下 socks5 代理 git，效果还不错

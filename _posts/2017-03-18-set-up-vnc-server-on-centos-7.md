@@ -5,6 +5,9 @@ title: CentOS 7 配置 VNC Server
 date: 2017-03-18 21:53:07 +0800
 description: CentOS 7 配置 VNC Server
 keywords: VNC
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 最近决定把小主机扔到客厅跟路由器放在一起(远程开机 666），因为本来就跑的是 Linux，平时图形化需求也不多；但是为了保险起见准备搞一个 VNC，以便必要时图形化上去，比如强制删除一些 Virtual Box 虚拟机等，记录一下安装过程

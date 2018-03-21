@@ -4,6 +4,9 @@ title: Linux 命令行下使用 Shadowsocks 代理
 categories: [Shadowsocks]
 description: Linux 命令行下使用 Shadowsocks 代理
 keywords: Linux,Shadowsocks,Privoxy
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 

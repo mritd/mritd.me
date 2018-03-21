@@ -4,7 +4,10 @@ categories: CI/CD
 title: CI/CD 之 GitLab CI
 date: 2017-11-28 17:43:23 +0800
 description: CI/CD 之 GitLab CI
-keywords: CI/CD GitLab CI Runner
+keywords: CI/CD,GitLab,CI,Runner
+catalog: true
+multilingual: false
+tags: Linux Docker CI/CD
 ---
 
 > 接着上篇文章整理，这篇文章主要介绍一下 GitLab CI 相关功能，并通过 GitLab CI 实现自动化构建项目；项目中所用的示例项目已经上传到了 [GitHub](https://github.com/mritd/GitLabCI-TestProject)

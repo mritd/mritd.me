@@ -4,7 +4,10 @@ categories: Linux
 title: StrongSwan 搭建 VPN
 date: 2016-10-18 00:14:04 +0800
 description: 记录使用 StrongSwan 创建 VPN 的过程
-keywords: StrongSwan VPN
+keywords: StrongSwan,VPN
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 由于工作需要，记录一下使用 StrongSwan 搭建 VPN 的过程，支持 L2TP、IKEv2 PSK/CERT、IPsec 连接，基本上兼容大部分设备

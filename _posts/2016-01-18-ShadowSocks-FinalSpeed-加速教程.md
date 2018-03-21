@@ -4,6 +4,8 @@ title: ShadowSocks FinalSpeed 加速教程
 categories: [Shadowsocks]
 description: ShadowSocks FinalSpeed 加速教程
 keywords: ShadowSocks,FinalSpeed
+catalog: true
+multilingual: false
 ---
 
 ![ShadowSocks](https://mritd.b0.upaiyun.com/markdown/hexo_shadowsocks_logo.png)

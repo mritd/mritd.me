@@ -4,6 +4,9 @@ title: Can't connect to MySQL server on 'xxxx' (61)
 categories: [MySQL]
 description: Can't connect to MySQL server on 'xxxx' (61)
 keywords: Linux,MySQL
+catalog: true
+multilingual: false
+tags: SQL
 ---
 
 **记录一下 Ubuntu 下安装 MySql 踩得坑；刚刚安装完 MySQL，连接时始终报 `Can't connect to MySQL server on '10.211.55.14' (61)`；后来查询此错误的原因就是网络不通，于是检查 ufw 防火墙、本机杀软、MySql远程访问开启情况...发现没问题以后，最终找到了答案：**

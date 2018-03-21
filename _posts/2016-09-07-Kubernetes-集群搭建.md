@@ -4,6 +4,9 @@ title: Kubernetes 集群搭建
 categories: [Docker, Kubernetes]
 description: Kubernetes 集群搭建
 keywords: Kubernetes,k8s,Docker,Etcd,Flannel,Linux
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 

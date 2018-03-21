@@ -4,7 +4,10 @@ categories: Linux
 title: 从 WWDC16 ATS 说起
 date: 2016-12-30 21:49:42 +0800
 description: Centos7 下配置 nginx https 以支持 IOS ATS
-keywords: ATS nginx https
+keywords: ATS,nginx,https
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > WWDC16 苹果正式发出公告，2017年1月1号后所有 IOS 应用需要使用 HTTPS 配置，并且 HTTPS 还得符合 ATS 要求，以下记录一下 CentoS 7 下配置 nginx HTTPS 并满足 ATS 过程

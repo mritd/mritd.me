@@ -4,7 +4,10 @@ categories: Docker
 title: 樱花 Docker 免费高速翻墙教程
 date: 2016-10-14 23:31:19 +0800
 description: 利用免费的樱花 Docker 使用 shadowsocks 翻墙教程
-keywords: shadowsocks Docker
+keywords: Shadowsocks,Docker
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 > 免费梯子不多，且用亲珍惜，以下为利用樱花 Docker 翻墙教程

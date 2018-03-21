@@ -4,7 +4,10 @@ categories: CI/CD Git
 title: CI/CD Git Flow
 date: 2017-09-05 14:00:55 +0800
 description: CI/CD Git Flow
-keywords: 记录 Git Flow 工作流程
+keywords: 记录,Git,Flow,工作流程
+catalog: true
+multilingual: false
+tags: CI/CD
 ---
 
 > 由于 git 代码管理比较混乱，所以记录一下 Git Flow + GitLab 的整体工作流程

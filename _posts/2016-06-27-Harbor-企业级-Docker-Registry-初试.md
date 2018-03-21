@@ -4,6 +4,9 @@ title: Harbor 企业级 Docker Registry 初试
 categories: [Docker]
 description: Harbor 企业级 Docker Registry 初试
 keywords: Docker,Linux,Harbor,Registry
+catalog: true
+multilingual: false
+tags: Linux Docker
 ---
 
 

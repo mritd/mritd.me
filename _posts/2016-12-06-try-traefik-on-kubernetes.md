@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Traefik-kubernetes 初试
 date: 2016-12-06 22:38:22 +0800
 description: Traefik-kubernetes 初试
-keywords: Traefik Kubernetes
+keywords: Traefik,Kubernetes
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > traefik 是一个前端负载均衡器，对于微服务架构尤其是 kubernetes 等编排工具具有良好的支持；同 nginx 等相比，traefik 能够自动感知后端容器变化，从而实现自动服务发现；今天小试了一下，在此记录一下使用过程

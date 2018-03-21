@@ -4,7 +4,10 @@ categories: Kubernetes
 title: How to build Kubernetes RPM
 date: 2017-07-12 22:52:38 +0800
 description: 记录 build kubernetes 的过程
-keywords: kubernetes rpm
+keywords: kubernetes
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 一直使用 Centos 运行 Kubernetes,有些时候基于二进制部署的情况下,手动复制二进制文件和创建 Systemd service 配置略显繁琐;最近找了一下 Kubernetes RPM 的 build 方式,以下记录一下 build 过程

@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: kargo 集群扩展及细粒度配置
 date: 2017-03-10 23:57:12 +0800
 description: kargo 集群扩展及细粒度配置
-keywords: kargo Kubernetes Docker HA
+keywords: kargo,Kubernetes,Docker,HA
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 上一篇写了一下一下使用 kargo 快速部署 Kubernetes 高可用集群，但是一些细节部分不算完善，这里准备补一下，详细说明一下一些问题；比如后期如何扩展、一些配置如何自定义等

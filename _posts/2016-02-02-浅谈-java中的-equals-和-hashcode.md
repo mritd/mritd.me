@@ -4,6 +4,9 @@ title: 浅谈 java中的 equals 和 hashcode
 categories: [J2SE]
 description: 浅谈 java中的 equals 和 hashcode
 keywords: equals,hashcode
+catalog: true
+multilingual: false
+tags: Java
 ---
 
 ![hexo_java_equals_hashcode.jpg](https://mritd.b0.upaiyun.com/markdown/hexo_java_equals_hashcode.jpg)

@@ -4,7 +4,10 @@ categories: Kubernetes
 title: Kubernetes TLS bootstrapping 那点事
 date: 2018-01-07 18:06:06 +0800
 description: Kubernetes TLS bootstrapping 那点事
-keywords: tls-bootstrapping kubernetes
+keywords: tls-bootstrapping,kubernetes
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 前段时间撸了一会 Kubernetes 官方文档，在查看 TLS bootstrapping 这块是发现已经跟 1.4 的时候完全不一样了；目前所有搭建文档也都保留着 1.4 时代的配置，在看完文档后发现目前配置有很多问题，同时也埋下了 **隐藏炸弹**，这个问题可能会在一年后爆发.....后果就是集群 node 全部掉线；所以仔细的撸了一下这个文档，从元旦到写此文章的时间都在测试这个 TLS bootstrapping，以下记录一下这次的成果

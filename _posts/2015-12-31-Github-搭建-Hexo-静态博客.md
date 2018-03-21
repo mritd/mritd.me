@@ -1,9 +1,12 @@
 ---
 layout: post
-title: Github 搭建 Hexo 静态博客
+title: GitHub 搭建 Hexo 静态博客
 categories: [Hexo]
-description: Github 搭建 Hexo 静态博客
-keywords: Github,Hexo
+description: GitHub 搭建 Hexo 静态博客
+keywords: GitHub,Hexo
+catalog: true
+multilingual: false
+tags: GitHub
 ---
 
 > 操作环境为虚拟机中 CentOS_6.7 , [阿里镜像源](http://mirrors.aliyun.com/help/centos)

@@ -4,7 +4,10 @@ categories: Kubernetes Docker
 title: Consul 集群搭建
 date: 2017-09-21 22:50:28 +0800
 description: Consul 集群搭建
-keywords: Consul Etcd
+keywords: Consul,Etcd
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 不知道 Consul 用的人多还是少，最近有人问怎么搭建 Consul 集群，这里顺手记录一下吧

@@ -4,7 +4,10 @@ categories: Kubernetes Calico
 title: Calico 部署踩坑记录
 date: 2017-07-31 15:39:23 +0800
 description: Calico 部署踩坑记录
-keywords: Kubernetes Calico
+keywords: Kubernetes,Calico
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 自从上次在虚拟机中手动了部署了 Kubernetes 1.7.2 以后，自己在测试环境就来了一下，结果网络组件死活起不来，最后找到原因记录一下

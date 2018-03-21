@@ -4,7 +4,10 @@ categories: Kubernetes
 title: 手动档搭建 Kubernetes HA 集群
 date: 2017-07-21 16:23:50 +0800
 description: 基于二进制文件纯手动搭建 Kubenretes 集群
-keywords: Kubernetes HA 二进制 rpm
+keywords: Kubernetes,HA,二进制,rpm
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 以前一直用 Kargo(基于 ansible) 来搭建 Kubernetes 集群，最近发现 ansible 部署的时候有些东西有点 bug，而且 Kargo 对 rkt 等也做了适配，感觉问题已经有点复杂化了；在 2.2 release 没出来这个时候，准备自己纯手动挡部署一下，Master HA 直接抄 Kargo 的就行了，以下记录一下;**本文以下部分所有用到的 rpm 、配置文件等全部已经上传到了 [百度云](http://pan.baidu.com/s/1o8PZLKA)  密码: x5v4**

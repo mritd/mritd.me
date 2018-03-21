@@ -5,6 +5,9 @@ title: 人生就是会不断挥手说再见的啊
 date: 2016-10-25 13:50:29 +0800
 description: 人生就是会不断挥手说再见的啊
 keywords: 挥手说再见
+catalog: true
+multilingual: false
+tags: 随笔
 ---
 
 > 有些人，注定只能陪你一阵子，不是一辈子。人生就是会不断挥手说再见的啊...

@@ -5,6 +5,9 @@ title: CentOS 升级 kernel
 date: 2016-11-08 21:24:31 +0800
 description: CentOS 升级 kernel
 keywords: kernel
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 最紧要鼓捣 Dokcer Swarm，而 Swarm 的 overlay 网络需要 3.15 以上的 kernel，故记录一下升级内核的过程

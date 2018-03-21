@@ -4,6 +4,9 @@ title: Linux 下 MySQL 密码强制修改
 categories: [Linux, MySQL]
 description: 记录一下 Linux 下 MySQL 密码强制修改过程
 keywords: Linux,MySQL
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 好吧好吧，这事不怨我，二逼同事打扰我，就输错了......

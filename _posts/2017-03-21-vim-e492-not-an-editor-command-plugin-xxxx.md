@@ -4,7 +4,10 @@ categories: Linux
 title: vim E492 Not an editor command Plugin xxxx
 date: 2017-03-21 20:26:37 +0800
 description: vim E492 Not an editor command Plugin xxxx
-keywords: vim E492
+keywords: vim,E492
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > 最近自用的 vim 装了不少插件，但是发现 `kubectl edit` 或者 `git merge` 时，调用 vim 总是会弹出各种错误，记录一下解决方法

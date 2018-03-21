@@ -5,6 +5,9 @@ title: Logical Volume Manager 笔记
 date: 2017-01-27 10:05:26 +0800
 description: LVM 笔记
 keywords: LVM
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 > Logical Volume Manager 简称 LVM，LVM 是一种可用在Linux内核的逻辑分卷管理器；可用于管理磁盘驱动器或其他类似的大容量存储设备；LVM 依赖于 内核 device mapper 机制，可以实现动态伸缩逻辑卷大小，而屏蔽底层硬件变化，为后期磁盘扩展提供便利

@@ -4,7 +4,10 @@ categories: Kubernetes
 title: Kubernetes 1.8 集群搭建
 date: 2017-10-09 22:48:03 +0800
 description: Kubernetes 1.8 集群搭建
-keywords: Kubernetes 1.8 1.8.0 HA
+keywords: Kubernetes,1.8,1.8.0,HA
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 目前 Kubernetes 1.8.0 已经发布，1.8.0增加了很多新特性，比如 kube-proxy 组建的 ipvs 模式等，同时 RBAC 授权也做了一些调整，国庆没事干，所以试了一下；以下记录了 Kubernetes 1.8.0 的搭建过程

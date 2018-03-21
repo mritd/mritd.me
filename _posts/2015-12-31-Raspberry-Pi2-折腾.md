@@ -4,6 +4,9 @@ title: Raspberry Pi2 折腾
 categories: [Linux, Raspberry Pi2]
 description: Raspberry Pi2 折腾
 keywords: Linux,Raspberry Pi2
+catalog: true
+multilingual: false
+tags: Linux
 ---
 
 ### 开启Root用户

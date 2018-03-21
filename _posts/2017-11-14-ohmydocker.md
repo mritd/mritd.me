@@ -4,7 +4,10 @@ categories: Docker
 title: ohmydocker 镜像加速
 date: 2017-11-14 14:43:30 +0800
 description: ohmydocker 镜像加速
-keywords: docker 镜像加速
+keywords: Docker,镜像加速
+catalog: true
+multilingual: false
+tags: Linux Docker Kubernetes
 ---
 
 > 国外一直有台服务器闲置，准备用来做 Docker 镜像下载加速，写了个小工具打成了镜像放了出来 😀
