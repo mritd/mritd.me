@@ -45,7 +45,7 @@ Normal users are assumed to be managed by an outside, independent service. An ad
 
 其他不再一一列举，具体请看文档 [Authenticating](https://kubernetes.io/docs/admin/authentication/)；了解了这些，后面我们使用 RBAC 控制 kubectl 权限的时候就要使用如上几种方法创建对应用户
 
-#### 1.1、RBAC 权限相关
+#### 1.2、RBAC 权限相关
 
 RBAC 权限定义部分主要有三个层级
 
