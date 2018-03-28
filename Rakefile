@@ -14,6 +14,7 @@ task :new do
   @description = STDIN.gets.chomp
   puts "请输入 post 关键词，以空格分隔："
   @keywords = STDIN.gets.chomp
+  @keywords = @keywords.downcase.strip.gsub(' ', ',')
   @slug = "#{@url}"
   @slug = @slug.downcase.strip.gsub(' ', '-')
   @date = Time.now.strftime("%F")
@@ -32,6 +33,7 @@ task :new do
     file.puts "keywords: #{@keywords}"
     file.puts "catalog: true"
     file.puts "multilingual: false"
+    file.puts "tags: #{@categories}"
     file.puts "---"
     file.puts ""
     file.puts ""
