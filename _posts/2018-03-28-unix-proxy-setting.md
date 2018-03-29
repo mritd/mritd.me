@@ -10,7 +10,7 @@ multilingual: false
 tags: Linux
 ---
 
-> 本文主要阐述在 \*Uinx 平台下，各种常用开发工具的加速配置，**加速前提是你需要有一个能够加速的 socks5 端口，常用工具请自行搭建**；本文档包括 docker、terminal、git、chrome 常用加速配置，其他工具可能后续补充；**由于 jekyll 目前 markdown 解析有些 bug，所以本文内所有 `\<<-EOF` 实际替换为 `<<EOF`**
+> 本文主要阐述在 \*Uinx 平台下，各种常用开发工具的加速配置，**加速前提是你需要有一个能够加速的 socks5 端口，常用工具请自行搭建**；本文档包括 docker、terminal、git、chrome 常用加速配置，其他工具可能后续补充
 
 ### 一、加速类型
 
@@ -72,13 +72,13 @@ if [ "${OS_TYPE}" == "" ];then
     exit 1
 elif [ "${OS_TYPE}" == "centos" ];then
     mkdir /etc/systemd/system/docker.service.d || true
-    tee /etc/systemd/system/docker.service.d/socks5-proxy.conf \<<-EOF
+    tee /etc/systemd/system/docker.service.d/socks5-proxy.conf <<-EOF
 [Service]
 Environment="ALL_PROXY=socks5://${PROXY_ADDRESS}"
 EOF
 elif [ "${OS_TYPE}" == "ubuntu" ];then
     mkdir /lib/systemd/system/docker.service.d || true
-    tee /lib/systemd/system/docker.service.d/socks5-proxy.conf \<<-EOF
+    tee /lib/systemd/system/docker.service.d/socks5-proxy.conf <<-EOF
 [Service]
 Environment="ALL_PROXY=socks5://${PROXY_ADDRESS}"
 EOF
@@ -138,7 +138,7 @@ SwitchyOmega 安装成功后在 Chrome 右上角有显示，右键点击该图�
 对于终端下的应用程序，百分之九十的程序都会识别 `http_proxy` 和 `https_proxy` 两个变量；所以终端加速最简单的方式就是在执行命令前声明这两个变量即可，为了方便起见也可以写个小脚本，示例如下:
 
 ``` sh
-sudo tee /usr/local/bin/proxy \<<-EOF
+sudo tee /usr/local/bin/proxy <<-EOF
 #!/bin/bash
 http_proxy=http://1.2.3.4:8118 https_proxy=http://1.2.3.4:8118 \$*
 EOF
@@ -189,7 +189,7 @@ socks5 1.2.3.4 1080
 目前 Git 的协议大致上只有三种 `https`、`ssh` 和 `git`，对于使用 `https` 方式进行 clone 和 push 操作时，可以使用第五部分 Terminal 加速方案即可实现对 Git 的加速；对于 `ssh`、`git` 协议，实际上都在调用 ssh 协议相关进行通讯(具体细节请 Google，这里的描述可能不精准)，此时同样可以使用 `proxychains-ng` 进行加速，**不过需要注意 `proxychains-ng` 要自行编译安装，同时 `./configure` 增加 `--fat-binary` 选项，具体参考 [GitHub Issue](https://github.com/rofl0r/proxychains-ng/issues/109)**；`ssh`、`git` 由于都在调用 ssh 协议进行通讯，所以实际上还可以通过设置 ssh 的 `ProxyCommand` 来实现，具体操作如下:
 
 ``` sh
-sudo tee /usr/local/bin/proxy-wrapper \<<-EOF
+sudo tee /usr/local/bin/proxy-wrapper <<-EOF
 #!/bin/bash
 nc -x1.2.3.4:1080 -X5 \$*
 #connect-proxy -S 1.2.3.4:1080 \$*
@@ -197,7 +197,7 @@ EOF
 
 sudo chmod +x /usr/local/bin/proxy-wrapper
 
-sudo tee ~/.ssh/config \<<-EOF
+sudo tee ~/.ssh/config <<-EOF
 Host github.com
     ProxyCommand /usr/local/bin/proxy-wrapper '%h %p'
 EOF
