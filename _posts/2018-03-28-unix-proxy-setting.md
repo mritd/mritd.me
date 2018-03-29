@@ -4,7 +4,7 @@ title: Unix 平台下各种加速配置
 date: 2018-03-28 22:09:57 +0800
 categories: Linux
 description: Unix 平台下各种加速配置
-keywords: Unix proxy socks5 gcr.io docker SwitchyOmega proxychains-ng
+keywords: Unix,proxy,socks5,gcr.io,docker,SwitchyOmega,proxychains-ng
 catalog: true
 multilingual: false
 tags: Linux
