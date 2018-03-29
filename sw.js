@@ -23,7 +23,6 @@ const PRECACHE_LIST = [
   "./img/home-bg.jpg",
   "./img/404-bg.jpg",
   "./css/mritd-blog.min.css",
-  "./css/syntax.css",
   "./css/bootstrap.min.css"
 ]
 const HOSTNAME_WHITELIST = [
