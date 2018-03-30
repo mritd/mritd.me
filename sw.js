@@ -22,6 +22,7 @@ const PRECACHE_LIST = [
   "./img/avatar.jpg",
   "./img/home-bg.jpg",
   "./img/404-bg.jpg",
+  "./css/syntax.css",
   "./css/mritd-blog.min.css",
   "./css/bootstrap.min.css"
 ]
