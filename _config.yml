@@ -56,6 +56,7 @@ kramdown:
 
 # Disqus settings
 disqus_username: mritd
+disqus_url: "https://mritd.me"
 
 # Netease setttings
 netease_comment: false
