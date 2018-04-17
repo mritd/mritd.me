@@ -1,7 +1,7 @@
 {
-  "name": "Hux Blog",
-  "short_name": "Hux Blog",
-  "description": "About an engineer & designer who loves web.",
+  "name": "mritd Blog",
+  "short_name": "mritd",
+  "description": "Nothing is impossible to a willing heart!",
   "icons": [{
     "src": "icons/128.png",
     "sizes": "128x128",
