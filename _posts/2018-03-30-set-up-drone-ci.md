@@ -7,7 +7,7 @@ description: Drone CI 搭建
 keywords: drone,ci,cd,docker
 catalog: true
 multilingual: false
-tags: Linux Dokcer CI/CD
+tags: Linux Docker CI/CD
 ---
 
 > 最近感觉 GitLab CI 稍有繁琐，所以尝试了一下 Drone CI，这里记录一下搭建过程；虽然 Drone CI 看似简单，但是坑还是有不少的
