@@ -37,7 +37,6 @@ import (
 
 type CommitType string
 
-// 允许的 提交信息前缀
 const (
     FEAT     CommitType = "feat"
     FIX      CommitType = "fix"
@@ -49,11 +48,8 @@ const (
     PERF     CommitType = "perf"
     HOTFIX   CommitType = "hotfix"
 )
-
-// 提交信息 正则
 const CommitMessagePattern = `^(?:fixup!\s*)?(\w*)(\(([\w\$\.\*/-].*)\))?\: (.*)|^Merge\ branch(.*)`
 
-// 检测失败的提示
 const checkFailedMeassge = `##############################################################################
 ##                                                                          ##
 ## Commit message style check failed!                                       ##
@@ -66,11 +62,13 @@ const checkFailedMeassge = `####################################################
 ##                                                                          ##
 ##############################################################################`
 
+// 是否开启严格模式，严格模式下将校验所有的提交信息格式(多 commit 下)
+const strictMode = false
+
 var commitMsgReg = regexp.MustCompile(CommitMessagePattern)
 
 func main() {
 
-   // 拿到 stdin 的三个参数
     input, _ := ioutil.ReadAll(os.Stdin)
     param := strings.Fields(string(input))
 
@@ -79,33 +77,38 @@ func main() {
         os.Exit(0)
     }
 
-    commitMsg := getCommitMsg(param[1])
-    commitTypes := commitMsgReg.FindAllStringSubmatch(commitMsg, -1)
+    commitMsg := getCommitMsg(param[0], param[1])
+    for _, tmpStr := range commitMsg {
+        commitTypes := commitMsgReg.FindAllStringSubmatch(tmpStr, -1)
 
-    if len(commitTypes) != 1 {
-        checkFailed()
-    } else {
-        switch commitTypes[0][1] {
-        case string(FEAT):
-        case string(FIX):
-        case string(DOCS):
-        case string(STYLE):
-        case string(REFACTOR):
-        case string(TEST):
-        case string(CHORE):
-        case string(PERF):
-        case string(HOTFIX):
-        default:
-            if !strings.HasPrefix(commitMsg, "Merge branch") {
-                checkFailed()
+        if len(commitTypes) != 1 {
+            checkFailed()
+        } else {
+            switch commitTypes[0][1] {
+            case string(FEAT):
+            case string(FIX):
+            case string(DOCS):
+            case string(STYLE):
+            case string(REFACTOR):
+            case string(TEST):
+            case string(CHORE):
+            case string(PERF):
+            case string(HOTFIX):
+            default:
+                if !strings.HasPrefix(tmpStr, "Merge branch") {
+                    checkFailed()
+                }
             }
         }
+        if !strictMode {
+            os.Exit(0)
+        }
     }
+
 }
 
-// 获取本次提交信息
-func getCommitMsg(commitID string) string {
-    getCommitMsgCmd := exec.Command("git", "show", "-q", commitID)
+func getCommitMsg(odlCommitID, commitID string) []string {
+    getCommitMsgCmd := exec.Command("git", "log", odlCommitID+".."+commitID, "--pretty=format:%s")
     getCommitMsgCmd.Stdin = os.Stdin
     getCommitMsgCmd.Stderr = os.Stderr
     b, err := getCommitMsgCmd.Output()
@@ -114,16 +117,15 @@ func getCommitMsg(commitID string) string {
         os.Exit(1)
     }
 
-    tmpStr := strings.Split(string(b), "\n")
-    commitMsg := strings.Join(tmpStr[3:], "")
-    return strings.TrimLeft(commitMsg, "    ")
+    commitMsg := strings.Split(string(b), "\n")
+    return commitMsg
 }
 
-// 打印失败提示并退出
 func checkFailed() {
     fmt.Fprintln(os.Stderr, checkFailedMeassge)
     os.Exit(1)
 }
+
 ```
 
 ## 三、安装 pre-receive
