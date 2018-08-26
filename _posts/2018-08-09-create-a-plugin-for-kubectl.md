@@ -131,11 +131,12 @@ func main() {
 		allNameSpace := strings.Fields(string(b))
 
 		// 弄到所有的 NameSpace 后，我在弄一个下拉列表(这是我自己造的一个下拉列表库)
+        // 注意: 下面的模板语法大括号中间没有空格，此处空格是为了防止博客渲染出错
 		cfg := &promptx.SelectConfig{
-			ActiveTpl:    "»  {{ . | cyan }}",
-			InactiveTpl:  "  {{ . | white }}",
+			ActiveTpl:    "»  { { . | cyan } }",
+			InactiveTpl:  "  { { . | white } }",
 			SelectPrompt: "NameSpace",
-			SelectedTpl:  "{{ \"» \" | green }}{{\"NameSpace:\" | cyan }} {{ . }}",
+			SelectedTpl:  "{ { \"» \" | green } }{ {\"NameSpace:\" | cyan } } { { . } }",
 			DisPlaySize:  9,
 			DetailsTpl:   ` `,
 		}
