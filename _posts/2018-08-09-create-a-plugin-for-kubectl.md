@@ -95,6 +95,8 @@ command: "./swns"
 上面 `plugin.yaml` 已经定义好了，那么接下来就简单了，撸代码实现了就好；代码如下:
 
 ``` go
+// 注意: 下面的模板语法大括号中间没有空格，此处空格是为了防止博客渲染出错
+
 package main
 
 import (
@@ -125,13 +127,12 @@ func main() {
 		fmt.Printf("Kubernetes namespace switch to %s.\n", os.Args[1])
 	} else {
 		// 没提供我就得先把所有的 NameSpace 弄出来
-		cmd = exec.Command("kubectl", "get", "ns", "-o", "template", "--template", "{{ range .items }}{{ .metadata.name }} {{ end }}")
+		cmd = exec.Command("kubectl", "get", "ns", "-o", "template", "--template", "{ { range .items } }{ { .metadata.name } } { { end } }")
 		b, err = cmd.Output()
 		checkAndExit(err)
 		allNameSpace := strings.Fields(string(b))
 
 		// 弄到所有的 NameSpace 后，我在弄一个下拉列表(这是我自己造的一个下拉列表库)
-        // 注意: 下面的模板语法大括号中间没有空格，此处空格是为了防止博客渲染出错
 		cfg := &promptx.SelectConfig{
 			ActiveTpl:    "»  { { . | cyan } }",
 			InactiveTpl:  "  { { . | white } }",
