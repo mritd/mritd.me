@@ -168,6 +168,9 @@ rules:
 然后是三个 `ClusterRole` 对应的 `ClusterRoleBinding`；需要注意的是 **在使用 `Bootstrap Token` 进行引导时，Kubelet 组件使用 Token 发起的请求其用户名为 `system:bootstrap:<token id>`，用户组为 `system:bootstrappers`；so 我们在创建 `ClusterRoleBinding` 时要绑定到这个用户或者组上**；当然我选择懒一点，全部绑定到组上
 
 ```sh
+# 允许 system:bootstrappers 组用户创建 CSR 请求
+kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --group=system:bootstrappers
+
 # 自动批准 system:bootstrappers 组用户 TLS bootstrapping 首次申请证书的 CSR 请求
 kubectl create clusterrolebinding node-client-auto-approve-csr --clusterrole=system:certificates.k8s.io:certificatesigningrequests:nodeclient --group=system:bootstrappers
 
