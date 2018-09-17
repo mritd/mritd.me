@@ -7,7 +7,7 @@ description: Google container registry 同步
 keywords: gcr.io,kubernetes,docker
 catalog: true
 multilingual: false
-tags: Kubernetes docker
+tags: Kubernetes Docker
 ---
 
 ## 一、起因
