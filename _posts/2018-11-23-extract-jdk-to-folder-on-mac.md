@@ -1,9 +1,9 @@
 ---
 layout: post
 categories: Java
-title: Mac: Extract JDK to folder, without running installer
+title: "Mac: Extract JDK to folder, without running installer"
 date: 2018-11-23 12:33:20 +0800
-description: Mac: Extract JDK to folder, without running installer
+description: "Mac: Extract JDK to folder, without running installer"
 keywords: jdk
 catalog: true
 multilingual: false
