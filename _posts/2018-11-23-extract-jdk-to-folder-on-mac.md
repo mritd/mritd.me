@@ -10,8 +10,6 @@ multilingual: false
 tags: Java
 ---
 
-## Mac: Extract JDK to folder, without running installer
-
 > 重装了 mac 系统，由于一些公司项目必须使用 Oracle JDK(验证码等组件用了一些 Oracle 独有的 API) 所以又得重新安装；但是 Oracle 只提供了 pkg 的安装方式，研究半天找到了一个解包 pkg 的安装方式，这里记录一下
 
 
