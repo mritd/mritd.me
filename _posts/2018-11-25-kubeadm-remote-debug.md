@@ -7,7 +7,7 @@ description: 远程 Debug kubeadm
 keywords: kubeadm,debug
 catalog: true
 multilingual: false
-tags: Golang Kubenretes
+tags: Golang Kubernetes
 ---
 
 > 最近在看 kubeadm 的源码，不过有些东西光看代码还是没法太清楚，还是需要实际运行才能看到具体代码怎么跑的，还得打断点 debug；无奈的是本机是 mac，debug 得在 Linux 下，so 研究了一下 remote debug
