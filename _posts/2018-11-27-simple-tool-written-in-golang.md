@@ -56,7 +56,7 @@ Options:
   -x  HTTP Proxy address as host:port.
   -h2 Enable HTTP/2.
 
-  -host	HTTP Host header.
+  -host    HTTP Host header.
 
   -disable-compression  Disable compression.
   -disable-keepalive    Disable keep-alive, prevents re-use of TCP
@@ -75,81 +75,81 @@ Usage: vegeta [global flags] <command> [command flags]
 
 global flags:
   -cpus int
-    	Number of CPUs to use (default 8)
+        Number of CPUs to use (default 8)
   -profile string
-    	Enable profiling of [cpu, heap]
+        Enable profiling of [cpu, heap]
   -version
-    	Print version and exit
+        Print version and exit
 
 attack command:
   -body string
-    	Requests body file
+        Requests body file
   -cert string
-    	TLS client PEM encoded certificate file
+        TLS client PEM encoded certificate file
   -connections int
-    	Max open idle connections per target host (default 10000)
+        Max open idle connections per target host (default 10000)
   -duration duration
-    	Duration of the test [0 = forever]
+        Duration of the test [0 = forever]
   -format string
-    	Targets format [http, json] (default "http")
+        Targets format [http, json] (default "http")
   -h2c
-    	Send HTTP/2 requests without TLS encryption
+        Send HTTP/2 requests without TLS encryption
   -header value
-    	Request header
+        Request header
   -http2
-    	Send HTTP/2 requests when supported by the server (default true)
+        Send HTTP/2 requests when supported by the server (default true)
   -insecure
-    	Ignore invalid server TLS certificates
+        Ignore invalid server TLS certificates
   -keepalive
-    	Use persistent connections (default true)
+        Use persistent connections (default true)
   -key string
-    	TLS client PEM encoded private key file
+        TLS client PEM encoded private key file
   -laddr value
-    	Local IP address (default 0.0.0.0)
+        Local IP address (default 0.0.0.0)
   -lazy
-    	Read targets lazily
+        Read targets lazily
   -max-body value
-    	Maximum number of bytes to capture from response bodies. [-1 = no limit] (default -1)
+        Maximum number of bytes to capture from response bodies. [-1 = no limit] (default -1)
   -name string
-    	Attack name
+        Attack name
   -output string
-    	Output file (default "stdout")
+        Output file (default "stdout")
   -rate value
-    	Number of requests per time unit (default 50/1s)
+        Number of requests per time unit (default 50/1s)
   -redirects int
-    	Number of redirects to follow. -1 will not follow but marks as success (default 10)
+        Number of redirects to follow. -1 will not follow but marks as success (default 10)
   -resolvers value
-    	List of addresses (ip:port) to use for DNS resolution. Disables use of local system DNS. (comma separated list)
+        List of addresses (ip:port) to use for DNS resolution. Disables use of local system DNS. (comma separated list)
   -root-certs value
-    	TLS root certificate files (comma separated list)
+        TLS root certificate files (comma separated list)
   -targets string
-    	Targets file (default "stdin")
+        Targets file (default "stdin")
   -timeout duration
-    	Requests timeout (default 30s)
+        Requests timeout (default 30s)
   -workers uint
-    	Initial number of workers (default 10)
+        Initial number of workers (default 10)
 
 encode command:
   -output string
-    	Output file (default "stdout")
+        Output file (default "stdout")
   -to string
-    	Output encoding [csv, gob, json] (default "json")
+        Output encoding [csv, gob, json] (default "json")
 
 plot command:
   -output string
-    	Output file (default "stdout")
+        Output file (default "stdout")
   -threshold int
-    	Threshold of data points above which series are downsampled. (default 4000)
+        Threshold of data points above which series are downsampled. (default 4000)
   -title string
-    	Title and header of the resulting HTML page (default "Vegeta Plot")
+        Title and header of the resulting HTML page (default "Vegeta Plot")
 
 report command:
   -every duration
-    	Report interval
+        Report interval
   -output string
-    	Output file (default "stdout")
+        Output file (default "stdout")
   -type string
-    	Report type to generate [text, json, hist[buckets]] (default "text")
+        Report type to generate [text, json, hist[buckets]] (default "text")
 
 examples:
   echo "GET http://localhost/" | vegeta attack -duration=5s | tee results.bin | vegeta report
@@ -166,7 +166,7 @@ examples:
 
 ### ctop
 
-容器运行时资源分析，如 CPU、内存消耗等 👉 [Github] (https://github.com/bcicen/ctop)
+容器运行时资源分析，如 CPU、内存消耗等 👉 [Github](https://github.com/bcicen/ctop)
 
 ![ctop](https://mritd.b0.upaiyun.com/markdown/mr3x3.gif)
 
@@ -178,7 +178,7 @@ Google 推出的工具，功能就顾名思义了 👉 [Github](https://github.c
 
 ### transfer.sh
 
-快捷的终端文件分享工具 👉 [Github] (https://github.com/dutchcoders/transfer.sh)
+快捷的终端文件分享工具 👉 [Github](https://github.com/dutchcoders/transfer.sh)
 
 ![transfer.sh](https://mritd.b0.upaiyun.com/markdown/76vh0.png)
 
