@@ -10,8 +10,6 @@ multilingual: false
 tags: Kubernetes
 ---
 
-# Kubernetes 1.12 新的插件机制
-
 > 在很久以前的版本研究过 kubernetes 的插件机制，当时弄了一个快速切换 `namespace` 的小插件；最近把自己本机的 kubectl 升级到了 1.12，突然发现插件不能用了；撸了一下文档发现插件机制彻底改了...
 
 ## 一、插件编写语言
