@@ -34,7 +34,7 @@ RAID1 通常称之为镜像盘，同样 RAID1 至少需要两块磁盘，其工�
 
 为了既能够冗余备份，又能提升性能，则需要 RAID4，RAID4至少需要3块硬盘，其工作逻辑为 **对于一个文件，首先将其分片存储进前两块硬盘，然后对于两个数据片做亦或运算生成校验码存储到第三块硬盘，第三块硬盘只存校验码，不存储真正的文件数据；**此时前两块硬盘相当于 RAID0 的性能，当其中一块损坏后，可通过第三块硬盘与第一块硬盘做反向运算得出第二块硬盘内的数据，达到数据冗余的效果；**但当前两块硬盘某一硬盘损坏后，剩下的两块硬盘将产生巨大压力，同时半损巨大的性能降低，**因为每次读取存储文件都需要两块硬盘参与并完成数据计算。RAID1 下一旦磁盘出现损坏必须第一时间更换，否则剩下的两块磁盘一旦在此损坏数据将完全丢失，此种存储方式磁盘利用率为 (n-1)/n，下图为 RAID4 示意图 :
 
-![hexo_raid4](https://mritd.b0.upaiyun.com/markdown/hexo_raid4.png)
+![hexo_raid4](https://oss.link/markdown/hexo_raid4.png)
 
 
 ### 5、RAID5
@@ -49,7 +49,7 @@ RAID6 同 RAID5 基本一致，不过 RAID6至少需要4块硬盘，并且允许
 
 RAID10 基于 RAID1 和 RAID0，RAID10 需要至少4块磁盘，空间利用率为50%，首先使用2块磁盘一组做 RAID1 镜像盘，保证数据完全备份，然后使用2块磁盘作为一个磁盘组，用这些磁盘组组件 RAID0 提高读写性能，此阵列允许同一组 RAID1 内有一块硬盘损坏，但不能同时损坏，同时损坏则会造成数据丢失，其示意图如下 :
 
-![hexo_raid10](https://mritd.b0.upaiyun.com/markdown/hexo_raid10.png)
+![hexo_raid10](https://oss.link/markdown/hexo_raid10.png)
 
 ### 8、JBOD
 
@@ -88,7 +88,7 @@ mdadm 命令用于与内核的 md 模块通讯，设置软件模式的 RAID；md
 
 
 <audio autoplay="autoplay">
-<source src="https://mritd.b0.upaiyun.com/markdown/Cake-By-The Ocean.mp3" type="audio/mpeg" />
+<source src="https://oss.link/markdown/Cake-By-The Ocean.mp3" type="audio/mpeg" />
 Your browser does not support the audio element.
 </audio>
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

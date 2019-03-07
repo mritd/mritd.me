@@ -68,11 +68,11 @@ ansible-playbook -i inventory/inventory.cfg cluster.yml -b -v --private-key=~/.s
 
 **kargo 是基于 ansible 的，实际上也就是 ansible，只不过它帮我们写好了配置文件而已；按照 ansible 的规则，Play Book 首先执行 roles 目录下的 roles，在这些 roles 中定义了如何配置集群、如何初始化网络、怎么配置 docker 等等，所以只要我们去更改这些 roles 规则就可以实现一些功能的定制，roles 目录位置如下**
 
-![roles](https://mritd.b0.upaiyun.com/markdown/jmy7o.jpg)
+![roles](https://oss.link/markdown/jmy7o.jpg)
 
 如果需要更改某些默认配置，那么只需要更改对应目录下的 role 即可，**每个 role 子目录都是一个组件的配置过程(动作)，动作实际上就是不同的 task，所有的 task 定义在 `tasks/main.yml` 中，如果我们注释(删掉)了相关 task，那么也就关闭了 kargo 对应的处理；如下禁用了 kargo 安装 docker，但是允许 kargo 覆盖 docker service 文件**
 
-![docker task](https://mritd.b0.upaiyun.com/markdown/vv2px.jpg)
+![docker task](https://oss.link/markdown/vv2px.jpg)
 
 **禁用掉 docker 仓库以及 docker 的安装动作**
 
@@ -180,7 +180,7 @@ vim roles/docker/tasks/main.yml
 
 **kargo 在进行各种任务(task)时可能会释放一些配置文件，比如 docker service 配置文件、kubernetes 配置文件等；这些文件一般位于 `roles/组件/templates` 目录，比如 docker 的 service 配置位于如下位置；我们可以更改，甚至直接换一个，把里面写死变成我们自己的**
 
-![docker service template](https://mritd.b0.upaiyun.com/markdown/f1f9g.jpg)
+![docker service template](https://oss.link/markdown/f1f9g.jpg)
 
 ### 三、其他相关
 

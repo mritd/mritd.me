@@ -28,7 +28,7 @@ tags: Linux Docker CI/CD
 GitLab CI 是 GitLab 默认集成的 CI 功能，GitLab CI 通过在项目内 `.gitlab-ci.yaml` 配置文件读取 CI 任务并进行相应处理；GitLab CI 通过其称为 GitLab Runner 的 Agent 端进行 build 操作；Runner 本身可以使用多种方式安装，比如使用 Docker 镜像启动等；Runner 在进行 build 操作时也可以选择多种 build 环境提供者；比如直接在 Runner 所在宿主机 build、通过新创建虚拟机(vmware、virtualbox)进行 build等；同时 Runner 支持 Docker 作为 build 提供者，即每次 build 新启动容器进行 build；GitLab CI 其大致架构如下
 
 
-![GitLab](https://mritd.b0.upaiyun.com/markdown/wejnz.png)
+![GitLab](https://oss.link/markdown/wejnz.png)
 
 ### 三、搭建 GitLab 服务器
 
@@ -60,20 +60,20 @@ services:
 
 直接启动后，首次登陆需要设置初始密码如下，默认用户为 `root`
 
-![gitkab init](https://mritd.b0.upaiyun.com/markdown/5go94.png)
+![gitkab init](https://oss.link/markdown/5go94.png)
 
 登陆成功后创建一个用户(该用户最好给予 Admin 权限，以后操作以该用户为例)，并且创建一个测试 Group 和 Project，如下所示
 
-![Create User](https://mritd.b0.upaiyun.com/markdown/vtyhi.png)
+![Create User](https://oss.link/markdown/vtyhi.png)
 
 
-![Test Project](https://mritd.b0.upaiyun.com/markdown/3b7gl.png)
+![Test Project](https://oss.link/markdown/3b7gl.png)
 
 #### 3.2、增加示例项目
 
 这里示例项目采用 Java 的 SpringBoot 项目，并采用 Gradle 构建，其他语言原理一样；**如果不熟悉 Java 的没必要死磕此步配置，任意语言(最好 Java)整一个能用的 Web 项目就行，并不强求一定 Java 并且使用 Gradle 构建，以下只是一个样例项目**；SpringBoot 可以采用 [Spring Initializr](https://start.spring.io/) 直接生成(依赖要加入 WEB)，如下所示
 
-![Spring Initializr](https://mritd.b0.upaiyun.com/markdown/0wx6d.png)
+![Spring Initializr](https://oss.link/markdown/0wx6d.png)
 
 将项目导入 IDEA，然后创建一个 index 示例页面，主要修改如下
 
@@ -156,15 +156,15 @@ public class HomeController {
 
 最后项目整体结构如下
 
-![TestProject](https://mritd.b0.upaiyun.com/markdown/5k12p.png)
+![TestProject](https://oss.link/markdown/5k12p.png)
 
 执行 `assemble` Task 打包出可执行 jar 包，并运行 `java -jar TestProject-0.0.1-SNAPSHOT.jar` 测试下能启动访问页面即可
 
-![TestProject assemble](https://mritd.b0.upaiyun.com/markdown/xoj3d.png)
+![TestProject assemble](https://oss.link/markdown/xoj3d.png)
 
 最后将项目提交到 GitLab 后如下
 
-![init Project](https://mritd.b0.upaiyun.com/markdown/1fuex.png)
+![init Project](https://oss.link/markdown/1fuex.png)
 
 ### 四、GitLab CI 配置
 
@@ -203,15 +203,15 @@ docker exec -it gitlab-runner gitlab-runner register
 
 在执行上一条激活命令后，会按照提示让你输入一些信息；**首先输入 GitLab 地址，然后是 Runner Token，Runner Token 可以从 GitLab 设置中查看**，如下所示
 
-![Runner Token](https://mritd.b0.upaiyun.com/markdown/mfqg7.png)
+![Runner Token](https://oss.link/markdown/mfqg7.png)
 
 整体注册流程如下
 
-![Runner registry](https://mritd.b0.upaiyun.com/markdown/r7xay.png)
+![Runner registry](https://oss.link/markdown/r7xay.png)
 
 注册完成后，在 GitLab Runner 设置中就可以看到刚刚注册的 Runner，如下所示
 
-![Runner List](https://mritd.b0.upaiyun.com/markdown/xv03e.png)
+![Runner List](https://oss.link/markdown/xv03e.png)
 
 **Runner 注册成功后会将配置写入到 config.toml 配置文件；由于两个测试宿主机都没有配置内网 DNS，所以为了保证 runner 在使用 docker build 时能正确的找到 GitLab 仓库地址，还需要增加一个 docker 的 host 映射( `extra_hosts` )；同时为了能调用 宿主机 Docker 和持久化 build 的一些缓存还挂载了一些文件和目录；完整的 配置如下(配置文件可以做一些更高级的配置，具体参考 [官方文档](https://docs.gitlab.com/runner/configuration/advanced-configuration.html) )**
 
@@ -322,7 +322,7 @@ export IMAGE_NAME=mritd/test:`echo ${CI_BUILD_REF_NAME} | tr '/' '-'`-`echo ${CI
 export LATEST_IMAGE_NAME=mritd/test:latest
 ```
 
-![PROJECT_ENV](https://mritd.b0.upaiyun.com/markdown/gr6kc.png)
+![PROJECT_ENV](https://oss.link/markdown/gr6kc.png)
 
 
 #### 4.5、创建 CI 配置文件
@@ -379,18 +379,18 @@ deploy:
 
 stages 字段定义了整个 CI 一共有哪些阶段流程，以上的 CI 配置中，定义了该项目的 CI 总共分为 `build`、`deploy` 两个阶段；GitLab CI 会根据其顺序执行对应阶段下的所有任务；**在正常生产环境流程可以定义很多个，比如可以有 `test`、`publish`，甚至可能有代码扫描的 `sonar` 阶段等；这些阶段没有任何限制，完全是自定义的**，上面的阶段定义好后在 CI 中表现如下图
 
-![stages](https://mritd.b0.upaiyun.com/markdown/8c7gs.png)
+![stages](https://oss.link/markdown/8c7gs.png)
 
 ##### task
 
 task 隶属于 stages 之下；也就是说一个阶段可以有多个任务，任务执行顺序默认不指定会并发执行；对于上面的 CI 配置来说 `auto-build` 和 `deploy` 都是 task，他们通过 `stage: xxxx` 这个标签来指定他们隶属于哪个 stage；当 Runner 使用 Docker 作为 build 提供者时，我们可以在 task 的 `image` 标签下声明该 task 要使用哪个镜像运行，不指定则默认为 Runner 注册时的镜像(这里是 debian)；**同时 task 还有一个 `tags` 的标签，该标签指明了这个任务将可以在哪些 Runner 上运行；这个标签可以从 Runner 页面看到，实际上就是 Runner 注册时输入的哪个 tag；对于某些特殊的项目，比如 IOS 项目，则必须在特定机器上执行，所以此时指定 tags 标签很有用**，当 task 运行后如下图所示
 
-![Task](https://mritd.b0.upaiyun.com/markdown/qzvlh.png)
+![Task](https://oss.link/markdown/qzvlh.png)
 
 除此之外 task 还能指定 `only` 标签用于限定那些分支才能触发这个 task，如果分支名字不满足则不会触发；**默认情况下，这些 task 都是自动执行的，如果感觉某些任务太过危险，则可以通过增加 `when: manual` 改为手动执行；注意: 手动执行被 GitLab 认为是高权限的写操作，所以只有项目管理员才能手动运行一个 task，直白的说就是管理员才能点击**；手动执行如下图所示
 
 
-![manual task](https://mritd.b0.upaiyun.com/markdown/vcjci.png)
+![manual task](https://oss.link/markdown/vcjci.png)
 
 
 ##### cache
@@ -405,19 +405,19 @@ cache 这个参数用于定义全局那些文件将被 cache；**在 GitLab CI �
 
 上面已经基本搞定了一个项目的 CI，但是有些变量可能并未说清楚；比如在创建的 `PROJECT_ENV` 文件中引用了 `${CI_COMMIT_SHA}` 变量；这种变量其实是 GitLab CI 的内置隐藏变量，这些变量在每次 CI 调用 Runner 运行某个任务时都会传递到对应的 Runner 的执行环境中；**也就是说这些变量在每次的任务容器 SHELL 环境中都会存在，可以直接引用**，具体的完整环境变量列表可以从 [官方文档](https://docs.gitlab.com/ee/ci/variables/) 中获取；如果想知道环境变量具体的值，实际上可以通过在任务执行前用 `env` 指令打印出来，如下所示
 
-![env](https://mritd.b0.upaiyun.com/markdown/la9kn.png)
+![env](https://oss.link/markdown/la9kn.png)
 
-![env task](https://mritd.b0.upaiyun.com/markdown/0175j.png)
+![env task](https://oss.link/markdown/0175j.png)
 
 #### 5.2、GitLab 自定义环境变量
 
 在某些情况下，我们希望 CI 能自动的发布或者修改一些东西；比如将 jar 包上传到 nexus、将 docker 镜像 push 到私服；这些动作往往需要一个高权限或者说有可写入对应仓库权限的账户来支持，但是这些账户又不想写到项目的 CI 配置里；因为这样很不安全，谁都能看到；此时我们可以将这些敏感变量写入到 GitLab 自定义环境变量中，GitLab 会像对待内置变量一样将其传送到 Runner 端，以供我们使用；GitLab 中自定义的环境变量可以有两种，一种是项目级别的，只能够在当前项目使用，如下
 
-![project env](https://mritd.b0.upaiyun.com/markdown/ennug.png)
+![project env](https://oss.link/markdown/ennug.png)
 
 另一种是组级别的，可以在整个组内的所有项目中使用，如下
 
-![group env](https://mritd.b0.upaiyun.com/markdown/si8ig.png)
+![group env](https://oss.link/markdown/si8ig.png)
 
 这两种变量添加后都可以在 CI 的脚本中直接引用
 
@@ -426,7 +426,7 @@ cache 这个参数用于定义全局那些文件将被 cache；**在 GitLab CI �
 对于 Kubernetes 集成实际上有两种方案，一种是对接 Kubernetes 的 api，纯代码实现；另一种取巧的方案是调用 kubectl 工具，用 kubectl 工具来实现滚动升级；这里采用后一种取巧的方式，将 kubectl 二进制文件封装到镜像中，然后在 deploy 阶段使用这个镜像直接部署就可以
 
 
-![kubectl](https://mritd.b0.upaiyun.com/markdown/bu17r.png)
+![kubectl](https://oss.link/markdown/bu17r.png)
 
 
 其中 `mritd/docker-kubectl:v1.7.4` 这个镜像的 Dockerfile 如下

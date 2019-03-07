@@ -27,7 +27,7 @@ tags: Linux Kubernetes Docker
 
 但是翻了一会文档，最晕的就是 **这个用户标识(ID)存在哪**，因为传统的授权模型都是下面这样
 
-![ctrole](https://mritd.b0.upaiyun.com/markdown/sn1qp.png)
+![ctrole](https://oss.link/markdown/sn1qp.png)
 
 不论怎样，在进行授权时总要有个地方存放用户信息(DB/文件)，但是在 Kubernetes 里却没找到；后来翻阅文档，找到[这么一段](https://kubernetes.io/docs/admin/authentication/)
 
@@ -263,7 +263,7 @@ subjects:
 
 将最初创建的 kubeconfig 放到 `~/.kube/config` 或者直接使用 `--kubeconfig` 选项测试读取、删除 pod 等权限即可，测试后如下所示
 
-![test readonly](https://mritd.b0.upaiyun.com/markdown/68ukm.png)
+![test readonly](https://oss.link/markdown/68ukm.png)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

@@ -78,23 +78,23 @@ dlv --listen=192.168.1.61:2345 --headless=true --api-version=2 exec ./kubeadm in
 
 首先新建一个远程 debug configuration
 
-![create configuration](https://mritd.b0.upaiyun.com/markdown/i6oed.png)
+![create configuration](https://oss.link/markdown/i6oed.png)
 
 名字可以随便写，主要是地址和端口
 
-![conifg delve](https://mritd.b0.upaiyun.com/markdown/rmczj.png)
+![conifg delve](https://oss.link/markdown/rmczj.png)
 
 接下来在目标源码位置打断点，以下为 init 子命令的源码位置
 
-![create breakpoint](https://mritd.b0.upaiyun.com/markdown/ylf97.png)
+![create breakpoint](https://oss.link/markdown/ylf97.png)
 
 最后只需要点击 debug 按钮即可
 
-![debug](https://mritd.b0.upaiyun.com/markdown/ns2yw.png)
+![debug](https://oss.link/markdown/ns2yw.png)
 
 **在没有运行 GoLand debug 之前，目标机器的实际指令是不会运行的，也就是说在 GoLand 没有连接到远程 delve 启动的 `kubeadm init` 命令之前，`kubeadm init` 并不会真正运行；当点击 GoLand 的终止 debug 按钮后，远程的 delve 也会随之退出**
 
-![stop](https://mritd.b0.upaiyun.com/markdown/lmdke.png)
+![stop](https://oss.link/markdown/lmdke.png)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

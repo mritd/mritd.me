@@ -40,7 +40,7 @@ docker -H LOCAL_IP:1028 save gcr.io/google_containers/kubernetes-dashboard-init-
 
 **如果你感觉该镜像对你有所帮助，欢迎请我喝杯咖啡**
 
-![支付宝](https://mritd.b0.upaiyun.com/markdown/zhifubao.png)
+![支付宝](https://oss.link/markdown/zhifubao.png)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

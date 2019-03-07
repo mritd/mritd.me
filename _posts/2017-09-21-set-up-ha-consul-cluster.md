@@ -43,7 +43,7 @@ Consul 集群与 Etcd 略有区别，**Consul 在启动后分为两种模式:**
 
 **其集群后如下所示:**
 
-![Consul Cluster](https://mritd.b0.upaiyun.com/markdown/n4mdw.jpg)
+![Consul Cluster](https://oss.link/markdown/n4mdw.jpg)
 
 #### 3.2、集群搭建
 
@@ -64,7 +64,7 @@ name=Mritd Repository
 baseurl=https://yumrepo.b0.upaiyun.com/centos/7/x86_64
 enabled=1
 gpgcheck=1
-gpgkey=https://mritd.b0.upaiyun.com/keys/rpm.public.key
+gpgkey=https://oss.link/keys/rpm.public.key
 EOF
 
 # 安装 Consul，请不要在大规模部署时使用此 yum 源，CDN 流量不多请手下留情，
@@ -108,7 +108,7 @@ systemctl status consul
 
 **此时可访问任意一台 Server 节点的 UI 界面，地址为 `http://serverIP:8500`，截图如下**
 
-![Server Success](https://mritd.b0.upaiyun.com/markdown/t9cxf.jpg)
+![Server Success](https://oss.link/markdown/t9cxf.jpg)
 
 
 接下来修改其他两个节点配置，使其作为 Client 加入到集群即可，**注意的是当处于 Client 模式时，`bootstrap_expect` 必须为 0，即关闭状态；具体配置如下**
@@ -135,9 +135,9 @@ systemctl status consul
 
 另外一个 Client 配置与以上相同，最终集群成功后如下所示
 
-![Cluster ok](https://mritd.b0.upaiyun.com/markdown/j1zrc.jpg)
+![Cluster ok](https://oss.link/markdown/j1zrc.jpg)
 
-![Command Line](https://mritd.b0.upaiyun.com/markdown/kq4cz.jpg)
+![Command Line](https://oss.link/markdown/kq4cz.jpg)
 
 
 ### 四、其他说明
