@@ -18,7 +18,7 @@ tags: Kubernetes
 
 以前的服务暴露方案是修改应用代码，使其能对接 Consul，然后 Consul 负责健康监测，检测通过后 Fabio 负责读取，最终上层 Nginx 将流量打到 Fabio 上，Fabio 再将流量路由到健康的 Pod 上；总体架构如下
 
-![consul+fabio](https://oss.link/markdown/hkwp3.png)
+![consul+fabio](https://mritd.oss.link/markdown/hkwp3.png)
 
 这种架构目前有几点不太好的地方，首先是必须应用能成功集成 Consul，需要动应用代码不通用；其次组件过多增加维护成本，尤其是调用链日志不好追踪；这里面需要吐槽下 Consul 和 Fabio，Consul 的集群设计模式要想做到完全的 HA 那么需要在每个 pod 中启动一个 agent，因为只要这个 agent 挂了那么集群认为其上所有注册服务都挂了，这点很恶心人；而 Fabio 的日志目前好像还是不支持合理的输出，好像只能 stdout；目前来看不论是组件复杂度还是维护成本都不怎么友好
 
@@ -27,7 +27,7 @@ tags: Kubernetes
 使用 Traefik 首先想到就是直接怼 Ingress，这个确实方便也简单；但是在集群 kube-proxy 不走 ipvs 的情况下 iptables 性能确实堪忧；虽说 Traefik 会直连 Pod，但是你 Ingress 暴露 80、443 端口在本机没有对应 Ingress Controller 的情况下还是会走一下 iptables；**不论是换 kube-router、kube-proxy 走 ipvs 都不是我想要的，我们需要一种完全远离 Kubernetes Service 的新路子**；在看 Traefik 文档的时候，其中说明了 Traefik 只利用 Kubernetes 的 API 来读取相关后端数据，那么我们就可以以此来使用如下的套路
 
 
-![traefik](https://oss.link/markdown/tfo2f.png)
+![traefik](https://mritd.oss.link/markdown/tfo2f.png)
 
 这个套路的方案很简单，**将 Traefik 部署在物理机上，让其直连 Kubernets api 以读取 Ingress 配置和 Pod IP 等信息，然后在这几台物理机上部署好 Kubernetes 的网络组件使其能直连 Pod IP**；这种方案能够让流量经过 Traefik 直接路由到后端 Pod，健康检测还是由集群来做；**由于 Traefik 连接 Kubernetes api 需要获取一些数据；所以在集群内还是像往常一样创建 Ingress，只不过此时我们并没有 Ingress Controller；这样避免了经过 iptables 转发，不占用全部集群机器的 80、443 端口，同时还能做到高可控**
 
@@ -423,7 +423,7 @@ traefik
 
 启动成功后可以访问 `http://IP:2180` 查看 Traefik 的控制面板
 
-![dashboard](https://oss.link/markdown/phrps.png)
+![dashboard](https://mritd.oss.link/markdown/phrps.png)
 
 ## 三、增加 Ingress 配置并测试
 
@@ -497,7 +497,7 @@ spec:
 
 部署好后应当能从 Traefik 的 Dashboard 中看到新增的 demo ingress，如下所示
 
-![dashboard-demo](https://oss.link/markdown/zociy.png)
+![dashboard-demo](https://mritd.oss.link/markdown/zociy.png)
 
 最后我们使用 curl 测试即可
 

@@ -37,7 +37,7 @@ name=Mritd Repository
 baseurl=https://yum.mritd.me/centos/7/x86_64
 enabled=1
 gpgcheck=1
-gpgkey=https://oss.link/keys/rpm.public.key
+gpgkey=https://mritd.oss.link/keys/rpm.public.key
 EOF
 # 刷新cache
 yum makecache

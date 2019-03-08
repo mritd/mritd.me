@@ -24,7 +24,7 @@ docker run -dt --privileged --restart always --name registry-mirror -p 5000:5000
 
 **此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 `https://gcr.io`；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)；默认镜像已经上传了 Docker Hub，如果无法下载请访问 [百度云](https://pan.baidu.com/s/1o7Wye8M)**
 
-![start up](https://oss.link/markdown/gwfeo.jpg)
+![start up](https://mritd.oss.link/markdown/gwfeo.jpg)
 
 ### 二、设置 docker 非安全仓库
 
@@ -77,7 +77,7 @@ gcr.io/google_containers/kube-apiserver-amd64               v1.5.4              
 
 **仓库镜像是一个黑盒镜像，担心安全的朋友可以不用，我也不会开放源码(为了防止梯子被滥用)；同时镜像内部也做了处理，防止有心人搞我...希望大家可以利用此仓库将镜像下载下来，然后自己传到百度云等网盘互助分享，随手之劳帮助别人也能减轻服务器压力；同时由于资金有限，如果感觉这个仓库对你有点帮助，欢迎捐助杯咖啡钱**
 
-![alipay](https://oss.link/markdown/zhifubao.png)
+![alipay](https://mritd.oss.link/markdown/zhifubao.png)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

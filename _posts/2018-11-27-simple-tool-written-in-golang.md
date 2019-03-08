@@ -17,13 +17,13 @@ tags: Golang Linux
 
 强大的文件同步工具，构建私人同步盘 👉 [Github](https://github.com/syncthing、syncthing)
 
-![syncthing](https://oss.link/markdown/er3tj.jpg)
+![syncthing](https://mritd.oss.link/markdown/er3tj.jpg)
 
 ### fzf
 
 一个强大的终端文件浏览器 👉 [Github](https://github.com/junegunn/fzf)
 
-![fzf](https://oss.link/markdown/ihhqy.jpg)
+![fzf](https://mritd.oss.link/markdown/ihhqy.jpg)
 
 ### hey
 
@@ -162,67 +162,67 @@ examples:
 
 功能强大的 Docker 镜像分析工具，可以查看每层镜像的具体差异等 👉 [Github](https://github.com/wagoodman/dive)
 
-![dive](https://oss.link/markdown/ik3ng.gif)
+![dive](https://mritd.oss.link/markdown/ik3ng.gif)
 
 ### ctop
 
 容器运行时资源分析，如 CPU、内存消耗等 👉 [Github](https://github.com/bcicen/ctop)
 
-![ctop](https://oss.link/markdown/mr3x3.gif)
+![ctop](https://mritd.oss.link/markdown/mr3x3.gif)
 
 ### container-diff
 
 Google 推出的工具，功能就顾名思义了 👉 [Github](https://github.com/GoogleContainerTools/container-diff)
 
-![container-diff](https://oss.link/markdown/dtapx.png)
+![container-diff](https://mritd.oss.link/markdown/dtapx.png)
 
 ### transfer.sh
 
 快捷的终端文件分享工具 👉 [Github](https://github.com/dutchcoders/transfer.sh)
 
-![transfer.sh](https://oss.link/markdown/76vh0.png)
+![transfer.sh](https://mritd.oss.link/markdown/76vh0.png)
 
 ### vuls
 
  Linux/FreeBSD 漏洞扫描工具 👉 [Github](https://github.com/future-architect/vuls)
  
- ![vuls](https://oss.link/markdown/bpsps.jpg)
+ ![vuls](https://mritd.oss.link/markdown/bpsps.jpg)
 
 ### restic
 
 高性能安全的文件备份工具 👉 [Github](https://github.com/restic/restic)
 
-![restic](https://oss.link/markdown/g51z4.png)
+![restic](https://mritd.oss.link/markdown/g51z4.png)
 
 ### gitql
 
 使用 sql 的方式查询 git 提交 👉 [Github](https://github.com/cloudson/gitql)
 
-![gitql](https://oss.link/markdown/4h095.gif)
+![gitql](https://mritd.oss.link/markdown/4h095.gif)
 
 ### gitflow-toolkit
 
 帮助生成满足 Gitflow 格式 commit message 的小工具(自己写的) 👉 [Github](https://github.com/mritd/gitflow-toolkit)
 
-![gitflow-toolkit](https://oss.link/markdown/1e2v1.gif)
+![gitflow-toolkit](https://mritd.oss.link/markdown/1e2v1.gif)
 
 ### git-chglog
 
 对主流的 Gitflow 格式的 commit message 生成 CHANGELOG 👉 [Github](https://github.com/git-chglog/git-chglog)
 
-![git-chglog](https://oss.link/markdown/zphxd.gif)
+![git-chglog](https://mritd.oss.link/markdown/zphxd.gif)
 
 ### grv
 
 一个 git 终端图形化浏览工具 👉 [Github](https://github.com/rgburke/grv)
 
-![grv](https://oss.link/markdown/k1vh2.jpg)
+![grv](https://mritd.oss.link/markdown/k1vh2.jpg)
 
 ### jid
 
 命令行 json 格式化处理工具，类似 jq，不过感觉更加强大 👉 [Github](https://github.com/simeji/jid)
 
-![jid](https://oss.link/markdown/3k4ue.gif)
+![jid](https://mritd.oss.link/markdown/3k4ue.gif)
 
 ### annie
 
@@ -265,7 +265,7 @@ $ annie -i https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 Linux 下管道式终端搜索工具 👉 [Github](https://github.com/akavel/up)
 
-![up](https://oss.link/markdown/n8zdj.gif)
+![up](https://mritd.oss.link/markdown/n8zdj.gif)
 
 ### lego
 
@@ -315,7 +315,7 @@ GLOBAL OPTIONS:
 
 贼好用的终端命令异步执行通知工具 👉 [Github](https://github.com/variadico/noti)
 
-![noti](https://oss.link/markdown/m2r1e.jpg)
+![noti](https://mritd.oss.link/markdown/m2r1e.jpg)
 
 ### gosu
 
@@ -333,19 +333,19 @@ Usage: ./gosu user-spec command [args]
 
 类似 Ansible 的一个批量执行工具，暂且称之为低配版 Ansible 👉 [Github](https://github.com/pressly/sup)
 
-![sup](https://oss.link/markdown/x0eaz.gif)
+![sup](https://mritd.oss.link/markdown/x0eaz.gif)
 
 ### aptly
 
 Debian 仓库管理工具 👉 [Github](https://github.com/aptly-dev/aptly)
 
-![aptly](https://oss.link/markdown/8e0ml.jpg)
+![aptly](https://mritd.oss.link/markdown/8e0ml.jpg)
 
 ### mmh
 
 支持无限跳板机登录的 ssh 小工具(自己写的) 👉 [Github](https://github.com/mritd/mmh)
 
-![mmh](https://oss.link/markdown/37638.gif)
+![mmh](https://mritd.oss.link/markdown/37638.gif)
 
 
 

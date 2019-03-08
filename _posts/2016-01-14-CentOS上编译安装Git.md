@@ -9,7 +9,7 @@ multilingual: false
 tags: Linux
 ---
 
-![hexo_git_install_logo](https://oss.link/markdown/hexo_git_install_logo.png)
+![hexo_git_install_logo](https://mritd.oss.link/markdown/hexo_git_install_logo.png)
 
 ## 一、概述
 

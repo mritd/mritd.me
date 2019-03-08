@@ -124,7 +124,7 @@ BGM：天空の城ラピュタ~君をのせて by 高嶋ちさ子
 **本文转自 [素锦](http://isujin.com/6117)**
 
 <audio  autoplay="autoplay">
-  <source src="https://oss.link/bgm/高嶋ちさ子-天空の城ラピュタ~君をのせて.mp3" type="audio/mpeg" />
+  <source src="https://mritd.oss.link/bgm/高嶋ちさ子-天空の城ラピュタ~君をのせて.mp3" type="audio/mpeg" />
 Your browser does not support the audio element.
 </audio>
 

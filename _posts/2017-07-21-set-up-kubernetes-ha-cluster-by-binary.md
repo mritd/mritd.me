@@ -137,7 +137,7 @@ cfssl gencert --ca etcd-root-ca.pem --ca-key etcd-root-ca-key.pem --config etcd-
 
 生成的证书列表如下
 
-![Etcd Certs](https://oss.link/markdown/2x0ja.jpg)
+![Etcd Certs](https://mritd.oss.link/markdown/2x0ja.jpg)
 
 #### 2.4、生成 Kubernetes 证书
 
@@ -279,7 +279,7 @@ done
 
 生成后证书列表如下
 
-![Kubernetes Certs](https://oss.link/markdown/uj9q0.jpg)
+![Kubernetes Certs](https://mritd.oss.link/markdown/uj9q0.jpg)
 
 #### 2.5、生成 token 及 kubeconfig
 
@@ -451,7 +451,7 @@ etcdctl --cacert=/etc/etcd/ssl/etcd-root-ca.pem --cert=/etc/etcd/ssl/etcd.pem --
 
 最后截图如下，警告可忽略
 
-![Etcd Healthy](https://oss.link/markdown/yr6k4.jpg)
+![Etcd Healthy](https://mritd.oss.link/markdown/yr6k4.jpg)
 
 
 ### 四、部署 HA Master
@@ -460,7 +460,7 @@ etcdctl --cacert=/etc/etcd/ssl/etcd-root-ca.pem --cert=/etc/etcd/ssl/etcd.pem --
 
 目前所谓的 Kubernetes HA 其实主要的就是 API Server 的 HA，master 上其他组件比如 controller-manager 等都是可以通过 Etcd 做选举；而 API Server 只是提供一个请求接收服务，所以对于 API Server 一般有两种方式做 HA；一种是对多个 API Server 做 vip，另一种使用 nginx 反向代理，本文采用 nginx 方式，以下为 HA 示意图
 
-![master ha](https://oss.link/markdown/m2sug.jpg)
+![master ha](https://mritd.oss.link/markdown/m2sug.jpg)
 
 **master 之间除 api server 以外其他组件通过 etcd 选举，api server 默认不作处理；在每个 node 上启动一个 nginx，每个 nginx 反向代理所有 api server，node 上 kubelet、kube-proxy 连接本地的 nginx 代理端口，当 nginx 发现无法连接后端时会自动踢掉出问题的 api server，从而实现 api server 的 HA**
 
@@ -647,7 +647,7 @@ systemctl enable kube-scheduler
 
 各个节点启动成功后，验证组件状态(kubectl 在不做任何配置的情况下默认链接本地 8080 端口)如下，**其中 etcd 全部为 Unhealthy 状态，并且提示 `remote error: tls: bad certificate` 这是个 bug，不影响实际使用，具体可参考 [issue](https://github.com/kubernetes/kubernetes/issues/29330)**
 
-![api status](https://oss.link/markdown/0j7k2.jpg)
+![api status](https://mritd.oss.link/markdown/0j7k2.jpg)
 
 
 ### 五、部署 Node
@@ -845,11 +845,11 @@ systemctl enable nginx-proxy
 
 启动成功后如下
 
-![nginx-proxy](https://oss.link/markdown/0shgz.jpg)
+![nginx-proxy](https://mritd.oss.link/markdown/0shgz.jpg)
 
 kubectl 测试联通性如下
 
-![test nginx-proxy](https://oss.link/markdown/maiz2.jpg)
+![test nginx-proxy](https://mritd.oss.link/markdown/maiz2.jpg)
 
 #### 5.5、添加 Node
 
@@ -897,7 +897,7 @@ systemctl enable kube-proxy
 
 Master 上部署 Node 与单独 Node 部署大致相同，**只需要修改 `bootstrap.kubeconfig`、`kube-proxy.kubeconfig` 中的 API Server 地址即可**
 
-![modify api server](https://oss.link/markdown/2gkyj.jpg)
+![modify api server](https://mritd.oss.link/markdown/2gkyj.jpg)
 
 然后修改 `kubelet`、`proxy` 配置启动即可
 
@@ -917,7 +917,7 @@ kubectl certificate approve csr-z090b
 
 整体部署完成后如下
 
-![read](https://oss.link/markdown/fsddv.jpg)
+![read](https://mritd.oss.link/markdown/fsddv.jpg)
 
 ### 六、部署 Calico
 
@@ -957,7 +957,7 @@ kubectl apply -f http://docs.projectcalico.org/v2.3/getting-started/kubernetes/i
 
 部署完成后如下 
 
-![caliaco](https://oss.link/markdown/ocqsf.jpg)
+![caliaco](https://mritd.oss.link/markdown/ocqsf.jpg)
 
 **最后测试一下跨主机通讯**
 
@@ -986,7 +986,7 @@ kubectl create -f demo.deploy.yml
 
 exec 到一台主机 pod 内 ping 另一个不同 node 上的 pod 如下
 
-![ping](https://oss.link/markdown/phkgr.jpg)
+![ping](https://mritd.oss.link/markdown/phkgr.jpg)
 
 ### 七、部署 DNS
 
@@ -1014,9 +1014,9 @@ kubectl create -f ../dns
 
 **接下来测试 DNS，**测试方法创建两个 deployment 和 svc，通过在 pod 内通过 svc 域名方式访问另一个 deployment 下的 pod，相关测试的 deploy、svc 配置在这里不在展示，基本情况如下图所示
 
-![deployment](https://oss.link/markdown/o94qb.jpg)
+![deployment](https://mritd.oss.link/markdown/o94qb.jpg)
 
-![test dns](https://oss.link/markdown/586mm.jpg)
+![test dns](https://mritd.oss.link/markdown/586mm.jpg)
 
 #### 7.2、DNS 自动扩容部署
 

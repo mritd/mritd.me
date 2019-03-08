@@ -56,17 +56,17 @@ vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目�
 
 这里准备一笔带过了，基本就是 clone 源码到 `$GOPATH/src/k8s.io/sample-cli-plugin` 目录，然后在 GoLand 中打开；目前我使用的 Go 版本为最新的 1.11.4；以下时导入源码后的截图
 
-![GoLand](https://oss.link/markdown/sn8o8.png)
+![GoLand](https://mritd.oss.link/markdown/sn8o8.png)
 
 ### 2.2、定位核心运行方法
 
 熟悉过 Cobra 库以后，再从整个项目包名上分析，首先想到的启动入口应该在 `cmd` 包下(一般 `cmd` 包下的文件都会编译成最终可执行文件名，Kubernetes 也是一样)
 
-![main](https://oss.link/markdown/rafeq.png)
+![main](https://mritd.oss.link/markdown/rafeq.png)
 
 从以上截图中可以看出，首先通过 `cmd.NewCmdNamespace` 方法创建了一个 Command 对象 `root`，然后调用了 `root.Execute` 就结束了；那么也就说明 `root` 这个 Command 是唯一的核心命令对象，整个插件实现都在这个 `root` 里；所以我们需要查看一下这个 `cmd.NewCmdNamespace` 是如何对它初始化的，找到 Cobra 中的 `Run` 或者 `RunE` 设置
 
-![NewCmdNamespace](https://oss.link/markdown/77krg.png)
+![NewCmdNamespace](https://mritd.oss.link/markdown/77krg.png)
 
 定位到 `NewCmdNamespace` 方法以后，基本上就是标准的 Cobra 库的使用方式了；**从截图上可以看到，`RunE` 设置的函数总共运行了 3 个动作: `o.Complete`、`o.Validate`、`o.Run`**；所以接下来我们主要分析这三个方法就行了
 
@@ -75,7 +75,7 @@ vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目�
 
 在分析上面说的这三个方法之前，我们还应当了解一下这个 `o` 是什么玩意
 
-![NamespaceOptions](https://oss.link/markdown/4b3cc.png)
+![NamespaceOptions](https://mritd.oss.link/markdown/4b3cc.png)
 
 从源码中可以看到，`o` 这个对象由 `NewNamespaceOptions` 创建，而 `NewNamespaceOptions` 方法返回的实际上是一个 `NamespaceOptions` 结构体；接下来我们需要研究一下这个结构体都是由什么组成的，换句话说要基本大致上整明白结构体的基本结构，比如里面的属性都是干啥的
 
@@ -83,7 +83,7 @@ vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目�
 
 首先看下第一个属性 `configFlags`，它的实际类型是 `*genericclioptions.ConfigFlags`，点击查看以后如下
 
-![genericclioptions.ConfigFlags](https://oss.link/markdown/li6s4.png)
+![genericclioptions.ConfigFlags](https://mritd.oss.link/markdown/li6s4.png)
 
 从这些字段上来看，我们可以暂且模糊的推测出这应该是个基础配置型的字段，负责存储一些全局基本设置，比如 API Server 认证信息等
 
@@ -103,21 +103,21 @@ rawConfig 这个变量名字有点子奇怪，不过它实际上是个 `api.Conf
 
 这个变量实际上相当于一个 flag，用于存储插件是否使用了 `--list` 选项；在分析结构体这里没法看出来；不过只要稍稍的多看一眼代码就能看在 `NewCmdNamespace` 方法中有这么一行代码
 
-![listNamespaces](https://oss.link/markdown/f07l3.png)
+![listNamespaces](https://mritd.oss.link/markdown/f07l3.png)
 
 
 ### 2.4、核心处理逻辑
 
 介绍完了结构体的基本属性，最后我们只需要弄明白在核心 Command 方法内运行的这三个核心方法就行了
 
-![core func](https://oss.link/markdown/8lm4b.png)
+![core func](https://mritd.oss.link/markdown/8lm4b.png)
 
 
 #### 2.4.1、*NamespaceOptions.Complete
 
 这个方法代码稍微有点多，这里不会对每一行代码都做解释，只要大体明白都在干什么就行了；我们的目的是理解它，后续模仿它创造自己的插件；下面是代码截图
 
-![NamespaceOptions.Complete](https://oss.link/markdown/qqf0f.png)
+![NamespaceOptions.Complete](https://mritd.oss.link/markdown/qqf0f.png)
 
 从截图上可以看到，首先弄出了 `rawConfig` 这个玩意，`rawConfig` 上面也提到了，它就是终端选项和用户配置文件的最终合并，至于为什么可以查看 `ToRawKubeConfigLoader().RawConfig()` 这两个方法的注释和实现即可；
 
@@ -129,17 +129,17 @@ rawConfig 这个变量名字有点子奇怪，不过它实际上是个 `api.Conf
 
 这个方法看名字就知道，里面全是对最终结果的校验；比如检查一下 `rawConfig` 中的 `CurrentContext` 是否获取到了，看看命令行参数是否正确，确保你不会瞎鸡儿输入 `kubectl ns NS_NAME1 NS_NAME2` 这种命令
 
-![NamespaceOptions.Validate](https://oss.link/markdown/frqpb.png)
+![NamespaceOptions.Validate](https://mritd.oss.link/markdown/frqpb.png)
 
 #### 2.4.3、*NamespaceOptions.Run
 
 第一步合并配置信息并获取到用户设置(输入)的配置，第二部做参数校验；可以说前面的两步操作都是为这一步做准备，`Run` 方法真正的做了配置文件写入、终端返回结果打印操作
 
-![NamespaceOptions.Run](https://oss.link/markdown/6tkjz.png)
+![NamespaceOptions.Run](https://mritd.oss.link/markdown/6tkjz.png)
 
 可以看到，`Run` 方法第一步就是更加谨慎的检查了一下参数是否正常，然后调用了 `o.setNamespace`；这个方法截图如下
 
-![NamespaceOptions.setNamespace](https://oss.link/markdown/1jc3k.png)
+![NamespaceOptions.setNamespace](https://mritd.oss.link/markdown/1jc3k.png)
 
 这个 `setNamespace`是真正的做了配置文件写入动作的，实际写入方法就是 `clientcmd.ModifyConfig`；这个是 `Kubernetes` `client-go` 提供的方法，这些库的作用就是提供给我们非常方便的 API 操作；比如修改配置文件，你不需要关心配置文件在哪，你更不需要关系文件句柄是否被释放
 

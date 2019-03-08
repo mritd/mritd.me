@@ -16,25 +16,25 @@ tags: Linux Docker
 
 首先在 [樱花 Docker 注册地址](https://app.arukas.io/) 注册一个账号
 
-![crate_account](https://oss.link/markdown/xek39.jpg)
+![crate_account](https://mritd.oss.link/markdown/xek39.jpg)
 
 填写邮箱、账户名、密码后点击确认
 
-![Fill_in_the_account](https://oss.link/markdown/jax98.jpg)
+![Fill_in_the_account](https://mritd.oss.link/markdown/jax98.jpg)
 
 稍等片刻在邮箱中点击验证连接即可
 
-![Verify_the_mailbox](https://oss.link/markdown/pewta.jpg)
+![Verify_the_mailbox](https://mritd.oss.link/markdown/pewta.jpg)
 
 ### 二、创建容器
 
 注册号账号以后，登录控制台，点击 `Create` 创建容器 
 
-![login](https://oss.link/markdown/3ai5c.jpg)
+![login](https://mritd.oss.link/markdown/3ai5c.jpg)
 
 然后填写相关信息，如下
 
-![set_container](https://oss.link/markdown/0dkkc.jpg)
+![set_container](https://mritd.oss.link/markdown/0dkkc.jpg)
 
 **其中 `Image` 填写 `mritd/shadowsocks`，表示使用哪个镜像模板创建容器，关于 Docker 镜像含义等请自行 Google，`mritd/shadowsocks` 这个镜像是我维护的一个 shadowsocks 镜像，如果想使用其他 shadowsocks 可从 [Docker Hub](https://hub.docker.com/) 上自行搜索**
 
@@ -49,25 +49,25 @@ tags: Linux Docker
 
 最后点击创建即可
 
-![create_container](https://oss.link/markdown/e2d1j.jpg)
+![create_container](https://mritd.oss.link/markdown/e2d1j.jpg)
 
 ### 三、启动并连接
 
 创建完成后会回到主页列表，在主页列表中可以看到刚刚创建的容器，此时容器还没有启动，点击启动按钮即可
 
-![start_container](https://oss.link/markdown/b9nts.jpg)
+![start_container](https://mritd.oss.link/markdown/b9nts.jpg)
 
 创建时间稍稍有点长，此时列表中容器变为黄色，点击容器名称后可看到如下所示
 
-![create_detail](https://oss.link/markdown/m093z.jpg)
+![create_detail](https://mritd.oss.link/markdown/m093z.jpg)
 
 稍等片刻后容器变为绿色，并为 `Running` 状态表示创建完成
 
-![create_success](https://oss.link/markdown/ybwqj.jpg)
+![create_success](https://mritd.oss.link/markdown/ybwqj.jpg)
 
 **容器运行成功后会显示如下信息，其中包含了 shadowsocks 链接地址**
 
-![ss_detail](https://oss.link/markdown/czjyx.jpg)
+![ss_detail](https://mritd.oss.link/markdown/czjyx.jpg)
 
 最后使用客户端连接即可
 
@@ -75,7 +75,7 @@ tags: Linux Docker
 
 樱花 Docker 提供了一个 CLI 命令行工具，可以通过相关 API Token 实现命令行下查询、创建 Docker 容器等操作，CLI 使用需要先创建 API Token，点击左侧按钮即可
 
-![crate_api_token](https://oss.link/markdown/ol0lv.jpg)
+![crate_api_token](https://mritd.oss.link/markdown/ol0lv.jpg)
 
 创建成功后将 Token 声明道环境变量中，并使用 CLI 工具即可实现命令行下创建 shadowsocks 镜像，关于 CLI 使用说明和下载地址请移步 [Github](https://github.com/arukasio/cli) 查看
 

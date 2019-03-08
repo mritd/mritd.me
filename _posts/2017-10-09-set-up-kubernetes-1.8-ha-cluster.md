@@ -111,7 +111,7 @@ cfssl gencert --ca etcd-root-ca.pem --ca-key etcd-root-ca-key.pem --config etcd-
 
 证书生成后截图如下
 
-![Gen Etcd Cert](https://oss.link/markdown/6mn6y.jpg)
+![Gen Etcd Cert](https://mritd.oss.link/markdown/6mn6y.jpg)
 
 
 #### 2.2、搭建集群
@@ -211,7 +211,7 @@ export ETCDCTL_API=3
 etcdctl --cacert=/etc/etcd/ssl/etcd-root-ca.pem --cert=/etc/etcd/ssl/etcd.pem --key=/etc/etcd/ssl/etcd-key.pem --endpoints=https://10.10.1.5:2379,https://10.10.1.6:2379,https://10.10.1.7:2379 endpoint health
 ```
 
-![check etcd](https://oss.link/markdown/ecrgr.jpg)
+![check etcd](https://mritd.oss.link/markdown/ecrgr.jpg)
 
 ### 三、搭建 Master 节点
 
@@ -578,7 +578,7 @@ systemctl enable kube-controller-manager
 systemctl enable kube-scheduler
 ```
 
-![Master Success](https://oss.link/markdown/klnwa.jpg)
+![Master Success](https://mritd.oss.link/markdown/klnwa.jpg)
 
 
 ### 四、搭建 Node 节点
@@ -836,7 +836,7 @@ systemctl enable kube-proxy
 
 最终成功后如下图所示
 
-![cluster success](https://oss.link/markdown/c4dde.jpg)
+![cluster success](https://mritd.oss.link/markdown/c4dde.jpg)
 
 
 ### 五、部署 Calico
@@ -981,7 +981,7 @@ systemctl restart kubelet
 
 此时检查 Node 应该都处于 Ready 状态
 
-![Node Ready](https://oss.link/markdown/agxp3.jpg)
+![Node Ready](https://mritd.oss.link/markdown/agxp3.jpg)
 
 **最后测试一下跨主机通讯**
 
@@ -1014,7 +1014,7 @@ kubectl create -f demo.deploy.yml
 
 **进入其中一个 Pod，ping 另一个 Pod 的 IP 测试即可**
 
-![Test Calico](https://oss.link/markdown/00krx.jpg)
+![Test Calico](https://mritd.oss.link/markdown/00krx.jpg)
 
 
 ### 六、部署 DNS
@@ -1038,15 +1038,15 @@ kubectl create -f kube-dns.yaml
 
 创建好以后如下所示
 
-![DNS](https://oss.link/markdown/vg95n.jpg)
+![DNS](https://mritd.oss.link/markdown/vg95n.jpg)
 
 然后创建两组 Pod 和 Service，进入 Pod 中 curl 另一个 Service 名称看看是否能解析；同时还要测试一下外网能否解析
 
-![Test DNS1](https://oss.link/markdown/x185c.jpg)
+![Test DNS1](https://mritd.oss.link/markdown/x185c.jpg)
 
 测试外网
 
-![Test DNS2](https://oss.link/markdown/3k9gz.jpg)
+![Test DNS2](https://mritd.oss.link/markdown/3k9gz.jpg)
 
 
 #### 6.2、部署 DNS 自动扩容部署
@@ -1060,7 +1060,7 @@ kubectl create -f dns-horizontal-autoscaler.yaml
 
 部署完成后如下
 
-![DNS autoscaler](https://oss.link/markdown/mid1u.jpg)
+![DNS autoscaler](https://mritd.oss.link/markdown/mid1u.jpg)
 
 自动扩容这里不做测试了，虚拟机吃不消了，详情自己参考 [Autoscale the DNS Service in a Cluster](https://kubernetes.io/docs/tasks/administer-cluster/dns-horizontal-autoscaling/)
 

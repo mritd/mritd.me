@@ -64,7 +64,7 @@ INFO  Hexo is running at http://0.0.0.0:4000/. Press Ctrl+C to stop.
 # 测试访问 http://IP:4000 ，效果如下
 ```
 
-![Hexo Start](https://oss.link/markdown/hexo_start.png)
+![Hexo Start](https://mritd.oss.link/markdown/hexo_start.png)
 
 - 安装扩展程序包
 
@@ -198,7 +198,7 @@ deploy: #部署插件设置(目前只自动部署到github)
 
 - 推荐主题 [yilia](http://litten.github.io/2014/08/31/hexo-theme-yilia/)
 
-![hexo_yilia](https://oss.link/markdown/hexo_yilia.png)
+![hexo_yilia](https://mritd.oss.link/markdown/hexo_yilia.png)
 
 - 主题安装
 
@@ -301,7 +301,7 @@ hexo g       # 生成静态文件
 hexo s       # 启动服务器预览
 ```
 
-![hexo_mritd](https://oss.link/markdown/hexo_mritd.png)
+![hexo_mritd](https://mritd.oss.link/markdown/hexo_mritd.png)
 
 ### 六、部署到Github
 
@@ -309,7 +309,7 @@ hexo s       # 启动服务器预览
 
 > 首先注册 Github 账户，这里掠过，然后创建一个新项目，项目名称为 ***用户名.github.io*** ，比如我的Github用户名是mritd，则创建的项目名为 `mritd.github.io`
 
-![hexo_githubproject](https://oss.link/markdown/hexo_githubproject.png)
+![hexo_githubproject](https://mritd.oss.link/markdown/hexo_githubproject.png)
 
 - 生成密钥
 
@@ -326,7 +326,7 @@ less ~/.ssh/id_rsa.pub
 
 > 登录 Github后访问 [https://github.com/settings/ssh](https://github.com/settings/ssh)，选择 `Add SSH key` ,取个名字然后把内容粘进去，保存即可。
 
-![hexo_githubaddsshkey](https://oss.link/markdown/hexo_githubaddsshkey.png)
+![hexo_githubaddsshkey](https://mritd.oss.link/markdown/hexo_githubaddsshkey.png)
 
 - 配置 Hexo 部署到 Github
 

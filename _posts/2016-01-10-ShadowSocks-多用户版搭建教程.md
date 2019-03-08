@@ -8,7 +8,7 @@ catalog: true
 multilingual: false
 ---
 
-![ShadowSocks](https://oss.link/markdown/hexo_shadowsocks_logo.png)
+![ShadowSocks](https://mritd.oss.link/markdown/hexo_shadowsocks_logo.png)
 
 > 众所周知，由于某种原因，大天朝的网络对外网(国际网路)的访问是封锁的，但作为搞IT的，个人感觉翻墙是必备的技能；因为很多东西(IT资料)谷歌出来的更准确一些，忍不住吐槽百度的垃圾搜索，我已经大约2年没用百度了，因为百度点东西你会发现很多情况都是 **一大片都一样的**，要不就是不同网站，但是内容一样......下面记录一下目前最屌的爬墙工具 **ShadowSocks** 简称 ss 的搭建过程。
 
@@ -40,7 +40,7 @@ wget https://github.com/orvice/ss-panel/archive/v2.4.7.tar.gz
 
 也可下载到本地再上传 [下载地址](https://github.com/orvice/ss-panel/branches)
 
-![hexo_ss-panel_download](https://oss.link/markdown/hexo_ss-panel_download.png)
+![hexo_ss-panel_download](https://mritd.oss.link/markdown/hexo_ss-panel_download.png)
 
 ## 三、安装LNMP环境
 1. LNMP一键安装脚本地址 [点这里](http://lnmp.org/install.html)
@@ -239,5 +239,5 @@ update user set user_name='用户名',email='登录邮箱', pass='密码', passw
 
 #### 如果本文对你有帮助，可以考虑用支付宝请我喝杯咖啡  ( ^_^ )
 
-![支付宝](https://oss.link/markdown/zhifubao.png)
+![支付宝](https://mritd.oss.link/markdown/zhifubao.png)
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

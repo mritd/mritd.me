@@ -9,7 +9,7 @@ multilingual: false
 tags: Linux
 ---
 
-![centos6](https://oss.link/markdown/centos6.png)
+![centos6](https://mritd.oss.link/markdown/centos6.png)
 
 ### CentOS 6.7_x64 网络初始化配置
 

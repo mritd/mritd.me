@@ -28,7 +28,7 @@ tags: Linux
 
 Vagrant 安装极其简单，目前官方已经打包好了各个平台的安装包文件，地址访问 [Vagrant 官方下载地址](https://www.vagrantup.com/downloads.html)；截图如下
 
-![vagrant download](https://oss.link/markdown/m46fa.jpg)
+![vagrant download](https://mritd.oss.link/markdown/m46fa.jpg)
 
 以下为 CentOS 上的安装命令
 
@@ -41,15 +41,15 @@ rpm -ivh vagrant_1.9.2_x86_64.rpm
 
 装虚拟机大家都不陌生，首先应该搞个系统镜像；同样 Vagrant 也需要先搞一个 Vagrant Box，Vagrant Box 是一个已经预装好操作系统的虚拟机打包文件；根据不同系统可以选择不同的 Vagrant Box，官方维护了一个 Vagrant Box 仓库，地址 [点这里](https://atlas.hashicorp.com/boxes/search)，截图如下
 
-![vagrant boxes](https://oss.link/markdown/2duz7.jpg)
+![vagrant boxes](https://mritd.oss.link/markdown/2duz7.jpg)
 
 点击对应的系统后可以看到如下界面
 
-![box detail](https://oss.link/markdown/kiohr.jpg)
+![box detail](https://mritd.oss.link/markdown/kiohr.jpg)
 
 该页面罗列出了使用不同虚拟机时应当使用扥添加明令；当然执行这些命令后 vagrant 将会从网络下载这个 box 文件并添加到本地 box 仓库；**不过众所周知的原因，这个下载速度会让你怀疑人生，所有简单的办法是执行以下这条命令，然后会显示 box 的实际下载地址；拿到地址以后用梯子先把文件下载下来，然后使用 vagrant 导入也可以(centos7 本地已经有了一下以 ubuntu 为例)**
 
-![box download url](https://oss.link/markdown/p36th.jpg)
+![box download url](https://mritd.oss.link/markdown/p36th.jpg)
 下载后使用 `vagrant box add xxxx.box` 即可将 box 导入到本地仓库
 
 #### 2.3、启动一个虚拟机

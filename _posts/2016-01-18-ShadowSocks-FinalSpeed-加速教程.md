@@ -8,7 +8,7 @@ catalog: true
 multilingual: false
 ---
 
-![ShadowSocks](https://oss.link/markdown/hexo_shadowsocks_logo.png)
+![ShadowSocks](https://mritd.oss.link/markdown/hexo_shadowsocks_logo.png)
 
 ## 一、闲聊
 
@@ -54,7 +54,7 @@ chmod +x install_fs.sh
 
 - 4、安装成功后如下图(自己的忘记截图了，引自论坛)
 
-![hexo_finalspeed_install_success.jpg](https://oss.link/markdown/hexo_finalspeed_install_success.jpg)
+![hexo_finalspeed_install_success.jpg](https://mritd.oss.link/markdown/hexo_finalspeed_install_success.jpg)
 
 ## 四、客户端安装&连接
 
@@ -68,13 +68,13 @@ chmod +x install_fs.sh
 
 ---
 
-![hexo_finalspeed_set_bandwidth.png](https://oss.link/markdown/hexo_finalspeed_set_bandwidth.png)
+![hexo_finalspeed_set_bandwidth.png](https://mritd.oss.link/markdown/hexo_finalspeed_set_bandwidth.png)
 
 **设置IP和加速方式(openvz只支持UPD，搬瓦工就是)**
 
 ---
 
-![hexo_finalspeed_set_udp.png](https://oss.link/markdown/hexo_finalspeed_set_udp.png)
+![hexo_finalspeed_set_udp.png](https://mritd.oss.link/markdown/hexo_finalspeed_set_udp.png)
 
 **设置加速服务器**
 
@@ -82,7 +82,7 @@ chmod +x install_fs.sh
 
 > 加速端口根据实际情况添加，加速端口即为 ss 连接的服务器端口；本地端口随便填，一般为 2000。
 
-![hexo_finalspeed_set_server.png](https://oss.link/markdown/hexo_finalspeed_set_server.png)
+![hexo_finalspeed_set_server.png](https://mritd.oss.link/markdown/hexo_finalspeed_set_server.png)
 
 **设置 SS 客户端**
 
@@ -90,9 +90,9 @@ chmod +x install_fs.sh
 
 > SS客户端新建一个服务器，地址为127.0.0.1，端口为你设置的本地端口，一般为2000，密码为原来账号的密码。
 
-![hexo_finalspeed_set_ssclient.png](https://oss.link/markdown/hexo_finalspeed_set_ssclient.png)
+![hexo_finalspeed_set_ssclient.png](https://mritd.oss.link/markdown/hexo_finalspeed_set_ssclient.png)
 
 - 3、切换到此服务器即可，以下为搬瓦工512，北京联通50M测试截图(以前720p卡成翔，500K顶天)。
 
-![hexo_finalspeed_video_test.png](https://oss.link/markdown/hexo_finalspeed_video_test.png)
+![hexo_finalspeed_video_test.png](https://mritd.oss.link/markdown/hexo_finalspeed_video_test.png)
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

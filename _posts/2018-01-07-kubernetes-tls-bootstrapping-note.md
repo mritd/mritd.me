@@ -24,7 +24,7 @@ Kubernetes 在 1.4 版本(我记着是)推出了 TLS bootstrapping 功能；这�
 
 当集群开启了 TLS 认证后，每个节点的 kubelet 组件都要使用由 apiserver 使用的 CA 签发的有效证书才能与 apiserver 通讯；此时如果节点多起来，为每个节点单独签署证书将是一件非常繁琐的事情；TLS bootstrapping 功能就是让 kubelet 先使用一个预定的低权限用户连接到 apiserver，然后向 apiserver 申请证书，kubelet 的证书由 apiserver 动态签署；在配合 RBAC 授权模型下的工作流程大致如下所示(不完整，下面细说)
 
-![tls_bootstrapping](https://oss.link/markdown/ixtwd.png)
+![tls_bootstrapping](https://mritd.oss.link/markdown/ixtwd.png)
 
 
 ### 二、TLS bootstrapping 相关术语
@@ -71,7 +71,7 @@ kubelet 发起的 CSR 请求都是由 controller manager 来做实际签署的�
 
 这个问题实际上可以去查看一下 `bootstrap.kubeconfig` 和 `token.csv` 得到答案: **在 apiserver 配置中指定了一个 `token.csv` 文件，该文件中是一个预设的用户配置；同时该用户的 Token 和 apiserver 的 CA 证书被写入了 kubelet 所使用的 `bootstrap.kubeconfig` 配置文件中；这样在首次请求时，kubelet 使用 `bootstrap.kubeconfig` 中的 apiserver CA 证书来与 apiserver 建立 TLS 通讯，使用 `bootstrap.kubeconfig` 中的用户 Token 来向 apiserver 声明自己的 RBAC 授权身份**，如下图所示
 
-![first_request](https://oss.link/markdown/ji5ug.png)
+![first_request](https://mritd.oss.link/markdown/ji5ug.png)
 
 在有些用户首次启动时，可能与遇到 kubelet 报 401 无权访问 apiserver 的错误；**这是因为在默认情况下，kubelet 通过 `bootstrap.kubeconfig` 中的预设用户 Token 声明了自己的身份，然后创建 CSR 请求；但是不要忘记这个用户在我们不处理的情况下他没任何权限的，包括创建 CSR 请求；所以需要如下命令创建一个 ClusterRoleBinding，将预设用户 `kubelet-bootstrap` 与内置的 ClusterRole `system:node-bootstrapper` 绑定到一起，使其能够发起 CSR 请求**
 
@@ -85,15 +85,15 @@ kubectl create clusterrolebinding kubelet-bootstrap \
 
 在 kubelet 首次启动后，如果用户 Token 没问题，并且 RBAC 也做了相应的设置，那么此时在集群内应该能看到 kubelet 发起的 CSR 请求
 
-![bootstrap_csr](https://oss.link/markdown/n9bbw.png)
+![bootstrap_csr](https://mritd.oss.link/markdown/n9bbw.png)
 
 出现 CSR 请求后，可以使用 kubectl 手动签发(允许) kubelet 的证书
 
-![bootstrap_approve_crt](https://oss.link/markdown/5ssf8.png)
+![bootstrap_approve_crt](https://mritd.oss.link/markdown/5ssf8.png)
 
 **当成功签发证书后，目标节点的 kubelet 会将证书写入到 `--cert-dir=` 选项指定的目录中；注意此时如果不做其他设置应当生成四个文件**
 
-![bootstrap_crt](https://oss.link/markdown/a25ip.png)
+![bootstrap_crt](https://mritd.oss.link/markdown/a25ip.png)
 
 **而 kubelet 与 apiserver 通讯所使用的证书为 `kubelet-client.crt`，剩下的 `kubelet.crt` 将会被用于 `kubelet server`(10250) 做鉴权使用；注意，此时 `kubelet.crt` 这个证书是个独立于 apiserver CA 的自签 CA，并且删除后 kubelet 组件会重新生成它**
 
@@ -420,6 +420,6 @@ kubectl create clusterrolebinding node-server-auto-renew-crt --clusterrole=syste
 **一切就绪后启动 kubelet 组件即可，1.8 版本 kubelet 会自动重载证书，以下为 1.8 版本在运行一段时间后的相关证书截图**
 
 
-![tls_bootstrapping_crts](https://oss.link/markdown/570wk.png)
+![tls_bootstrapping_crts](https://mritd.oss.link/markdown/570wk.png)
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

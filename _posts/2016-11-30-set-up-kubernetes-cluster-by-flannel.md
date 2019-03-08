@@ -36,7 +36,7 @@ name=Mritd Repository
 baseurl=https://rpm.mritd.me/centos/7/x86_64
 enabled=1
 gpgcheck=1
-gpgkey=https://oss.link/keys/rpm.public.key
+gpgkey=https://mritd.oss.link/keys/rpm.public.key
 EOF
 yum install -y kubelet kubectl kubernetes-cni kubeadm
 
@@ -67,7 +67,7 @@ kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Docume
 
 有兴趣的可以把 yml 搞下来看下，由于他的镜像托管在 `quay.io`，所以没有墙的问题，也可以提前 load 进来；对于 yml 上面的 `ConfigMap` 中的 ip 段最好与 `--pod-network-cidr` 一致(不一致没测试，想作死自己试吧)，然后稍等片刻网络便创建成功，截图如下
 
-![flannel](https://oss.link/markdown/fh723.jpg)
+![flannel](https://mritd.oss.link/markdown/fh723.jpg)
 
 #### 2.3、网络测试
 
@@ -106,11 +106,11 @@ spec:
 
 **去两个主机上分别进入容器，然后互 ping 集群 IP 可以 ping 通**；图2 ping 错了，不重新截图了，谅解
 
-![cluster ip](https://oss.link/markdown/x4i0j.jpg)
+![cluster ip](https://mritd.oss.link/markdown/x4i0j.jpg)
 
-![node2 ping](https://oss.link/markdown/v24ju.jpg)
+![node2 ping](https://mritd.oss.link/markdown/v24ju.jpg)
 
-![node3 ping](https://oss.link/markdown/iukrh.jpg)
+![node3 ping](https://mritd.oss.link/markdown/iukrh.jpg)
 
 **本文只是简单搭建，其他更高级的性能测试交给各位玩网络的大神吧**
 

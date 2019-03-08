@@ -28,7 +28,7 @@ tags: Linux Docker
 
 所有 Contianer 文件存放于 `/var/lib/docker/aufs/mnt` 目录，改废掉的文件名为 `hexo.conf`，so  直接开搜 :
 
-![hexo_docker_modify_contianerfile](https://oss.link/markdown/hexo_docker_modify_contianerfile.png)
+![hexo_docker_modify_contianerfile](https://mritd.oss.link/markdown/hexo_docker_modify_contianerfile.png)
 
 然后直接修改保存即可，此时 Contianer 可恢复启动，此坑完结；目测企业级应用不会出现这种坑爹情况，一般都是编排工具......像我这么作死的应该没有
 

@@ -36,7 +36,7 @@ tags: Linux Docker Kubernetes
 
 当我从虚拟机中测试完全没问题以后，就在测试环境尝试创建 Calico 网络，结果出现的问题是**某个(几个) Calico 节点无法启动，同时创建 deployment 后，执行 `route -n` 会发现每个 node 只有自己节点 Pod 的路由，正常每个 node 上会有所有 node 上 Pod 网段的路由，如下(正常情况)**
 
-![calico route](https://oss.link/markdown/c44e7.jpg)
+![calico route](https://mritd.oss.link/markdown/c44e7.jpg)
 
 此时观察每个 node 上 Calico Pod 日志，会有提示 **未知节点 xxxx** 等错误日志，大体意思就是 **未知的一个(几个)节点在进行 BGP 协议时被拒绝**，偶尔某些 node 上还可能出现 **IP 已经被占用** 的神奇错误提示
 

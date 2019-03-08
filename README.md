@@ -8,9 +8,9 @@
 
 ### 新站点
 
-![新站点](https://oss.link/markdown/jekyll_homepage.png)
+![新站点](https://mritd.oss.link/markdown/jekyll_homepage.png)
 
 ### 老站点
 
-![老站点](https://oss.link/markdown/hexo_newblog.png)
+![老站点](https://mritd.oss.link/markdown/hexo_newblog.png)
 

@@ -132,7 +132,7 @@ func checkFailed() {
 
 把以上代码编译后生成的 `pre-receive` 文件复制到对应项目的钩子目录即可；**要注意的是文件名必须为 `pre-receive`，同时 `custom_hooks` 目录需要自建；`custom_hooks` 目录以及 `pre-receive` 文件用户组必须为 `git:git`；在删除分支时 commit ID 为 `0000000000000000000000000000000000000000`，此时不需要检测提交信息，否则可能导致无法删除分支/tag**；最后效果如下所示
 
-![commit msg check](https://oss.link/markdown/hs9c2.png)
+![commit msg check](https://mritd.oss.link/markdown/hs9c2.png)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

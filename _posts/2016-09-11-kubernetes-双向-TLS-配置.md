@@ -121,7 +121,7 @@ openssl x509 -req -in admin.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -ou
 
 **最终生成的文件清单如下**
 
-![hexo_kubernetes_tls_certs](https://oss.link/markdown/hexo_kubernetes_tls_certs.png)
+![hexo_kubernetes_tls_certs](https://mritd.oss.link/markdown/hexo_kubernetes_tls_certs.png)
 
 ## 三、配置 kubernetes
 
