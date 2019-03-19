@@ -24,7 +24,7 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存储�
 
 **以上各术语(定义)之间关系如下图所示**
 
-![PV_VG_LV](https://mritd.oss.link/markdown/mbzrv.jpg)
+![PV_VG_LV](https://cdn.oss.link/markdown/mbzrv.jpg)
 
 ### 二、LVM 相关命令
 

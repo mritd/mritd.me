@@ -17,7 +17,7 @@ tags: Kubernetes
 `kubectl` 命令从 `v1.8.0` 版本开始引入了 alpha feature 的插件机制；在此机制下我们可以对 `kubectl` 命令进行扩展，从而编写一些自己的插件集成进 `kubectl` 命令中；**`kubectl` 插件机制是与语言无关的，也就是说你可以用任何语言编写插件，可以是 `bash`、`python` 脚本，也可以是 `go`、`java` 等编译型语言；所以选择你熟悉的语言即可**，以下是一个用 `go` 编写的用于快速切换 NameSpace 的小插件，运行截图如下:
 
 **所谓: 开局一张图，功能全靠编 😂**
-![swns.gif](https://mritd.oss.link/markdown/6t89g.gif)
+![swns.gif](https://cdn.oss.link/markdown/6t89g.gif)
 
 当前插件代码放在 [mritd/swns](https://github.com/mritd/swns) 这个项目下面
 

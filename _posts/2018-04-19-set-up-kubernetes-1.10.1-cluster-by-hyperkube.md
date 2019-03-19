@@ -119,7 +119,7 @@ cfssl gencert --ca etcd-root-ca.pem --ca-key etcd-root-ca-key.pem --config etcd-
 
 生成后如下
 
-![gen etcd certs](https://mritd.oss.link/markdown/81203.png)
+![gen etcd certs](https://cdn.oss.link/markdown/81203.png)
 
 #### 2.3、安装 Etcd
 
@@ -296,7 +296,7 @@ export ETCDCTL_API=3
 etcdctl --cacert=/etc/etcd/ssl/etcd-root-ca.pem --cert=/etc/etcd/ssl/etcd.pem --key=/etc/etcd/ssl/etcd-key.pem --endpoints=https://192.168.1.61:2379,https://192.168.1.62:2379,https://192.168.1.63:2379 endpoint health
 ```
 
-![check etcd](https://mritd.oss.link/markdown/ji94m.png)
+![check etcd](https://cdn.oss.link/markdown/ji94m.png)
 
 ### 三、安装 Kubernets 集群组件
 
@@ -516,7 +516,7 @@ EOF
 
 生成后文件如下
 
-![k8s certs](https://mritd.oss.link/markdown/xk8uj.png)
+![k8s certs](https://cdn.oss.link/markdown/xk8uj.png)
 
 #### 3.2、准备 systemd 配置
 
@@ -977,7 +977,7 @@ systemctl enable kube-scheduler
 
 成功后截图如下
 
-![Master success](https://mritd.oss.link/markdown/lqur1.png)
+![Master success](https://cdn.oss.link/markdown/lqur1.png)
 
 
 ### 五、启动 Kubernetes Node 节点
@@ -1118,7 +1118,7 @@ systemctl enable kube-proxy
 
 最后启动成功后如下
 
-![cluster started](https://mritd.oss.link/markdown/r4s34.png)
+![cluster started](https://cdn.oss.link/markdown/r4s34.png)
 
 
 ### 五、安装 Calico
@@ -1313,7 +1313,7 @@ kubectl create -f demo.deploy.yml
 
 测试结果如图所示
 
-![test calico](https://mritd.oss.link/markdown/u9j3v.png)
+![test calico](https://cdn.oss.link/markdown/u9j3v.png)
 
 ### 六、部署集群 DNS
 
@@ -1499,7 +1499,7 @@ kubectl create -f coredns.yaml
 
 测试截图如下
 
-![test dns](https://mritd.oss.link/markdown/v1jdc.png)
+![test dns](https://cdn.oss.link/markdown/v1jdc.png)
 
 #### 6.2、部署 DNS 自动扩容
 
@@ -1679,9 +1679,9 @@ kubectl describe secret -n kube-system $(kubectl get secrets -n kube-system | gr
 
 将以上脚本保存为 `create_dashboard_sa.sh` 执行即可，成功后访问截图如下(**如果访问不了的话请检查下 iptable FORWARD 默认规则是否为 DROP，如果是将其改为 ACCEPT 即可**)
 
-![create_dashboard_sa](https://mritd.oss.link/markdown/oxmms.png)
+![create_dashboard_sa](https://cdn.oss.link/markdown/oxmms.png)
 
-![dashboard](https://mritd.oss.link/markdown/pyplb.png)
+![dashboard](https://cdn.oss.link/markdown/pyplb.png)
 
 ### 九、其他说明
 

@@ -81,17 +81,17 @@ sudo -u nexus /usr/local/nexus-3.2.0-01/bin/nexus start
 
 默认账户 `admin` 密码 `admin123`，登录如下
 
-![nexus_homepage](https://mritd.oss.link/markdown/sb9dw.jpg)
+![nexus_homepage](https://cdn.oss.link/markdown/sb9dw.jpg)
 
 ### 三、创建 docker 仓库
 
 在设置 `Repositories` 选项卡中中选择 `Create repository`
 
-![Create repository](https://mritd.oss.link/markdown/m7m53.jpg)
+![Create repository](https://cdn.oss.link/markdown/m7m53.jpg)
 
 仓库类型有很多，docker 相关总共有三种类型，其秉承 maven 私服的概念
 
-![repository type](https://mritd.oss.link/markdown/pm0r8.jpg)
+![repository type](https://cdn.oss.link/markdown/pm0r8.jpg)
 
 - hosted: 本地存储，即同 docker 官方仓库一样提供本地私服功能
 - proxy: 提供代理其他仓库的类型，如 docker 中央仓库
@@ -101,7 +101,7 @@ sudo -u nexus /usr/local/nexus-3.2.0-01/bin/nexus start
 
 选择 `hosted` 类型仓库，然后输入一个仓库名，**并勾选 HTTP 选项，端口任意即可(下面截图失误，不补了)**
 
-![create hosted repository](https://mritd.oss.link/markdown/972cl.jpg)
+![create hosted repository](https://cdn.oss.link/markdown/972cl.jpg)
 
 #### 3.2、测试私服
 
@@ -154,13 +154,13 @@ Status: Downloaded newer image for registry.com:8800/alpine:latest
  
 创建仓库类型选择 `proxy`，Remote storage 填写 `https://registry-1.docker.io`，Docker index 选择 `Use Docker Hub`，然后从 代理仓库地址 pull 就可以，但是本人百试不成功，截图如下
 
-![proxy registry](https://mritd.oss.link/markdown/q350r.jpg)
+![proxy registry](https://cdn.oss.link/markdown/q350r.jpg)
 
 #### 3.4、创建 group 仓库
 
 group 不提供具体存储服务，其主要作用就是类似一个前端反代，可以把多个仓库(比如 hosted 私服和 proxy)组合成一个地址提供访问，创建方法基本相同，主要是添加多个 hosted 或者 proxy 类型的其他仓库即可，这里不再详细阐述，截图如下
 
-![group registry](https://mritd.oss.link/markdown/2q1qv.jpg)
+![group registry](https://cdn.oss.link/markdown/2q1qv.jpg)
 
 ### 四、其他相关
 

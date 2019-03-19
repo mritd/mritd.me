@@ -242,11 +242,11 @@ ansible-playbook -i inventory/inventory.cfg cluster.yml -b -v --private-key=~/.s
 
 部署成功后截图如下
 
-![deploy success](https://mritd.oss.link/markdown/ksgtg.jpg)
+![deploy success](https://cdn.oss.link/markdown/ksgtg.jpg)
 
 相关 pod 启动情况如下 
 
-![deploy pods](https://mritd.oss.link/markdown/c7zaz.jpg)
+![deploy pods](https://cdn.oss.link/markdown/c7zaz.jpg)
 
 
 **最后附上我部署是的 kargo 配置**

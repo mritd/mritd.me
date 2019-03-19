@@ -116,7 +116,7 @@ chmod 755 /etc/sysconfig/modules/ipvs.modules && bash /etc/sysconfig/modules/ipv
 
 执行后应该如下图所示，**如果 `lsmod | grep ip_vs` 并未出现 `ip_vs_rr` 等模块；那么请更换内核(一般不会，2.6 以后 ipvs 好像已经就合并进主干了)**
 
-![Load kernel modules](https://mritd.oss.link/markdown/49wbb.jpg)
+![Load kernel modules](https://cdn.oss.link/markdown/49wbb.jpg)
 
 ### 三、开启 ipvs 支持
 
@@ -166,15 +166,15 @@ systemctl restart kube-proxy
 
 重启后日志中应该能看到如下输出，不应该有其他提示 ipvs 的错误信息出现
 
-![kube-proxy ipvs log](https://mritd.oss.link/markdown/o05rq.jpg)
+![kube-proxy ipvs log](https://cdn.oss.link/markdown/o05rq.jpg)
 
 同时使用 ipvsadm 命令应该能看到相应的 service 的 ipvs 规则(ipvsadm 自己安装一下)
 
-![ipvs role](https://mritd.oss.link/markdown/d1ilk.jpg)
+![ipvs role](https://cdn.oss.link/markdown/d1ilk.jpg)
 
 然后进入 Pod 测试
 
-![test ipvs1](https://mritd.oss.link/markdown/42pjm.jpg)
+![test ipvs1](https://cdn.oss.link/markdown/42pjm.jpg)
 
 **最后说一点: ipvs 尚未稳定，请慎用；而且 `--masquerade-all` 选项与 Calico 安全策略控制不兼容，请酌情考虑使用(Calico 在做网络策略限制的时候要求不能开启此选项)**
 

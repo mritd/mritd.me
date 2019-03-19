@@ -184,7 +184,7 @@ subdomain = test
 
 服务端和客户端同时开启完成后，即可访问 `http://domain.com:7500` 进入 frp 控制面板，如下
 
-![dashboard](https://mritd.oss.link/markdown/1d8pq.jpg)
+![dashboard](https://cdn.oss.link/markdown/1d8pq.jpg)
 
 此时通过 `ssh root@domain.com -p 6000` 即可连接到内网服务器，通过访问 `http://test.domain.com:4080` 即可访问内网发布的位于 `8000` 端口服务
 

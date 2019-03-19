@@ -25,13 +25,13 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 
 众所周知 Kubernetes 具有强大的副本控制能力，能保证在任意副本(Pod)挂掉时自动从其他机器启动一个新的，还可以动态扩容等，总之一句话，这个 Pod 可能在任何时刻出现在任何节点上，也可能在任何时刻死在任何节点上；那么自然随着 Pod 的创建和销毁，Pod IP 肯定会动态变化；**那么如何把这个动态的 Pod IP 暴露出去？这里借助于 Kubernetes 的 Service 机制，Service 可以以标签的形式选定一组带有指定标签的 Pod，并监控和自动负载他们的 Pod IP，那么我们向外暴露只暴露 Service IP 就行了**；这就是 NodePort 模式：即在每个节点上开起一个端口，然后转发到内部 Pod IP 上，如下图所示
 
-![NodePort](https://mritd.oss.link/markdown/5a1i4.jpg)
+![NodePort](https://cdn.oss.link/markdown/5a1i4.jpg)
 
 #### 1.3、端口管理问题
 
 采用 NodePort 方式暴露服务面临一个坑爹的问题是，服务一旦多起来，NodePort 在每个节点上开启的端口会及其庞大，而且难以维护；这时候引出的思考问题是 **"能不能使用 Nginx 啥的只监听一个端口，比如 80，然后按照域名向后转发？"** 这思路很好，简单的实现就是使用 DaemonSet 在每个 node 上监听 80，然后写好规则，**因为 Nginx 外面绑定了宿主机 80 端口(就像 NodePort)，本身又在集群内，那么向后直接转发到相应 Service IP 就行了**，如下图所示
 
-![use nginx proxy](https://mritd.oss.link/markdown/rrcuu.jpg)
+![use nginx proxy](https://cdn.oss.link/markdown/rrcuu.jpg)
 
 #### 1.4、域名分配及动态更新问题
 
@@ -41,7 +41,7 @@ Ingress 这个玩意，简单的理解就是 **你原来要改 Nginx 配置，�
 
 Ingress Controller 这东西就是解决 "Nginx 咋整" 的；**Ingress Controoler 通过与 Kubernetes API 交互，动态的去感知集群中 Ingress 规则变化，然后读取他，按照他自己模板生成一段 Nginx 配置，再写到 Nginx Pod 里，最后 reload 一下**，工作流程如下图
 
-![Ingress](https://mritd.oss.link/markdown/e5fcy.jpg)
+![Ingress](https://cdn.oss.link/markdown/e5fcy.jpg)
 
 **当然在实际应用中，最新版本 Kubernetes 已经将 Nginx 与 Ingress Controller 合并为一个组件，所以 Nginx 无需单独部署，只需要部署 Ingress Controller 即可**
 
@@ -61,7 +61,7 @@ service "default-http-backend" created
 
 这个 `default-backend.yaml` 文件可以在 [官方 Ingress 仓库](https://github.com/kubernetes/ingress/blob/master/examples/deployment/nginx/default-backend.yaml) 找到，由于篇幅限制这里不贴了，仓库位置如下
 
-![default-backend](https://mritd.oss.link/markdown/1ct6w.jpg)
+![default-backend](https://cdn.oss.link/markdown/1ct6w.jpg)
 
 #### 2.2、部署 Ingress Controller
 
@@ -74,11 +74,11 @@ daemonset "nginx-ingress-lb" created
 
 **注意：官方的 Ingress Controller 有个坑，至少我看了 DaemonSet 方式部署的有这个问题：没有绑定到宿主机 80 端口，也就是说前端 Nginx 没有监听宿主机 80 端口(这还玩个卵啊)；所以需要把配置搞下来自己加一下 `hostNetwork`**，截图如下
 
-![add hostNetwork](https://mritd.oss.link/markdown/n1fsc.jpg)
+![add hostNetwork](https://cdn.oss.link/markdown/n1fsc.jpg)
 
 同样配置文件自己找一下，地址 [点这里](https://github.com/kubernetes/ingress/blob/master/examples/daemonset/nginx/nginx-ingress-daemonset.yaml)，仓库截图如下
 
-![Ingress Controller](https://mritd.oss.link/markdown/jirhn.jpg)
+![Ingress Controller](https://cdn.oss.link/markdown/jirhn.jpg)
 
 **当然它支持以 deamonset 的方式部署，这里用的就是(个人喜欢而已)，所以你发现我上面截图是 deployment，但是链接给的却是 daemonset，因为我截图截错了.....**
 
@@ -86,14 +86,14 @@ daemonset "nginx-ingress-lb" created
 
 **这个可就厉害了，这个部署完就能装逼了**
 
-![daitouzhaungbi](https://mritd.oss.link/markdown/v450z.jpg)
-![zhanxianjishu](https://mritd.oss.link/markdown/b1kz2.jpg)
+![daitouzhaungbi](https://cdn.oss.link/markdown/v450z.jpg)
+![zhanxianjishu](https://cdn.oss.link/markdown/b1kz2.jpg)
 
 **咳咳，回到正题，从上面可以知道 Ingress 就是个规则，指定哪个域名转发到哪个 Service，所以说首先我们得有个 Service，当然 Service 去哪找这里就不管了；这里默认为已经有了两个可用的 Service，以下以 Dashboard 和 kibana 为例**
 
 **先写一个 Ingress 文件，语法格式啥的请参考 [官方文档](https://kubernetes.io/docs/user-guide/ingress)，由于我的 Dashboard 和 Kibana 都在 kube-system 这个命名空间，所以要指定 namespace**，写之前 Service 分布如下
 
-![All Service](https://mritd.oss.link/markdown/vtg8f.jpg)
+![All Service](https://cdn.oss.link/markdown/vtg8f.jpg)
 
 ``` sh
 vim dashboard-kibana-ingress.yml
@@ -121,15 +121,15 @@ spec:
 
 **装逼成功截图如下**
 
-![Dashboard](https://mritd.oss.link/markdown/pyhdy.jpg)
+![Dashboard](https://cdn.oss.link/markdown/pyhdy.jpg)
 
-![Kibana](https://mritd.oss.link/markdown/p3qli.jpg)
+![Kibana](https://cdn.oss.link/markdown/p3qli.jpg)
 
 ### 三、部署 Ingress TLS
 
 上面已经搞定了 Ingress，下面就顺便把 TLS 怼上；官方给出的样例很简单，大致步骤就两步：**创建一个含有证书的 secret、在 Ingress 开启证书**；但是我不得不喷一下，文档就提那么一嘴，大坑一堆，比如多域名配置，还有下面这文档特么的是逗我玩呢？
 
-![douniwan](https://mritd.oss.link/markdown/t3n1j.jpg)
+![douniwan](https://cdn.oss.link/markdown/t3n1j.jpg)
 
 #### 3.1、创建证书
 
@@ -240,9 +240,9 @@ ingress "dashboard-kibana-ingress" created
 
 **注意：部署 TLS 后 80 端口会自动重定向到 443**，最终访问截图如下
 
-![Ingress TLS](https://mritd.oss.link/markdown/6o0pj.jpg)
+![Ingress TLS](https://cdn.oss.link/markdown/6o0pj.jpg)
 
-![Ingress TLS Certificate](https://mritd.oss.link/markdown/2ch1k.jpg)
+![Ingress TLS Certificate](https://cdn.oss.link/markdown/2ch1k.jpg)
 
 **历时 5 个小时鼓捣，到此结束**
 

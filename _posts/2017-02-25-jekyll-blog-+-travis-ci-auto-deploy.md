@@ -25,13 +25,13 @@ tags: Linux
 
 整体 "架构" 如下
 
-![老架构](https://mritd.oss.link/markdown/44qmr.jpg)
+![老架构](https://cdn.oss.link/markdown/44qmr.jpg)
 
 #### 1.2、存在问题
 
 按照以前的方式其实存在一个很大问题就是部署不及时，每次写完文章实际上都是自己 ssh 到服务器手动 pull 一下，感觉很繁琐；另一个大问题(这也不能算 bug) jekyll 的 rss 插件默认生成的 rss 引用地址为 `jekyll server -H x.x.x.x` 的监听地址，而容器化启动 jekyll 监听地址必然是 `0.0.0.0`；后果就是 feed.xml 无法访问，如下所示(这里监听的是 localhost)
 
-![feed error](https://mritd.oss.link/markdown/fq9im.jpg)
+![feed error](https://cdn.oss.link/markdown/fq9im.jpg)
 
 #### 1.3、新部署思路
 
@@ -56,15 +56,15 @@ tags: Linux
 
 首先注册好 Travis CI 账号，然后点击最左侧 `+` 按钮添加项目
 
-![add repo](https://mritd.oss.link/markdown/7axvx.jpg)
+![add repo](https://cdn.oss.link/markdown/7axvx.jpg)
 
 在想要使用 Travis CI 的项目上开启 build
 
-![open](https://mritd.oss.link/markdown/ouod9.jpg)
+![open](https://cdn.oss.link/markdown/ouod9.jpg)
 
 点击设置按钮设置一下项目
 
-![set options](https://mritd.oss.link/markdown/p1cad.jpg)
+![set options](https://cdn.oss.link/markdown/p1cad.jpg)
 
 ##### 2.2.2、.travis.yml 配置
 
@@ -119,7 +119,7 @@ Travis CI 在完成 build 后会在 `_site` 目录生成博客的静态文件，
 
 流程图如下
 
-![new auto deploy](https://mritd.oss.link/markdown/8tro9.jpg)
+![new auto deploy](https://cdn.oss.link/markdown/8tro9.jpg)
 
 ##### 2.3.2、实现方法
 
@@ -141,17 +141,17 @@ after_success:
 
 `$DEPLOY_TOKEN` 是从 Github 授权得到的，然后给于相应权限即可
 
-![Github token](https://mritd.oss.link/markdown/pco7k.jpg)
+![Github token](https://cdn.oss.link/markdown/pco7k.jpg)
 
 **关于代码中 `$DEPLOY_TOKEN` 这种重要的密码类变量，Travis CI 在每个项目下提供了设置环境变量功能，如下图**
 
-![setting](https://mritd.oss.link/markdown/7zmj2.jpg)
+![setting](https://cdn.oss.link/markdown/7zmj2.jpg)
 
-![add env](https://mritd.oss.link/markdown/0b91x.jpg)
+![add env](https://cdn.oss.link/markdown/0b91x.jpg)
 
 **设置后可在 `.travis.yml` 中直接引用，不过注意一定要关闭 `Display value in build log` 功能，否则 CI log 中会显示 `export XXXX=XXXX` 这种 log 从而暴露重要密码(公有项目的 log 别人可以查看的)；如果开启了那么尽快找到相应 build 并删除 log 日志，如下**
 
-![delete log](https://mritd.oss.link/markdown/kal69.jpg)
+![delete log](https://cdn.oss.link/markdown/kal69.jpg)
 
 在成功 push 了静态文件以后，就要实现服务器的自动更新，自动更新很简单，只需要写个脚本让容器启动后自动 pull 即可，这里不再阐述；下面说一下怎么通知服务器重启容器，这里的思路很简单，**让 CI ssh 上去执行一些 docker 命令即可**；但是有个很大问题是 **SSH 密码怎么整？**
 

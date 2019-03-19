@@ -151,11 +151,11 @@ volumes:
 
 Drone CI 工作时需要接入 GitLab 以完成项目同步等功能，所以在搭建好 GitLab 后需要为其创建 Application，创建方式如下所示
 
-![create drone app](https://mritd.oss.link/markdown/lzm4j.png)
+![create drone app](https://cdn.oss.link/markdown/lzm4j.png)
 
 创建 Application 时请自行更换回调地址域名，创建好后如下所示(后续 Drone CI 需要使用这两个 key)
 
-![drone app create success](https://mritd.oss.link/markdown/sl4yl.png)
+![drone app create success](https://cdn.oss.link/markdown/sl4yl.png)
 
 
 ## 三、Drone 服务端配置
@@ -289,14 +289,14 @@ HE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CB
 然后访问 `https://YOUR_DRONE_SERVER` 将会自动跳转到 GitLab Auth2 授权界面，授权登录即可；随后将会返回 Drone CI 界面，界面上会列出相应的项目列表，点击后面的开关按钮来开启对应项目的 Drone CI 服务
 
 
-![drone ci project list](https://mritd.oss.link/markdown/6u4fk.png)
+![drone ci project list](https://cdn.oss.link/markdown/6u4fk.png)
 
 
 ### 3.2、创建示例项目
 
 这里的示例项目为 Java 项目，采用 Gradle 构建，项目整体结构如下所示，源码可以从 [GitHub]() 下载
 
-![drone test project](https://mritd.oss.link/markdown/ybrjc.png)
+![drone test project](https://cdn.oss.link/markdown/ybrjc.png)
 
 将此项目推送到 GitLab 就会触发 Drone CI 自动构建(第一次肯定构建失败，具体看下面配置)
 
@@ -311,7 +311,7 @@ cli 工具下载后需要进行配置，目前只支持读取环境变量，使�
 
 其中 Token 可以在用户设置页面找到，如下
 
-![drone user token](https://mritd.oss.link/markdown/5fkvi.png)
+![drone user token](https://cdn.oss.link/markdown/5fkvi.png)
 
 配置好以后就可以使用 cli 操作 CI Server 了
 
@@ -374,7 +374,7 @@ drone registry add --repository drone/DroneCI-TestProject --hostname reg.mritd.m
 
 除此之外，某些特殊性的挂载行为默认也是不被允许的，需要在 Drone CI 中对项目做 `Trusted` 设置
 
-![Drone Project Trusted Setting](https://mritd.oss.link/markdown/gd60v.png)
+![Drone Project Trusted Setting](https://cdn.oss.link/markdown/gd60v.png)
 
 ## 四、与 GitLab CI 对比
 

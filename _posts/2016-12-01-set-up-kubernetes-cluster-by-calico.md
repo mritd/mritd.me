@@ -50,15 +50,15 @@ kubectl create -f calico.yaml
 
 创建完成后如下
 
-![Calico](https://mritd.oss.link/markdown/ub8yg.jpg)
+![Calico](https://cdn.oss.link/markdown/ub8yg.jpg)
 
 节点测试如下
 
-![all node](https://mritd.oss.link/markdown/p7zlt.jpg)
+![all node](https://cdn.oss.link/markdown/p7zlt.jpg)
 
-![node2](https://mritd.oss.link/markdown/ybdw5.jpg)
+![node2](https://cdn.oss.link/markdown/ybdw5.jpg)
 
-![node3](https://mritd.oss.link/markdown/3qm8t.jpg)
+![node3](https://cdn.oss.link/markdown/3qm8t.jpg)
 
 **更细节的性能体现等可参考 [将Docker网络方案进行到底](http://blog.dataman-inc.com/shurenyun-docker-133/)**
 

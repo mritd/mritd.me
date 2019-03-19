@@ -21,5 +21,5 @@ vim /etc/mysql/my.cnf
 
 **找到 bind-address 选项，将后面的 IP 改为 0.0.0.0，然后 执行重启 `service mysql restart`，截图如下:**
 
-![hexo_mysql_modify_listen_port](https://mritd.oss.link/markdown/hexo_mysql_modify_listen_port.png)
+![hexo_mysql_modify_listen_port](https://cdn.oss.link/markdown/hexo_mysql_modify_listen_port.png)
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

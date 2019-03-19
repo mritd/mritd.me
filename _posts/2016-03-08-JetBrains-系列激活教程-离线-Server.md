@@ -9,7 +9,7 @@ multilingual: false
 tags: Linux
 ---
 
-![JetBrains_logo](https://mritd.oss.link/markdown/JetBrains_Drive_to_develop.png)
+![JetBrains_logo](https://cdn.oss.link/markdown/JetBrains_Drive_to_develop.png)
 
 ## 一、前言
 > 激活采用离线服务器激活方式，如有网的情况下可直接采用 [http://idea.lanyus.com/](http://idea.lanyus.com/) 的激活方法。经济许可的情况下请购买正版 [https://www.jetbrains.com/idea/buy/](https://www.jetbrains.com/idea/buy/)。
@@ -34,7 +34,7 @@ sc create idea_license_server binPath="D:\Work\windows\jetbrains_license_server\
 
 最后激活时选择服务器激活，地址填写 `http://127.0.0.1:9123`，到此激活完成。
 
-![hexo_idea_license_server_win](https://mritd.oss.link/markdown/hexo_idea_license_server_win.png)
+![hexo_idea_license_server_win](https://cdn.oss.link/markdown/hexo_idea_license_server_win.png)
 
 
 ### Linux/Mac 下激活

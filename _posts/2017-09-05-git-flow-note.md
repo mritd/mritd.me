@@ -27,7 +27,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
 
 Github Flow 和 GitLab Flow 对于持续发布支持比较好，但是原始版本的 Git Flow 对于传统的按照版本发布更加友好一些，所以以下主要说明以下 Git Flow 的工作流程；Git Flow 主要分支模型如下
 
-![git flow](https://mritd.oss.link/markdown/80dio.jpg)
+![git flow](https://cdn.oss.link/markdown/80dio.jpg)
 
 
 在整个分支模型中 **存在两个长期分支: develop 和 master**，其中 develop 分支为开发分支，master 为生产分支；**master 代码始终保持随时可以部署到线上的状态；develop 分支用于合并最新提交的功能性代码**；具体的分支定义如下
@@ -88,7 +88,7 @@ git-flow 安装以及使用具体请参考 [git-flow 备忘清单](https://danie
 
 针对 Git 的 commit message 目前已经有了成熟的生成工具，比较有名的为 [commitizen-cli](https://github.com/commitizen/cz-cli) 工具，其采用 node.js 编写，执行 `git cz` 命令能够自动生成符合 Angular 社区规范的 commit message；不过由于其使用 node.js 编写，所以安装前需要安装 node.js，因此可能不适合其他非 node.js 的项目使用；这里推荐一个基于 shell 编写的 [Git-toolkit](https://cimhealth.github.io/git-toolkit)，安装此工具后执行 `git ci` 命令进行提交将会产生交互式生成 Angular git commit message 格式的提交说明，截图如下:
 
-![git ci](https://mritd.oss.link/markdown/xnonb.jpg)
+![git ci](https://cdn.oss.link/markdown/xnonb.jpg)
 
 ### 六、GitLab 整合
 

@@ -42,17 +42,17 @@ echo "I am a plugin named kubectl-foo"
 
 1.12 kubectl 插件最大的变化就是加载方式变了，由原来的放置在指定位置，还要为其编写 yaml 配置变成了现在的类似 git 扩展命令的方式: **只要放置在 PATH 下，并以 `kubectl-` 开头的可执行文件都被认为是 `kubectl` 的插件**；所以你可以随便弄个小脚本(比如上面的代码)，然后改好名字赋予可执行权限，扔到 PATH 下即可
 
-![test-plugin](https://mritd.oss.link/markdown/s64v6.png)
+![test-plugin](https://cdn.oss.link/markdown/s64v6.png)
 
 ### 2.2、插件变量
 
 同以前不通，**以前版本的执行插件时，`kubectl` 会向插件传递一些特定的与 `kubectl` 相关的变量，现在则只会传递标准变量；即 `kubectl` 能读到什么变量，插件就能读到，其他的私有化变量(比如 `KUBECTL_PLUGINS_CURRENT_NAMESPACE`)不会再提供**
 
-![plugin env](https://mritd.oss.link/markdown/vs1c3.png)
+![plugin env](https://cdn.oss.link/markdown/vs1c3.png)
 
 **并且新版本的插件体系，所有选项(`flag`) 将全部交由插件本身处理，kubectl 不会再解析**，比如下面的 `--help` 交给了自定义插件处理，由于脚本内没有处理这个选项，所以相当于选项无效了
 
-![plugin flag](https://mritd.oss.link/markdown/8ch88.png)
+![plugin flag](https://cdn.oss.link/markdown/8ch88.png)
 
 还有就是 **传递给插件的第一个参数永远是插件自己的绝对位置，比如这个 `test` 插件在执行时的 `$0` 是 `/usr/local/bin/kubectl-test`**
 
@@ -67,19 +67,19 @@ echo "I am a plugin named kubectl-foo"
 
 `PATH` 优先匹配原则跟传统的命令查找一致，即当多个路径下存在同名的插件时，则采用最先查找到的插件
 
-![plugin path](https://mritd.oss.link/markdown/ljyp5.png)
+![plugin path](https://cdn.oss.link/markdown/ljyp5.png)
 
 当你的插件文件名中包含 `-` ，并且 `kubectl` 在无法精确找到插件时会尝试自动拼接命令来尝试匹配；如下所示，在没有找到 `kubectl-test` 这个命令时会尝试拼接参数查找
 
-![auto merge](https://mritd.oss.link/markdown/l85bp.png)
+![auto merge](https://cdn.oss.link/markdown/l85bp.png)
 
 由于以上这种查找机制，**当命令中确实包含 `-` 时，必须进行转义以 `_` 替换，否则 `kubectl` 会提示命令未找到错误**；替换后可直接使用 `kubectl 插件命令(包含-)` 执行，同时也支持以原始插件名称执行(使用 `_`)
 
-![name contains dash](https://mritd.oss.link/markdown/7vm0l.png)
+![name contains dash](https://cdn.oss.link/markdown/7vm0l.png)
 
 在复杂插件体系下，多个插件可能包含同样的前缀，此时将遵序最精确查找原则；即当两个插件 `kubectl-test-aaa`、`kubectl-test-aaa-bbb` 同时存在，并且执行 `kubectl test aaa bbb` 命令时，优先匹配最精确的插件 `kubectl-test-aaa-bbb`，**而不是将 `bbb` 作为参数传递给 `kubectl-test-aaa` 插件**
 
-![precise search](https://mritd.oss.link/markdown/god8q.png)
+![precise search](https://cdn.oss.link/markdown/god8q.png)
 
 ### 2.4、总结
 

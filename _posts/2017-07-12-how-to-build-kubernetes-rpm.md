@@ -155,7 +155,7 @@ rpmbuild -ba kubernetes.spec
 
 最后 build 完成后如下
 
-![rpms](https://mritd.oss.link/markdown/7tn2a.jpg)
+![rpms](https://cdn.oss.link/markdown/7tn2a.jpg)
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权

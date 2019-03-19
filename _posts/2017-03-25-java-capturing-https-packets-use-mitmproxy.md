@@ -16,7 +16,7 @@ tags: Java
 
 mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓取 HTTP(S) 数据包并加以分析；对于 HTTPS 抓包，首先要在本地添加 mitmproxy 的根证书，然后 mitmproxy 通过以下方式进行抓包：
 
-![mitmproxy1](https://mritd.oss.link/markdown/x7lir.jpg)
+![mitmproxy1](https://cdn.oss.link/markdown/x7lir.jpg)
 
 - 1、客户端发起一个到 mitmproxy 的连接，并且发出HTTP CONNECT 请求
 - 2、mitmproxy作出响应(200)，模拟已经建立了CONNECT通信管道
@@ -55,7 +55,7 @@ mitmproxy -p 4000 --no-mouse
 
 **浏览器通过设置代理访问 mitm.it**
 
-![access](https://mritd.oss.link/markdown/unrnc.jpg)
+![access](https://cdn.oss.link/markdown/unrnc.jpg)
 
 
 选择对应平台并将其证书加入到系统信任根证书列表即可；对于 Java 程序来说可能有时候并不会生效，所以必须 **修改 keystore**，修改如下
@@ -81,11 +81,11 @@ public void beforeTest(){
 
 **然后保证在发送 HTTPS 请求之前此代码执行即可，以下为抓包示例**
 
-![zhuabao](https://mritd.oss.link/markdown/kuzhd.jpg)
+![zhuabao](https://cdn.oss.link/markdown/kuzhd.jpg)
 
 通过方向键+回车即可选择某个请求查看报文信息
 
-![detail](https://mritd.oss.link/markdown/vfifu.jpg)
+![detail](https://cdn.oss.link/markdown/vfifu.jpg)
 
 ### 三、Java 其他代理设置
 

@@ -106,27 +106,27 @@ Environment="ALL_PROXY=socks5://1.2.3.4:1080
 
 默认情况下 `SwitchyOmega` 可以通过 Chrome 进行在线安装，但是众所周知的原因这是不可能的，不过国内有一些网站提供代理下载 Chrome 扩展的服务，如 `https://chrome-extension-downloader.com`、`http://yurl.sinaapp.com/crx.php`，这些网站只需要提供插件 ID 即可帮你下载下来；**`SwitchyOmega` 插件的 ID 为 `padekgcemlokbadohgkifijomclgjgif`，注意下载时不要使用 chrome 下载，因为他自身的防护机制会阻止你下载扩展程序**；下载后打开 chrome 的扩展设置页，将 crx 文件拖入安装即可，如下所示:
 
-![install chrome plugin](https://mritd.oss.link/markdown/zruoq.png)
+![install chrome plugin](https://cdn.oss.link/markdown/zruoq.png)
 
 #### 4.2、SwitchyOmega 配置
 
 SwitchyOmega 安装成功后在 Chrome 右上角有显示，右键点击该图标，进入选项设置后如下所示:
 
-![SwitchyOmega detail](https://mritd.oss.link/markdown/ouh48.png)
+![SwitchyOmega detail](https://cdn.oss.link/markdown/ouh48.png)
 
 默认情况下左侧只有两个加速模式，一个叫做 `proxy` 另一个叫做 `autoproxy`；根据加速模式不同 SwitchyOmega 在浏览网页时选择的加速通道也不同，不同的加速方式可以通过点击 **新建情景模式** 按钮创建，下面介绍一下常用的两种情景模式:
 
 **代理服务器:** 这种情景模式创建后需要填写一个代理地址，该地址可以是 http(s)/socks5(4) 类型；创建成功后，浏览器右上角切换到该情景模式，**浏览器访问所有网页的流量全部通过该代理地址发出**，不论你是访问百度还是 Google
  
- ![create test proxy1](https://mritd.oss.link/markdown/idbi4.png)
+ ![create test proxy1](https://cdn.oss.link/markdown/idbi4.png)
  
- ![create test proxy2](https://mritd.oss.link/markdown/52m7b.png)
+ ![create test proxy2](https://cdn.oss.link/markdown/52m7b.png)
  
 **自动切换模式:** 这种情景模式并不需要填写实际的代理地址，而是需要填写一些规则；创建完成后插件中选择此种情景模式时，浏览器访问所有网页流量会根据填写的规则自动路由，然后选择合适的代理情景模式；可以实现智能切换代理
  
- ![create test auto proxy1](https://mritd.oss.link/markdown/7u6mv.png)
+ ![create test auto proxy1](https://cdn.oss.link/markdown/7u6mv.png)
  
- ![create test auto proxy2](https://mritd.oss.link/markdown/m5x36.png)
+ ![create test auto proxy2](https://cdn.oss.link/markdown/m5x36.png)
  
  
 综上所述，首先应该创建(或者修改默认的 proxy 情景模式)一个代理服务器的情景模式，然后填写好你的加速 IP 和对应的协议端口；接下来在浏览器中切换到该情景模式尝试访问 kubenretes.io 等网站测试加速效果；成功后再次新建一个自动切换情景模式，**保证 `规则列表规则` 一栏后面的下拉列表对应到你刚刚创建的代理服务器情景模式，`默认情景模式` 后面的下拉列表对应到直接连接情景模式，然后点击下面的 `添加规则列表` 按钮，选择 `AutoProxy` 单选框，`规则列表网址` 填写 `https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt`(这是一个开源项目收集的需要加速的网址列表)**；最后在浏览器中切换到自动切换情景模式，然后访问 kubernetes.io、baidu.com 等网站测试是否能自动切换情景模式

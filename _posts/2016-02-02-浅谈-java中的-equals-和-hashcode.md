@@ -9,7 +9,7 @@ multilingual: false
 tags: Java
 ---
 
-![hexo_java_equals_hashcode.jpg](https://mritd.oss.link/markdown/hexo_java_equals_hashcode.jpg)
+![hexo_java_equals_hashcode.jpg](https://cdn.oss.link/markdown/hexo_java_equals_hashcode.jpg)
 
 ## equals 方法
 > equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。
