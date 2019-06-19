@@ -1001,6 +1001,7 @@ KUBE_SCHEDULER_ARGS="   --address=127.0.0.1 \
                         --port=10251 \
                         --tls-cert-file=/etc/kubernetes/ssl/kube-scheduler.pem \
                         --tls-private-key-file=/etc/kubernetes/ssl/kube-scheduler-key.pem \
+                        --v=2"
 ```
 
 shceduler 同  controller manager 一样将不安全端口绑定在本地，安全端口对外公开
