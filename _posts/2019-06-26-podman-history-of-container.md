@@ -42,14 +42,14 @@ tags: Docker Podman
 
 在一段时间的沉默后，Docker 公司又创造了 "Swarm" 这个工具，妄图夺走 Google 公司利用 Kubernetes 赢来的蛋糕；当然，Google 这个公司极其庞大，人数众多，而且在这个社会有很大的影响地位...
 
-终于，巨人苏醒了，Google 联合了 Redhat、Microsoft、IBM、Intel、Cisco 等公司决定对这个爱动歪脑筋的 Docker 公司进行制裁；当然制裁的手段不能过于暴力，那样会让别人落下把柄，成为别人的笑料，被人所不耻；**最总他们决定制订规范，成立组织，明确规定 Docker 的角色，以及它应当拥有的能力，这个规范被称之为 `OCI Runtime Specification`；自此之后各大公司宣布他们容器相关的工具只兼容 OCI 标准，无论是 Docker 还是 rkt 等工具，只要实现了这些标准，就可以配合这些容器工具进行使用**。
+终于，巨人苏醒了，Google 联合了 Redhat、Microsoft、IBM、Intel、Cisco 等公司决定对这个爱动歪脑筋的 Docker 公司进行制裁；当然制裁的手段不能过于暴力，那样会让别人落下把柄，成为别人的笑料，被人所不耻；**最总他们决定制订规范，成立组织，明确规定 Docker 的角色，以及它应当拥有的能力，这些规范包括但不限于 `CRI`、`CNI` 等；自此之后各大公司宣布他们容器相关的工具只兼容 CRI 等相关标准，无论是 Docker 还是 rkt 等工具，只要实现了这些标准，就可以配合这些容器工具进行使用**。
  
 
 ## 三、成败
 
-自此之后，Docker 跌下神坛，各路大神纷纷创造满足 OCI 规范的工具用来取代 Docker，Docker 丢失了往日一家独大的场面，最终为了顺应时代发展，拆分自己成为模块化组件；这些模块化组件被放置在 [mobyproject](https://mobyproject.org/) 中方便其他人重复利用。
+自此之后，Docker 跌下神坛，各路大神纷纷创造满足 CRI 等规范的工具用来取代 Docker，Docker 丢失了往日一家独大的场面，最终为了顺应时代发展，拆分自己成为模块化组件；这些模块化组件被放置在 [mobyproject](https://mobyproject.org/) 中方便其他人重复利用。
 
-时至今日，虽然 Docker 已经不负以前，但是仍然是容器化首选工具，因为 Docker 是一个完整的产品，它可以提供出了满足 OCI 标准以外更加方便的功能；但是制裁并非没有结果，Google 公司借此创造了 cri-o 用来满足 OCI 标准，其他公司也相应创建了对应的 OCI 实现；**为了进一步分化 Docker 势力，一个叫作 Podman 的工具被创建，它以 cri-o 为基础，兼容大部份 Docker 命令的方式开始抢夺 Dcoker 用户**；到目前为止 Podman 已经可以在大部份功能上替代 Docker。
+时至今日，虽然 Docker 已经不负以前，但是仍然是容器化首选工具，因为 Docker 是一个完整的产品，它可以提供除了满足 CRI 等标准以外更加方便的功能；但是制裁并非没有结果，Google 公司借此创造了 cri-o 用来满足 CRI 标准，其他公司也相应创建了对应的 CRI 实现；**为了进一步分化 Docker 势力，一个叫作 Podman 的工具被创建，它以 cri-o 为基础，兼容大部份 Docker 命令的方式开始抢夺 Dcoker 用户**；到目前为止 Podman 已经可以在大部份功能上替代 Docker。
 
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
