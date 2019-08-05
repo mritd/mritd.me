@@ -30,7 +30,7 @@ Kubernetes 运行深度学习应用实际上要解决的唯一问题就是 GPU �
 
 在安装 Nvidia Docker 之前，请确保 Nvidia 驱动以及 CUDA 安装成功，并且 `nvidia-smi` 能正确显示，如下图所示(来源于网络)
 
-![nvidia-smi](https://ws3.sinaimg.cn/large/006tNc79ly1fl3vz0yt6tj30wy0mg4qp.jpg)
+![nvidia-smi](https://oss.link/markdown/tdpbk.jpg)
 
 Nvidia Docker 安装极其简单，具体可参考 [官方文档](https://github.com/NVIDIA/nvidia-docker)，安装完成后请自行按照官方文档描述进行测试，这一步一般不会出现问题
 
@@ -40,7 +40,7 @@ Nvidia Docker 安装极其简单，具体可参考 [官方文档](https://github
 
 当所有基础环境就绪后，最后需要开启 Kubernetes 对 GPU 支持；Kubernetes GPU 文档可以参考 [这里](https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus)，实际主要就是在 kubelet 启动时增加 `--feature-gates="Accelerators=true"` 参数，如下所示
 
-![Accelerators](https://ws3.sinaimg.cn/large/006tKfTcly1fl4zj170jxj31is0z8ahj.jpg)
+![Accelerators](https://oss.link/markdown/gifs3.jpg)
 
 所有节点全部修改完成后重启 kubelet 即可，**如果一台机器上有不同型号的显卡，同时希望 Pod 能区别使用不同的 GPU 则可以按照 [官方文档](https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/#api) 增加相应设置**
 
@@ -119,6 +119,6 @@ print(sess.run(a + b))
 
 成功后截图如下
 
-![Tensorflow](https://ws2.sinaimg.cn/large/006tKfTcly1fl501nwxhyj31kw0ti7nd.jpg)
+![Tensorflow](https://oss.link/markdown/l7ufl.jpg)
 
 转载请注明出处，本文采用 [CC4.0](http://creativecommons.org/licenses/by-nc-nd/4.0/) 协议授权
