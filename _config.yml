@@ -95,6 +95,9 @@ service-worker: true
 # Friends
 friends: [
     {
+        title: "DBA的罗浮宫",
+        href: "http://mdba.cn"
+    },{
         title: "谢雨轩",
         href: "http://www.xieyuxuan.cc"
     },{
