@@ -177,6 +177,30 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/">
+        <h2 class="post-title">
+            Jekyll + Travis CI 自动化部署博客
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  由于 Github 访问过慢，所以博客一直放在自己的服务器上托管；博客采用了 Jekyll 生成静态展点，最近鼓捣了一下完成了 Travis CI 自动化部署，顺便在此记录下
+
+
+一、原部署方式
+
+1.1、原部署流程
+
+由于博客访问量不大，同时 jekyll 启动后会开启 http 服务器，还能自动监听文件变化实现刷新；所以以前的方式就是打了一个 docker 镜像，然后镜像每隔 15...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on February 25, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/02/09/gcr.io-registy-proxy/">
         <h2 class="post-title">
             gcr.io 仓库代理
@@ -387,39 +411,6 @@ git 目前支持 4 种协议: https、ssh、git、本地文件；其中 git协�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/">
-        <h2 class="post-title">
-            Kubernetes 网络搭建-Calico
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  接上一篇，大早上试下 Calico，从目前的各种评论上来看 Calico 的性能要更好些，不过由于是纯三层的解决方案，某些用到二层的应用可能无法使用，不过目前还没遇到过，个人理解这种情况应该不多
-
-
-一、环境准备
-
-首先有个 kubernetes 集群，集群网络处于未部署状态，集群信息如下
-
-
-  
-    
-      IP地址
-      节点
-    
-  
-  
-    
-  ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on December 1, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -454,7 +445,7 @@ git 目前支持 4 种协议: https、ssh、git、本地文件；其中 git协�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

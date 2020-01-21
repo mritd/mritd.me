@@ -177,6 +177,24 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2018/09/17/google-container-registry-sync/">
+        <h2 class="post-title">
+            Google container registry 同步
+        </h2>
+        
+        <div class="post-content-preview">
+            一、起因
+
+玩 Kubenretes 的基本都很清楚，Kubernetes 很多组件的镜像全部托管在 gcr.io 这个域名下(现在换成了 k8s.gcr.io)；由于众所周知的原因，这个网站在国内是不可达的；当时由于 Docker Hub 提供了 Auto Build 功能，机智的想到一个解决办法；就是利用 Docker Hub 的 Auto Build，创建只有一行的 Dockerfil...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 17, 2018
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2018/08/28/kubernetes-tls-bootstrapping-with-bootstrap-token/">
         <h2 class="post-title">
             使用 Bootstrap Token 完成 TLS Bootstrapping
@@ -383,23 +401,6 @@ kube...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/">
-        <h2 class="post-title">
-            Kubernetes TLS bootstrapping 那点事
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  前段时间撸了一会 Kubernetes 官方文档，在查看 TLS bootstrapping 这块是发现已经跟 1.4 的时候完全不一样了；目前所有搭建文档也都保留着 1.4 时代的配置，在看完文档后发现目前配置有很多问题，同时也埋下了 隐藏炸弹，这个问题可能会在一年后爆发…..后果就是集群 node 全部掉线；所以仔细的撸了一下这个文档，从元旦到写此文章的时间都在测试这个 TLS b...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 7, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -434,7 +435,7 @@ kube...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

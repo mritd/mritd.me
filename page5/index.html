@@ -177,6 +177,32 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
+        <h2 class="post-title">
+            阿里云部署 Kubernetes
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  公司有点小需求，在阿里云上开了几台机器，然后部署了一个 Kubernetes 集群，以下记录一下阿里云踩坑问题，主要是网络组件的坑。
+
+
+一、部署环境
+
+部署时开启了 4 台 ECS 实例，基本部署环境与裸机部署相似，其中区别是，阿里云网络采用 VPC 网络，不过以下流程适用于经典网络；以下为各个组件版本:
+
+
+  OS CentOS
+  Kernel 4.4.88-1.el7.elr...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 20, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/09/05/git-flow-note/">
         <h2 class="post-title">
             CI/CD Git Flow
@@ -375,28 +401,6 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/03/25/java-capturing-https-packets-use-mitmproxy/">
-        <h2 class="post-title">
-            Java 配合 mitmproxy HTTPS 抓包调试
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  今天对接接口，对方给的 Demo 和已有项目用的 HTTP 工具不是一个；后来出现人家的好使，我的死活不通的情况；无奈之下开始研究 Java 抓包，所以怕忘了记录一下……
-
-
-一、mitmproxy 简介
-
-mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓取 HTTP(S) 数据包并加以分析；对于 HTTPS 抓包，首先要在本地添加 mitmproxy 的根证书，然后...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 25, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -431,7 +435,7 @@ mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

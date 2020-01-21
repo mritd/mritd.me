@@ -280,6 +280,28 @@ Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Ser
 <hr>
 
 <div class="post-preview">
+    <a href="/2020/01/21/set-up-percona-server/">
+        <h2 class="post-title">
+            Percona MySQL 搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近被拉去折腾 MySQL 了，Kuberntes 相关的文章停更了好久… MySQL 折腾完了顺便记录一下折腾过程，值得注意的是本篇文章从实际生产环境文档中摘录，部分日志和数据库敏感信息已被胡乱替换，所以不要盲目复制粘贴。
+
+
+一、版本信息
+
+目前采用 MySQL fork 版本 Percona Server 5.7.28，监控方面选择 Percona Monitoring and ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2019/11/05/writing-plugin-for-coredns/">
         <h2 class="post-title">
             如何编写一个 CoreDNS 插件
@@ -406,35 +428,6 @@ import (
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/03/23/oh-my-rime/">
-        <h2 class="post-title">
-            Mac 下调校 Rime
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  由于对国内输入法隐私问题的担忧，决定放弃搜狗等输入法；为了更加 Geek 一些，最终决定了折腾 Rime(鼠须管) 输入法，以下为一些折腾的过程
-
-
-国际惯例先放点图压压惊
-
-
-
-
-
-
-一、安装
-
-安装 Rime 没啥好说的，直接从官网下载最新版本的安装包既可；安装完成后配置文件位于 ~/Library/Rime 位置；在进行后续折腾之前我建议还是先 cp -r ~/Library/R...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 23, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -465,7 +458,7 @@ import (
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

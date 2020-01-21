@@ -177,6 +177,39 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/">
+        <h2 class="post-title">
+            Kubernetes 网络搭建-Calico
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  接上一篇，大早上试下 Calico，从目前的各种评论上来看 Calico 的性能要更好些，不过由于是纯三层的解决方案，某些用到二层的应用可能无法使用，不过目前还没遇到过，个人理解这种情况应该不多
+
+
+一、环境准备
+
+首先有个 kubernetes 集群，集群网络处于未部署状态，集群信息如下
+
+
+  
+    
+      IP地址
+      节点
+    
+  
+  
+    
+  ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on December 1, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/">
         <h2 class="post-title">
             Kubernetes 网络搭建-flannel
@@ -461,34 +494,6 @@ yum install -y gmp-...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/10/09/kubernetes-1.4-create-cluster/">
-        <h2 class="post-title">
-            kubernetes 1.4 集群搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  距离 kubernetes 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案
-
-
-一、环境准备
-
-基本环境为 3 台虚拟机，虚拟机信息如下
-
-
-  
-    
-      IP 地址
-      节点...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on October 9, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -523,7 +528,7 @@ yum install -y gmp-...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

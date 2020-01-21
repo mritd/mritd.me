@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/03/25/java-capturing-https-packets-use-mitmproxy/">
+        <h2 class="post-title">
+            Java 配合 mitmproxy HTTPS 抓包调试
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  今天对接接口，对方给的 Demo 和已有项目用的 HTTP 工具不是一个；后来出现人家的好使，我的死活不通的情况；无奈之下开始研究 Java 抓包，所以怕忘了记录一下……
+
+
+一、mitmproxy 简介
+
+mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓取 HTTP(S) 数据包并加以分析；对于 HTTPS 抓包，首先要在本地添加 mitmproxy 的根证书，然后...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 25, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/21/private-maintenance-docker-mirror-registry/">
         <h2 class="post-title">
             个人维护的 Docker 加速仓库
@@ -382,30 +404,6 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/">
-        <h2 class="post-title">
-            Jekyll + Travis CI 自动化部署博客
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  由于 Github 访问过慢，所以博客一直放在自己的服务器上托管；博客采用了 Jekyll 生成静态展点，最近鼓捣了一下完成了 Travis CI 自动化部署，顺便在此记录下
-
-
-一、原部署方式
-
-1.1、原部署流程
-
-由于博客访问量不大，同时 jekyll 启动后会开启 http 服务器，还能自动监听文件变化实现刷新；所以以前的方式就是打了一个 docker 镜像，然后镜像每隔 15...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 25, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -440,7 +438,7 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

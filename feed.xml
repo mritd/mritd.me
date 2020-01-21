@@ -5,8 +5,8 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 21 Jan 2020 21:39:26 +0800</pubDate>
-    <lastBuildDate>Tue, 21 Jan 2020 21:39:26 +0800</lastBuildDate>
+    <pubDate>Tue, 21 Jan 2020 21:43:01 +0800</pubDate>
+    <lastBuildDate>Tue, 21 Jan 2020 21:43:01 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
     
       <item>
@@ -1214,6 +1214,1037 @@ W0112 19:23:06.466778   28637 validation.go:28] Cannot validate kube-proxy confi
       </item>
     
       <item>
+        <title>Percona MySQL 搭建</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;最近被拉去折腾 MySQL 了，Kuberntes 相关的文章停更了好久… MySQL 折腾完了顺便记录一下折腾过程，值得注意的是本篇文章从实际生产环境文档中摘录，部分日志和数据库敏感信息已被胡乱替换，所以不要盲目复制粘贴。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一版本信息&quot;&gt;一、版本信息&lt;/h2&gt;
+
+&lt;p&gt;目前采用 MySQL fork 版本 Percona Server 5.7.28，监控方面选择 Percona Monitoring and Management 2.1.0，对应监控 Client 版本为 2.1.0&lt;/p&gt;
+
+&lt;h2 id=&quot;二percona-server-安装&quot;&gt;二、Percona Server 安装&lt;/h2&gt;
+
+&lt;p&gt;为保证兼容以及稳定性，MySQL 宿主机系统选择 CentOS 7，Percona Server 安装方式为 rpm 包，安装后由 Systemd 守护&lt;/p&gt;
+
+&lt;h3 id=&quot;21下载安装包&quot;&gt;2.1、下载安装包&lt;/h3&gt;
+
+&lt;p&gt;安装包下载地址为 &lt;a href=&quot;https://www.percona.com/downloads/Percona-Server-5.7/LATEST/&quot;&gt;https://www.percona.com/downloads/Percona-Server-5.7/LATEST/&lt;/a&gt;，下载时选择 &lt;code class=&quot;highlighter-rouge&quot;&gt;Download All Packages Together&lt;/code&gt;，下载后是所有组件全量的压缩 tar 包。&lt;/p&gt;
+
+&lt;h3 id=&quot;22安装前准备&quot;&gt;2.2、安装前准备&lt;/h3&gt;
+
+&lt;p&gt;针对 CentOS 7 系统，安装前升级所有系统组件库，执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;yum update&lt;/code&gt; 既可；大部份 &lt;strong&gt;CentOS 7 安装后可能会附带 &lt;code class=&quot;highlighter-rouge&quot;&gt;mariadb-libs&lt;/code&gt; 包，这个包会默认创建一些配置文件，导致后面的 Percona Server 无法覆盖它(例如 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/my.cnf&lt;/code&gt;)，所以安装 Percona Server 之前需要卸载它 &lt;code class=&quot;highlighter-rouge&quot;&gt;yum remove mariadb-libs&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;针对于数据存储硬盘，目前统一为 SSD 硬盘，挂载点为 &lt;code class=&quot;highlighter-rouge&quot;&gt;/data&lt;/code&gt;，挂载方式可以采用 &lt;code class=&quot;highlighter-rouge&quot;&gt;fstab&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-mount&lt;/code&gt;，分区格式目前采用 &lt;code class=&quot;highlighter-rouge&quot;&gt;xfs&lt;/code&gt; 格式。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;SSD 优化有待补充…&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;23安装-percona-server&quot;&gt;2.3、安装 Percona Server&lt;/h3&gt;
+
+&lt;p&gt;Percona Server tar 包解压后会有 9 个 rpm 包，实际安装时只需要安装其中 4 个既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;yum &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;Percona-Server-client-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-server-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-shared-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-shared-compat-57-5.7.28-31.1.el7.x86_64.rpm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;24安装后调整&quot;&gt;2.4、安装后调整&lt;/h3&gt;
+
+&lt;h4 id=&quot;241硬盘调整&quot;&gt;2.4.1、硬盘调整&lt;/h4&gt;
+
+&lt;p&gt;目前 MySQL 数据会统一存放到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/data&lt;/code&gt; 目录下，所以需要将单独的数据盘挂载到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/data&lt;/code&gt; 目录；&lt;strong&gt;如果是 SSD 硬盘还需要调整系统 I/O 调度器等其他优化。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;242目录预创建&quot;&gt;2.4.2、目录预创建&lt;/h4&gt;
+
+&lt;p&gt;Percona Server 安装完成后，由于配置调整原因，还会用到一些其他的数据目录，这些目录可以预先创建并授权&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; /var/log/mysql /data/mysql_tmp
+&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; mysql:mysql /var/log/mysql /data/mysql_tmp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;/var/log/mysql&lt;/code&gt; 目录用来存放 MySQL 相关的日志(不包括 binlog)，&lt;code class=&quot;highlighter-rouge&quot;&gt;/data/mysql_tmp&lt;/code&gt; 用来存放 MySQL 运行时产生的缓存文件。&lt;/p&gt;
+
+&lt;h4 id=&quot;243文件描述符调整&quot;&gt;2.4.3、文件描述符调整&lt;/h4&gt;
+
+&lt;p&gt;由于 rpm 安装的 Percona Server 会采用 Systemd 守护，所以如果想修改文件描述符配置应当调整 Systemd 配置文件&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;vim /usr/lib/systemd/system/mysqld.service
+
+&lt;span class=&quot;c&quot;&gt;# Sets open_files_limit&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 注意 infinity = 65536&lt;/span&gt;
+LimitCORE &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; infinity
+LimitNOFILE &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; infinity
+LimitNPROC &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; infinity
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然后执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemctl daemon-reload&lt;/code&gt; 重载既可。&lt;/p&gt;
+
+&lt;h4 id=&quot;244配置文件调整&quot;&gt;2.4.4、配置文件调整&lt;/h4&gt;
+
+&lt;p&gt;Percona Server 安装完成后也会生成 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/my.cnf&lt;/code&gt; 配置文件，不过不建议直接修改该文件；修改配置文件需要进入到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/percona-server.conf.d/&lt;/code&gt; 目录调整相应配置；以下为配置样例(&lt;strong&gt;生产环境 mysqld 配置需要优化调整&lt;/strong&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;[mysql]&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;auto-rehash&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;default_character_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqld.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Percona Server template configuration
+&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;[mysqld]&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3306&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;datadir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/data/mysql&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;socket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/data/mysql/mysql.sock&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;pid_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/data/mysql/mysqld.pid&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 服务端编码
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;character_set_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 服务端排序
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;collation_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4_general_ci&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 强制使用 utf8mb4 编码集，忽略客户端设置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_character_set_client_handshake&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 日志输出到文件
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;FILE&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启常规日志输出
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;general_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 常规日志输出文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;general_log_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 错误日志位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld-error.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 记录慢查询
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;slow_query_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 慢查询时间(大于 1s 被视为慢查询)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;long_query_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 慢查询日志文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;slow_query_log_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld-slow.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 临时文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;tmpdir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/data/mysql_tmp&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 线程池缓存(refs https://my.oschina.net/realfighter/blog/363853)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;thread_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# The number of open tables for all threads.(refs https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_table_open_cache)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;table_open_cache&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16384&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 文件描述符(此处修改不生效，请修改 systemd service 配置) 
+# refs https://www.percona.com/blog/2017/10/12/open_files_limit-mystery/
+# refs https://www.cnblogs.com/wxxjianchi/p/10370419.html
+#open_files_limit=65535
+# 表定义缓存(5.7 以后自动调整)
+# refs https://dev.mysql.com/doc/refman/5.6/en/server-system-variables.html#sysvar_table_definition_cache
+# refs http://mysql.taobao.org/monthly/2015/08/10/
+#table_definition_cache=16384
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sort_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;join_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;read_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;read_rnd_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;key_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;bulk_insert_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# myisam_sort_buffer_size 与 sort_buffer_size 区别请参考(https://stackoverflow.com/questions/7871027/myisam-sort-buffer-size-vs-sort-buffer-size)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;myisam_sort_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;64M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 内部内存临时表大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;tmp_table_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 用户创建的 MEMORY 表最大大小(tmp_table_size 受此值影响)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_heap_table_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启查询缓存
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;query_cache_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 查询缓存大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;query_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# sql mode
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sql_mode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;########### Network ###########
+# 最大连接数(该参数受到最大文件描述符影响，如果不生效请检查最大文件描述符设置)
+# refs https://stackoverflow.com/questions/39976756/the-max-connections-in-mysql-5-7
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_connections&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1500&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# mysql 堆栈内暂存的链接数量
+# 当短时间内链接数量超过 max_connections 时，部分链接会存储在堆栈内，存储数量受此参数控制
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;back_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 最大链接错误，针对于 client 主机，超过此数量的链接错误将会导致 mysql server 针对此主机执行锁定(禁止链接 ERROR 1129 )
+# 此错误计数仅在 mysql 链接握手失败才会计算，一般出现问题时都是网络故障
+# refs https://www.cnblogs.com/kerrycode/p/8405862.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_connect_errors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;100000&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# mysql server 允许的最大数据包大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_allowed_packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;64M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 交互式客户端链接超时(30分钟自动断开)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;interactive_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1800&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 非交互式链接超时时间(10分钟)
+# 如果客户端有连接池，则需要协商此参数(refs https://database.51cto.com/art/201909/603519.htm)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;wait_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;600&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 跳过外部文件系统锁定
+# If you run multiple servers that use the same database directory (not recommended), 
+# each server must have external locking enabled.
+# refs https://dev.mysql.com/doc/refman/5.7/en/external-locking.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_external_locking&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 跳过链接的域名解析(开启此选项后 mysql 用户授权的 host 方式失效)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_name_resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 禁用主机名缓存，每次都会走 DNS
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;host_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;########### REPL ###########
+# 开启 binlog
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_bin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;mysql-bin&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 作为从库时，同步信息依然写入 binlog，方便此从库再作为其他从库的主库
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_slave_updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# server id，默认为 ipv4 地址去除第一段
+# eg: 172.16.10.11 =&amp;gt; 161011
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;server_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;161011&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每次次事务 binlog 刷新到磁盘
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sync_binlog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;100&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 格式(refs https://zhuanlan.zhihu.com/p/33504555)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;binlog_format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;row&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 自动清理时间
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;expire_logs_days&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启 relay-log，一般作为 slave 时开启
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;relay_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;mysql-replay&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 主从复制时跳过 test 库
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;replicate_ignore_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每个 session binlog 缓存
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;binlog_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 滚动大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_binlog_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1024M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# GTID 相关(refs https://keithlan.github.io/2016/06/23/gtid/)
+#gtid_mode=1
+#enforce_gtid_consistency=1
+&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;########### InnoDB ###########
+# 永久表默认存储引擎
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;default_storage_engine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;InnoDB&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 系统表空间数据文件大小(初始化为 1G，并且自动增长)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_data_file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ibdata1:1G:autoextend&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 缓存池大小
+# innodb_buffer_pool_size 必须等于 innodb_buffer_pool_chunk_size*innodb_buffer_pool_instances，或者是其整数倍
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-buffer-pool-resize.html
+# refs https://zhuanlan.zhihu.com/p/60089484
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;7680M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_instances&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_chunk_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;128M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 强制恢复(refs https://www.askmaclean.com/archives/mysql-innodb-innodb_force_recovery.html)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_force_recovery&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB buffer 预热(refs http://www.dbhelp.net/2017/01/12/mysql-innodb-buffer-pool-warmup.html)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_dump_at_shutdown&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_load_at_startup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 日志组中的日志文件数
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_files_in_group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB redo 日志大小
+# refs https://www.percona.com/blog/2017/10/18/chose-mysql-innodb_log_file_size/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_file_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256MB&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 缓存还未提交的事务的缓冲区大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 在事务提交后的日志写入频率
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_flush_log_at_trx_commit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB DML 操作行级锁等待时间
+# 超时返回 ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+# refs https://ningyu1.github.io/site/post/75-mysql-lock-wait-timeout-exceeded/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_lock_wait_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 行级锁超时是否回滚整个事务，默认为 OFF 仅回滚上一条语句
+# 此时应用程序可以接受到错误后选择是否继续提交事务(并没有违反 ACID 原子性)
+# refs https://www.cnblogs.com/hustcat/archive/2012/11/18/2775487.html
+#innodb_rollback_on_timeout=ON
+# InnoDB 数据写入磁盘的方式，具体见博客文章
+# refs https://www.cnblogs.com/gomysql/p/3595806.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_flush_method&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;O_DIRECT&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 缓冲池脏页刷新百分比
+# refs https://dbarobin.com/2015/08/29/mysql-optimization-under-ssd
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_max_dirty_pages_pct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;50&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 每秒执行的写IO量
+# refs https://www.centos.bz/2016/11/mysql-performance-tuning-15-config-item/#10.INNODB_IO_CAPACITY,%20INNODB_IO_CAPACITY_MAX
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_io_capacity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;500&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_io_capacity_max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1000&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 请求并发 InnoDB 线程数
+# refs https://www.cnblogs.com/xinysu/p/6439715.html#_lab2_1_0
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_thread_concurrency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;60&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 再使用多个 InnoDB 表空间时，允许打开的最大 &quot;.ibd&quot; 文件个数，不设置默认 300，
+# 并且取与 table_open_cache 相比较大的一个，此选项独立于 open_files_limit
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_open_files
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_open_files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;65535&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每个 InnoDB 表都存储在独立的表空间(.ibd)中
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_file_per_table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 事务级别(可重复读，会出幻读)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;transaction_isolation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;REPEATABLE-READ&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 是否在搜索和索引扫描中使用间隙锁(gap locking)，不建议使用未来将删除
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_locks_unsafe_for_binlog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 后台清理线程数，更大的值有助于 DML 执行性能，&amp;gt;= 5.7.8 默认为 4
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_purge_threads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqld_safe.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#
+# The Percona Server 5.7 configuration file.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;[mysqld_safe]&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;pid-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/run/mysqld/mysqld.pid&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;socket&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/run/mysqld/mysqld.sock&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;nice&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqldump.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;[mysqldump]&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;quick&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;default-character-set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;max_allowed_packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256M&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;25启动&quot;&gt;2.5、启动&lt;/h3&gt;
+
+&lt;p&gt;配置文件调整完成后启动既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemctl start mysqld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;启动完成后默认 root 密码会自动生成，通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;grep 'temporary password' /var/log/mysql/*&lt;/code&gt; 查看默认密码；获得默认密码后可以通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;mysqladmin -S /data/mysql/mysql.sock -u root -p password&lt;/code&gt; 修改 root 密码。&lt;/p&gt;
+
+&lt;h2 id=&quot;三percona-monitoring-and-management&quot;&gt;三、Percona Monitoring and Management&lt;/h2&gt;
+
+&lt;p&gt;数据库创建成功后需要增加 pmm 监控，后续将会通过监控信息来调优数据库，所以数据库监控必不可少。&lt;/p&gt;
+
+&lt;h3 id=&quot;31安装前准备&quot;&gt;3.1、安装前准备&lt;/h3&gt;
+
+&lt;p&gt;pmm 监控需要使用特定用户来监控数据信息，所以需要预先为 pmm 创建用户&lt;/p&gt;
+
+&lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;USE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mysql&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;GRANT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ALL&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIVILEGES&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ON&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'pmm'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'%'&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IDENTIFIED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'pmm12345'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;GRANT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;OPTION&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;FLUSH&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIVILEGES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;32安装-pmm-server&quot;&gt;3.2、安装 PMM Server&lt;/h3&gt;
+
+&lt;p&gt;pmm server 端推荐直接使用 docker 启动，以下为样例 docker compose&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.7'&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;pmm&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;percona/pmm-server:2.1.0&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;container_name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;pmm&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;restart&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;always&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/srv&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;80:80&quot;&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;443:443&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;如果想要自定义证书，请将证书复制到 volume 内的 nginx 目录下，自定义证书需要以下证书文件&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pmmserver.node ➜ tree
+&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+├── ca-certs.pem
+├── certificate.conf  &lt;span class=&quot;c&quot;&gt;# 此文件是 pmm 默认生成自签证书的配置文件，不需要关注&lt;/span&gt;
+├── certificate.crt
+├── certificate.key
+└── dhparam.pem
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;pmm server 启动后访问 &lt;code class=&quot;highlighter-rouge&quot;&gt;http(s)://IP_ADDRESS&lt;/code&gt; 既可进入 granafa 面板，默认账户名和密码都是 &lt;code class=&quot;highlighter-rouge&quot;&gt;admin&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;33安装-pmm-client&quot;&gt;3.3、安装 PMM Client&lt;/h3&gt;
+
+&lt;p&gt;PMM Client 同样采用 rpm 安装，下载地址 &lt;a href=&quot;https://www.percona.com/downloads/pmm2/&quot;&gt;https://www.percona.com/downloads/pmm2/&lt;/a&gt;，当前采用最新的 2.1.0 版本；rpm 下载完成后直接 &lt;code class=&quot;highlighter-rouge&quot;&gt;yum install&lt;/code&gt; 既可。&lt;/p&gt;
+
+&lt;p&gt;rpm 安装完成后使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;pmm-admin&lt;/code&gt; 命令配置服务端地址，并添加当前 mysql 实例监控&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 配置服务端地址&lt;/span&gt;
+pmm-admin config &lt;span class=&quot;nt&quot;&gt;--server-url&lt;/span&gt; https://admin:admin@pmm.mysql.node 172.16.0.11 generic mysql
+&lt;span class=&quot;c&quot;&gt;# 配置当前 mysql 实例&lt;/span&gt;
+pmm-admin add mysql &lt;span class=&quot;nt&quot;&gt;--username&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;pmm &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;pmm12345 mysql 172.16.0.11:3306
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;完成后稍等片刻既可在 pmm server 端的 granafa 中看到相关数据。&lt;/p&gt;
+
+&lt;h2 id=&quot;四数据导入&quot;&gt;四、数据导入&lt;/h2&gt;
+
+&lt;p&gt;从原始数据库 dump 相关库，并导入到新数据库既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# dump&lt;/span&gt;
+mysqldump &lt;span class=&quot;nt&quot;&gt;-h&lt;/span&gt; 172.16.1.10 &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--master-data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;2 &lt;span class=&quot;nt&quot;&gt;--routines&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--triggers&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--single_transaction&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--databases&lt;/span&gt; DATABASE_NAME &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; dump.sql
+&lt;span class=&quot;c&quot;&gt;# load&lt;/span&gt;
+mysql &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; /data/mysql/mysql.sock &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &amp;lt; dump.sql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;数据导入后重建业务用户既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;USE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mysql&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;GRANT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ALL&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIVILEGES&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ON&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'test_user'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'%'&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IDENTIFIED&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'test_user'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;GRANT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;OPTION&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;FLUSH&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIVILEGES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;五数据备份&quot;&gt;五、数据备份&lt;/h2&gt;
+
+&lt;h3 id=&quot;51安装-xtrabackup&quot;&gt;5.1、安装 xtrabackup&lt;/h3&gt;
+
+&lt;p&gt;目前数据备份采用 Perconra xtrabackup 工具，xtrabackup 可以实现高速、压缩带增量的备份；xtrabackup 安装同样采用 rpm 方式，下载地址为 &lt;a href=&quot;https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/&quot;&gt;https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/&lt;/a&gt;，下载完成后执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;yum install&lt;/code&gt; 既可&lt;/p&gt;
+
+&lt;h3 id=&quot;52备份工具&quot;&gt;5.2、备份工具&lt;/h3&gt;
+
+&lt;p&gt;目前备份工具开源在 &lt;a href=&quot;https://github.com/gozap/mybak&quot;&gt;GitHub&lt;/a&gt; 上，每次全量备份会写入 &lt;code class=&quot;highlighter-rouge&quot;&gt;.full-backup&lt;/code&gt; 文件，增量备份会写入 &lt;code class=&quot;highlighter-rouge&quot;&gt;.inc-backup&lt;/code&gt; 文件&lt;/p&gt;
+
+&lt;h3 id=&quot;53配置-systemd&quot;&gt;5.3、配置 systemd&lt;/h3&gt;
+
+&lt;p&gt;为了使备份自动运行，目前将定时任务配置到 systemd 中，由 systemd 调度并执行；以下为相关 systemd 配置文件&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-full.service&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql full backup
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;network.target
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Service]
+&lt;span class=&quot;nv&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;simple
+&lt;span class=&quot;nv&quot;&gt;Restart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;on-failure
+&lt;span class=&quot;nv&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/local/bin/mybak &lt;span class=&quot;nt&quot;&gt;--backup-dir&lt;/span&gt; /data/mysql_backup &lt;span class=&quot;nt&quot;&gt;--prefix&lt;/span&gt; mysql full
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;multi-user.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-inc.service&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql incremental backup
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;network.target
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Service]
+&lt;span class=&quot;nv&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;simple
+&lt;span class=&quot;nv&quot;&gt;Restart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;on-failure
+&lt;span class=&quot;nv&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/local/bin/mybak &lt;span class=&quot;nt&quot;&gt;--backup-dir&lt;/span&gt; /data/mysql_backup &lt;span class=&quot;nt&quot;&gt;--prefix&lt;/span&gt; mysql inc
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;multi-user.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-compress.service&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql backup compress
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;network.target
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Service]
+&lt;span class=&quot;nv&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;simple
+&lt;span class=&quot;nv&quot;&gt;Restart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;on-failure
+&lt;span class=&quot;nv&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/local/bin/mybak &lt;span class=&quot;nt&quot;&gt;--backup-dir&lt;/span&gt; /data/mysql_backup &lt;span class=&quot;nt&quot;&gt;--prefix&lt;/span&gt; mysql compress &lt;span class=&quot;nt&quot;&gt;--clean&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;multi-user.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-full.timer&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql weekly full backup
+&lt;span class=&quot;c&quot;&gt;# 备份之前依赖相关目录的挂载&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data.mount
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data-mysql_backup.mount
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Timer]
+&lt;span class=&quot;c&quot;&gt;# 目前每周日一个全量备份&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;OnCalendar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Sun &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; 3:00
+&lt;span class=&quot;nv&quot;&gt;Persistent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;timers.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-inc.timer&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql weekly full backup
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data.mount
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data-mysql_backup.mount
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Timer]
+&lt;span class=&quot;c&quot;&gt;# 每天三个增量备份&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;OnCalendar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; 9:00
+&lt;span class=&quot;nv&quot;&gt;OnCalendar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; 13:00
+&lt;span class=&quot;nv&quot;&gt;OnCalendar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; 18:00
+&lt;span class=&quot;nv&quot;&gt;Persistent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;timers.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql-backup-compress.timer&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;mysql weekly backup compress
+&lt;span class=&quot;c&quot;&gt;# 备份之前依赖相关目录的挂载&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data.mount
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;data-mysql_backup.mount
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Timer]
+&lt;span class=&quot;c&quot;&gt;# 目前每周日一个全量备份，自动压缩后同时完成清理&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;OnCalendar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Sun &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;-&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; 5:00
+&lt;span class=&quot;nv&quot;&gt;Persistent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;timers.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;创建好相关文件后启动相关定时器既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cp&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.timer &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.service /lib/systemd/system
+systemctl daemon-reload
+systemctl start mysql-backup-full.timer mysql-backup-inc.timer mysql-backup-compress.timer
+systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;mysql-backup-full.timer mysql-backup-inc.timer mysql-backup-compress.timer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;六数据恢复&quot;&gt;六、数据恢复&lt;/h2&gt;
+
+&lt;h3 id=&quot;61全量备份恢复&quot;&gt;6.1、全量备份恢复&lt;/h3&gt;
+
+&lt;p&gt;针对于全量备份，只需要按照官方文档的还原顺序进行还原既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 由于备份时进行了压缩，所以先解压备份文件&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--decompress&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--parallel&lt;/span&gt; 4 &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502
+&lt;span class=&quot;c&quot;&gt;# 执行预处理&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--prepare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502
+&lt;span class=&quot;c&quot;&gt;# 执行恢复(恢复时自动根据 my.cnf 将数据覆盖到 data 数据目录)&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--copy-back&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502
+&lt;span class=&quot;c&quot;&gt;# 修复数据目录权限&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; mysql:mysql /data/mysql
+&lt;span class=&quot;c&quot;&gt;# 启动 mysql&lt;/span&gt;
+systemctl start mysqld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;62增量备份恢复&quot;&gt;6.2、增量备份恢复&lt;/h3&gt;
+
+&lt;p&gt;对于增量备份恢复，其与全量备份恢复的根本区别在于: &lt;strong&gt;对于非最后一个增量文件的预处理必须使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;--apply-log-only&lt;/code&gt; 选项防止运行回滚阶段的处理&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 对所有备份文件进行解压处理&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;dir &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do &lt;/span&gt;xtrabackup &lt;span class=&quot;nt&quot;&gt;--decompress&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--parallel&lt;/span&gt; 4 &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$dir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 对全量备份文件执行预处理(注意增加 --apply-log-only 选项)&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--prepare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--apply-log-only&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502
+&lt;span class=&quot;c&quot;&gt;# 对非最后一个增量备份执行预处理&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--prepare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--apply-log-only&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502 &lt;span class=&quot;nt&quot;&gt;--incremental-dir&lt;/span&gt; /data/mysql_backup/mysql-inc-20191206230802
+&lt;span class=&quot;c&quot;&gt;# 对最后一个增量备份执行预处理(不需要 --apply-log-only)&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--prepare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502 &lt;span class=&quot;nt&quot;&gt;--incremental-dir&lt;/span&gt; /data/mysql_backup/mysql-inc-20191207031005
+&lt;span class=&quot;c&quot;&gt;# 执行恢复(恢复时自动根据 my.cnf 将数据覆盖到 data 数据目录)&lt;/span&gt;
+xtrabackup &lt;span class=&quot;nt&quot;&gt;--copy-back&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt; /data/mysql_backup/mysql-20191205230502
+&lt;span class=&quot;c&quot;&gt;# 修复数据目录权限&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; mysql:mysql /data/mysql
+&lt;span class=&quot;c&quot;&gt;# 启动 mysql&lt;/span&gt;
+systemctl start mysqld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;63创建-slave&quot;&gt;6.3、创建 slave&lt;/h3&gt;
+
+&lt;p&gt;针对 xtrabackup 备份的数据可以直接恢复成 slave 节点，具体步骤如下:&lt;/p&gt;
+
+&lt;p&gt;首先将备份文件复制到目标机器，然后执行解压(默认备份工具采用 lz4 压缩)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;xtrabackup &lt;span class=&quot;nt&quot;&gt;--decompress&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;xxxxxx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;解压完成后执行预处理操作(&lt;strong&gt;在执行预处理之前请确保 slave 机器上相关配置文件与 master 相同，并且处理好数据目录存放等&lt;/strong&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;xtrabackup &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root &lt;span class=&quot;nt&quot;&gt;--password&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;xxxxxxx &lt;span class=&quot;nt&quot;&gt;--prepare&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;xxxx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;预处理成功后便可执行恢复，以下命令将自动读取 &lt;code class=&quot;highlighter-rouge&quot;&gt;my.cnf&lt;/code&gt; 配置，自动识别数据目录位置并将数据文件移动到该位置&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;xtrabackup &lt;span class=&quot;nt&quot;&gt;--move-back&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--target-dir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;xxxxx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;所由准备就绪后需要进行权限修复&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; mysql:mysql MYSQL_DATA_DIR
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后在 mysql 内启动 slave 既可，slave 信息可通过从数据备份目录的 &lt;code class=&quot;highlighter-rouge&quot;&gt;xtrabackup_binlog_info&lt;/code&gt; 中获取&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 获取备份 POS 信息&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;xxxxxx/xtrabackup_binlog_info
+
+&lt;span class=&quot;c&quot;&gt;# 创建 slave 节点&lt;/span&gt;
+CHANGE MASTER TO
+    &lt;span class=&quot;nv&quot;&gt;MASTER_HOST&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'192.168.2.48'&lt;/span&gt;,
+    &lt;span class=&quot;nv&quot;&gt;MASTER_USER&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'repl'&lt;/span&gt;,
+    &lt;span class=&quot;nv&quot;&gt;MASTER_PASSWORD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'xxxxxxx'&lt;/span&gt;,
+    &lt;span class=&quot;nv&quot;&gt;MASTER_LOG_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'mysql-bin.000005'&lt;/span&gt;,
+    &lt;span class=&quot;nv&quot;&gt;MASTER_LOG_POS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;52500595&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 启动 slave&lt;/span&gt;
+start slave&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+show slave status &lt;span class=&quot;se&quot;&gt;\G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;七生产处理&quot;&gt;七、生产处理&lt;/h2&gt;
+
+&lt;h3 id=&quot;71数据目录&quot;&gt;7.1、数据目录&lt;/h3&gt;
+
+&lt;p&gt;目前生产环境数据目录位置调整到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/mysql&lt;/code&gt;，所以目录权限处理也要做对应调整&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; /var/log/mysql /home/mysql_tmp
+&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; mysql:mysql /var/log/mysql /home/mysql_tmp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;72配置文件&quot;&gt;7.2、配置文件&lt;/h3&gt;
+
+&lt;p&gt;生产环境目前节点配置如下&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CPU: &lt;code class=&quot;highlighter-rouge&quot;&gt;Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;RAM: &lt;code class=&quot;highlighter-rouge&quot;&gt;128G&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;所以配置文件也需要做相应的优化调整&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;mysql.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;[mysql]&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;auto-rehash&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;default_character_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqld.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Percona Server template configuration
+&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;[mysqld]&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3306&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;datadir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/home/mysql/mysql&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;socket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/home/mysql/mysql/mysql.sock&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;pid_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/home/mysql/mysql/mysqld.pid&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 服务端编码
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;character_set_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 服务端排序
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;collation_server&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4_general_ci&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 强制使用 utf8mb4 编码集，忽略客户端设置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_character_set_client_handshake&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 日志输出到文件
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;FILE&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启常规日志输出
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;general_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 常规日志输出文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;general_log_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 错误日志位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld-error.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 记录慢查询
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;slow_query_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 慢查询时间(大于 1s 被视为慢查询)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;long_query_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 慢查询日志文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;slow_query_log_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/mysql/mysqld-slow.log&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 临时文件位置
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;tmpdir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/home/mysql/mysql_tmp&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# The number of open tables for all threads.(refs https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_table_open_cache)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;table_open_cache&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16384&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 文件描述符(此处修改不生效，请修改 systemd service 配置) 
+# refs https://www.percona.com/blog/2017/10/12/open_files_limit-mystery/
+# refs https://www.cnblogs.com/wxxjianchi/p/10370419.html
+#open_files_limit=65535
+# 表定义缓存(5.7 以后自动调整)
+# refs https://dev.mysql.com/doc/refman/5.6/en/server-system-variables.html#sysvar_table_definition_cache
+# refs http://mysql.taobao.org/monthly/2015/08/10/
+#table_definition_cache=16384
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sort_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;join_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;read_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;read_rnd_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;key_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# MyiSAM 引擎专用(内部临时磁盘表可能会用)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;bulk_insert_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# myisam_sort_buffer_size 与 sort_buffer_size 区别请参考(https://stackoverflow.com/questions/7871027/myisam-sort-buffer-size-vs-sort-buffer-size)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;myisam_sort_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;64M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 内部内存临时表大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;tmp_table_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 用户创建的 MEMORY 表最大大小(tmp_table_size 受此值影响)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_heap_table_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启查询缓存
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;query_cache_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 查询缓存大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;query_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;32M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# sql mode
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sql_mode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;########### Network ###########
+# 最大连接数(该参数受到最大文件描述符影响，如果不生效请检查最大文件描述符设置)
+# refs https://stackoverflow.com/questions/39976756/the-max-connections-in-mysql-5-7
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_connections&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1500&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# mysql 堆栈内暂存的链接数量
+# 当短时间内链接数量超过 max_connections 时，部分链接会存储在堆栈内，存储数量受此参数控制
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;back_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 最大链接错误，针对于 client 主机，超过此数量的链接错误将会导致 mysql server 针对此主机执行锁定(禁止链接 ERROR 1129 )
+# 此错误计数仅在 mysql 链接握手失败才会计算，一般出现问题时都是网络故障
+# refs https://www.cnblogs.com/kerrycode/p/8405862.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_connect_errors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;100000&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# mysql server 允许的最大数据包大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_allowed_packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;64M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 交互式客户端链接超时(30分钟自动断开)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;interactive_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1800&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 非交互式链接超时时间(10分钟)
+# 如果客户端有连接池，则需要协商此参数(refs https://database.51cto.com/art/201909/603519.htm)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;wait_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;28800&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 跳过外部文件系统锁定
+# If you run multiple servers that use the same database directory (not recommended), 
+# each server must have external locking enabled.
+# refs https://dev.mysql.com/doc/refman/5.7/en/external-locking.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_external_locking&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 跳过链接的域名解析(开启此选项后 mysql 用户授权的 host 方式失效)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;skip_name_resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 禁用主机名缓存，每次都会走 DNS
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;host_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;########### REPL ###########
+# 开启 binlog
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_bin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;mysql-bin&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 作为从库时，同步信息依然写入 binlog，方便此从库再作为其他从库的主库
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;log_slave_updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# server id，默认为 ipv4 地址去除第一段
+# eg: 192.168.2.48 =&amp;gt; 168248
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;server_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;168248&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每 n 次事务 binlog 刷新到磁盘
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;sync_binlog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;100&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 格式(refs https://zhuanlan.zhihu.com/p/33504555)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;binlog_format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;row&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 自动清理时间
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;expire_logs_days&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;20&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 开启 relay-log，一般作为 slave 时开启
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;relay_log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;mysql-replay&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 主从复制时跳过 test 库
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;replicate_ignore_db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每个 session binlog 缓存
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;binlog_cache_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# binlog 滚动大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;max_binlog_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1024M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# GTID 相关(refs https://keithlan.github.io/2016/06/23/gtid/)
+#gtid_mode=1
+#enforce_gtid_consistency=1
+&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;########### InnoDB ###########
+# 永久表默认存储引擎
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;default_storage_engine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;InnoDB&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 系统表空间数据文件大小(初始化为 1G，并且自动增长)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_data_file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ibdata1:1G:autoextend&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 缓存池大小(资源充足，为所欲为)
+# innodb_buffer_pool_size 必须等于 innodb_buffer_pool_chunk_size*innodb_buffer_pool_instances，或者是其整数倍
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-buffer-pool-resize.html
+# refs https://zhuanlan.zhihu.com/p/60089484
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;61440M&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_instances&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 默认 128M
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_chunk_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;128M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 强制恢复(refs https://www.askmaclean.com/archives/mysql-innodb-innodb_force_recovery.html)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_force_recovery&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB buffer 预热(refs http://www.dbhelp.net/2017/01/12/mysql-innodb-buffer-pool-warmup.html)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_dump_at_shutdown&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_buffer_pool_load_at_startup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 日志组中的日志文件数
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_files_in_group&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB redo 日志大小
+# refs https://www.percona.com/blog/2017/10/18/chose-mysql-innodb_log_file_size/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_file_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256MB&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 缓存还未提交的事务的缓冲区大小
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_log_buffer_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16M&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 在事务提交后的日志写入频率
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_flush_log_at_trx_commit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB DML 操作行级锁等待时间
+# 超时返回 ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+# refs https://ningyu1.github.io/site/post/75-mysql-lock-wait-timeout-exceeded/
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_lock_wait_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 行级锁超时是否回滚整个事务，默认为 OFF 仅回滚上一条语句
+# 此时应用程序可以接受到错误后选择是否继续提交事务(并没有违反 ACID 原子性)
+# refs https://www.cnblogs.com/hustcat/archive/2012/11/18/2775487.html
+#innodb_rollback_on_timeout=ON
+# InnoDB 数据写入磁盘的方式，具体见博客文章
+# refs https://www.cnblogs.com/gomysql/p/3595806.html
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_flush_method&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;O_DIRECT&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 缓冲池脏页刷新百分比
+# refs https://dbarobin.com/2015/08/29/mysql-optimization-under-ssd
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_max_dirty_pages_pct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;50&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 每秒执行的写IO量
+# refs https://www.centos.bz/2016/11/mysql-performance-tuning-15-config-item/#10.INNODB_IO_CAPACITY,%20INNODB_IO_CAPACITY_MAX
+# refs https://www.alibabacloud.com/blog/testing-io-performance-with-sysbench_594709
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_io_capacity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;8000&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;innodb_io_capacity_max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;16000&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 请求并发 InnoDB 线程数
+# refs https://www.cnblogs.com/xinysu/p/6439715.html#_lab2_1_0
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_thread_concurrency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 再使用多个 InnoDB 表空间时，允许打开的最大 &quot;.ibd&quot; 文件个数，不设置默认 300，
+# 并且取与 table_open_cache 相比较大的一个，此选项独立于 open_files_limit
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_open_files
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_open_files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;65535&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 每个 InnoDB 表都存储在独立的表空间(.ibd)中
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_file_per_table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 事务级别(可重复读，会出幻读)
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;transaction_isolation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;REPEATABLE-READ&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 是否在搜索和索引扫描中使用间隙锁(gap locking)，不建议使用未来将删除
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_locks_unsafe_for_binlog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# InnoDB 后台清理线程数，更大的值有助于 DML 执行性能，&amp;gt;= 5.7.8 默认为 4
+&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;innodb_purge_threads&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqld_safe.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#
+# The Percona Server 5.7 configuration file.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;[mysqld_safe]&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;pid-file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/run/mysqld/mysqld.pid&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;socket&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/var/run/mysqld/mysqld.sock&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;nice&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;mysqldump.cnf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-ini highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;[mysqldump]&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;quick&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;default-character-set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;utf8mb4&lt;/span&gt;
+&lt;span class=&quot;py&quot;&gt;max_allowed_packet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256M&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;八常用诊断&quot;&gt;八、常用诊断&lt;/h2&gt;
+
+&lt;h3 id=&quot;81动态配置-diff&quot;&gt;8.1、动态配置 diff&lt;/h3&gt;
+
+&lt;p&gt;mysql 默认允许在实例运行后使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;set global VARIABLES=VALUE&lt;/code&gt; 的方式动态调整一些配置，这可能导致在运行一段时间后(运维动态修改)实例运行配置和配置文件中配置不一致；所以&lt;strong&gt;建议定期 diff 运行时配置与配置文件配置差异，防制特殊情况下 mysql 重启后运行期配置丢失&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-config-diff /etc/percona-server.conf.d/mysqld.cnf &lt;span class=&quot;nv&quot;&gt;h&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--report-width&lt;/span&gt; 100
+Enter MySQL password:
+2 config differences
+Variable                  /etc/percona-server.conf.d/mysqld.cnf mysql47.test.com
+&lt;span class=&quot;o&quot;&gt;=========================&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=====================================&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==================&lt;/span&gt;
+innodb_max_dirty_pages... 50                                    50.000000
+skip_name_resolve         0                                     ON
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;82配置优化建议&quot;&gt;8.2、配置优化建议&lt;/h3&gt;
+
+&lt;p&gt;Percona Toolkit 提供了一个诊断工具，用于对 mysql 内的配置进行扫描并给出优化建议，在初始化时可以使用此工具评估 mysql 当前配置的具体情况&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-variable-advisor 127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'^$'&lt;/span&gt;
+Enter password: 
+
+&lt;span class=&quot;c&quot;&gt;# WARN delay_key_write: MyISAM index blocks are never flushed until necessary.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# WARN innodb_flush_log_at_trx_commit-1: InnoDB is not configured in strictly ACID mode.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# NOTE innodb_max_dirty_pages_pct: The innodb_max_dirty_pages_pct is lower than the default.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# WARN max_connections: If the server ever really has more than a thousand threads running, then the system is likely to spend more time scheduling threads than really doing useful work.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# NOTE read_buffer_size-1: The read_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# NOTE read_rnd_buffer_size-1: The read_rnd_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# NOTE sort_buffer_size-1: The sort_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# NOTE innodb_data_file_path: Auto-extending InnoDB files can consume a lot of disk space that is very difficult to reclaim later.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# WARN myisam_recover_options: myisam_recover_options should be set to some value such as BACKUP,FORCE to ensure that table corruption is noticed.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# WARN sync_binlog: Binary logging is enabled, but sync_binlog isn't configured so that every transaction is flushed to the binary log for durability.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;83死锁诊断&quot;&gt;8.3、死锁诊断&lt;/h3&gt;
+
+&lt;p&gt;使用 pt-deadlock-logger 工具可以诊断当前的死锁状态，以下为对死锁检测的测试&lt;/p&gt;
+
+&lt;p&gt;首先创建测试数据库和表&lt;/p&gt;
+
+&lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;创建测试库&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;DATABASE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dbatest&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;CHARACTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;utf8mb4&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;COLLATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;utf8mb4_unicode_ci&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;切换到测试库并建立测试表&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;USE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dbatest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IF&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;EXISTS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;INT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AUTO_INCREMENT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;KEY&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;VARCHAR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createtime&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;TIMESTAMP&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;DEFAULT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;CURRENT_TIMESTAMP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ENGINE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;INNODB&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在一个其他终端上开启 pt-deadlock-logger 检测&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-deadlock-logger 127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--tab&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;检测开启后进行死锁测试&lt;/p&gt;
+
+&lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;插入两条测试数据&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;INSERT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;INTO&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;VALUES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'test1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;INSERT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;INTO&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;VALUES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'test2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;在两个终端下进行交叉事务&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;统一关闭自动提交&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AUTOCOMMIT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AUTOCOMMIT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;交叉事务，终端&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;先更新第一条数据，终端&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;先更新第二条数据&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'x1'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'x2'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;此后终端&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;再尝试更新第二条数据，终端&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;再尝试更新第一条数据；造成等待互向释放锁的死锁&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'lock2'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;terminal_2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'lock1'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;此时由于开启了&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mysql&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;innodb&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;的死锁自动检测机制，会导致终端&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;弹出错误&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;ERROR&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1213&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;40001&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Deadlock&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;found&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;trying&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;get&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;restarting&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;同时&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deadlock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;有日志输出&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;server&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;ts&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;txn_id&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;txn_time&lt;/span&gt;        &lt;span class=&quot;k&quot;&gt;user&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;hostname&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;lock_type&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;lock_mode&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;wait_hold&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;victim&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;2019&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T14&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;57&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;87&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;52&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;root&lt;/span&gt;            &lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;dbatest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RECORD&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'lock2'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;2019&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T14&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;57&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;89&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;41&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;root&lt;/span&gt;            &lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;dbatest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RECORD&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;       &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;test&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'lock1'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;84查看-io-详情&quot;&gt;8.4、查看 IO 详情&lt;/h3&gt;
+
+&lt;p&gt;不同于 &lt;code class=&quot;highlighter-rouge&quot;&gt;iostat&lt;/code&gt;，&lt;code class=&quot;highlighter-rouge&quot;&gt;pt-diskstats&lt;/code&gt; 提供了更加详细的 IO 详情统计，并且据有交互式处理，执行一下命令将会实时检测 IO 状态&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-diskstats &lt;span class=&quot;nt&quot;&gt;--show-timestamps&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;其中几个关键值含义如下(更详细的请参考官方文档 &lt;a href=&quot;https://www.percona.com/doc/percona-toolkit/LATEST/pt-diskstats.html#output&quot;&gt;https://www.percona.com/doc/percona-toolkit/LATEST/pt-diskstats.html#output&lt;/a&gt;)&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;rd_s: 每秒平均读取次数。这是发送到基础设备的 IO 请求数。通常，此数量少于应用程序发出的逻辑IO请求的数量。更多请求可能已排队到块设备，但是其中一些请求通常在发送到磁盘之前先进行合并。&lt;/li&gt;
+  &lt;li&gt;rd_avkb: 读取的平均大小，以千字节为单位。&lt;/li&gt;
+  &lt;li&gt;rd_mb_s: 每秒读取的平均兆字节数。&lt;/li&gt;
+  &lt;li&gt;rd_mrg: 在发送到物理设备之前在队列调度程序中合并在一起的读取请求的百分比。&lt;/li&gt;
+  &lt;li&gt;rd_rt: 读取操作的平均响应时间(以毫秒为单位)；这是端到端响应时间，包括在队列中花费的时间。这是发出 IO 请求的应用程序看到的响应时间，而不是块设备下的物理磁盘的响应时间。&lt;/li&gt;
+  &lt;li&gt;busy: 设备至少有一个请求 wall-clock 时间的比例；等同于 &lt;code class=&quot;highlighter-rouge&quot;&gt;iostat&lt;/code&gt; 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;％util&lt;/code&gt;。&lt;/li&gt;
+  &lt;li&gt;in_prg: 正在进行的请求数。与读写并发是从可靠数字中生成的平均值不同，该数字是一个时样本，您可以看到它可能表示请求峰值，而不是真正的长期平均值。如果此数字很大，则从本质上讲意味着设备高负载运行。&lt;/li&gt;
+  &lt;li&gt;ios_s: 物理设备的平均吞吐量，以每秒 IO 操作(IOPS)为单位。此列显示基础设备正在处理的总 IOPS；它是 rd_s 和 wr_s 的总和。&lt;/li&gt;
+  &lt;li&gt;qtime: 平均排队时间；也就是说，请求在发送到物理设备之前在设备调度程序队列中花费的时间。&lt;/li&gt;
+  &lt;li&gt;stime: 平均服务时间；也就是说，请求完成在队列中的等待之后，物理设备处理请求的时间。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;85重复索引优化&quot;&gt;8.5、重复索引优化&lt;/h3&gt;
+
+&lt;p&gt;pt-duplicate-key-checker 工具提供了对数据库重复索引和外键的自动查找功能，工具使用如下&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-duplicate-key-checker 127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt;
+Enter password:
+
+&lt;span class=&quot;c&quot;&gt;# A software update is available:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# ########################################################################&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# aaaaaa.aaaaaa_audit&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# ########################################################################&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# index_linkId is a duplicate of unique_linkId&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Key definitions:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#   KEY `index_linkId` (`link_id`)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#   UNIQUE KEY `unique_linkId` (`link_id`),&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Column types:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#         `link_id` bigint(20) not null comment 'bdid'&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# To remove this duplicate index, execute:&lt;/span&gt;
+ALTER TABLE &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;aaaaaa.aaaaaa_audit&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt; DROP INDEX &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;index_linkId&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# ########################################################################&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Summary of indexes&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# ########################################################################&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Size Duplicate Indexes   927420&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Total Duplicate Indexes  3&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Total Indexes            847&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;86表统计&quot;&gt;8.6、表统计&lt;/h3&gt;
+
+&lt;p&gt;pt-find 是一个很方便的表查找统计工具，默认的一些选项可以实现批量查找符合条件的表，甚至执行一些 SQL 处理命令&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 批量查找大于 5G 的表，并排序&lt;/span&gt;
+pt-find &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt; 127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--tablesize&lt;/span&gt; +5G | &lt;span class=&quot;nb&quot;&gt;sort&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-rn&lt;/span&gt;
+Enter password: 
+
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;rss_service&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_feed_news&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201912&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201911&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201910&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_user_messages&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_user_link_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_message&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_link_votes&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_links_mobile_content&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_links&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_comment_votes&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_comments&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;如果想要定制输出可以采用 &lt;code class=&quot;highlighter-rouge&quot;&gt;--printf&lt;/code&gt; 选项&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pt-find &lt;span class=&quot;nt&quot;&gt;--host&lt;/span&gt; 127.0.0.1 &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; root &lt;span class=&quot;nt&quot;&gt;--ask-pass&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--tablesize&lt;/span&gt; +5G &lt;span class=&quot;nt&quot;&gt;--printf&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;%T&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;%D.%N&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;sort&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-rn&lt;/span&gt;
+Enter password: 
+
+13918404608     &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_links_mobile_content&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+13735231488     &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_comment_votes&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+12633227264     &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_user_messages&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+12610174976     &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_user_link_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+10506305536     &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_links&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+9686745088      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_message&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+9603907584      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;rss_service&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_feed_news&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+9004122112      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201910&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+8919007232      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_comments&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+8045707264      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201912&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+7855915008      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;db_log_history&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click_201911&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+6099566592      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_mobile_click&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+5892898816      &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_dix&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;test_link_votes&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;遗憾的是目前 &lt;code class=&quot;highlighter-rouge&quot;&gt;printf&lt;/code&gt; 格式来源与 Perl 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;sprintf&lt;/code&gt; 函数，所以支持格式有限，不过简单的格式定制已经基本实现，复杂的建议通过 awk 处理&lt;/strong&gt;；其他的可选参数具体参考官方文档 &lt;a href=&quot;https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html&quot;&gt;https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;87其他命令&quot;&gt;8.7、其他命令&lt;/h3&gt;
+
+&lt;p&gt;迫于篇幅，其他更多的高级命令请自行查阅官方文档 &lt;a href=&quot;https://www.percona.com/doc/percona-toolkit/LATEST/index.html&quot;&gt;https://www.percona.com/doc/percona-toolkit/LATEST/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 21 Jan 2020 20:41:22 +0800</pubDate>
+        <link>https://mritd.me/2020/01/21/set-up-percona-server/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/01/21/set-up-percona-server/</guid>
+        
+        <category>Linux</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
+    
+      <item>
         <title>如何编写一个 CoreDNS 插件</title>
         <description>&lt;blockquote&gt;
   &lt;p&gt;目前测试环境中有很多个 DNS 服务器，不同项目组使用的 DNS 服务器不同，但是不可避免的他们会访问一些公共域名；老的 DNS 服务器都是 dnsmasq，改起来很麻烦，最近研究了一下 CoreDNS，通过编写插件的方式可以实现让多个 CoreDNS 实例实现分布式的统一控制，以下记录了插件编写过程&lt;/p&gt;
@@ -2302,222 +3333,6 @@ RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&
         
         
         <category>Docker</category>
-        
-      </item>
-    
-      <item>
-        <title>Mac 下调校 Rime</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;由于对国内输入法隐私问题的担忧，决定放弃搜狗等输入法；为了更加 Geek 一些，最终决定了折腾 Rime(鼠须管) 输入法，以下为一些折腾的过程&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;strong&gt;国际惯例先放点图压压惊&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/t3otb.jpg&quot; alt=&quot;example1&quot; /&gt;
-&lt;img src=&quot;https://cdn.oss.link/markdown/ep8sl.jpg&quot; alt=&quot;example2&quot; /&gt;
-&lt;img src=&quot;https://cdn.oss.link/markdown/wth6n.jpg&quot; alt=&quot;example3&quot; /&gt;
-&lt;img src=&quot;https://cdn.oss.link/markdown/5b85o.jpg&quot; alt=&quot;example4&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;一安装&quot;&gt;一、安装&lt;/h2&gt;
-
-&lt;p&gt;安装 Rime 没啥好说的，直接从&lt;a href=&quot;https://rime.im&quot;&gt;官网&lt;/a&gt;下载最新版本的安装包既可；安装完成后配置文件位于 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/Library/Rime&lt;/code&gt; 位置；在进行后续折腾之前我建议还是先 &lt;code class=&quot;highlighter-rouge&quot;&gt;cp -r ~/Library/Rime ~/Library/Rime.bak&lt;/code&gt; 备份一下配置文件，以防制后续折腾挂了还可以还原；安装完成以后按 &lt;code class=&quot;highlighter-rouge&quot;&gt;⌘ + 反引号(~)&lt;/code&gt; 切换到 &lt;code class=&quot;highlighter-rouge&quot;&gt;朙月拼音-简化字&lt;/code&gt; 既可开启简体中文输入&lt;/p&gt;
-
-&lt;h2 id=&quot;二乱码解决&quot;&gt;二、乱码解决&lt;/h2&gt;
-
-&lt;p&gt;安装完成后在打字时可能出现乱码情况(俗称豆腐块)，这是由于 Rime 默认 UTF-8 字符集比较大，预选词内会出现生僻字，而 mac 字体内又不包含这些字体，从而导致乱码；解决方案很简单，下载 &lt;a href=&quot;https://github.com/mritd/rime/tree/master/fonts&quot;&gt;花园明朝&lt;/a&gt; A、B 两款字体安装既可，安装后重启一下就不会出现乱码了&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/yfbis.png&quot; alt=&quot;fonts&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;三配置文件&quot;&gt;三、配置文件&lt;/h2&gt;
-
-&lt;p&gt;官方并不建议直接修改原始的配置文件，因为输入法更新时会重新覆盖默认配置，可能导致某些自定义配置丢失；推荐作法是创建一系列的 patch 配置，通过类似打补丁替换这种方式来实现无感的增加自定义配置；&lt;/p&gt;
-
-&lt;p&gt;由于使用的是 &lt;code class=&quot;highlighter-rouge&quot;&gt;朙月拼音-简化字&lt;/code&gt; 输入方案，所以需要创建 &lt;code class=&quot;highlighter-rouge&quot;&gt;luna_pinyin_simp.custom.yaml&lt;/code&gt; 等配置文件，后面就是查文档 + 各种 Google 一顿魔改了；目前我将我自己用的配置放在了 &lt;a href=&quot;https://github.com/mritd/rime&quot;&gt;Github&lt;/a&gt; 上，有需要的可以直接 clone 下来，用里面的配置文件直接覆盖 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/Library/Rime&lt;/code&gt; 下的文件，然后重新部署既可，关于具体配置细节在下面写&lt;/p&gt;
-
-&lt;h2 id=&quot;四自定义配色&quot;&gt;四、自定义配色&lt;/h2&gt;
-
-&lt;p&gt;皮肤配色配置方案位于 &lt;code class=&quot;highlighter-rouge&quot;&gt;squirrel.custom.yaml&lt;/code&gt; 配置文件中，我的配置目前是参考搜狗输入法皮肤自己调试的；官方也提供了一些皮肤外观配置，详见 &lt;a href=&quot;https://gist.github.com/lotem/2290714&quot;&gt;Gist&lt;/a&gt;；想要切换皮肤配色只需要修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;style/color_scheme&lt;/code&gt; 为相应的皮肤配色名称既可&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;patch&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;show_notifications_when&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;appropriate&lt;/span&gt;          &lt;span class=&quot;c1&quot;&gt;# 状态通知，适当，也可设为全开（always）全关（never）&lt;/span&gt;
-
-  &lt;span class=&quot;s&quot;&gt;style/color_scheme&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mritd_dark&lt;/span&gt;                &lt;span class=&quot;c1&quot;&gt;# 方案命名，不能有空格&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;preset_color_schemes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;mritd_dark&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;漠然／mritd dark&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;author&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mritd &amp;lt;mritd1234@gmail.com&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;horizontal&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;                          &lt;span class=&quot;c1&quot;&gt;# 水平排列&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;inline_preedit&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;                      &lt;span class=&quot;c1&quot;&gt;# 单行显示，false双行显示&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;candidate_format&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%c&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\u2005&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%@&quot;&lt;/span&gt;            &lt;span class=&quot;c1&quot;&gt;# 用 1/6 em 空格 U+2005 来控制编号 %c 和候选词 %@ 前后的空间。&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;corner_radius&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;                          &lt;span class=&quot;c1&quot;&gt;# 候选条圆角&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_corner_radius&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;                  &lt;span class=&quot;c1&quot;&gt;# 高亮圆角&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;border_height&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;                          &lt;span class=&quot;c1&quot;&gt;# 窗口边界高度，大于圆角半径才生效&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;border_width&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;                           &lt;span class=&quot;c1&quot;&gt;# 窗口边界宽度，大于圆角半径才生效&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;border_color_width&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;
-      &lt;span class=&quot;c1&quot;&gt;#font_face: &quot;PingFangSC&quot;                   # 候选词字体&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;font_point&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;16&lt;/span&gt;                            &lt;span class=&quot;c1&quot;&gt;# 候选字词大小&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;label_font_point&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;14&lt;/span&gt;                      &lt;span class=&quot;c1&quot;&gt;# 候选编号大小&lt;/span&gt;
-
-      &lt;span class=&quot;na&quot;&gt;text_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xdedddd&lt;/span&gt;                      &lt;span class=&quot;c1&quot;&gt;# 拼音行文字颜色，24位色值，16进制，BGR顺序&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;back_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0x4b4b4b&lt;/span&gt;                      &lt;span class=&quot;c1&quot;&gt;# 候选条背景色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;label_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0x888785&lt;/span&gt;                     &lt;span class=&quot;c1&quot;&gt;# 预选栏编号颜色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;border_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0x4b4b4b&lt;/span&gt;                    &lt;span class=&quot;c1&quot;&gt;# 边框色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;candidate_text_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xffffff&lt;/span&gt;            &lt;span class=&quot;c1&quot;&gt;# 预选项文字颜色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_text_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xdedddd&lt;/span&gt;              &lt;span class=&quot;c1&quot;&gt;# 高亮拼音 (需要开启内嵌编码)&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_back_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0x252320&lt;/span&gt;              &lt;span class=&quot;c1&quot;&gt;# 高亮拼音 (需要开启内嵌编码)&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_candidate_text_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xFFE696&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# 第一候选项文字颜色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_candidate_back_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0x4b4b4b&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# 第一候选项背景背景色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hilited_candidate_label_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xffffff&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# 第一候选项编号颜色&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;comment_text_color&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0xdedddd&lt;/span&gt;              &lt;span class=&quot;c1&quot;&gt;# 拼音等提示文字颜色&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;五增加自定义快捷字符&quot;&gt;五、增加自定义快捷字符&lt;/h2&gt;
-
-&lt;p&gt;快捷字符例如在中文输入法状态下可以直接输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;/dn&lt;/code&gt; 来调出特殊符号输入；这些配置位于 &lt;code class=&quot;highlighter-rouge&quot;&gt;luna_pinyin_simp.custom.yaml&lt;/code&gt; 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;punctuator&lt;/code&gt; 配置中，我目前自行定义了一些，有需要的可以依葫芦画瓢直接修改&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;punctuator&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;import_preset&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;symbols&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;symbols&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/fs&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;½&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;‰&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;¼&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⅓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⅔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;¾&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⅒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/dq&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌏&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌕&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌚&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌛&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⭐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⛅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⚡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔥&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;💧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/jt&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⬆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;➡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⬇&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⬅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↕&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↩&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;↪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⤴&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⤵&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔃&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔚&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔛&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🔝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/sg&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍇&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍈&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍌&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍏&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌽&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🌰&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍕&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍳&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍲&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍱&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍚&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍛&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍢&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍣&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍤&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍥&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍦&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍨&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍩&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🎂&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍰&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍫&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍬&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍭&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍮&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍯&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍼&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍵&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍶&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍷&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍸&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍹&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍺&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍻&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🍴&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/dw&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🙈&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🙉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🙊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐵&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐶&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐕&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐩&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐺&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐱&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😺&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😸&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😹&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😻&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😼&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😽&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🙀&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😿&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😾&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐈&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐯&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐴&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐮&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐂&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐃&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐷&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐽&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐏&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐫&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐭&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐁&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐀&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐹&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐰&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐇&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐻&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐨&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐼&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐾&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐣&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐤&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐥&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐦&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐸&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐢&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐲&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐳&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐬&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐚&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐌&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐛&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🐞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;🦋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/bq&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😀&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😁&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😂&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😃&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😙&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😚&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😇&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😶&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😏&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😣&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😥&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😮&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😯&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😫&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😴&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😌&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😛&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😔&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😕&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😲&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😷&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😤&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😢&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😭&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😦&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😨&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😬&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😰&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😱&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😳&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😵&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;😠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/ss&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;💪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👈&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👇&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👌&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👏&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;👐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/dn&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⌘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⌥&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⇧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⌃&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⎋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⇪&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⌫&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⌦&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;↩︎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⏎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;↑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;↓&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;←&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;→&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;↖&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;↘&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⇟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;⇞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/fh&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;©&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;®&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;℗&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ⓘ&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;℠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;™&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;℡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;␡&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;♂&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;♀&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☌&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☍&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☑︎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☒&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☜&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☝&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☞&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☟&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✎&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✄&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;♻&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⚐&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⚑&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;⚠&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/xh&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;＊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;×&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✱&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;★&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;☆&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✩&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✧&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❋&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❊&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❉&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❈&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;❅&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✿&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;✲&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;六设置输入方案&quot;&gt;六、设置输入方案&lt;/h2&gt;
-
-&lt;p&gt;在第一次按 &lt;code class=&quot;highlighter-rouge&quot;&gt;⌘ + 反引号(~)&lt;/code&gt; 设置输入法时实际上我们可以看到很多的输入方案，而事实上很多方案我们根本用不上；想要删除和修改方案可以调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;default.custom.yaml&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;schema_list&lt;/code&gt; 字段&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;patch&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;menu&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;page_size&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;schema_list&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin_simp&lt;/span&gt;      &lt;span class=&quot;c1&quot;&gt;# 朙月拼音 简化字&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin&lt;/span&gt;           &lt;span class=&quot;c1&quot;&gt;# 朙月拼音&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin_fluency&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# 语句流&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#  - schema: double_pinyin         # 自然碼雙拼&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#  - schema: double_pinyin_flypy   # 小鹤雙拼&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#  - schema: double_pinyin_pyjj    # 拼音加加双拼&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#  - schema: wubi_pinyin           # 五笔拼音混合輸入&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;实际上我只能用上第一个…毕竟写了好几年代码还得看键盘的人也只能这样了…&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;七调整特殊键行为&quot;&gt;七、调整特殊键行为&lt;/h2&gt;
-
-&lt;p&gt;在刚安装完以后发现在中文输入法状态下输入英文，按 &lt;code class=&quot;highlighter-rouge&quot;&gt;shift&lt;/code&gt; 键后字符上屏，然后还得回车一下，这就很让我难受…最后找到了这篇 &lt;a href=&quot;https://gist.github.com/lotem/2981316&quot;&gt;Gist&lt;/a&gt;，目前将大写锁定、&lt;code class=&quot;highlighter-rouge&quot;&gt;shift&lt;/code&gt; 键调整为了跟搜狗一致的配置，有需要调整的可以自行编辑 &lt;code class=&quot;highlighter-rouge&quot;&gt;default.custom.yaml&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;ascii_composer/switch_key&lt;/code&gt; 部分&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# capslock 键切换英文并输出大写&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;ascii_composer/good_old_caps_lock&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 输入法中英文状态快捷键&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;ascii_composer/switch_key&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;Caps_Lock&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;commit_code&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;Control_L&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;noop&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;Control_R&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;noop&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;# 按下左 shift 英文字符直接上屏，不需要再次回车，输入法保持英文状态&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;Shift_L&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;commit_code&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;Shift_R&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;noop&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;八自定义词库&quot;&gt;八、自定义词库&lt;/h2&gt;
-
-&lt;p&gt;Rime 默认的词库稍为有点弱，我们可以下载一些搜狗词库来进行扩展；不过搜狗词库格式默认是无法解析的，好在有人开发了工具可以方便的将搜狗细胞词库转化为 Rime 的格式(工具&lt;a href=&quot;https://github.com/studyzy/imewlconverter/releases&quot;&gt;点击这里&lt;/a&gt;下载)；目前该工具只支持 Windows(也有些别人写的 py 脚本啥的，但是我没用)，所以词库转换这种操作还得需要一个 Windows 虚拟机；&lt;/p&gt;
-
-&lt;p&gt;转换过程很简单，先从&lt;a href=&quot;https://pinyin.sogou.com/dict/&quot;&gt;搜狗词库&lt;/a&gt;下载一系列的 &lt;code class=&quot;highlighter-rouge&quot;&gt;scel&lt;/code&gt; 文件，然后批量选中，接着调整一下输入和输出格式点击转换，最后保存成一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;txt&lt;/code&gt; 文本&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/jtv97.png&quot; alt=&quot;input-setting&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/p7qha.png&quot; alt=&quot;convert&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;光有这个文本还不够，我们要将它塞到词库的 &lt;code class=&quot;highlighter-rouge&quot;&gt;yaml&lt;/code&gt; 配置里，所以新建一个词库配置文件 &lt;code class=&quot;highlighter-rouge&quot;&gt;luna_pinyin.sougou.dict.yaml&lt;/code&gt;，然后写上头部说明(&lt;strong&gt;注意最后三个点后面加一个换行&lt;/strong&gt;)&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# Rime dictionary&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# encoding: utf-8&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 搜狗词库 目前包含如下:&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# IT计算机 实用IT词汇 亲戚称呼 化学品名 数字时间 数学词汇 淘宝词库 编程语言 软件专业 颜色名称 程序猿词库 开发专用词库 搜狗标准词库&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 摄影专业名词 计算机专业词库 计算机词汇大全 保险词汇 最详细的全国地名大全 饮食大全 常见花卉名称 房地产词汇大全 中国传统节日大全 财经金融词汇大全&lt;/span&gt;
-
-&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.sougou&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1.0&quot;&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;by_weight&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;use_preset_vocabulary&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;nn&quot;&gt;...&lt;/span&gt;
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;接着只需要把生成好的词库 &lt;code class=&quot;highlighter-rouge&quot;&gt;txt&lt;/code&gt; 文件内容粘贴到三个点下面既可；但是词库太多的话你会发现这个文本有好几十 M，一般编辑器打开都会卡死，解决这种情况只需要用命令行 &lt;code class=&quot;highlighter-rouge&quot;&gt;cat&lt;/code&gt; 一下就行&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;sougou.txt &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; luna_pinyin.sougou.dict.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;最后修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;luna_pinyin.extended.dict.yaml&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;import_tables&lt;/code&gt; 字段，加入刚刚新建的词库既可&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.extended&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2016.06.26&quot;&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;by_weight&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;#字典初始排序，可選original或by_weight&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;use_preset_vocabulary&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#此處爲明月拼音擴充詞庫（基本）默認鏈接載入的詞庫，有朙月拼音官方詞庫、明月拼音擴充詞庫（漢語大詞典）、明月拼音擴充詞庫（詩詞）、明月拼音擴充詞庫（含西文的詞彙）。如果不需要加載某个詞庫請將其用「#」註釋掉。&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#雙拼不支持 luna_pinyin.cn_en 詞庫，請用戶手動禁用。&lt;/span&gt;
-
-&lt;span class=&quot;na&quot;&gt;import_tables&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;# 加入搜狗词库&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.sougou&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.poetry&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.cn_en&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.kaomoji&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;九定制特殊单词&quot;&gt;九、定制特殊单词&lt;/h2&gt;
-
-&lt;p&gt;由于长期撸码，24 小时离不开命令行，偶尔在中文输入法下输入了一些命令导致汉字直接出现在 terminal 上就很尴尬…这时候我们可以在 &lt;code class=&quot;highlighter-rouge&quot;&gt;luna_pinyin.cn_en.dict.yaml&lt;/code&gt; 加入一些我们自己的专属词库，比如这样&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;luna_pinyin.cn_en&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2017.9.13&quot;&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;by_weight&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;use_preset_vocabulary&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;nn&quot;&gt;...&lt;/span&gt;
-
-&lt;span class=&quot;s&quot;&gt;git&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;git&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ls&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;cd&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;cd&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;pwd&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pwd&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;git ps&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;gitps&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;kubernetes&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubernetes&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;kubernetes&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kuber&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;kubectl&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubectl&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;kubectl&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubec&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;docker&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;docker&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;docker&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;dock&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;ipvs&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ipvs&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;ps&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ps&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;bash&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;bash&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;source&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;sou&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;rm&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;	&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;rm&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;配置后如果我在中文输入法下输入 git 则会自动匹配 git 这个单词，避免错误的键入中文字符；&lt;strong&gt;需要注意的是第一列代表上屏的字符，第二列代表输入的单词，即 “当输入第二列时候选词为第一列”；两列之间要用 tag 制表符隔开，记住不是空格&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Sat, 23 Mar 2019 21:03:43 +0800</pubDate>
-        <link>https://mritd.me/2019/03/23/oh-my-rime/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/03/23/oh-my-rime/</guid>
-        
-        <category>Mac</category>
-        
-        
-        <category>Mac</category>
         
       </item>
     

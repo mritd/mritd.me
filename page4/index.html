@@ -177,6 +177,23 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/">
+        <h2 class="post-title">
+            Kubernetes TLS bootstrapping 那点事
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  前段时间撸了一会 Kubernetes 官方文档，在查看 TLS bootstrapping 这块是发现已经跟 1.4 的时候完全不一样了；目前所有搭建文档也都保留着 1.4 时代的配置，在看完文档后发现目前配置有很多问题，同时也埋下了 隐藏炸弹，这个问题可能会在一年后爆发…..后果就是集群 node 全部掉线；所以仔细的撸了一下这个文档，从元旦到写此文章的时间都在测试这个 TLS b...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 7, 2018
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/11/28/ci-cd-gitlab-ci/">
         <h2 class="post-title">
             CI/CD 之 GitLab CI
@@ -390,32 +407,6 @@ Consul 与 Etcd 一样，都属于分布式一致性数据库，其主要特性�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
-        <h2 class="post-title">
-            阿里云部署 Kubernetes
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  公司有点小需求，在阿里云上开了几台机器，然后部署了一个 Kubernetes 集群，以下记录一下阿里云踩坑问题，主要是网络组件的坑。
-
-
-一、部署环境
-
-部署时开启了 4 台 ECS 实例，基本部署环境与裸机部署相似，其中区别是，阿里云网络采用 VPC 网络，不过以下流程适用于经典网络；以下为各个组件版本:
-
-
-  OS CentOS
-  Kernel 4.4.88-1.el7.elr...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on September 20, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -450,7 +441,7 @@ Consul 与 Etcd 一样，都属于分布式一致性数据库，其主要特性�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

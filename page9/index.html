@@ -177,6 +177,34 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/10/09/kubernetes-1.4-create-cluster/">
+        <h2 class="post-title">
+            kubernetes 1.4 集群搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  距离 kubernetes 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案
+
+
+一、环境准备
+
+基本环境为 3 台虚拟机，虚拟机信息如下
+
+
+  
+    
+      IP 地址
+      节点...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 9, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/10/09/jekyll-create-a-static-blog/">
         <h2 class="post-title">
             Jekyll 搭建静态博客
@@ -390,34 +418,6 @@ Flannel 是 CoreOS 提供用于解决 Dokcer 集群跨主机通讯的覆盖网�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
-        <h2 class="post-title">
-            Etcd 集群搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  本文参考 Systemd 教程、Etcd 配置说明
-
-
-一、简介
-
-Etcd 是 CoreOS 推出的高可用的键值存储系统，主要用于k8s集群的服务发现等，而本身 Etcd 也支持集群模式部署，从而实现自身高可用；
-
-Etcd 构建自身高可用集群主要有三种形式:
-
-
-  静态发现: 预先已知 Etcd 集群中有哪些节点，在启动时直接指定好 Etcd 的各个 node 节点地址
-  Et...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on September 1, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -452,7 +452,7 @@ Etcd 构建自身高可用集群主要有三种形式:
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             

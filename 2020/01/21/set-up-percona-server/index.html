@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Percona MySQL 搭建">
+    <meta name="keywords"  content="percona,mysql">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Percona MySQL 搭建 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2020/01/21/set-up-percona-server/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Percona MySQL 搭建</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on January 21, 2020</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>最近被拉去折腾 MySQL 了，Kuberntes 相关的文章停更了好久… MySQL 折腾完了顺便记录一下折腾过程，值得注意的是本篇文章从实际生产环境文档中摘录，部分日志和数据库敏感信息已被胡乱替换，所以不要盲目复制粘贴。</p>
+</blockquote>
+
+<h2 id="一版本信息">一、版本信息</h2>
+
+<p>目前采用 MySQL fork 版本 Percona Server 5.7.28，监控方面选择 Percona Monitoring and Management 2.1.0，对应监控 Client 版本为 2.1.0</p>
+
+<h2 id="二percona-server-安装">二、Percona Server 安装</h2>
+
+<p>为保证兼容以及稳定性，MySQL 宿主机系统选择 CentOS 7，Percona Server 安装方式为 rpm 包，安装后由 Systemd 守护</p>
+
+<h3 id="21下载安装包">2.1、下载安装包</h3>
+
+<p>安装包下载地址为 <a href="https://www.percona.com/downloads/Percona-Server-5.7/LATEST/">https://www.percona.com/downloads/Percona-Server-5.7/LATEST/</a>，下载时选择 <code class="highlighter-rouge">Download All Packages Together</code>，下载后是所有组件全量的压缩 tar 包。</p>
+
+<h3 id="22安装前准备">2.2、安装前准备</h3>
+
+<p>针对 CentOS 7 系统，安装前升级所有系统组件库，执行 <code class="highlighter-rouge">yum update</code> 既可；大部份 <strong>CentOS 7 安装后可能会附带 <code class="highlighter-rouge">mariadb-libs</code> 包，这个包会默认创建一些配置文件，导致后面的 Percona Server 无法覆盖它(例如 <code class="highlighter-rouge">/etc/my.cnf</code>)，所以安装 Percona Server 之前需要卸载它 <code class="highlighter-rouge">yum remove mariadb-libs</code></strong></p>
+
+<p>针对于数据存储硬盘，目前统一为 SSD 硬盘，挂载点为 <code class="highlighter-rouge">/data</code>，挂载方式可以采用 <code class="highlighter-rouge">fstab</code>、<code class="highlighter-rouge">systemd-mount</code>，分区格式目前采用 <code class="highlighter-rouge">xfs</code> 格式。</p>
+
+<p><strong>SSD 优化有待补充…</strong></p>
+
+<h3 id="23安装-percona-server">2.3、安装 Percona Server</h3>
+
+<p>Percona Server tar 包解压后会有 9 个 rpm 包，实际安装时只需要安装其中 4 个既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nb">install </span>Percona-Server-client-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-server-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-shared-57-5.7.28-31.1.el7.x86_64.rpm Percona-Server-shared-compat-57-5.7.28-31.1.el7.x86_64.rpm
+</code></pre></div></div>
+
+<h3 id="24安装后调整">2.4、安装后调整</h3>
+
+<h4 id="241硬盘调整">2.4.1、硬盘调整</h4>
+
+<p>目前 MySQL 数据会统一存放到 <code class="highlighter-rouge">/data</code> 目录下，所以需要将单独的数据盘挂载到 <code class="highlighter-rouge">/data</code> 目录；<strong>如果是 SSD 硬盘还需要调整系统 I/O 调度器等其他优化。</strong></p>
+
+<h4 id="242目录预创建">2.4.2、目录预创建</h4>
+
+<p>Percona Server 安装完成后，由于配置调整原因，还会用到一些其他的数据目录，这些目录可以预先创建并授权</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> /var/log/mysql /data/mysql_tmp
+<span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /var/log/mysql /data/mysql_tmp
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">/var/log/mysql</code> 目录用来存放 MySQL 相关的日志(不包括 binlog)，<code class="highlighter-rouge">/data/mysql_tmp</code> 用来存放 MySQL 运行时产生的缓存文件。</p>
+
+<h4 id="243文件描述符调整">2.4.3、文件描述符调整</h4>
+
+<p>由于 rpm 安装的 Percona Server 会采用 Systemd 守护，所以如果想修改文件描述符配置应当调整 Systemd 配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /usr/lib/systemd/system/mysqld.service
+
+<span class="c"># Sets open_files_limit</span>
+<span class="c"># 注意 infinity = 65536</span>
+LimitCORE <span class="o">=</span> infinity
+LimitNOFILE <span class="o">=</span> infinity
+LimitNPROC <span class="o">=</span> infinity
+</code></pre></div></div>
+
+<p>然后执行 <code class="highlighter-rouge">systemctl daemon-reload</code> 重载既可。</p>
+
+<h4 id="244配置文件调整">2.4.4、配置文件调整</h4>
+
+<p>Percona Server 安装完成后也会生成 <code class="highlighter-rouge">/etc/my.cnf</code> 配置文件，不过不建议直接修改该文件；修改配置文件需要进入到 <code class="highlighter-rouge">/etc/percona-server.conf.d/</code> 目录调整相应配置；以下为配置样例(<strong>生产环境 mysqld 配置需要优化调整</strong>)</p>
+
+<p><strong>mysql.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[mysql]</span>
+<span class="err">auto-rehash</span>
+<span class="py">default_character_set</span><span class="p">=</span><span class="s">utf8mb4</span>
+</code></pre></div></div>
+
+<p><strong>mysqld.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Percona Server template configuration
+</span>
+<span class="nn">[mysqld]</span>
+<span class="c">#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+</span><span class="py">port</span><span class="p">=</span><span class="s">3306</span>
+<span class="py">datadir</span><span class="p">=</span><span class="s">/data/mysql</span>
+<span class="py">socket</span><span class="p">=</span><span class="s">/data/mysql/mysql.sock</span>
+<span class="py">pid_file</span><span class="p">=</span><span class="s">/data/mysql/mysqld.pid</span>
+
+<span class="c"># 服务端编码
+</span><span class="py">character_set_server</span><span class="p">=</span><span class="s">utf8mb4</span>
+<span class="c"># 服务端排序
+</span><span class="py">collation_server</span><span class="p">=</span><span class="s">utf8mb4_general_ci</span>
+<span class="c"># 强制使用 utf8mb4 编码集，忽略客户端设置
+</span><span class="py">skip_character_set_client_handshake</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 日志输出到文件
+</span><span class="py">log_output</span><span class="p">=</span><span class="s">FILE</span>
+<span class="c"># 开启常规日志输出
+</span><span class="py">general_log</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 常规日志输出文件位置
+</span><span class="py">general_log_file</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld.log</span>
+<span class="c"># 错误日志位置
+</span><span class="py">log_error</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld-error.log</span>
+<span class="c"># 记录慢查询
+</span><span class="py">slow_query_log</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 慢查询时间(大于 1s 被视为慢查询)
+</span><span class="py">long_query_time</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 慢查询日志文件位置
+</span><span class="py">slow_query_log_file</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld-slow.log</span>
+<span class="c"># 临时文件位置
+</span><span class="py">tmpdir</span><span class="p">=</span><span class="s">/data/mysql_tmp</span>
+<span class="c"># 线程池缓存(refs https://my.oschina.net/realfighter/blog/363853)
+</span><span class="py">thread_cache_size</span><span class="p">=</span><span class="s">30</span>
+<span class="c"># The number of open tables for all threads.(refs https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_table_open_cache)
+</span><span class="py">table_open_cache</span><span class="p">=</span><span class="s">16384</span>
+<span class="c"># 文件描述符(此处修改不生效，请修改 systemd service 配置) 
+# refs https://www.percona.com/blog/2017/10/12/open_files_limit-mystery/
+# refs https://www.cnblogs.com/wxxjianchi/p/10370419.html
+#open_files_limit=65535
+# 表定义缓存(5.7 以后自动调整)
+# refs https://dev.mysql.com/doc/refman/5.6/en/server-system-variables.html#sysvar_table_definition_cache
+# refs http://mysql.taobao.org/monthly/2015/08/10/
+#table_definition_cache=16384
+</span><span class="py">sort_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="py">join_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">read_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="py">read_rnd_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">key_buffer_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">bulk_insert_buffer_size</span><span class="p">=</span><span class="s">16M</span>
+<span class="c"># myisam_sort_buffer_size 与 sort_buffer_size 区别请参考(https://stackoverflow.com/questions/7871027/myisam-sort-buffer-size-vs-sort-buffer-size)
+</span><span class="py">myisam_sort_buffer_size</span><span class="p">=</span><span class="s">64M</span>
+<span class="c"># 内部内存临时表大小
+</span><span class="py">tmp_table_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># 用户创建的 MEMORY 表最大大小(tmp_table_size 受此值影响)
+</span><span class="py">max_heap_table_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># 开启查询缓存
+</span><span class="py">query_cache_type</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 查询缓存大小
+</span><span class="py">query_cache_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># sql mode
+</span><span class="py">sql_mode</span><span class="p">=</span><span class="s">'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'</span>
+
+<span class="c">########### Network ###########
+# 最大连接数(该参数受到最大文件描述符影响，如果不生效请检查最大文件描述符设置)
+# refs https://stackoverflow.com/questions/39976756/the-max-connections-in-mysql-5-7
+</span><span class="py">max_connections</span><span class="p">=</span><span class="s">1500</span>
+<span class="c"># mysql 堆栈内暂存的链接数量
+# 当短时间内链接数量超过 max_connections 时，部分链接会存储在堆栈内，存储数量受此参数控制
+</span><span class="py">back_log</span><span class="p">=</span><span class="s">256</span>
+<span class="c"># 最大链接错误，针对于 client 主机，超过此数量的链接错误将会导致 mysql server 针对此主机执行锁定(禁止链接 ERROR 1129 )
+# 此错误计数仅在 mysql 链接握手失败才会计算，一般出现问题时都是网络故障
+# refs https://www.cnblogs.com/kerrycode/p/8405862.html
+</span><span class="py">max_connect_errors</span><span class="p">=</span><span class="s">100000</span>
+<span class="c"># mysql server 允许的最大数据包大小
+</span><span class="py">max_allowed_packet</span><span class="p">=</span><span class="s">64M</span>
+<span class="c"># 交互式客户端链接超时(30分钟自动断开)
+</span><span class="py">interactive_timeout</span><span class="p">=</span><span class="s">1800</span>
+<span class="c"># 非交互式链接超时时间(10分钟)
+# 如果客户端有连接池，则需要协商此参数(refs https://database.51cto.com/art/201909/603519.htm)
+</span><span class="py">wait_timeout</span><span class="p">=</span><span class="s">600</span>
+<span class="c"># 跳过外部文件系统锁定
+# If you run multiple servers that use the same database directory (not recommended), 
+# each server must have external locking enabled.
+# refs https://dev.mysql.com/doc/refman/5.7/en/external-locking.html
+</span><span class="py">skip_external_locking</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 跳过链接的域名解析(开启此选项后 mysql 用户授权的 host 方式失效)
+</span><span class="py">skip_name_resolve</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># 禁用主机名缓存，每次都会走 DNS
+</span><span class="py">host_cache_size</span><span class="p">=</span><span class="s">0</span>
+
+<span class="c">########### REPL ###########
+# 开启 binlog
+</span><span class="py">log_bin</span><span class="p">=</span><span class="s">mysql-bin</span>
+<span class="c"># 作为从库时，同步信息依然写入 binlog，方便此从库再作为其他从库的主库
+</span><span class="py">log_slave_updates</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># server id，默认为 ipv4 地址去除第一段
+# eg: 172.16.10.11 =&gt; 161011
+</span><span class="py">server_id</span><span class="p">=</span><span class="s">161011</span>
+<span class="c"># 每次次事务 binlog 刷新到磁盘
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+</span><span class="py">sync_binlog</span><span class="p">=</span><span class="s">100</span>
+<span class="c"># binlog 格式(refs https://zhuanlan.zhihu.com/p/33504555)
+</span><span class="py">binlog_format</span><span class="p">=</span><span class="s">row</span>
+<span class="c"># binlog 自动清理时间
+</span><span class="py">expire_logs_days</span><span class="p">=</span><span class="s">10</span>
+<span class="c"># 开启 relay-log，一般作为 slave 时开启
+</span><span class="py">relay_log</span><span class="p">=</span><span class="s">mysql-replay</span>
+<span class="c"># 主从复制时跳过 test 库
+</span><span class="py">replicate_ignore_db</span><span class="p">=</span><span class="s">test</span>
+<span class="c"># 每个 session binlog 缓存
+</span><span class="py">binlog_cache_size</span><span class="p">=</span><span class="s">4M</span>
+<span class="c"># binlog 滚动大小
+</span><span class="py">max_binlog_size</span><span class="p">=</span><span class="s">1024M</span>
+<span class="c"># GTID 相关(refs https://keithlan.github.io/2016/06/23/gtid/)
+#gtid_mode=1
+#enforce_gtid_consistency=1
+</span>
+<span class="c">########### InnoDB ###########
+# 永久表默认存储引擎
+</span><span class="py">default_storage_engine</span><span class="p">=</span><span class="s">InnoDB</span>
+<span class="c"># 系统表空间数据文件大小(初始化为 1G，并且自动增长)
+</span><span class="py">innodb_data_file_path</span><span class="p">=</span><span class="s">ibdata1:1G:autoextend</span>
+<span class="c"># InnoDB 缓存池大小
+# innodb_buffer_pool_size 必须等于 innodb_buffer_pool_chunk_size*innodb_buffer_pool_instances，或者是其整数倍
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-buffer-pool-resize.html
+# refs https://zhuanlan.zhihu.com/p/60089484
+</span><span class="py">innodb_buffer_pool_size</span><span class="p">=</span><span class="s">7680M</span>
+<span class="py">innodb_buffer_pool_instances</span><span class="p">=</span><span class="s">10</span>
+<span class="py">innodb_buffer_pool_chunk_size</span><span class="p">=</span><span class="s">128M</span>
+<span class="c"># InnoDB 强制恢复(refs https://www.askmaclean.com/archives/mysql-innodb-innodb_force_recovery.html)
+</span><span class="py">innodb_force_recovery</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># InnoDB buffer 预热(refs http://www.dbhelp.net/2017/01/12/mysql-innodb-buffer-pool-warmup.html)
+</span><span class="py">innodb_buffer_pool_dump_at_shutdown</span><span class="p">=</span><span class="s">1</span>
+<span class="py">innodb_buffer_pool_load_at_startup</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># InnoDB 日志组中的日志文件数
+</span><span class="py">innodb_log_files_in_group</span><span class="p">=</span><span class="s">2</span>
+<span class="c"># InnoDB redo 日志大小
+# refs https://www.percona.com/blog/2017/10/18/chose-mysql-innodb_log_file_size/
+</span><span class="py">innodb_log_file_size</span><span class="p">=</span><span class="s">256MB</span>
+<span class="c"># 缓存还未提交的事务的缓冲区大小
+</span><span class="py">innodb_log_buffer_size</span><span class="p">=</span><span class="s">16M</span>
+<span class="c"># InnoDB 在事务提交后的日志写入频率
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+</span><span class="py">innodb_flush_log_at_trx_commit</span><span class="p">=</span><span class="s">2</span>
+<span class="c"># InnoDB DML 操作行级锁等待时间
+# 超时返回 ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+# refs https://ningyu1.github.io/site/post/75-mysql-lock-wait-timeout-exceeded/
+</span><span class="py">innodb_lock_wait_timeout</span><span class="p">=</span><span class="s">30</span>
+<span class="c"># InnoDB 行级锁超时是否回滚整个事务，默认为 OFF 仅回滚上一条语句
+# 此时应用程序可以接受到错误后选择是否继续提交事务(并没有违反 ACID 原子性)
+# refs https://www.cnblogs.com/hustcat/archive/2012/11/18/2775487.html
+#innodb_rollback_on_timeout=ON
+# InnoDB 数据写入磁盘的方式，具体见博客文章
+# refs https://www.cnblogs.com/gomysql/p/3595806.html
+</span><span class="py">innodb_flush_method</span><span class="p">=</span><span class="s">O_DIRECT</span>
+<span class="c"># InnoDB 缓冲池脏页刷新百分比
+# refs https://dbarobin.com/2015/08/29/mysql-optimization-under-ssd
+</span><span class="py">innodb_max_dirty_pages_pct</span><span class="p">=</span><span class="s">50</span>
+<span class="c"># InnoDB 每秒执行的写IO量
+# refs https://www.centos.bz/2016/11/mysql-performance-tuning-15-config-item/#10.INNODB_IO_CAPACITY,%20INNODB_IO_CAPACITY_MAX
+</span><span class="py">innodb_io_capacity</span><span class="p">=</span><span class="s">500</span>
+<span class="py">innodb_io_capacity_max</span><span class="p">=</span><span class="s">1000</span>
+<span class="c"># 请求并发 InnoDB 线程数
+# refs https://www.cnblogs.com/xinysu/p/6439715.html#_lab2_1_0
+</span><span class="py">innodb_thread_concurrency</span><span class="p">=</span><span class="s">60</span>
+<span class="c"># 再使用多个 InnoDB 表空间时，允许打开的最大 ".ibd" 文件个数，不设置默认 300，
+# 并且取与 table_open_cache 相比较大的一个，此选项独立于 open_files_limit
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_open_files
+</span><span class="py">innodb_open_files</span><span class="p">=</span><span class="s">65535</span>
+<span class="c"># 每个 InnoDB 表都存储在独立的表空间(.ibd)中
+</span><span class="py">innodb_file_per_table</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 事务级别(可重复读，会出幻读)
+</span><span class="py">transaction_isolation</span><span class="p">=</span><span class="s">REPEATABLE-READ</span>
+<span class="c"># 是否在搜索和索引扫描中使用间隙锁(gap locking)，不建议使用未来将删除
+</span><span class="py">innodb_locks_unsafe_for_binlog</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># InnoDB 后台清理线程数，更大的值有助于 DML 执行性能，&gt;= 5.7.8 默认为 4
+</span><span class="py">innodb_purge_threads</span><span class="p">=</span><span class="s">4</span>
+</code></pre></div></div>
+
+<p><strong>mysqld_safe.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#
+# The Percona Server 5.7 configuration file.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+</span>
+<span class="nn">[mysqld_safe]</span>
+<span class="py">pid-file</span> <span class="p">=</span> <span class="s">/var/run/mysqld/mysqld.pid</span>
+<span class="py">socket</span>   <span class="p">=</span> <span class="s">/var/run/mysqld/mysqld.sock</span>
+<span class="py">nice</span>     <span class="p">=</span> <span class="s">0</span>
+</code></pre></div></div>
+
+<p><strong>mysqldump.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[mysqldump]</span>
+<span class="err">quick</span>
+<span class="py">default-character-set</span><span class="p">=</span><span class="s">utf8mb4</span>
+<span class="py">max_allowed_packet</span><span class="p">=</span><span class="s">256M</span>
+</code></pre></div></div>
+
+<h3 id="25启动">2.5、启动</h3>
+
+<p>配置文件调整完成后启动既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl start mysqld
+</code></pre></div></div>
+
+<p>启动完成后默认 root 密码会自动生成，通过 <code class="highlighter-rouge">grep 'temporary password' /var/log/mysql/*</code> 查看默认密码；获得默认密码后可以通过 <code class="highlighter-rouge">mysqladmin -S /data/mysql/mysql.sock -u root -p password</code> 修改 root 密码。</p>
+
+<h2 id="三percona-monitoring-and-management">三、Percona Monitoring and Management</h2>
+
+<p>数据库创建成功后需要增加 pmm 监控，后续将会通过监控信息来调优数据库，所以数据库监控必不可少。</p>
+
+<h3 id="31安装前准备">3.1、安装前准备</h3>
+
+<p>pmm 监控需要使用特定用户来监控数据信息，所以需要预先为 pmm 创建用户</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">USE</span> <span class="n">mysql</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">'pmm'</span><span class="o">@</span><span class="s1">'%'</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">'pmm12345'</span> <span class="k">WITH</span> <span class="k">GRANT</span> <span class="k">OPTION</span><span class="p">;</span>
+<span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="32安装-pmm-server">3.2、安装 PMM Server</h3>
+
+<p>pmm server 端推荐直接使用 docker 启动，以下为样例 docker compose</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.7'</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">pmm</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">percona/pmm-server:2.1.0</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">pmm</span>
+    <span class="na">restart</span><span class="pi">:</span> <span class="s">always</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">data:/srv</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">80:80"</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">443:443"</span>
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">data</span><span class="pi">:</span>
+</code></pre></div></div>
+
+<p><strong>如果想要自定义证书，请将证书复制到 volume 内的 nginx 目录下，自定义证书需要以下证书文件</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pmmserver.node ➜ tree
+<span class="nb">.</span>
+├── ca-certs.pem
+├── certificate.conf  <span class="c"># 此文件是 pmm 默认生成自签证书的配置文件，不需要关注</span>
+├── certificate.crt
+├── certificate.key
+└── dhparam.pem
+</code></pre></div></div>
+
+<p><strong>pmm server 启动后访问 <code class="highlighter-rouge">http(s)://IP_ADDRESS</code> 既可进入 granafa 面板，默认账户名和密码都是 <code class="highlighter-rouge">admin</code></strong></p>
+
+<h3 id="33安装-pmm-client">3.3、安装 PMM Client</h3>
+
+<p>PMM Client 同样采用 rpm 安装，下载地址 <a href="https://www.percona.com/downloads/pmm2/">https://www.percona.com/downloads/pmm2/</a>，当前采用最新的 2.1.0 版本；rpm 下载完成后直接 <code class="highlighter-rouge">yum install</code> 既可。</p>
+
+<p>rpm 安装完成后使用 <code class="highlighter-rouge">pmm-admin</code> 命令配置服务端地址，并添加当前 mysql 实例监控</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 配置服务端地址</span>
+pmm-admin config <span class="nt">--server-url</span> https://admin:admin@pmm.mysql.node 172.16.0.11 generic mysql
+<span class="c"># 配置当前 mysql 实例</span>
+pmm-admin add mysql <span class="nt">--username</span><span class="o">=</span>pmm <span class="nt">--password</span><span class="o">=</span>pmm12345 mysql 172.16.0.11:3306
+</code></pre></div></div>
+
+<p>完成后稍等片刻既可在 pmm server 端的 granafa 中看到相关数据。</p>
+
+<h2 id="四数据导入">四、数据导入</h2>
+
+<p>从原始数据库 dump 相关库，并导入到新数据库既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># dump</span>
+mysqldump <span class="nt">-h</span> 172.16.1.10 <span class="nt">-u</span> root <span class="nt">-p</span> <span class="nt">--master-data</span><span class="o">=</span>2 <span class="nt">--routines</span> <span class="nt">--triggers</span> <span class="nt">--single_transaction</span> <span class="nt">--databases</span> DATABASE_NAME <span class="o">&gt;</span> dump.sql
+<span class="c"># load</span>
+mysql <span class="nt">-S</span> /data/mysql/mysql.sock <span class="nt">-u</span> root <span class="nt">-p</span> &lt; dump.sql
+</code></pre></div></div>
+
+<p>数据导入后重建业务用户既可</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">USE</span> <span class="n">mysql</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">'test_user'</span><span class="o">@</span><span class="s1">'%'</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">'test_user'</span> <span class="k">WITH</span> <span class="k">GRANT</span> <span class="k">OPTION</span><span class="p">;</span>
+<span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="五数据备份">五、数据备份</h2>
+
+<h3 id="51安装-xtrabackup">5.1、安装 xtrabackup</h3>
+
+<p>目前数据备份采用 Perconra xtrabackup 工具，xtrabackup 可以实现高速、压缩带增量的备份；xtrabackup 安装同样采用 rpm 方式，下载地址为 <a href="https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/">https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/</a>，下载完成后执行 <code class="highlighter-rouge">yum install</code> 既可</p>
+
+<h3 id="52备份工具">5.2、备份工具</h3>
+
+<p>目前备份工具开源在 <a href="https://github.com/gozap/mybak">GitHub</a> 上，每次全量备份会写入 <code class="highlighter-rouge">.full-backup</code> 文件，增量备份会写入 <code class="highlighter-rouge">.inc-backup</code> 文件</p>
+
+<h3 id="53配置-systemd">5.3、配置 systemd</h3>
+
+<p>为了使备份自动运行，目前将定时任务配置到 systemd 中，由 systemd 调度并执行；以下为相关 systemd 配置文件</p>
+
+<p><strong>mysql-backup-full.service</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql full backup
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">Type</span><span class="o">=</span>simple
+<span class="nv">Restart</span><span class="o">=</span>on-failure
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/mybak <span class="nt">--backup-dir</span> /data/mysql_backup <span class="nt">--prefix</span> mysql full
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p><strong>mysql-backup-inc.service</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql incremental backup
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">Type</span><span class="o">=</span>simple
+<span class="nv">Restart</span><span class="o">=</span>on-failure
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/mybak <span class="nt">--backup-dir</span> /data/mysql_backup <span class="nt">--prefix</span> mysql inc
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p><strong>mysql-backup-compress.service</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql backup compress
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">Type</span><span class="o">=</span>simple
+<span class="nv">Restart</span><span class="o">=</span>on-failure
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/mybak <span class="nt">--backup-dir</span> /data/mysql_backup <span class="nt">--prefix</span> mysql compress <span class="nt">--clean</span>
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p><strong>mysql-backup-full.timer</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql weekly full backup
+<span class="c"># 备份之前依赖相关目录的挂载</span>
+<span class="nv">After</span><span class="o">=</span>data.mount
+<span class="nv">After</span><span class="o">=</span>data-mysql_backup.mount
+
+<span class="o">[</span>Timer]
+<span class="c"># 目前每周日一个全量备份</span>
+<span class="nv">OnCalendar</span><span class="o">=</span>Sun <span class="k">*</span>-<span class="k">*</span>-<span class="k">*</span> 3:00
+<span class="nv">Persistent</span><span class="o">=</span><span class="nb">true</span>
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>timers.target
+</code></pre></div></div>
+
+<p><strong>mysql-backup-inc.timer</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql weekly full backup
+<span class="nv">After</span><span class="o">=</span>data.mount
+<span class="nv">After</span><span class="o">=</span>data-mysql_backup.mount
+
+<span class="o">[</span>Timer]
+<span class="c"># 每天三个增量备份</span>
+<span class="nv">OnCalendar</span><span class="o">=</span><span class="k">*</span>-<span class="k">*</span>-<span class="k">*</span> 9:00
+<span class="nv">OnCalendar</span><span class="o">=</span><span class="k">*</span>-<span class="k">*</span>-<span class="k">*</span> 13:00
+<span class="nv">OnCalendar</span><span class="o">=</span><span class="k">*</span>-<span class="k">*</span>-<span class="k">*</span> 18:00
+<span class="nv">Persistent</span><span class="o">=</span><span class="nb">true</span>
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>timers.target
+</code></pre></div></div>
+
+<p><strong>mysql-backup-compress.timer</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>mysql weekly backup compress
+<span class="c"># 备份之前依赖相关目录的挂载</span>
+<span class="nv">After</span><span class="o">=</span>data.mount
+<span class="nv">After</span><span class="o">=</span>data-mysql_backup.mount
+
+<span class="o">[</span>Timer]
+<span class="c"># 目前每周日一个全量备份，自动压缩后同时完成清理</span>
+<span class="nv">OnCalendar</span><span class="o">=</span>Sun <span class="k">*</span>-<span class="k">*</span>-<span class="k">*</span> 5:00
+<span class="nv">Persistent</span><span class="o">=</span><span class="nb">true</span>
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>timers.target
+</code></pre></div></div>
+
+<p>创建好相关文件后启动相关定时器既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> <span class="k">*</span>.timer <span class="k">*</span>.service /lib/systemd/system
+systemctl daemon-reload
+systemctl start mysql-backup-full.timer mysql-backup-inc.timer mysql-backup-compress.timer
+systemctl <span class="nb">enable </span>mysql-backup-full.timer mysql-backup-inc.timer mysql-backup-compress.timer
+</code></pre></div></div>
+
+<h2 id="六数据恢复">六、数据恢复</h2>
+
+<h3 id="61全量备份恢复">6.1、全量备份恢复</h3>
+
+<p>针对于全量备份，只需要按照官方文档的还原顺序进行还原既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 由于备份时进行了压缩，所以先解压备份文件</span>
+xtrabackup <span class="nt">--decompress</span> <span class="nt">--parallel</span> 4 <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502
+<span class="c"># 执行预处理</span>
+xtrabackup <span class="nt">--prepare</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502
+<span class="c"># 执行恢复(恢复时自动根据 my.cnf 将数据覆盖到 data 数据目录)</span>
+xtrabackup <span class="nt">--copy-back</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502
+<span class="c"># 修复数据目录权限</span>
+<span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /data/mysql
+<span class="c"># 启动 mysql</span>
+systemctl start mysqld
+</code></pre></div></div>
+
+<h3 id="62增量备份恢复">6.2、增量备份恢复</h3>
+
+<p>对于增量备份恢复，其与全量备份恢复的根本区别在于: <strong>对于非最后一个增量文件的预处理必须使用 <code class="highlighter-rouge">--apply-log-only</code> 选项防止运行回滚阶段的处理</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 对所有备份文件进行解压处理</span>
+<span class="k">for </span><span class="nb">dir </span><span class="k">in</span> <span class="sb">`</span><span class="nb">ls</span><span class="sb">`</span><span class="p">;</span> <span class="k">do </span>xtrabackup <span class="nt">--decompress</span> <span class="nt">--parallel</span> 4 <span class="nt">--target-dir</span> <span class="nv">$dir</span><span class="p">;</span> <span class="k">done</span>
+<span class="c"># 对全量备份文件执行预处理(注意增加 --apply-log-only 选项)</span>
+xtrabackup <span class="nt">--prepare</span> <span class="nt">--apply-log-only</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502
+<span class="c"># 对非最后一个增量备份执行预处理</span>
+xtrabackup <span class="nt">--prepare</span> <span class="nt">--apply-log-only</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502 <span class="nt">--incremental-dir</span> /data/mysql_backup/mysql-inc-20191206230802
+<span class="c"># 对最后一个增量备份执行预处理(不需要 --apply-log-only)</span>
+xtrabackup <span class="nt">--prepare</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502 <span class="nt">--incremental-dir</span> /data/mysql_backup/mysql-inc-20191207031005
+<span class="c"># 执行恢复(恢复时自动根据 my.cnf 将数据覆盖到 data 数据目录)</span>
+xtrabackup <span class="nt">--copy-back</span> <span class="nt">--target-dir</span> /data/mysql_backup/mysql-20191205230502
+<span class="c"># 修复数据目录权限</span>
+<span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /data/mysql
+<span class="c"># 启动 mysql</span>
+systemctl start mysqld
+</code></pre></div></div>
+
+<h3 id="63创建-slave">6.3、创建 slave</h3>
+
+<p>针对 xtrabackup 备份的数据可以直接恢复成 slave 节点，具体步骤如下:</p>
+
+<p>首先将备份文件复制到目标机器，然后执行解压(默认备份工具采用 lz4 压缩)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>xtrabackup <span class="nt">--decompress</span> <span class="nt">--target-dir</span><span class="o">=</span>xxxxxx
+</code></pre></div></div>
+
+<p>解压完成后执行预处理操作(<strong>在执行预处理之前请确保 slave 机器上相关配置文件与 master 相同，并且处理好数据目录存放等</strong>)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>xtrabackup <span class="nt">--user</span><span class="o">=</span>root <span class="nt">--password</span><span class="o">=</span>xxxxxxx <span class="nt">--prepare</span> <span class="nt">--target-dir</span><span class="o">=</span>xxxx
+</code></pre></div></div>
+
+<p>预处理成功后便可执行恢复，以下命令将自动读取 <code class="highlighter-rouge">my.cnf</code> 配置，自动识别数据目录位置并将数据文件移动到该位置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>xtrabackup <span class="nt">--move-back</span> <span class="nt">--target-dir</span><span class="o">=</span>xxxxx
+</code></pre></div></div>
+
+<p>所由准备就绪后需要进行权限修复</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql MYSQL_DATA_DIR
+</code></pre></div></div>
+
+<p>最后在 mysql 内启动 slave 既可，slave 信息可通过从数据备份目录的 <code class="highlighter-rouge">xtrabackup_binlog_info</code> 中获取</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 获取备份 POS 信息</span>
+<span class="nb">cat </span>xxxxxx/xtrabackup_binlog_info
+
+<span class="c"># 创建 slave 节点</span>
+CHANGE MASTER TO
+    <span class="nv">MASTER_HOST</span><span class="o">=</span><span class="s1">'192.168.2.48'</span>,
+    <span class="nv">MASTER_USER</span><span class="o">=</span><span class="s1">'repl'</span>,
+    <span class="nv">MASTER_PASSWORD</span><span class="o">=</span><span class="s1">'xxxxxxx'</span>,
+    <span class="nv">MASTER_LOG_FILE</span><span class="o">=</span><span class="s1">'mysql-bin.000005'</span>,
+    <span class="nv">MASTER_LOG_POS</span><span class="o">=</span>52500595<span class="p">;</span>
+
+<span class="c"># 启动 slave</span>
+start slave<span class="p">;</span>
+show slave status <span class="se">\G</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="七生产处理">七、生产处理</h2>
+
+<h3 id="71数据目录">7.1、数据目录</h3>
+
+<p>目前生产环境数据目录位置调整到 <code class="highlighter-rouge">/home/mysql</code>，所以目录权限处理也要做对应调整</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> /var/log/mysql /home/mysql_tmp
+<span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /var/log/mysql /home/mysql_tmp
+</code></pre></div></div>
+
+<h3 id="72配置文件">7.2、配置文件</h3>
+
+<p>生产环境目前节点配置如下</p>
+
+<ul>
+  <li>CPU: <code class="highlighter-rouge">Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz</code></li>
+  <li>RAM: <code class="highlighter-rouge">128G</code></li>
+</ul>
+
+<p>所以配置文件也需要做相应的优化调整</p>
+
+<p><strong>mysql.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[mysql]</span>
+<span class="err">auto-rehash</span>
+<span class="py">default_character_set</span><span class="p">=</span><span class="s">utf8mb4</span>
+</code></pre></div></div>
+
+<p><strong>mysqld.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Percona Server template configuration
+</span>
+<span class="nn">[mysqld]</span>
+<span class="c">#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+# innodb_buffer_pool_size = 128M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+</span><span class="py">port</span><span class="p">=</span><span class="s">3306</span>
+<span class="py">datadir</span><span class="p">=</span><span class="s">/home/mysql/mysql</span>
+<span class="py">socket</span><span class="p">=</span><span class="s">/home/mysql/mysql/mysql.sock</span>
+<span class="py">pid_file</span><span class="p">=</span><span class="s">/home/mysql/mysql/mysqld.pid</span>
+
+<span class="c"># 服务端编码
+</span><span class="py">character_set_server</span><span class="p">=</span><span class="s">utf8mb4</span>
+<span class="c"># 服务端排序
+</span><span class="py">collation_server</span><span class="p">=</span><span class="s">utf8mb4_general_ci</span>
+<span class="c"># 强制使用 utf8mb4 编码集，忽略客户端设置
+</span><span class="py">skip_character_set_client_handshake</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 日志输出到文件
+</span><span class="py">log_output</span><span class="p">=</span><span class="s">FILE</span>
+<span class="c"># 开启常规日志输出
+</span><span class="py">general_log</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 常规日志输出文件位置
+</span><span class="py">general_log_file</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld.log</span>
+<span class="c"># 错误日志位置
+</span><span class="py">log_error</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld-error.log</span>
+<span class="c"># 记录慢查询
+</span><span class="py">slow_query_log</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 慢查询时间(大于 1s 被视为慢查询)
+</span><span class="py">long_query_time</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 慢查询日志文件位置
+</span><span class="py">slow_query_log_file</span><span class="p">=</span><span class="s">/var/log/mysql/mysqld-slow.log</span>
+<span class="c"># 临时文件位置
+</span><span class="py">tmpdir</span><span class="p">=</span><span class="s">/home/mysql/mysql_tmp</span>
+<span class="c"># The number of open tables for all threads.(refs https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_table_open_cache)
+</span><span class="py">table_open_cache</span><span class="p">=</span><span class="s">16384</span>
+<span class="c"># 文件描述符(此处修改不生效，请修改 systemd service 配置) 
+# refs https://www.percona.com/blog/2017/10/12/open_files_limit-mystery/
+# refs https://www.cnblogs.com/wxxjianchi/p/10370419.html
+#open_files_limit=65535
+# 表定义缓存(5.7 以后自动调整)
+# refs https://dev.mysql.com/doc/refman/5.6/en/server-system-variables.html#sysvar_table_definition_cache
+# refs http://mysql.taobao.org/monthly/2015/08/10/
+#table_definition_cache=16384
+</span><span class="py">sort_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="py">join_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">read_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="py">read_rnd_buffer_size</span><span class="p">=</span><span class="s">1M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">key_buffer_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># MyiSAM 引擎专用(内部临时磁盘表可能会用)
+</span><span class="py">bulk_insert_buffer_size</span><span class="p">=</span><span class="s">16M</span>
+<span class="c"># myisam_sort_buffer_size 与 sort_buffer_size 区别请参考(https://stackoverflow.com/questions/7871027/myisam-sort-buffer-size-vs-sort-buffer-size)
+</span><span class="py">myisam_sort_buffer_size</span><span class="p">=</span><span class="s">64M</span>
+<span class="c"># 内部内存临时表大小
+</span><span class="py">tmp_table_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># 用户创建的 MEMORY 表最大大小(tmp_table_size 受此值影响)
+</span><span class="py">max_heap_table_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># 开启查询缓存
+</span><span class="py">query_cache_type</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 查询缓存大小
+</span><span class="py">query_cache_size</span><span class="p">=</span><span class="s">32M</span>
+<span class="c"># sql mode
+</span><span class="py">sql_mode</span><span class="p">=</span><span class="s">'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'</span>
+
+<span class="c">########### Network ###########
+# 最大连接数(该参数受到最大文件描述符影响，如果不生效请检查最大文件描述符设置)
+# refs https://stackoverflow.com/questions/39976756/the-max-connections-in-mysql-5-7
+</span><span class="py">max_connections</span><span class="p">=</span><span class="s">1500</span>
+<span class="c"># mysql 堆栈内暂存的链接数量
+# 当短时间内链接数量超过 max_connections 时，部分链接会存储在堆栈内，存储数量受此参数控制
+</span><span class="py">back_log</span><span class="p">=</span><span class="s">256</span>
+<span class="c"># 最大链接错误，针对于 client 主机，超过此数量的链接错误将会导致 mysql server 针对此主机执行锁定(禁止链接 ERROR 1129 )
+# 此错误计数仅在 mysql 链接握手失败才会计算，一般出现问题时都是网络故障
+# refs https://www.cnblogs.com/kerrycode/p/8405862.html
+</span><span class="py">max_connect_errors</span><span class="p">=</span><span class="s">100000</span>
+<span class="c"># mysql server 允许的最大数据包大小
+</span><span class="py">max_allowed_packet</span><span class="p">=</span><span class="s">64M</span>
+<span class="c"># 交互式客户端链接超时(30分钟自动断开)
+</span><span class="py">interactive_timeout</span><span class="p">=</span><span class="s">1800</span>
+<span class="c"># 非交互式链接超时时间(10分钟)
+# 如果客户端有连接池，则需要协商此参数(refs https://database.51cto.com/art/201909/603519.htm)
+</span><span class="py">wait_timeout</span><span class="p">=</span><span class="s">28800</span>
+<span class="c"># 跳过外部文件系统锁定
+# If you run multiple servers that use the same database directory (not recommended), 
+# each server must have external locking enabled.
+# refs https://dev.mysql.com/doc/refman/5.7/en/external-locking.html
+</span><span class="py">skip_external_locking</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 跳过链接的域名解析(开启此选项后 mysql 用户授权的 host 方式失效)
+</span><span class="py">skip_name_resolve</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># 禁用主机名缓存，每次都会走 DNS
+</span><span class="py">host_cache_size</span><span class="p">=</span><span class="s">0</span>
+
+<span class="c">########### REPL ###########
+# 开启 binlog
+</span><span class="py">log_bin</span><span class="p">=</span><span class="s">mysql-bin</span>
+<span class="c"># 作为从库时，同步信息依然写入 binlog，方便此从库再作为其他从库的主库
+</span><span class="py">log_slave_updates</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># server id，默认为 ipv4 地址去除第一段
+# eg: 192.168.2.48 =&gt; 168248
+</span><span class="py">server_id</span><span class="p">=</span><span class="s">168248</span>
+<span class="c"># 每 n 次事务 binlog 刷新到磁盘
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+</span><span class="py">sync_binlog</span><span class="p">=</span><span class="s">100</span>
+<span class="c"># binlog 格式(refs https://zhuanlan.zhihu.com/p/33504555)
+</span><span class="py">binlog_format</span><span class="p">=</span><span class="s">row</span>
+<span class="c"># binlog 自动清理时间
+</span><span class="py">expire_logs_days</span><span class="p">=</span><span class="s">20</span>
+<span class="c"># 开启 relay-log，一般作为 slave 时开启
+</span><span class="py">relay_log</span><span class="p">=</span><span class="s">mysql-replay</span>
+<span class="c"># 主从复制时跳过 test 库
+</span><span class="py">replicate_ignore_db</span><span class="p">=</span><span class="s">test</span>
+<span class="c"># 每个 session binlog 缓存
+</span><span class="py">binlog_cache_size</span><span class="p">=</span><span class="s">4M</span>
+<span class="c"># binlog 滚动大小
+</span><span class="py">max_binlog_size</span><span class="p">=</span><span class="s">1024M</span>
+<span class="c"># GTID 相关(refs https://keithlan.github.io/2016/06/23/gtid/)
+#gtid_mode=1
+#enforce_gtid_consistency=1
+</span>
+<span class="c">########### InnoDB ###########
+# 永久表默认存储引擎
+</span><span class="py">default_storage_engine</span><span class="p">=</span><span class="s">InnoDB</span>
+<span class="c"># 系统表空间数据文件大小(初始化为 1G，并且自动增长)
+</span><span class="py">innodb_data_file_path</span><span class="p">=</span><span class="s">ibdata1:1G:autoextend</span>
+<span class="c"># InnoDB 缓存池大小(资源充足，为所欲为)
+# innodb_buffer_pool_size 必须等于 innodb_buffer_pool_chunk_size*innodb_buffer_pool_instances，或者是其整数倍
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-buffer-pool-resize.html
+# refs https://zhuanlan.zhihu.com/p/60089484
+</span><span class="py">innodb_buffer_pool_size</span><span class="p">=</span><span class="s">61440M</span>
+<span class="py">innodb_buffer_pool_instances</span><span class="p">=</span><span class="s">16</span>
+<span class="c"># 默认 128M
+</span><span class="py">innodb_buffer_pool_chunk_size</span><span class="p">=</span><span class="s">128M</span>
+<span class="c"># InnoDB 强制恢复(refs https://www.askmaclean.com/archives/mysql-innodb-innodb_force_recovery.html)
+</span><span class="py">innodb_force_recovery</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># InnoDB buffer 预热(refs http://www.dbhelp.net/2017/01/12/mysql-innodb-buffer-pool-warmup.html)
+</span><span class="py">innodb_buffer_pool_dump_at_shutdown</span><span class="p">=</span><span class="s">1</span>
+<span class="py">innodb_buffer_pool_load_at_startup</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># InnoDB 日志组中的日志文件数
+</span><span class="py">innodb_log_files_in_group</span><span class="p">=</span><span class="s">2</span>
+<span class="c"># InnoDB redo 日志大小
+# refs https://www.percona.com/blog/2017/10/18/chose-mysql-innodb_log_file_size/
+</span><span class="py">innodb_log_file_size</span><span class="p">=</span><span class="s">256MB</span>
+<span class="c"># 缓存还未提交的事务的缓冲区大小
+</span><span class="py">innodb_log_buffer_size</span><span class="p">=</span><span class="s">16M</span>
+<span class="c"># InnoDB 在事务提交后的日志写入频率
+# refs http://liyangliang.me/posts/2014/03/innodb_flush_log_at_trx_commit-and-sync_binlog/
+</span><span class="py">innodb_flush_log_at_trx_commit</span><span class="p">=</span><span class="s">2</span>
+<span class="c"># InnoDB DML 操作行级锁等待时间
+# 超时返回 ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+# refs https://ningyu1.github.io/site/post/75-mysql-lock-wait-timeout-exceeded/
+</span><span class="py">innodb_lock_wait_timeout</span><span class="p">=</span><span class="s">30</span>
+<span class="c"># InnoDB 行级锁超时是否回滚整个事务，默认为 OFF 仅回滚上一条语句
+# 此时应用程序可以接受到错误后选择是否继续提交事务(并没有违反 ACID 原子性)
+# refs https://www.cnblogs.com/hustcat/archive/2012/11/18/2775487.html
+#innodb_rollback_on_timeout=ON
+# InnoDB 数据写入磁盘的方式，具体见博客文章
+# refs https://www.cnblogs.com/gomysql/p/3595806.html
+</span><span class="py">innodb_flush_method</span><span class="p">=</span><span class="s">O_DIRECT</span>
+<span class="c"># InnoDB 缓冲池脏页刷新百分比
+# refs https://dbarobin.com/2015/08/29/mysql-optimization-under-ssd
+</span><span class="py">innodb_max_dirty_pages_pct</span><span class="p">=</span><span class="s">50</span>
+<span class="c"># InnoDB 每秒执行的写IO量
+# refs https://www.centos.bz/2016/11/mysql-performance-tuning-15-config-item/#10.INNODB_IO_CAPACITY,%20INNODB_IO_CAPACITY_MAX
+# refs https://www.alibabacloud.com/blog/testing-io-performance-with-sysbench_594709
+</span><span class="py">innodb_io_capacity</span><span class="p">=</span><span class="s">8000</span>
+<span class="py">innodb_io_capacity_max</span><span class="p">=</span><span class="s">16000</span>
+<span class="c"># 请求并发 InnoDB 线程数
+# refs https://www.cnblogs.com/xinysu/p/6439715.html#_lab2_1_0
+</span><span class="py">innodb_thread_concurrency</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># 再使用多个 InnoDB 表空间时，允许打开的最大 ".ibd" 文件个数，不设置默认 300，
+# 并且取与 table_open_cache 相比较大的一个，此选项独立于 open_files_limit
+# refs https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_open_files
+</span><span class="py">innodb_open_files</span><span class="p">=</span><span class="s">65535</span>
+<span class="c"># 每个 InnoDB 表都存储在独立的表空间(.ibd)中
+</span><span class="py">innodb_file_per_table</span><span class="p">=</span><span class="s">1</span>
+<span class="c"># 事务级别(可重复读，会出幻读)
+</span><span class="py">transaction_isolation</span><span class="p">=</span><span class="s">REPEATABLE-READ</span>
+<span class="c"># 是否在搜索和索引扫描中使用间隙锁(gap locking)，不建议使用未来将删除
+</span><span class="py">innodb_locks_unsafe_for_binlog</span><span class="p">=</span><span class="s">0</span>
+<span class="c"># InnoDB 后台清理线程数，更大的值有助于 DML 执行性能，&gt;= 5.7.8 默认为 4
+</span><span class="py">innodb_purge_threads</span><span class="p">=</span><span class="s">4</span>
+</code></pre></div></div>
+
+<p><strong>mysqld_safe.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#
+# The Percona Server 5.7 configuration file.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+</span>
+<span class="nn">[mysqld_safe]</span>
+<span class="py">pid-file</span> <span class="p">=</span> <span class="s">/var/run/mysqld/mysqld.pid</span>
+<span class="py">socket</span>   <span class="p">=</span> <span class="s">/var/run/mysqld/mysqld.sock</span>
+<span class="py">nice</span>     <span class="p">=</span> <span class="s">0</span>
+</code></pre></div></div>
+
+<p><strong>mysqldump.cnf</strong></p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[mysqldump]</span>
+<span class="err">quick</span>
+<span class="py">default-character-set</span><span class="p">=</span><span class="s">utf8mb4</span>
+<span class="py">max_allowed_packet</span><span class="p">=</span><span class="s">256M</span>
+</code></pre></div></div>
+
+<h2 id="八常用诊断">八、常用诊断</h2>
+
+<h3 id="81动态配置-diff">8.1、动态配置 diff</h3>
+
+<p>mysql 默认允许在实例运行后使用 <code class="highlighter-rouge">set global VARIABLES=VALUE</code> 的方式动态调整一些配置，这可能导致在运行一段时间后(运维动态修改)实例运行配置和配置文件中配置不一致；所以<strong>建议定期 diff 运行时配置与配置文件配置差异，防制特殊情况下 mysql 重启后运行期配置丢失</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-config-diff /etc/percona-server.conf.d/mysqld.cnf <span class="nv">h</span><span class="o">=</span>127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--report-width</span> 100
+Enter MySQL password:
+2 config differences
+Variable                  /etc/percona-server.conf.d/mysqld.cnf mysql47.test.com
+<span class="o">=========================</span> <span class="o">=====================================</span> <span class="o">==================</span>
+innodb_max_dirty_pages... 50                                    50.000000
+skip_name_resolve         0                                     ON
+</code></pre></div></div>
+
+<h3 id="82配置优化建议">8.2、配置优化建议</h3>
+
+<p>Percona Toolkit 提供了一个诊断工具，用于对 mysql 内的配置进行扫描并给出优化建议，在初始化时可以使用此工具评估 mysql 当前配置的具体情况</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-variable-advisor 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="s1">'^$'</span>
+Enter password: 
+
+<span class="c"># WARN delay_key_write: MyISAM index blocks are never flushed until necessary.</span>
+<span class="c"># WARN innodb_flush_log_at_trx_commit-1: InnoDB is not configured in strictly ACID mode.</span>
+<span class="c"># NOTE innodb_max_dirty_pages_pct: The innodb_max_dirty_pages_pct is lower than the default.</span>
+<span class="c"># WARN max_connections: If the server ever really has more than a thousand threads running, then the system is likely to spend more time scheduling threads than really doing useful work.</span>
+<span class="c"># NOTE read_buffer_size-1: The read_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.</span>
+<span class="c"># NOTE read_rnd_buffer_size-1: The read_rnd_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.</span>
+<span class="c"># NOTE sort_buffer_size-1: The sort_buffer_size variable should generally be left at its default unless an expert determines it is necessary to change it.</span>
+<span class="c"># NOTE innodb_data_file_path: Auto-extending InnoDB files can consume a lot of disk space that is very difficult to reclaim later.</span>
+<span class="c"># WARN myisam_recover_options: myisam_recover_options should be set to some value such as BACKUP,FORCE to ensure that table corruption is noticed.</span>
+<span class="c"># WARN sync_binlog: Binary logging is enabled, but sync_binlog isn't configured so that every transaction is flushed to the binary log for durability.</span>
+</code></pre></div></div>
+
+<h3 id="83死锁诊断">8.3、死锁诊断</h3>
+
+<p>使用 pt-deadlock-logger 工具可以诊断当前的死锁状态，以下为对死锁检测的测试</p>
+
+<p>首先创建测试数据库和表</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">创建测试库</span>
+<span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">dbatest</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8mb4</span> <span class="k">COLLATE</span> <span class="n">utf8mb4_unicode_ci</span><span class="p">;</span>
+<span class="o">#</span> <span class="err">切换到测试库并建立测试表</span>
+<span class="n">USE</span> <span class="n">dbatest</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> <span class="n">test</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span> <span class="n">AUTO_INCREMENT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span> <span class="n">value</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">createtime</span> <span class="nb">TIMESTAMP</span> <span class="k">DEFAULT</span> <span class="k">CURRENT_TIMESTAMP</span><span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">INNODB</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>在一个其他终端上开启 pt-deadlock-logger 检测</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-deadlock-logger 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--tab</span>
+</code></pre></div></div>
+
+<p>检测开启后进行死锁测试</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">插入两条测试数据</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">test</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">'test1'</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">test</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">'test2'</span><span class="p">);</span>
+<span class="o">#</span> <span class="err">在两个终端下进行交叉事务</span>
+
+<span class="o">#</span> <span class="err">统一关闭自动提交</span>
+<span class="n">terminal_1</span> <span class="o">#</span> <span class="k">SET</span> <span class="n">AUTOCOMMIT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">terminal_2</span> <span class="o">#</span> <span class="k">SET</span> <span class="n">AUTOCOMMIT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="o">#</span> <span class="err">交叉事务，终端</span> <span class="mi">1</span> <span class="err">先更新第一条数据，终端</span> <span class="mi">2</span> <span class="err">先更新第二条数据</span>
+<span class="n">terminal_1</span> <span class="o">#</span> <span class="k">BEGIN</span><span class="p">;</span>
+<span class="n">terminal_1</span> <span class="o">#</span> <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'x1'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="n">terminal_2</span> <span class="o">#</span> <span class="k">BEGIN</span><span class="p">;</span>
+<span class="n">terminal_2</span> <span class="o">#</span> <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'x2'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+
+<span class="o">#</span> <span class="err">此后终端</span> <span class="mi">1</span> <span class="err">再尝试更新第二条数据，终端</span> <span class="mi">2</span> <span class="err">再尝试更新第一条数据；造成等待互向释放锁的死锁</span>
+<span class="n">terminal_1</span> <span class="o">#</span> <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'lock2'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+<span class="n">terminal_2</span> <span class="o">#</span> <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'lock1'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+
+<span class="o">#</span> <span class="err">此时由于开启了</span> <span class="n">mysql</span> <span class="n">innodb</span> <span class="err">的死锁自动检测机制，会导致终端</span> <span class="mi">2</span> <span class="err">弹出错误</span>
+<span class="n">ERROR</span> <span class="mi">1213</span> <span class="p">(</span><span class="mi">40001</span><span class="p">):</span> <span class="n">Deadlock</span> <span class="k">found</span> <span class="k">when</span> <span class="n">trying</span> <span class="k">to</span> <span class="k">get</span> <span class="k">lock</span><span class="p">;</span> <span class="n">try</span> <span class="n">restarting</span> <span class="n">transaction</span>
+
+<span class="o">#</span> <span class="err">同时</span> <span class="n">pt</span><span class="o">-</span><span class="n">deadlock</span><span class="o">-</span><span class="n">logger</span> <span class="err">有日志输出</span>
+<span class="n">server</span>  <span class="n">ts</span>      <span class="n">thread</span>  <span class="n">txn_id</span>  <span class="n">txn_time</span>        <span class="k">user</span>    <span class="n">hostname</span>    <span class="n">ip</span>      <span class="n">db</span>      <span class="n">tbl</span>     <span class="n">idx</span>     <span class="n">lock_type</span>       <span class="n">lock_mode</span>       <span class="n">wait_hold</span>       <span class="n">victim</span>  <span class="n">query</span>
+<span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span>       <span class="mi">2019</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">24</span><span class="n">T14</span><span class="p">:</span><span class="mi">57</span><span class="p">:</span><span class="mi">10</span>     <span class="mi">87</span>      <span class="mi">0</span>       <span class="mi">52</span>      <span class="n">root</span>            <span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span>       <span class="n">dbatest</span> <span class="n">test</span>    <span class="k">PRIMARY</span> <span class="n">RECORD</span>  <span class="n">X</span>       <span class="n">w</span>       <span class="mi">0</span>       <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'lock2'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">2</span>
+<span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span>       <span class="mi">2019</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">24</span><span class="n">T14</span><span class="p">:</span><span class="mi">57</span><span class="p">:</span><span class="mi">10</span>     <span class="mi">89</span>      <span class="mi">0</span>       <span class="mi">41</span>      <span class="n">root</span>            <span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span>       <span class="n">dbatest</span> <span class="n">test</span>    <span class="k">PRIMARY</span> <span class="n">RECORD</span>  <span class="n">X</span>       <span class="n">w</span>       <span class="mi">1</span>       <span class="k">UPDATE</span> <span class="n">test</span> <span class="k">set</span> <span class="n">value</span><span class="o">=</span><span class="s1">'lock1'</span> <span class="k">where</span> <span class="n">id</span><span class="o">=</span><span class="mi">1</span>
+</code></pre></div></div>
+
+<h3 id="84查看-io-详情">8.4、查看 IO 详情</h3>
+
+<p>不同于 <code class="highlighter-rouge">iostat</code>，<code class="highlighter-rouge">pt-diskstats</code> 提供了更加详细的 IO 详情统计，并且据有交互式处理，执行一下命令将会实时检测 IO 状态</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-diskstats <span class="nt">--show-timestamps</span>
+</code></pre></div></div>
+
+<p>其中几个关键值含义如下(更详细的请参考官方文档 <a href="https://www.percona.com/doc/percona-toolkit/LATEST/pt-diskstats.html#output">https://www.percona.com/doc/percona-toolkit/LATEST/pt-diskstats.html#output</a>)</p>
+
+<ul>
+  <li>rd_s: 每秒平均读取次数。这是发送到基础设备的 IO 请求数。通常，此数量少于应用程序发出的逻辑IO请求的数量。更多请求可能已排队到块设备，但是其中一些请求通常在发送到磁盘之前先进行合并。</li>
+  <li>rd_avkb: 读取的平均大小，以千字节为单位。</li>
+  <li>rd_mb_s: 每秒读取的平均兆字节数。</li>
+  <li>rd_mrg: 在发送到物理设备之前在队列调度程序中合并在一起的读取请求的百分比。</li>
+  <li>rd_rt: 读取操作的平均响应时间(以毫秒为单位)；这是端到端响应时间，包括在队列中花费的时间。这是发出 IO 请求的应用程序看到的响应时间，而不是块设备下的物理磁盘的响应时间。</li>
+  <li>busy: 设备至少有一个请求 wall-clock 时间的比例；等同于 <code class="highlighter-rouge">iostat</code> 的 <code class="highlighter-rouge">％util</code>。</li>
+  <li>in_prg: 正在进行的请求数。与读写并发是从可靠数字中生成的平均值不同，该数字是一个时样本，您可以看到它可能表示请求峰值，而不是真正的长期平均值。如果此数字很大，则从本质上讲意味着设备高负载运行。</li>
+  <li>ios_s: 物理设备的平均吞吐量，以每秒 IO 操作(IOPS)为单位。此列显示基础设备正在处理的总 IOPS；它是 rd_s 和 wr_s 的总和。</li>
+  <li>qtime: 平均排队时间；也就是说，请求在发送到物理设备之前在设备调度程序队列中花费的时间。</li>
+  <li>stime: 平均服务时间；也就是说，请求完成在队列中的等待之后，物理设备处理请求的时间。</li>
+</ul>
+
+<h3 id="85重复索引优化">8.5、重复索引优化</h3>
+
+<p>pt-duplicate-key-checker 工具提供了对数据库重复索引和外键的自动查找功能，工具使用如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-duplicate-key-checker 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span>
+Enter password:
+
+<span class="c"># A software update is available:</span>
+<span class="c"># ########################################################################</span>
+<span class="c"># aaaaaa.aaaaaa_audit</span>
+<span class="c"># ########################################################################</span>
+
+<span class="c"># index_linkId is a duplicate of unique_linkId</span>
+<span class="c"># Key definitions:</span>
+<span class="c">#   KEY `index_linkId` (`link_id`)</span>
+<span class="c">#   UNIQUE KEY `unique_linkId` (`link_id`),</span>
+<span class="c"># Column types:</span>
+<span class="c">#         `link_id` bigint(20) not null comment 'bdid'</span>
+<span class="c"># To remove this duplicate index, execute:</span>
+ALTER TABLE <span class="sb">`</span>aaaaaa.aaaaaa_audit<span class="sb">`</span> DROP INDEX <span class="sb">`</span>index_linkId<span class="sb">`</span><span class="p">;</span>
+
+<span class="c"># ########################################################################</span>
+<span class="c"># Summary of indexes</span>
+<span class="c"># ########################################################################</span>
+
+<span class="c"># Size Duplicate Indexes   927420</span>
+<span class="c"># Total Duplicate Indexes  3</span>
+<span class="c"># Total Indexes            847</span>
+</code></pre></div></div>
+
+<h3 id="86表统计">8.6、表统计</h3>
+
+<p>pt-find 是一个很方便的表查找统计工具，默认的一些选项可以实现批量查找符合条件的表，甚至执行一些 SQL 处理命令</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 批量查找大于 5G 的表，并排序</span>
+pt-find <span class="nt">--host</span> 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--tablesize</span> +5G | <span class="nb">sort</span> <span class="nt">-rn</span>
+Enter password: 
+
+<span class="sb">`</span>rss_service<span class="sb">`</span>.<span class="sb">`</span>test_feed_news<span class="sb">`</span>
+<span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201912<span class="sb">`</span>
+<span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201911<span class="sb">`</span>
+<span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201910<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_user_messages<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_user_link_history<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_message<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_link_votes<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_links_mobile_content<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_links<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_comment_votes<span class="sb">`</span>
+<span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_comments<span class="sb">`</span>
+</code></pre></div></div>
+
+<p>如果想要定制输出可以采用 <code class="highlighter-rouge">--printf</code> 选项</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-find <span class="nt">--host</span> 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--tablesize</span> +5G <span class="nt">--printf</span> <span class="s2">"%T</span><span class="se">\t</span><span class="s2">%D.%N</span><span class="se">\n</span><span class="s2">"</span> | <span class="nb">sort</span> <span class="nt">-rn</span>
+Enter password: 
+
+13918404608     <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_links_mobile_content<span class="sb">`</span>
+13735231488     <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_comment_votes<span class="sb">`</span>
+12633227264     <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_user_messages<span class="sb">`</span>
+12610174976     <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_user_link_history<span class="sb">`</span>
+10506305536     <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_links<span class="sb">`</span>
+9686745088      <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_message<span class="sb">`</span>
+9603907584      <span class="sb">`</span>rss_service<span class="sb">`</span>.<span class="sb">`</span>test_feed_news<span class="sb">`</span>
+9004122112      <span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201910<span class="sb">`</span>
+8919007232      <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_comments<span class="sb">`</span>
+8045707264      <span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201912<span class="sb">`</span>
+7855915008      <span class="sb">`</span>db_log_history<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click_201911<span class="sb">`</span>
+6099566592      <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_mobile_click<span class="sb">`</span>
+5892898816      <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_link_votes<span class="sb">`</span>
+</code></pre></div></div>
+
+<p><strong>遗憾的是目前 <code class="highlighter-rouge">printf</code> 格式来源与 Perl 的 <code class="highlighter-rouge">sprintf</code> 函数，所以支持格式有限，不过简单的格式定制已经基本实现，复杂的建议通过 awk 处理</strong>；其他的可选参数具体参考官方文档 <a href="https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html">https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html</a></p>
+
+<h3 id="87其他命令">8.7、其他命令</h3>
+
+<p>迫于篇幅，其他更多的高级命令请自行查阅官方文档 <a href="https://www.percona.com/doc/percona-toolkit/LATEST/index.html">https://www.percona.com/doc/percona-toolkit/LATEST/index.html</a></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/11/05/writing-plugin-for-coredns/" data-toggle="tooltip" data-placement="top" title="如何编写一个 CoreDNS 插件">
+                        Previous<br>
+                        <span>如何编写一个 CoreDNS 插件</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2020/01/21/how-to-modify-dns-on-ubuntu18-server/" data-toggle="tooltip" data-placement="top" title="云服务器下 Ubuntu 18 正确的 DNS 修改">
+                        Next<br>
+                        <span>云服务器下 Ubuntu 18 正确的 DNS 修改</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="83">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2020/01/21/set-up-percona-server";
+    var disqus_url = "https://mritd.me/2020/01/21/set-up-percona-server/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

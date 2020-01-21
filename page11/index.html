@@ -177,6 +177,51 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/">
+        <h2 class="post-title">
+            Linux 笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            一、基础
+
+1、基础命令
+
+
+  tty : 查看当前终端类型
+
+
+
+  
+    
+      返回值
+      终端类型
+    
+  
+  
+    
+      /dev/pst/#
+      伪终端
+    
+    
+      /dev/tty#
+      虚拟终端
+    
+    
+      /dev/console
+      物理终端
+    
+    
+   ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 14, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/">
         <h2 class="post-title">
             Redundent Array of Inexpensive Disks
@@ -392,32 +437,6 @@ JAXB 原本是 J2...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/24/HotSpot-%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0/">
-        <h2 class="post-title">
-            HotSpot 虚拟机的算法实现
-        </h2>
-        
-        <div class="post-content-preview">
-            一、概述
-
-HotSpot 虚拟机通过 GC Roots 枚举判定待回收的对象，通过安全点和安全区域确定 GC 的触发点，最后通过各种不同的回收算法完成垃圾回收。
-
-
-
-二、GC Roots 枚举过程
-
-GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须在内存快照中进行，保证一致性，而且时间要求比较敏感。
-
-在生产环境中，即使不考虑其它部分内存，仅仅 Java 堆内存就可达几百...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 24, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -452,7 +471,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="83">
                                     Linux
                                 </a>
                             
