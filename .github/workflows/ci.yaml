@@ -11,6 +11,6 @@ jobs:
         docker build . --build-arg GITHUB_USER=mritd --build-arg=GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' --file Dockerfile.build --tag mritd/hugo:$(date +%s)
     - name: Update WebSite Static Files
       run: |
-        curl -XPOST -H 'Authorization: Bearer ${{ secrets.HTTPCMD_TOKEN }}' -H 'Content-Type: application/json; charset=utf-8' -d $'{"command": "git pull"}' https://mritd.com/ci
-        curl -XPOST -H 'Authorization: Bearer ${{ secrets.HTTPCMD_TOKEN }}' -H 'Content-Type: application/json; charset=utf-8' -d $'{"command": "chown -R nginx:nginx /usr/share/nginx/html"}' https://mritd.com/ci
+        curl -XPOST -H 'Authorization: Bearer ${{ secrets.HTTPCMD_TOKEN }}' -H 'Content-Type: application/json; charset=utf-8' -d $'{"command": "git pull"}' https://mritd.me/ci
+        curl -XPOST -H 'Authorization: Bearer ${{ secrets.HTTPCMD_TOKEN }}' -H 'Content-Type: application/json; charset=utf-8' -d $'{"command": "chown -R nginx:nginx /usr/share/nginx/html"}' https://mritd.me/ci
 
