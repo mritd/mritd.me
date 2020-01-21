@@ -177,6 +177,34 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/03/23/JVM-%E5%AF%B9%E8%B1%A1%E5%88%A4%E5%AE%9A%E5%92%8C%E5%8F%AF%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95/">
+        <h2 class="post-title">
+            JVM 对象判定和可回收算法
+        </h2>
+        
+        <div class="post-content-preview">
+            一、可回收对象判定方法
+
+1、引用计数算法
+
+基本原理：
+
+给对象添加一个引用计数器，当有新的地方引用他的时候就将其+1，引用失效则对其-1，知道为0时，说明该对象不被任何引用，可被 GC 回收，如下图所示：
+
+
+
+
+
+但是这种算法是有缺陷的，比如当 A、B 对象都没有使用时，其应该被 GC 回收，然后根据引用计数器算法，A、B 对象互相持有对方引用，导致两者引用计数器都为1，所以不会被 G...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 23, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98/">
         <h2 class="post-title">
             Java 内存之直接内存
@@ -435,44 +463,6 @@ Windows 下激活
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/">
-        <h2 class="post-title">
-            Hexo 添加 Rss 订阅
-        </h2>
-        
-        <div class="post-content-preview">
-            
-
-一、安装RSS插件
-
-执行以下命令安装 RSS 插件
-
-npm install hexo-generator-feed --save
-
-
-
-
-二、开启网站 RSS 支持
-
-编辑网站根目录下的 _config.yml，添加以下代码开启
-
-# RSS订阅支持
-plugin:
-- hexo-generator-feed
-
-# Feed Atom
-feed:
-type: atom
-path: a...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 8, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -543,7 +533,7 @@ path: a...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

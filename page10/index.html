@@ -177,6 +177,40 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/09/01/10%E5%88%86%E9%92%9F-dnsmasq-%E6%90%AD%E5%BB%BA/">
+        <h2 class="post-title">
+            10分钟 dnsmasq 搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            一、安装
+
+yum install -y dnsmasq
+
+
+二、配置
+
+# 编辑配置文件
+vim /etc/dnsmasq.conf
+
+
+主要配置如下
+
+# 上游 DNS 定义
+resolv-file=/etc/resolv.dnsmasq.conf
+# 取消从本地 hosts 读取
+no-hosts
+# 监听地址
+listen-address=127.0.0.1,192.168.1.10...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 1, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/08/02/yum-%E7%AC%94%E8%AE%B0/">
         <h2 class="post-title">
             yum 笔记
@@ -428,25 +462,6 @@ AspectJ 是一个强大的面向切面编程框架，Spring 等 AOP 全部兼容
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/">
-        <h2 class="post-title">
-            Redundent Array of Inexpensive Disks
-        </h2>
-        
-        <div class="post-content-preview">
-            一、简介
-
-
-  Redundent Array of Inexpensive/Indepedent Disks 简称 RAID 廉价(独立)冗余磁盘技术，早起由美国加州大学伯克利分校发明，用于使用廉价磁盘替代 SCSI 硬盘而设计，后经过发展成为 Linux 服务器构建高可用磁盘阵列技术；RAID 能够将多块硬盘组合成磁盘阵列，使其具备高速读写、数据冗余备份功能，对于 Host OS 来说...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on June 13, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -517,7 +532,7 @@ AspectJ 是一个强大的面向切面编程框架，Spring 等 AOP 全部兼容
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

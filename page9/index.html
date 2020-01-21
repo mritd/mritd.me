@@ -177,6 +177,23 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/10/09/jekyll-create-a-static-blog/">
+        <h2 class="post-title">
+            Jekyll 搭建静态博客
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近从 Hexo 切换到了 jekyll，发现 jekyll 搭建静态博客要比 Hexo 好得多；顺便吐槽一下 node 的依赖管理，感觉很蛋疼；同样的操作步骤往往在其他机器上无法搭建成功，每次挂掉的原因都是依赖不对等等，感觉没有一个良好的依赖管理系统；而 jekyll 使用 ruby 编写，暂不论语言哪个好那个坏，至少有 Genfile 等约束可以保证每次同样的操作搭建时不会出现依赖...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 9, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/09/24/Docker-mirror-Registry/">
         <h2 class="post-title">
             Docker mirror Registry
@@ -401,40 +418,6 @@ Etcd 构建自身高可用集群主要有三种形式:
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/09/01/10%E5%88%86%E9%92%9F-dnsmasq-%E6%90%AD%E5%BB%BA/">
-        <h2 class="post-title">
-            10分钟 dnsmasq 搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            一、安装
-
-yum install -y dnsmasq
-
-
-二、配置
-
-# 编辑配置文件
-vim /etc/dnsmasq.conf
-
-
-主要配置如下
-
-# 上游 DNS 定义
-resolv-file=/etc/resolv.dnsmasq.conf
-# 取消从本地 hosts 读取
-no-hosts
-# 监听地址
-listen-address=127.0.0.1,192.168.1.10...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on September 1, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -505,7 +488,7 @@ listen-address=127.0.0.1,192.168.1.10...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

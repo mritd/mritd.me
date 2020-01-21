@@ -5,9 +5,204 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 21 Jan 2020 21:35:48 +0800</pubDate>
-    <lastBuildDate>Tue, 21 Jan 2020 21:35:48 +0800</lastBuildDate>
+    <pubDate>Tue, 21 Jan 2020 21:39:26 +0800</pubDate>
+    <lastBuildDate>Tue, 21 Jan 2020 21:39:26 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>kubeadm 证书期限调整</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;最近 kubeadm HA 的集群折腾完了，发现集群证书始终是 1 年有效期，然后自己还有点子担心；无奈只能研究一下源码一探究竟了…&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一证书管理&quot;&gt;一、证书管理&lt;/h2&gt;
+
+&lt;p&gt;kubeadm 集群安装完成后，证书管理上实际上大致是两大类型:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;自动滚动续期&lt;/li&gt;
+  &lt;li&gt;手动定期续期&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;自动滚动续期类型的证书目前从我所阅读文档和实际测试中目前只有 kubelet 的 client 证书；kubelet client 证书自动滚动涉及到了 &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-tls-bootstrapping/&quot;&gt;TLS bootstrapping&lt;/a&gt; 部份，&lt;strong&gt;其核心由两个 ClusterRole 完成(&lt;code class=&quot;highlighter-rouge&quot;&gt;system:certificates.k8s.io:certificatesigningrequests:nodeclient&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;system:certificates.k8s.io:certificatesigningrequests:selfnodeclient&lt;/code&gt;)，针对这两个 ClusterRole kubeadm 在引导期间创建了 &lt;a href=&quot;https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#create-a-bootstrap-token&quot;&gt;bootstrap token&lt;/a&gt; 来完成引导期间证书签发(该 Token 24h 失效)，后续通过预先创建的 ClusterRoleBinding(&lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm:node-autoapprove-bootstrap&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm:node-autoapprove-certificate-rotation&lt;/code&gt;) 完成自动的 node 证书续期；&lt;/strong&gt;kubelet client 证书续期部份涉及到 TLS bootstrapping 太多了，有兴趣的可以仔细查看(最后还是友情提醒: &lt;strong&gt;用 kubeadm 一定要看看 &lt;a href=&quot;https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details&quot;&gt;Implementation details&lt;/a&gt;&lt;/strong&gt;)。&lt;/p&gt;
+
+&lt;p&gt;手动续期的证书目前需要在到期前使用 kubeadm 命令自行续期，这些证书目前可以通过以下命令列出&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 不要在意我的证书过期时间是 10 年，下面会说&lt;/span&gt;
+k1.node ➜ kubeadm alpha certs check-expiration
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;check-expiration] Reading configuration from the cluster...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;check-expiration] FYI: You can look at this config file with &lt;span class=&quot;s1&quot;&gt;'kubectl -n kube-system get cm kubeadm-config -oyaml'&lt;/span&gt;
+
+CERTIFICATE                EXPIRES                  RESIDUAL TIME   CERTIFICATE AUTHORITY   EXTERNALLY MANAGED
+admin.conf                 Dec 06, 2029 20:58 UTC   9y                                      no
+apiserver                  Dec 06, 2029 20:59 UTC   9y              ca                      no
+apiserver-kubelet-client   Dec 06, 2029 20:59 UTC   9y              ca                      no
+controller-manager.conf    Dec 06, 2029 20:59 UTC   9y                                      no
+front-proxy-client         Dec 06, 2029 20:59 UTC   9y              front-proxy-ca          no
+scheduler.conf             Dec 06, 2029 20:59 UTC   9y                                      no
+
+CERTIFICATE AUTHORITY   EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED
+ca                      Jan 13, 2030 08:45 UTC   9y              no
+front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;二证书期限调整&quot;&gt;二、证书期限调整&lt;/h2&gt;
+
+&lt;p&gt;上面已经提到了，手动管理部份的证书需要自己用命令续签(&lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm alpha certs renew all&lt;/code&gt;)，而且你会发现续签以后有效期还是 1 年；kubeadm 的初衷是 &lt;strong&gt;“为快速创建 kubernetes 集群的最佳实践”&lt;/strong&gt;，当然最佳实践包含确保证书安全性，毕竟 Let’s Encrypt 的证书有效期只有 3 个月的情况下 kubeadm 有效期有 1 年已经很不错了；但是对于最佳实践来说，我们公司的集群安全性并不需要那么高，一年续期一次无疑在增加运维人员心智负担(它并不最佳)，所以我们迫切需要一种 “一劳永逸” 的解决方案；当然我目前能想到的就是找到证书签发时在哪设置的有效期，然后想办法改掉它。&lt;/p&gt;
+
+&lt;h3 id=&quot;21源码分析&quot;&gt;2.1、源码分析&lt;/h3&gt;
+
+&lt;p&gt;目前通过宏观角度看整个 kubeadm 集群搭建过程，其中涉及到证书签署大致有两大部份: init  阶段和后期 renew，下面开始分析两个阶段的源码&lt;/p&gt;
+
+&lt;h4 id=&quot;211init-阶段&quot;&gt;2.1.1、init 阶段&lt;/h4&gt;
+
+&lt;p&gt;由于 kubernetes 整个命令行都是通过 cobra 库构建的，那么根据这个库的习惯首先直接从 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包开始翻，而 kubernetes 源码组织的又比较清晰进而直接定位到 kubeadm 命令包下面；接着打开 &lt;code class=&quot;highlighter-rouge&quot;&gt;app&lt;/code&gt; 目录一眼就看到了 &lt;code class=&quot;highlighter-rouge&quot;&gt;phases&lt;/code&gt;… &lt;code class=&quot;highlighter-rouge&quot;&gt;phases&lt;/code&gt; 顾名思义啊，整个 init 都是通过不同的 &lt;code class=&quot;highlighter-rouge&quot;&gt;phases&lt;/code&gt; 完成的，那么直接去 &lt;code class=&quot;highlighter-rouge&quot;&gt;phases&lt;/code&gt; 包下面找证书阶段的源码既可&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/ssdo7.jpg&quot; alt=&quot;init_source&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;进入到这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;certs.go&lt;/code&gt; 里面，直接列出所有方法，go 的规范里只有首字母大写才会被暴露出去，那么我们直接查看这些方法名既可；从名字上很轻松的看到了这个方法…基本上就是它了&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/uoqx4.jpg&quot; alt=&quot;certs.go&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;通过这个方法的代码会发现最终还是调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;certSpec.CreateFromCA(cfg, caCert, caKey)&lt;/code&gt;，那么接着看看这个方法&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/psrho.jpg&quot; alt=&quot;pkiutil.NewCertAndKey&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;通过这个方法继续往下翻发现调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;pkiutil.NewCertAndKey(caCert, caKey, cfg)&lt;/code&gt;，这个方法里最终调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewSignedCert(config, key, caCert, caKey)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/nel5u.jpg&quot; alt=&quot;NewSignedCert&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;从 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewSignedCert&lt;/code&gt; 方法里看到证书有效期实际上是个常量，&lt;strong&gt;那也就意味着我改了这个常量 init 阶段的证书有效期八九不离十的就变了，再通过包名看这个是个 &lt;code class=&quot;highlighter-rouge&quot;&gt;pkiutil&lt;/code&gt;… &lt;code class=&quot;highlighter-rouge&quot;&gt;xxxxxutil&lt;/code&gt; 明显是公共的，所以推测改了它 renew 阶段应该也会变&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/t3amy.jpg&quot; alt=&quot;CertificateValidity&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;212renew-阶段&quot;&gt;2.1.2、renew 阶段&lt;/h4&gt;
+
+&lt;p&gt;renew 阶段也是老套路，不过稳妥点先从 cmd 找起来，所以先看 &lt;code class=&quot;highlighter-rouge&quot;&gt;alpha&lt;/code&gt; 包下的 &lt;code class=&quot;highlighter-rouge&quot;&gt;certs.go&lt;/code&gt;；这时候方法名语义清晰就很有好处，一下就能找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;newCmdCertsRenewal&lt;/code&gt; 方法&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/amupo.jpg&quot; alt=&quot;alpha_certs.go&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;而这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;newCmdCertsRenewal&lt;/code&gt; 方法实际上没啥实现，所以目测实现是从 &lt;code class=&quot;highlighter-rouge&quot;&gt;getRenewSubCommands&lt;/code&gt; 实现的&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/8c38y.jpg&quot; alt=&quot;getRenewSubCommands&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;看了 &lt;code class=&quot;highlighter-rouge&quot;&gt;getRenewSubCommands&lt;/code&gt; 以后发现上面全是命令行库、配置文件参数啥的处理，核心在 &lt;code class=&quot;highlighter-rouge&quot;&gt;renewCert&lt;/code&gt; 上，从这个方法里发现还有意外收获: &lt;strong&gt;renew 时实际上分两种情况处理，一种是使用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;--use-api&lt;/code&gt; 选项，另一种是未使用&lt;/strong&gt;；当然根据上面的命令来说我们没使用，那么看 else 部份就行了(没看源码之前我特么居然没看 &lt;code class=&quot;highlighter-rouge&quot;&gt;--help&lt;/code&gt; 不知道有这个选项)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/9zsgp.jpg&quot; alt=&quot;renewCert&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;else 部份源码最终还是调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;RenewUsingLocalCA&lt;/code&gt; 方法，这个方法一直往下跟会有一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;Renew&lt;/code&gt; 方法&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/s3a5c.jpg&quot; alt=&quot;Renew&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这个方法一点进去… &lt;strong&gt;我上面的想法是对的&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/08cnb.jpg&quot; alt=&quot;FileRenewer_Renew&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;213其他推测&quot;&gt;2.1.3、其他推测&lt;/h4&gt;
+
+&lt;p&gt;根据刚刚查看代码可以看到在 renew 阶段判断了 &lt;code class=&quot;highlighter-rouge&quot;&gt;--use-api&lt;/code&gt; 选项是否使用，通过跟踪源码发现最终会调用到 &lt;code class=&quot;highlighter-rouge&quot;&gt;RenewUsingCSRAPI&lt;/code&gt; 方法上，&lt;code class=&quot;highlighter-rouge&quot;&gt;RenewUsingCSRAPI&lt;/code&gt; 会调用集群 CSR Api 执行证书签署&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/xivs9.png&quot; alt=&quot;RenewUsingCSRAPI&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;有了这个发现后基本上可以推测出这一步通过集群完成，那么按理说是应该受到 &lt;code class=&quot;highlighter-rouge&quot;&gt;kube-controller-manager&lt;/code&gt; 组件的 &lt;code class=&quot;highlighter-rouge&quot;&gt;--experimental-cluster-signing-duration&lt;/code&gt; 影响。&lt;/p&gt;
+
+&lt;h3 id=&quot;22测试验证&quot;&gt;2.2、测试验证&lt;/h3&gt;
+
+&lt;h4 id=&quot;221验证修改源码&quot;&gt;2.2.1、验证修改源码&lt;/h4&gt;
+
+&lt;p&gt;想验证修改源码是否有效只需要修改源码重新 build 出 kubeadm 命令，然后使用这个特定版本的 kubeadm renew 证书测试既可，源码调整的位置如下&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/qaavr.png&quot; alt=&quot;update_source&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后命令行下执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;make cross&lt;/code&gt; 进行跨平台交叉编译(如果过你在 linux amd64 平台下则直接 &lt;code class=&quot;highlighter-rouge&quot;&gt;make&lt;/code&gt; 既可)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  kubernetes git:&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v1.17.4&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; ✗ make cross
+&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt;: /proc/meminfo: No such file or directory
+&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt;: /proc/meminfo: No such file or directory
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] Multiple platforms requested and available 64G &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; threshold 40G, building platforms &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;parallel
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] Building go targets &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;linux/amd64 linux/arm linux/arm64 linux/s390x linux/ppc64le&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;parallel &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;output will appear &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;a burst when &lt;span class=&quot;nb&quot;&gt;complete&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;:
+    cmd/kube-proxy
+    cmd/kube-apiserver
+    cmd/kube-controller-manager
+    cmd/kubelet
+    cmd/kubeadm
+    cmd/kube-scheduler
+    vendor/k8s.io/apiextensions-apiserver
+    cluster/gce/gci/mounter
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] linux/amd64: build started
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:24] linux/amd64: build finished
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] linux/arm: build started
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:23] linux/arm: build finished
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] linux/arm64: build started
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:23] linux/arm64: build finished
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] linux/s390x: build started
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:24] linux/s390x: build finished
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:43:19] linux/ppc64le: build started
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:24] linux/ppc64le: build finished
+&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt;: /proc/meminfo: No such file or directory
+&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt;: /proc/meminfo: No such file or directory
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:52] Multiple platforms requested and available 64G &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; threshold 40G, building platforms &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;parallel
++++ &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;0116 23:47:52] Building go targets &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;linux/amd64 linux/arm
+&lt;span class=&quot;c&quot;&gt;# ... 省略编译日志&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;编译完成后能够在 &lt;code class=&quot;highlighter-rouge&quot;&gt;_output/local/bin/linux/amd64&lt;/code&gt; 下找到刚刚编译成功的 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm&lt;/code&gt; 文件，将编译好的 kubeadm scp 到已经存在集群上执行 renew，然后查看证书时间&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://cdn.oss.link/markdown/i3laa.png&quot; alt=&quot;kubeadm_renew&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;经过测试后确认源码修改方式有效&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;222验证调整-csr-api&quot;&gt;2.2.2、验证调整 CSR API&lt;/h4&gt;
+
+&lt;p&gt;根据推测当使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;--use-api&lt;/code&gt; 会受到 &lt;code class=&quot;highlighter-rouge&quot;&gt;kube-controller-manager&lt;/code&gt; 组件的 &lt;code class=&quot;highlighter-rouge&quot;&gt;--experimental-cluster-signing-duration&lt;/code&gt; 影响，从而从集群中下发证书；所以首先在启动集群时需要将 &lt;code class=&quot;highlighter-rouge&quot;&gt;--experimental-cluster-signing-duration&lt;/code&gt; 调整为 10 年，然后再进行测试&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;controllerManager&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;extraArgs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;node-cidr-mask-size&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;19&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;deployment-controller-sync-period&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10s&quot;&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# 在 kubeadm 配置文件中设置证书有效期为 10 年&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;experimental-cluster-signing-duration&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;86700h&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;node-monitor-grace-period&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;20s&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pod-eviction-timeout&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2m&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;terminated-pod-gc-threshold&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然后使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;--use-api&lt;/code&gt; 选项进行 renew&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeadm alpha certs renew all &lt;span class=&quot;nt&quot;&gt;--use-api&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;此时会发现日志中打印出 &lt;code class=&quot;highlighter-rouge&quot;&gt;[certs] Certificate request &quot;kubeadm-cert-kubernetes-admin-648w4&quot; created&lt;/code&gt; 字样，接下来从 &lt;code class=&quot;highlighter-rouge&quot;&gt;kube-system&lt;/code&gt; 的 namespace 中能够看到相关 csr&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/54awl.png&quot; alt=&quot;list_csr&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这时我们开始手动批准证书，每次批准完成一个 csr，紧接着 kubeadm 会创建另一个 csr&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/tdde7.png&quot; alt=&quot;approve_csr&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;当所有 csr 被批准后，再次查看集群证书发现证书期限确实被调整了&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/081qe.png&quot; alt=&quot;success&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;三总结&quot;&gt;三、总结&lt;/h2&gt;
+
+&lt;p&gt;总结一下，调整 kubeadm 证书期限有两种方案；第一种直接修改源码，耗时耗力还得会 go，最后还要跑跨平台编译(很耗时)；第二种在启动集群时调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;kube-controller-manager&lt;/code&gt; 组件的 &lt;code class=&quot;highlighter-rouge&quot;&gt;--experimental-cluster-signing-duration&lt;/code&gt; 参数，集群创建好后手动 renew 一下并批准相关 csr。&lt;/p&gt;
+
+&lt;p&gt;两种方案各有利弊，修改源码方式意味着在 client 端签发处理，不会对集群产生永久性影响，也就是说哪天你想 “反悔了” 你不需要修改集群什么配置，直接用官方 kubeadm renew 一下就会变回一年期限的证书；改集群参数实现的方式意味着你不需要懂 go 代码，只需要常规的集群配置既可实现，同时你也不需要跑几十分钟的交叉编译，不需要为编译过程中的网络问题而烦恼；所以最后使用哪种方案因人因情况而定吧。&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 21 Jan 2020 21:38:01 +0800</pubDate>
+        <link>https://mritd.me/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/</guid>
+        
+        <category>Kubernetes</category>
+        
+        
+        <category>Kubernetes</category>
+        
+      </item>
     
       <item>
         <title>kubeadm 集群升级</title>
@@ -2323,74 +2518,6 @@ RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&
         
         
         <category>Mac</category>
-        
-      </item>
-    
-      <item>
-        <title>Ubuntu 设置多个源</title>
-        <description>&lt;h2 id=&quot;一源起&quot;&gt;一、源起&lt;/h2&gt;
-
-&lt;p&gt;使用 Ubuntu 作为生产容器系统好久了，但是 apt 源问题一致有点困扰: &lt;strong&gt;由于众所周知的原因，官方源执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;apt update&lt;/code&gt; 等命令会非常慢；而国内有很多镜像服务，但是某些偶尔也会抽风(比如清华大源)，最后的结果就是日常修改 apt 源…&lt;/strong&gt;Google 查了了好久发现事实上 apt 源是支持 &lt;code class=&quot;highlighter-rouge&quot;&gt;mirror&lt;/code&gt; 协议的，从而自动选择可用的一个&lt;/p&gt;
-
-&lt;h2 id=&quot;二使用-mirror-协议&quot;&gt;二、使用 mirror 协议&lt;/h2&gt;
-
-&lt;p&gt;废话不说多直接上代码，编辑 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/apt/sources.list&lt;/code&gt;，替换为如下内容&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#------------------------------------------------------------------------------#&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;#                            OFFICIAL UBUNTU REPOS                             #&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;#------------------------------------------------------------------------------#&lt;/span&gt;
-
-
-&lt;span class=&quot;c&quot;&gt;###### Ubuntu Main Repos&lt;/span&gt;
-deb mirror://mirrors.ubuntu.com/mirrors.txt bionic main restricted universe multiverse
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt bionic main restricted universe multiverse
-
-&lt;span class=&quot;c&quot;&gt;###### Ubuntu Update Repos&lt;/span&gt;
-deb mirror://mirrors.ubuntu.com/mirrors.txt bionic-security main restricted universe multiverse
-deb mirror://mirrors.ubuntu.com/mirrors.txt bionic-updates main restricted universe multiverse
-deb mirror://mirrors.ubuntu.com/mirrors.txt bionic-backports main restricted universe multiverse
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt bionic-security main restricted universe multiverse
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt bionic-updates main restricted universe multiverse
-deb-src mirror://mirrors.ubuntu.com/mirrors.txt bionic-backports main restricted universe multiverse
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;当使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;mirror&lt;/code&gt; 协议后，执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;apt update&lt;/code&gt; 时会首先&lt;strong&gt;通过 http 访问&lt;/strong&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;mirrors.ubuntu.com/mirrors.txt&lt;/code&gt; 文本；文本内容实际上就是当前可用的镜像源列表，如下所示&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://ftp.sjtu.edu.cn/ubuntu/
-http://mirrors.nju.edu.cn/ubuntu/
-http://mirrors.nwafu.edu.cn/ubuntu/
-http://mirrors.sohu.com/ubuntu/
-http://mirrors.aliyun.com/ubuntu/
-http://mirrors.shu.edu.cn/ubuntu/
-http://mirrors.cqu.edu.cn/ubuntu/
-http://mirrors.huaweicloud.com/repository/ubuntu/
-http://mirrors.cn99.com/ubuntu/
-http://mirrors.yun-idc.com/ubuntu/
-http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
-http://mirrors.ustc.edu.cn/ubuntu/
-http://mirrors.njupt.edu.cn/ubuntu/
-http://mirror.lzu.edu.cn/ubuntu/
-http://archive.ubuntu.com/ubuntu/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;得到列表后 apt 会自动选择一个(选择规则暂不清楚，国外有文章说是选择最快的，但是不清楚这个最快是延迟还是网速)进行下载；&lt;strong&gt;同时根据地区不通，官方也提供指定国家的 &lt;code class=&quot;highlighter-rouge&quot;&gt;mirror.txt&lt;/code&gt;&lt;/strong&gt;，比如中国的实际上可以设置为 &lt;code class=&quot;highlighter-rouge&quot;&gt;mirrors.ubuntu.com/CN.txt&lt;/code&gt;(我测试跟官方一样，推测可能是使用了类似 DNS 选优的策略)&lt;/p&gt;
-
-&lt;h2 id=&quot;三自定义-mirror-地址&quot;&gt;三、自定义 mirror 地址&lt;/h2&gt;
-
-&lt;p&gt;现在已经解决了能同时使用多个源的问题，但是有些时候你会发现源的可用性检测并不是很精准，比如某个源只有 40k 的下载速度…不巧你某个下载还命中了，这就很尴尬；&lt;strong&gt;所以有时候我们可能需要自定义 &lt;code class=&quot;highlighter-rouge&quot;&gt;mirror.txt&lt;/code&gt; 这个源列表&lt;/strong&gt;，经过测试证明&lt;strong&gt;只需要开启一个标准的 &lt;code class=&quot;highlighter-rouge&quot;&gt;http server&lt;/code&gt; 能返回一个文本即可，不过需要注意只能是 &lt;code class=&quot;highlighter-rouge&quot;&gt;http&lt;/code&gt;，而不是 &lt;code class=&quot;highlighter-rouge&quot;&gt;https&lt;/code&gt;&lt;/strong&gt;；所以我们首先下载一下这个文本，把不想要的删掉；然后弄个 nginx，甚至 &lt;code class=&quot;highlighter-rouge&quot;&gt;python -m http.server&lt;/code&gt; 把文本文件暴露出去就可以；我比较懒…扔 CDN 上了: http://oss.link/config/apt-mirrors.txt&lt;/p&gt;
-
-&lt;p&gt;关于源的精简，我建议将一些 &lt;code class=&quot;highlighter-rouge&quot;&gt;edu&lt;/code&gt; 的删掉，因为敏感时期他们很不稳定；优选阿里云、网易、华为这种大公司的，比较有名的清华大的什么的可以留着，其他的可以考虑都删掉&lt;/p&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Tue, 19 Mar 2019 21:43:23 +0800</pubDate>
-        <link>https://mritd.me/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/</guid>
-        
-        <category>Linux</category>
-        
-        
-        <category>Linux</category>
         
       </item>
     

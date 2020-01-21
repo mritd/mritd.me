@@ -177,6 +177,35 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/">
+        <h2 class="post-title">
+            kubeadm 证书期限调整
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近 kubeadm HA 的集群折腾完了，发现集群证书始终是 1 年有效期，然后自己还有点子担心；无奈只能研究一下源码一探究竟了…
+
+
+一、证书管理
+
+kubeadm 集群安装完成后，证书管理上实际上大致是两大类型:
+
+
+  自动滚动续期
+  手动定期续期
+
+
+自动滚动续期类型的证书目前从我所阅读文档和实际测试中目前只有 kubelet 的 client 证书；kubelet cli...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2020/01/21/how-to-upgrade-kubeadm-cluster/">
         <h2 class="post-title">
             kubeadm 集群升级
@@ -406,28 +435,6 @@ import (
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/">
-        <h2 class="post-title">
-            Ubuntu 设置多个源
-        </h2>
-        
-        <div class="post-content-preview">
-            一、源起
-
-使用 Ubuntu 作为生产容器系统好久了，但是 apt 源问题一致有点困扰: 由于众所周知的原因，官方源执行 apt update 等命令会非常慢；而国内有很多镜像服务，但是某些偶尔也会抽风(比如清华大源)，最后的结果就是日常修改 apt 源…Google 查了了好久发现事实上 apt 源是支持 mirror 协议的，从而自动选择可用的一个
-
-二、使用 mirror 协议
-
-废...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 19, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -494,7 +501,7 @@ import (
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

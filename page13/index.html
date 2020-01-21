@@ -177,6 +177,44 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/">
+        <h2 class="post-title">
+            Hexo 添加 Rss 订阅
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+一、安装RSS插件
+
+执行以下命令安装 RSS 插件
+
+npm install hexo-generator-feed --save
+
+
+
+
+二、开启网站 RSS 支持
+
+编辑网站根目录下的 _config.yml，添加以下代码开启
+
+# RSS订阅支持
+plugin:
+- hexo-generator-feed
+
+# Feed Atom
+feed:
+type: atom
+path: a...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 8, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
         <h2 class="post-title">
             Gradle 构建基础笔记
@@ -463,29 +501,6 @@ wget http:/...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/01/10/ShadowSocks-%E5%A4%9A%E7%94%A8%E6%88%B7%E7%89%88%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/">
-        <h2 class="post-title">
-            ShadowSocks 多用户版搭建教程
-        </h2>
-        
-        <div class="post-content-preview">
-            
-
-
-  众所周知，由于某种原因，大天朝的网络对外网(国际网路)的访问是封锁的，但作为搞IT的，个人感觉翻墙是必备的技能；因为很多东西(IT资料)谷歌出来的更准确一些，忍不住吐槽百度的垃圾搜索，我已经大约2年没用百度了，因为百度点东西你会发现很多情况都是 一大片都一样的，要不就是不同网站，但是内容一样……下面记录一下目前最屌的爬墙工具 ShadowSocks 简称 ss 的搭建过程。
-
-
-
-...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 10, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -556,7 +571,7 @@ wget http:/...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

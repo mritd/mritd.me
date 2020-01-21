@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="CentOS上编译安装Git">
-    <meta name="keywords"  content="Git,CentOS">
+    <meta name="description" content="kubeadm 证书期限调整">
+    <meta name="keywords"  content="kubernetes,kubeadm,certificate">
     <meta name="theme-color" content="#000000">
     
-    <title>CentOS 上编译安装 Git - 漠然的博客 | mritd Blog</title>
+    <title>kubeadm 证书期限调整 - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2016/01/14/CentOS%E4%B8%8A%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85Git/">
+    <link rel="canonical" href="https://mritd.me/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -163,15 +163,15 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
                         
                     </div>
-                    <h1>CentOS 上编译安装 Git</h1>
+                    <h1>kubeadm 证书期限调整</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on January 14, 2016</span>
+                    <span class="meta">Posted by 漠然 on January 21, 2020</span>
                 </div>
             </div>
         </div>
@@ -192,46 +192,186 @@
                 <!-- Multi-Lingual -->
                 
 
-                <p><img src="https://cdn.oss.link/markdown/hexo_git_install_logo.png" alt="hexo_git_install_logo" /></p>
-
-<h2 id="一概述">一、概述</h2>
-
-<blockquote>
-  <p>Git是目前世界上最先进的分布式版本控制系统(没有之一)，高端大气上档次的 Git 值得我们去学习，由于CentOS本身的Git版本太低，所以这里记录一下CentOS下编译安装Git的过程。</p>
+                <blockquote>
+  <p>最近 kubeadm HA 的集群折腾完了，发现集群证书始终是 1 年有效期，然后自己还有点子担心；无奈只能研究一下源码一探究竟了…</p>
 </blockquote>
 
-<!--more-->
+<h2 id="一证书管理">一、证书管理</h2>
 
-<h2 id="二安装前准备工作">二、安装前准备工作</h2>
+<p>kubeadm 集群安装完成后，证书管理上实际上大致是两大类型:</p>
 
-<ol>
-  <li>下载 git 源码 <a href="https://github.com/git/git/releases">下载地址</a></li>
-  <li>上传到 CentOS (略过)</li>
-  <li>解压文件 执行 <code class="highlighter-rouge">tar -zxvf git-2.7.0.tar.gz</code></li>
-</ol>
+<ul>
+  <li>自动滚动续期</li>
+  <li>手动定期续期</li>
+</ul>
 
-<h2 id="三编译安装">三、编译安装</h2>
+<p>自动滚动续期类型的证书目前从我所阅读文档和实际测试中目前只有 kubelet 的 client 证书；kubelet client 证书自动滚动涉及到了 <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-tls-bootstrapping/">TLS bootstrapping</a> 部份，<strong>其核心由两个 ClusterRole 完成(<code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code> 和 <code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:selfnodeclient</code>)，针对这两个 ClusterRole kubeadm 在引导期间创建了 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#create-a-bootstrap-token">bootstrap token</a> 来完成引导期间证书签发(该 Token 24h 失效)，后续通过预先创建的 ClusterRoleBinding(<code class="highlighter-rouge">kubeadm:node-autoapprove-bootstrap</code> 和 <code class="highlighter-rouge">kubeadm:node-autoapprove-certificate-rotation</code>) 完成自动的 node 证书续期；</strong>kubelet client 证书续期部份涉及到 TLS bootstrapping 太多了，有兴趣的可以仔细查看(最后还是友情提醒: <strong>用 kubeadm 一定要看看 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details">Implementation details</a></strong>)。</p>
 
-<h3 id="1安装编译所需的依赖环境">1、安装编译所需的依赖环境</h3>
+<p>手动续期的证书目前需要在到期前使用 kubeadm 命令自行续期，这些证书目前可以通过以下命令列出</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nt">-y</span> <span class="nb">install </span>curl-devel expat-devel gettext-devel openssl-devel zlib-devel perl-ExtUtils-MakeMaker
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 不要在意我的证书过期时间是 10 年，下面会说</span>
+k1.node ➜ kubeadm alpha certs check-expiration
+<span class="o">[</span>check-expiration] Reading configuration from the cluster...
+<span class="o">[</span>check-expiration] FYI: You can look at this config file with <span class="s1">'kubectl -n kube-system get cm kubeadm-config -oyaml'</span>
+
+CERTIFICATE                EXPIRES                  RESIDUAL TIME   CERTIFICATE AUTHORITY   EXTERNALLY MANAGED
+admin.conf                 Dec 06, 2029 20:58 UTC   9y                                      no
+apiserver                  Dec 06, 2029 20:59 UTC   9y              ca                      no
+apiserver-kubelet-client   Dec 06, 2029 20:59 UTC   9y              ca                      no
+controller-manager.conf    Dec 06, 2029 20:59 UTC   9y                                      no
+front-proxy-client         Dec 06, 2029 20:59 UTC   9y              front-proxy-ca          no
+scheduler.conf             Dec 06, 2029 20:59 UTC   9y                                      no
+
+CERTIFICATE AUTHORITY   EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED
+ca                      Jan 13, 2030 08:45 UTC   9y              no
+front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 </code></pre></div></div>
 
-<h3 id="2配置安装目录">2、配置安装目录</h3>
+<h2 id="二证书期限调整">二、证书期限调整</h2>
 
-<blockquote>
-  <p>git 默认编译安装会安装到当前用户目录下，所以需要配置安装目录</p>
-</blockquote>
+<p>上面已经提到了，手动管理部份的证书需要自己用命令续签(<code class="highlighter-rouge">kubeadm alpha certs renew all</code>)，而且你会发现续签以后有效期还是 1 年；kubeadm 的初衷是 <strong>“为快速创建 kubernetes 集群的最佳实践”</strong>，当然最佳实践包含确保证书安全性，毕竟 Let’s Encrypt 的证书有效期只有 3 个月的情况下 kubeadm 有效期有 1 年已经很不错了；但是对于最佳实践来说，我们公司的集群安全性并不需要那么高，一年续期一次无疑在增加运维人员心智负担(它并不最佳)，所以我们迫切需要一种 “一劳永逸” 的解决方案；当然我目前能想到的就是找到证书签发时在哪设置的有效期，然后想办法改掉它。</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>git-2.7.0
-autoconf
-./configure <span class="nt">--prefix</span><span class="o">=</span>/usr/local
+<h3 id="21源码分析">2.1、源码分析</h3>
+
+<p>目前通过宏观角度看整个 kubeadm 集群搭建过程，其中涉及到证书签署大致有两大部份: init  阶段和后期 renew，下面开始分析两个阶段的源码</p>
+
+<h4 id="211init-阶段">2.1.1、init 阶段</h4>
+
+<p>由于 kubernetes 整个命令行都是通过 cobra 库构建的，那么根据这个库的习惯首先直接从 <code class="highlighter-rouge">cmd</code> 包开始翻，而 kubernetes 源码组织的又比较清晰进而直接定位到 kubeadm 命令包下面；接着打开 <code class="highlighter-rouge">app</code> 目录一眼就看到了 <code class="highlighter-rouge">phases</code>… <code class="highlighter-rouge">phases</code> 顾名思义啊，整个 init 都是通过不同的 <code class="highlighter-rouge">phases</code> 完成的，那么直接去 <code class="highlighter-rouge">phases</code> 包下面找证书阶段的源码既可</p>
+
+<p><img src="http://cdn.oss.link/markdown/ssdo7.jpg" alt="init_source" /></p>
+
+<p>进入到这个 <code class="highlighter-rouge">certs.go</code> 里面，直接列出所有方法，go 的规范里只有首字母大写才会被暴露出去，那么我们直接查看这些方法名既可；从名字上很轻松的看到了这个方法…基本上就是它了</p>
+
+<p><img src="http://cdn.oss.link/markdown/uoqx4.jpg" alt="certs.go" /></p>
+
+<p>通过这个方法的代码会发现最终还是调用了 <code class="highlighter-rouge">certSpec.CreateFromCA(cfg, caCert, caKey)</code>，那么接着看看这个方法</p>
+
+<p><img src="http://cdn.oss.link/markdown/psrho.jpg" alt="pkiutil.NewCertAndKey" /></p>
+
+<p>通过这个方法继续往下翻发现调用了 <code class="highlighter-rouge">pkiutil.NewCertAndKey(caCert, caKey, cfg)</code>，这个方法里最终调用了 <code class="highlighter-rouge">NewSignedCert(config, key, caCert, caKey)</code></p>
+
+<p><img src="http://cdn.oss.link/markdown/nel5u.jpg" alt="NewSignedCert" /></p>
+
+<p>从 <code class="highlighter-rouge">NewSignedCert</code> 方法里看到证书有效期实际上是个常量，<strong>那也就意味着我改了这个常量 init 阶段的证书有效期八九不离十的就变了，再通过包名看这个是个 <code class="highlighter-rouge">pkiutil</code>… <code class="highlighter-rouge">xxxxxutil</code> 明显是公共的，所以推测改了它 renew 阶段应该也会变</strong></p>
+
+<p><img src="http://cdn.oss.link/markdown/t3amy.jpg" alt="CertificateValidity" /></p>
+
+<h4 id="212renew-阶段">2.1.2、renew 阶段</h4>
+
+<p>renew 阶段也是老套路，不过稳妥点先从 cmd 找起来，所以先看 <code class="highlighter-rouge">alpha</code> 包下的 <code class="highlighter-rouge">certs.go</code>；这时候方法名语义清晰就很有好处，一下就能找到 <code class="highlighter-rouge">newCmdCertsRenewal</code> 方法</p>
+
+<p><img src="http://cdn.oss.link/markdown/amupo.jpg" alt="alpha_certs.go" /></p>
+
+<p>而这个 <code class="highlighter-rouge">newCmdCertsRenewal</code> 方法实际上没啥实现，所以目测实现是从 <code class="highlighter-rouge">getRenewSubCommands</code> 实现的</p>
+
+<p><img src="http://cdn.oss.link/markdown/8c38y.jpg" alt="getRenewSubCommands" /></p>
+
+<p>看了 <code class="highlighter-rouge">getRenewSubCommands</code> 以后发现上面全是命令行库、配置文件参数啥的处理，核心在 <code class="highlighter-rouge">renewCert</code> 上，从这个方法里发现还有意外收获: <strong>renew 时实际上分两种情况处理，一种是使用了 <code class="highlighter-rouge">--use-api</code> 选项，另一种是未使用</strong>；当然根据上面的命令来说我们没使用，那么看 else 部份就行了(没看源码之前我特么居然没看 <code class="highlighter-rouge">--help</code> 不知道有这个选项)</p>
+
+<p><img src="http://cdn.oss.link/markdown/9zsgp.jpg" alt="renewCert" /></p>
+
+<p>else 部份源码最终还是调用了 <code class="highlighter-rouge">RenewUsingLocalCA</code> 方法，这个方法一直往下跟会有一个 <code class="highlighter-rouge">Renew</code> 方法</p>
+
+<p><img src="http://cdn.oss.link/markdown/s3a5c.jpg" alt="Renew" /></p>
+
+<p>这个方法一点进去… <strong>我上面的想法是对的</strong></p>
+
+<p><img src="http://cdn.oss.link/markdown/08cnb.jpg" alt="FileRenewer_Renew" /></p>
+
+<h4 id="213其他推测">2.1.3、其他推测</h4>
+
+<p>根据刚刚查看代码可以看到在 renew 阶段判断了 <code class="highlighter-rouge">--use-api</code> 选项是否使用，通过跟踪源码发现最终会调用到 <code class="highlighter-rouge">RenewUsingCSRAPI</code> 方法上，<code class="highlighter-rouge">RenewUsingCSRAPI</code> 会调用集群 CSR Api 执行证书签署</p>
+
+<p><img src="http://cdn.oss.link/markdown/xivs9.png" alt="RenewUsingCSRAPI" /></p>
+
+<p>有了这个发现后基本上可以推测出这一步通过集群完成，那么按理说是应该受到 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 影响。</p>
+
+<h3 id="22测试验证">2.2、测试验证</h3>
+
+<h4 id="221验证修改源码">2.2.1、验证修改源码</h4>
+
+<p>想验证修改源码是否有效只需要修改源码重新 build 出 kubeadm 命令，然后使用这个特定版本的 kubeadm renew 证书测试既可，源码调整的位置如下</p>
+
+<p><img src="http://cdn.oss.link/markdown/qaavr.png" alt="update_source" /></p>
+
+<p>然后命令行下执行 <code class="highlighter-rouge">make cross</code> 进行跨平台交叉编译(如果过你在 linux amd64 平台下则直接 <code class="highlighter-rouge">make</code> 既可)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  kubernetes git:<span class="o">(</span>v1.17.4<span class="o">)</span> ✗ make cross
+<span class="nb">grep</span>: /proc/meminfo: No such file or directory
+<span class="nb">grep</span>: /proc/meminfo: No such file or directory
++++ <span class="o">[</span>0116 23:43:19] Multiple platforms requested and available 64G <span class="o">&gt;=</span> threshold 40G, building platforms <span class="k">in </span>parallel
++++ <span class="o">[</span>0116 23:43:19] Building go targets <span class="k">for</span> <span class="o">{</span>linux/amd64 linux/arm linux/arm64 linux/s390x linux/ppc64le<span class="o">}</span> <span class="k">in </span>parallel <span class="o">(</span>output will appear <span class="k">in </span>a burst when <span class="nb">complete</span><span class="o">)</span>:
+    cmd/kube-proxy
+    cmd/kube-apiserver
+    cmd/kube-controller-manager
+    cmd/kubelet
+    cmd/kubeadm
+    cmd/kube-scheduler
+    vendor/k8s.io/apiextensions-apiserver
+    cluster/gce/gci/mounter
++++ <span class="o">[</span>0116 23:43:19] linux/amd64: build started
++++ <span class="o">[</span>0116 23:47:24] linux/amd64: build finished
++++ <span class="o">[</span>0116 23:43:19] linux/arm: build started
++++ <span class="o">[</span>0116 23:47:23] linux/arm: build finished
++++ <span class="o">[</span>0116 23:43:19] linux/arm64: build started
++++ <span class="o">[</span>0116 23:47:23] linux/arm64: build finished
++++ <span class="o">[</span>0116 23:43:19] linux/s390x: build started
++++ <span class="o">[</span>0116 23:47:24] linux/s390x: build finished
++++ <span class="o">[</span>0116 23:43:19] linux/ppc64le: build started
++++ <span class="o">[</span>0116 23:47:24] linux/ppc64le: build finished
+<span class="nb">grep</span>: /proc/meminfo: No such file or directory
+<span class="nb">grep</span>: /proc/meminfo: No such file or directory
++++ <span class="o">[</span>0116 23:47:52] Multiple platforms requested and available 64G <span class="o">&gt;=</span> threshold 40G, building platforms <span class="k">in </span>parallel
++++ <span class="o">[</span>0116 23:47:52] Building go targets <span class="k">for</span> <span class="o">{</span>linux/amd64 linux/arm
+<span class="c"># ... 省略编译日志</span>
 </code></pre></div></div>
 
-<h3 id="3编译并安装">3、编译并安装</h3>
+<p>编译完成后能够在 <code class="highlighter-rouge">_output/local/bin/linux/amd64</code> 下找到刚刚编译成功的 <code class="highlighter-rouge">kubeadm</code> 文件，将编译好的 kubeadm scp 到已经存在集群上执行 renew，然后查看证书时间</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
+<p><img src="http://cdn.oss.link/markdown/i3laa.png" alt="kubeadm_renew" /></p>
+
+<p><strong>经过测试后确认源码修改方式有效</strong></p>
+
+<h4 id="222验证调整-csr-api">2.2.2、验证调整 CSR API</h4>
+
+<p>根据推测当使用 <code class="highlighter-rouge">--use-api</code> 会受到 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 影响，从而从集群中下发证书；所以首先在启动集群时需要将 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 调整为 10 年，然后再进行测试</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">controllerManager</span><span class="pi">:</span>
+  <span class="na">extraArgs</span><span class="pi">:</span>
+    <span class="na">v</span><span class="pi">:</span> <span class="s2">"</span><span class="s">4"</span>
+    <span class="na">node-cidr-mask-size</span><span class="pi">:</span> <span class="s2">"</span><span class="s">19"</span>
+    <span class="na">deployment-controller-sync-period</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10s"</span>
+    <span class="c1"># 在 kubeadm 配置文件中设置证书有效期为 10 年</span>
+    <span class="na">experimental-cluster-signing-duration</span><span class="pi">:</span> <span class="s2">"</span><span class="s">86700h"</span>
+    <span class="na">node-monitor-grace-period</span><span class="pi">:</span> <span class="s2">"</span><span class="s">20s"</span>
+    <span class="na">pod-eviction-timeout</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2m"</span>
+    <span class="na">terminated-pod-gc-threshold</span><span class="pi">:</span> <span class="s2">"</span><span class="s">30"</span>
 </code></pre></div></div>
+
+<p>然后使用 <code class="highlighter-rouge">--use-api</code> 选项进行 renew</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm alpha certs renew all <span class="nt">--use-api</span>
+</code></pre></div></div>
+
+<p>此时会发现日志中打印出 <code class="highlighter-rouge">[certs] Certificate request "kubeadm-cert-kubernetes-admin-648w4" created</code> 字样，接下来从 <code class="highlighter-rouge">kube-system</code> 的 namespace 中能够看到相关 csr</p>
+
+<p><img src="https://cdn.oss.link/markdown/54awl.png" alt="list_csr" /></p>
+
+<p>这时我们开始手动批准证书，每次批准完成一个 csr，紧接着 kubeadm 会创建另一个 csr</p>
+
+<p><img src="https://cdn.oss.link/markdown/tdde7.png" alt="approve_csr" /></p>
+
+<p>当所有 csr 被批准后，再次查看集群证书发现证书期限确实被调整了</p>
+
+<p><img src="https://cdn.oss.link/markdown/081qe.png" alt="success" /></p>
+
+<h2 id="三总结">三、总结</h2>
+
+<p>总结一下，调整 kubeadm 证书期限有两种方案；第一种直接修改源码，耗时耗力还得会 go，最后还要跑跨平台编译(很耗时)；第二种在启动集群时调整 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数，集群创建好后手动 renew 一下并批准相关 csr。</p>
+
+<p>两种方案各有利弊，修改源码方式意味着在 client 端签发处理，不会对集群产生永久性影响，也就是说哪天你想 “反悔了” 你不需要修改集群什么配置，直接用官方 kubeadm renew 一下就会变回一年期限的证书；改集群参数实现的方式意味着你不需要懂 go 代码，只需要常规的集群配置既可实现，同时你也不需要跑几十分钟的交叉编译，不需要为编译过程中的网络问题而烦恼；所以最后使用哪种方案因人因情况而定吧。</p>
+
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
 
@@ -240,19 +380,12 @@ autoconf
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2016/01/13/%E6%88%91%E5%92%8C%E6%88%91%E7%9A%84%E5%80%94%E5%BC%BA/" data-toggle="tooltip" data-placement="top" title="我和我的倔强">
+                        <a href="/2020/01/21/how-to-upgrade-kubeadm-cluster/" data-toggle="tooltip" data-placement="top" title="kubeadm 集群升级">
                         Previous<br>
-                        <span>我和我的倔强</span>
+                        <span>kubeadm 集群升级</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2016/01/18/ShadowSocks-FinalSpeed-%E5%8A%A0%E9%80%9F%E6%95%99%E7%A8%8B/" data-toggle="tooltip" data-placement="top" title="ShadowSocks FinalSpeed 加速教程">
-                        Next<br>
-                        <span>ShadowSocks FinalSpeed 加速教程</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -408,8 +541,8 @@ autoconf
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2016/01/14/CentOS上编译安装Git";
-    var disqus_url = "https://mritd.me/2016/01/14/CentOS%E4%B8%8A%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85Git/";
+    var disqus_identifier = "/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate";
+    var disqus_url = "https://mritd.me/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

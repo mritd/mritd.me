@@ -177,6 +177,25 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/">
+        <h2 class="post-title">
+            Redundent Array of Inexpensive Disks
+        </h2>
+        
+        <div class="post-content-preview">
+            一、简介
+
+
+  Redundent Array of Inexpensive/Indepedent Disks 简称 RAID 廉价(独立)冗余磁盘技术，早起由美国加州大学伯克利分校发明，用于使用廉价磁盘替代 SCSI 硬盘而设计，后经过发展成为 Linux 服务器构建高可用磁盘阵列技术；RAID 能够将多块硬盘组合成磁盘阵列，使其具备高速读写、数据冗余备份功能，对于 Host OS 来说...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 13, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/06/08/Can-t-connect-to-MySQL-server-on-xxxx-61/">
         <h2 class="post-title">
             Can't connect to MySQL server on 'xxxx' (61)
@@ -399,34 +418,6 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/23/JVM-%E5%AF%B9%E8%B1%A1%E5%88%A4%E5%AE%9A%E5%92%8C%E5%8F%AF%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95/">
-        <h2 class="post-title">
-            JVM 对象判定和可回收算法
-        </h2>
-        
-        <div class="post-content-preview">
-            一、可回收对象判定方法
-
-1、引用计数算法
-
-基本原理：
-
-给对象添加一个引用计数器，当有新的地方引用他的时候就将其+1，引用失效则对其-1，知道为0时，说明该对象不被任何引用，可被 GC 回收，如下图所示：
-
-
-
-
-
-但是这种算法是有缺陷的，比如当 A、B 对象都没有使用时，其应该被 GC 回收，然后根据引用计数器算法，A、B 对象互相持有对方引用，导致两者引用计数器都为1，所以不会被 G...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 23, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -497,7 +488,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/">
+        <h2 class="post-title">
+            Ubuntu 设置多个源
+        </h2>
+        
+        <div class="post-content-preview">
+            一、源起
+
+使用 Ubuntu 作为生产容器系统好久了，但是 apt 源问题一致有点困扰: 由于众所周知的原因，官方源执行 apt update 等命令会非常慢；而国内有很多镜像服务，但是某些偶尔也会抽风(比如清华大源)，最后的结果就是日常修改 apt 源…Google 查了了好久发现事实上 apt 源是支持 mirror 协议的，从而自动选择可用的一个
+
+二、使用 mirror 协议
+
+废...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 19, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2019/03/16/set-up-kubernetes-1.13.4-cluster/">
         <h2 class="post-title">
             Kubernetes 1.13.4 搭建
@@ -403,28 +425,6 @@ Usage: hey [o...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2018/08/28/kubernetes-tls-bootstrapping-with-bootstrap-token/">
-        <h2 class="post-title">
-            使用 Bootstrap Token 完成 TLS Bootstrapping
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近在测试 Kubernetes 1.11.2 新版本的相关东西，发现新版本的 Bootstrap Token 功能已经进入 Beta 阶段，索性便尝试了一下；虽说目前是为 kubeadm 设计的，不过手动挡用起来也不错，这里记录一下使用方式
-
-
-一、环境准备
-
-首先需要有一个运行状态正常的 Master 节点，目前我测试的是版本是 1.11.2，低版本我没测试；其次本文默认 Node...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on August 28, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -495,7 +495,7 @@ Usage: hey [o...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             

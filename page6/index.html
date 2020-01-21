@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/03/21/private-maintenance-docker-mirror-registry/">
+        <h2 class="post-title">
+            个人维护的 Docker 加速仓库
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近看着很多人下载镜像都很费劲，可能是网络环境越来越坑的原因吧；这里开放一个个人维护的 Docker 加速仓库，帮助扶墙下载 Docker 相关镜像
+
+
+该镜像基于 Docker 官方 Registry，在其基础上套了一个梯子，可以实现反代主流的三大墙外仓库(Docker Hub、Gcr.io、quay.io)；理论速度可以达到 10MB/S 的加速效果，使用方式如下
+
+一、确定要反代...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 21, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/21/vim-e492-not-an-editor-command-plugin-xxxx/">
         <h2 class="post-title">
             vim E492 Not an editor command Plugin xxxx
@@ -384,28 +406,6 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/02/09/gcr.io-registy-proxy/">
-        <h2 class="post-title">
-            gcr.io 仓库代理
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  对于 kubernetes 用户来说很头疼的问题就是 1.4 以后组件容器化，而相关镜像在 Google gcr.io 仓库；对于国内的网络环境(傻逼 GFW、一群脑残、闭关锁国、妈了个蛋的…好了下面继续)来说，这些镜像下载极其困难；当然国内 IT 巨头一般都提供了所谓的 “Docker 加速器”，但是由于使用众多，速度也不尽人意；这里开放一个个人维护的反代仓库
-
-
-一、仓库使用
-
-注...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 9, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -476,7 +476,7 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
                                     Kubernetes
                                 </a>
                             
