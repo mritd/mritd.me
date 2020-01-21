@@ -177,30 +177,6 @@
             ">
     			
 <div class="post-preview">
-    <a href="/2017/03/18/set-up-vnc-server-on-centos-7/">
-        <h2 class="post-title">
-            CentOS 7 配置 VNC Server
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近决定把小主机扔到客厅跟路由器放在一起(远程开机 666），因为本来就跑的是 Linux，平时图形化需求也不多；但是为了保险起见准备搞一个 VNC，以便必要时图形化上去，比如强制删除一些 Virtual Box 虚拟机等，记录一下安装过程
-
-
-安装 VNC Server
-
-VNC Server 软件有很多，这里使用 tigervnc-server
-
-yum install epel-...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 18, 2017
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
     <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
         <h2 class="post-title">
             kargo 集群扩展及细粒度配置
@@ -404,6 +380,31 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
 </div>
 <hr>
 
+<div class="post-preview">
+    <a href="/2017/01/21/use-frp-for-internal-network-wear/">
+        <h2 class="post-title">
+            利用 frp 进行内网穿透
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近新入了一台小主机，家里还有个树莓派，索性想通过小主机跑点东西，然后通过外网访问家里的设备；不过鉴于大天朝内网环境，没有公网 IP 并且多层路由的情况下只能选择使用内网穿透方案，以下记录了一下使用 frp 进行内网穿透的过程
+
+
+一、内网穿透原理
+
+简单地说，内网穿透依赖于 NAT 原理，根据 NAT 设备不同大致可分为以下 4 大类(前3种NAT类型可统称为cone类型)：
+
+
+ ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2017
+    </p>
+</div>
+<hr>
+
 
 <!-- Pager -->
 
@@ -438,7 +439,7 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                <a href="/tags/#Linux" title="Linux" rel="81">
                                     Linux
                                 </a>
                             
