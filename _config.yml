@@ -118,8 +118,5 @@ friends: [
     },{
         title: "Ephen's Blog",
         href: "http://ephen.me"
-    },{
-        title: "CodeSheep",
-        href: "https://www.codesheep.cn"
     }
 ]
