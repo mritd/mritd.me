@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Nexus 2.11 CentOS搭建教程">
+    <meta name="keywords"  content="Nexus,Maven,私服">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Nexus 2.11 CentOS搭建教程 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2015/12/29/Nexus-2-11-CentOS%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>Nexus 2.11 CentOS搭建教程</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on December 29, 2015</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <p><img src="https://cdn.oss.link/markdown/Maven-Nexus-logo.png" alt="Nexus Logo" /></p>
+
+<h3 id="一简介">一、简介</h3>
+
+<blockquote>
+  <p>Nexus是一个高效的Maven私有服务器，用过Maven的都知道，一般公司开发都会搭建一个私服；然后项目中通过POM文件或者Maven的setting.xml指向私服地址，这样我们便可以通过私服管理jar包；可自定义jar包坐标，高效的构建项目。</p>
+</blockquote>
+
+<!--more-->
+
+<h3 id="二前期准备">二、前期准备</h3>
+
+<ol>
+  <li>首先，你得有台能连接公网的CentOS系统服务器(可使用虚拟机，但网络必须桥接，保证内网独立IP)。</li>
+  <li>然后下载jdk和 nexus   <a href="http://apache.fayea.com/maven/maven-3/">Nexus下载地址</a></li>
+  <li><strong>注意事项：</strong>Nexus 有其对应的 jdk版本，请参考官网，截至目前最高版本2.11.4-01 需要jdk7</li>
+</ol>
+
+<h3 id="三搭建nexus私服">三、搭建Nexus私服</h3>
+
+<blockquote>
+  <p>啰嗦一句，由于也是刚刚开始搞，以前虽然搞过，但版本比较低，配置已经变了；还有刚刚被一篇博客坑了；算了，不说了，都是眼泪，喝瓶养乐多压压惊……</p>
+</blockquote>
+
+<ol>
+  <li>配置jdk和nexus环境变量</li>
+</ol>
+
+<ul>
+  <li>
+    <p>首先上传jdk到Linux服务器(nexus顺带也传上去)，推荐xshell工具，先执行 <code class="highlighter-rouge">yum install lrzsz</code> ，然后把jdk往命令行一拖就上传成功，当然你有其他办法我也不阻止，反正搞上去就行。
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-uploadfileo.png" alt="Maven-Nexus-uploadfileo" /></p>
+  </li>
+  <li>
+    <p>解压 jdk 和 nexus 执行以下命令</p>
+  </li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#解压 jdk</span>
+<span class="nb">tar</span> <span class="nt">-zxvf</span> jdk-7u79-linux-x64.tar.gz
+<span class="c">#解压 nexus</span>
+<span class="nb">tar</span> <span class="nt">-zxvf</span> nexus-latest-bundle.tar.gz
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>解压后如下
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-unzipfile1.png" alt="Maven-Nexus-unzipfile1" /></p>
+  </li>
+  <li>创建 并移动 解压后的目录到 /usr/local/java
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> /usr/local
+<span class="nb">mkdir </span>java
+<span class="nb">cd</span> ~
+<span class="nb">mv </span>jdk1.7.0_79 /usr/local/java
+<span class="nb">mv </span>nexus-2.11.4-01 /usr/loca/java
+<span class="nb">mv </span>sonatype-work /usr/local/java
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>最终效果如下
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-mvfile.png" alt="Maven-Nexus-mvfile" /></p>
+  </li>
+  <li>
+    <p>编辑 /etc/profile，配置环境变量，在末尾添加以下 变量(vim不会用的下面不用看了)
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-path.png" alt="Maven-Nexus-path" /></p>
+  </li>
+  <li>执行以下命令重新初始化环境变量，并测试是否成功</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">source</span> /etc/profile
+javac <span class="nt">-version</span>
+</code></pre></div></div>
+
+<ul>
+  <li>返回 javac 版本未成功，若出现 “command not found” 说明配置不成功，检查环境变量位置。</li>
+</ul>
+
+<ol>
+  <li>配置nexus</li>
+</ol>
+
+<blockquote>
+  <p>上面的估计玩过Linux的基本都能轻松搞定，说白了Nexus主要是下面的配置</p>
+</blockquote>
+
+<ul>
+  <li>配置nexus启动文件</li>
+</ul>
+
+<blockquote>
+  <p>编辑 /usr/local/java/nexus-2.11.4-01/bin 下的 nexus 可执行文件，主要配置部分样例如下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># These settings can be modified to fit the needs of your application</span>
+
+<span class="c"># Set this to the root of the Nexus installation</span>
+<span class="c"># 设置 nexus 主目录，就是解压后的那个 nexus目录绝对路径</span>
+<span class="nv">NEXUS_HOME</span><span class="o">=</span><span class="s2">"/usr/local/java/nexus-2.11.4-01"</span>
+
+<span class="c"># If specified, the Wrapper will be run as the specified user.</span>
+
+<span class="c"># IMPORTANT - Make sure that the user has the required privileges to write into the Nexus installation directory.</span>
+
+<span class="c"># NOTE - This will set the user which is used to run the Wrapper as well as</span>
+<span class="c">#  the JVM and is not useful in situations where a privileged resource or</span>
+<span class="c">#  port needs to be allocated prior to the user being changed.</span>
+<span class="c"># nexus官方不推荐以root 用户运行，如果你非要这么做，下面注释去掉 后面填写root</span>
+<span class="c">#RUN_AS_USER=</span>
+
+<span class="c"># Application</span>
+<span class="nv">APP_NAME</span><span class="o">=</span><span class="s2">"nexus"</span>
+<span class="nv">APP_LONG_NAME</span><span class="o">=</span><span class="s2">"Nexus OSS"</span>
+
+<span class="c"># Priority at which to run the wrapper.  See "man nice" for valid priorities.</span>
+<span class="c">#  nice is only used if a priority is specified.</span>
+<span class="c"># 这块我查了一下 好像是设置运行优先级，默认10，没太搞懂，可不填</span>
+<span class="nv">PRIORITY</span><span class="o">=</span>
+
+<span class="c">#Location of the pid file.</span>
+<span class="c"># nexus pid 文件存放位置 不用改</span>
+<span class="nv">PIDDIR</span><span class="o">=</span><span class="s2">"."</span>
+
+<span class="c"># If uncommented, causes the Wrapper to be shutdown using an anchor file.</span>
+<span class="c">#  When launched with the 'start' command, it will also ignore all INT and</span>
+<span class="c">#  TERM signals.</span>
+<span class="c">#IGNORE_SIGNALS=true</span>
+
+<span class="c"># The following two lines are used by the chkconfig command. Change as is</span>
+<span class="c">#  appropriate for your application.  They should remain commented.</span>
+<span class="c"># chkconfig: 2345 20 80</span>
+<span class="c"># description: Test Wrapper Sample Application</span>
+</code></pre></div></div>
+<ul>
+  <li>配置 /usr/local/java/nexus-2.11.4-01/bin/jsw/conf 下的 wrapper.conf 文件</li>
+</ul>
+
+<blockquote>
+  <p>妈蛋，最坑的就是这货，配置样例如下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># JSW Configuration file</span>
+<span class="c">#</span>
+<span class="c"># For complete coverage of available configuration, please go here:</span>
+<span class="c"># http://wrapper.tanukisoftware.org/doc/english/properties.html</span>
+<span class="c">#</span>
+<span class="c"># Some "most often used" keywords are added to end of this file</span>
+<span class="c"># to be used as a "guideline". They are NOT the complete list of</span>
+<span class="c"># keywords.</span>
+
+<span class="c"># Set the JSW working directory (used as base for resolving relative paths)</span>
+<span class="c"># 设置wrapper的工作目录 其实也是指向 nexus 主目录即可</span>
+<span class="c"># 妈蛋的地址我就不说了，刚刚一个博主告诉我把他指向 /usr/local/java/nexus-2.11.4-01/bin/jsw/linux-x86-64</span>
+<span class="c"># 我进去一看 里面确实有个wrapper 可执行文件，就特么信了，结果各种报错</span>
+<span class="c"># 不凑巧，我特么居然还看懂了，就是找不到java类，然后我就根据错误各种改底下配置的绝对路径</span>
+<span class="c"># 改了半天我特么感觉不对啊...怎么其实都是基于默认值往上 跳了几层，妈的瞬间领悟...</span>
+wrapper.working.dir<span class="o">=</span>/usr/local/java/nexus-2.11.4-01
+
+<span class="c"># Set the JVM executable</span>
+<span class="c"># (modify this to absolute path if you need a Java that is not on the OS path)</span>
+<span class="c"># 配置 jdk中 java 可执行文件的位置(其实我感觉jre就可以，没测试，有兴趣的测试一下)</span>
+wrapper.java.command<span class="o">=</span>/usr/local/java/jdk1.7.0_79/bin/java
+
+<span class="c"># The main class that JSW will execute within JVM</span>
+<span class="c"># 这货不要动，目测这个玩意应该在下面的 wrapper-3.2.3.jar 里面</span>
+wrapper.java.mainclass<span class="o">=</span>org.sonatype.nexus.bootstrap.jsw.JswLauncher
+
+<span class="c"># The JVM classpath</span>
+<span class="c"># 如果你上面的 wrapper.working.dir 没问题这块就没问题...再次吐槽，坑爹博主，害得我第一次把这都改成绝对路径了</span>
+wrapper.java.classpath.1<span class="o">=</span>bin/jsw/lib/wrapper-3.2.3.jar
+wrapper.java.classpath.2<span class="o">=</span>./lib/<span class="k">*</span>.jar
+wrapper.java.classpath.3<span class="o">=</span>./conf/
+
+<span class="c"># The library path</span>
+<span class="c"># 不需要动，一些依赖jar包 下面有路径配置的，默认值其实都是基于 wrapper.working.dir 的</span>
+<span class="c"># 也就是说一但你 wrapper.working.dir 错了，其他的就都得改</span>
+wrapper.java.library.path.1<span class="o">=</span>bin/jsw/lib
+
+<span class="c"># Additional JVM parameters (tune if needed, but match the sequence of numbers!)</span>
+<span class="c"># 一些 jvm 参数，默认即可，能玩明白的 可以自己调优啥的，下面的有能力可以设置一下，</span>
+<span class="c"># 搞不定的 就不用往下看了......</span>
+wrapper.java.additional.1<span class="o">=</span><span class="nt">-XX</span>:MaxPermSize<span class="o">=</span>192m
+wrapper.java.additional.2<span class="o">=</span><span class="nt">-Djava</span>.io.tmpdir<span class="o">=</span>./tmp
+wrapper.java.additional.3<span class="o">=</span><span class="nt">-Djava</span>.net.preferIPv4Stack<span class="o">=</span><span class="nb">true
+</span>wrapper.java.additional.4<span class="o">=</span><span class="nt">-Dcom</span>.sun.jndi.ldap.connect.pool.protocol<span class="o">=</span><span class="s2">"plain ssl"</span>
+wrapper.java.additional.4.stripquotes<span class="o">=</span>TRUE
+<span class="c">#wrapper.java.additional.5=-Xdebug</span>
+<span class="c">#wrapper.java.additional.6=-Xnoagent</span>
+<span class="c">#wrapper.java.additional.7=-Djava.compiler=NONE</span>
+<span class="c">#wrapper.java.additional.8=-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</span>
+<span class="c">#wrapper.java.additional.9=-XX:+HeapDumpOnOutOfMemoryError</span>
+
+wrapper.app.parameter.1<span class="o">=</span>./conf/jetty.xml
+wrapper.app.parameter.2<span class="o">=</span>./conf/jetty-requestlog.xml
+
+<span class="c">#下面的都无需更改，暂且省略......</span>
+</code></pre></div></div>
+
+<ul>
+  <li>创建 nexus 用户</li>
+</ul>
+
+<blockquote>
+  <p>nexus 不推荐以root用户运行，所以我们创建一个 nexus 用户，安全性要求高的可以控制其是否可登录什么的，我这里只是自己玩玩，so 允许登录。</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>useradd nexus
+passwd nexus
+<span class="c">#输入2次密码</span>
+</code></pre></div></div>
+
+<ol>
+  <li>启动nexus</li>
+</ol>
+
+<blockquote>
+  <p>首先切换到 nexus 用户，然后启动nexus</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>su - nexus
+<span class="c"># 由于配置了PATH变量，所以可在任意位置执行 nexus命令</span>
+nexus start
+</code></pre></div></div>
+
+<ul>
+  <li>查看是否启动成功&amp;监测日志</li>
+</ul>
+
+<blockquote>
+  <p>访问 ip:8081/nexus ；启动成功的话会进入如下界面</p>
+</blockquote>
+
+<p><img src="https://cdn.oss.link/markdown/Maven-Nexus-home-1024x436.png" alt="Maven-Nexus-home-1024x436" /></p>
+
+<blockquote>
+  <p>默认登陆账户密码为  admin/admin123 ；如启动不成功可查看日志</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>less /usr/local/java/nexus-2.11.4-01/logs/wrapper.log
+</code></pre></div></div>
+
+<blockquote>
+  <p>到此结束，关于仓库使用啥的不管了…
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+</blockquote>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2015/12/29/CentOS-6-7-x64-minimal-%E7%BD%91%E7%BB%9C%E5%88%9D%E5%A7%8B%E5%8C%96%E9%85%8D%E7%BD%AE/" data-toggle="tooltip" data-placement="top" title="CentOS 6.7_x64 minimal 网络初始化配置">
+                        Previous<br>
+                        <span>CentOS 6.7_x64 minimal 网络初始化配置</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2015/12/31/Github-%E6%90%AD%E5%BB%BA-Hexo-%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/" data-toggle="tooltip" data-placement="top" title="GitHub 搭建 Hexo 静态博客">
+                        Next<br>
+                        <span>GitHub 搭建 Hexo 静态博客</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2015/12/29/Nexus-2-11-CentOS搭建教程";
+    var disqus_url = "https://mritd.me/2015/12/29/Nexus-2-11-CentOS%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

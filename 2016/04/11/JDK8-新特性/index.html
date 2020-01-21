@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="JDK8 新特性">
+    <meta name="keywords"  content="JDK,JDK8,新特性">
+    <meta name="theme-color" content="#000000">
+    
+    <title>JDK8 新特性 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>JDK8 新特性</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on April 11, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一接口的默认方法实现">一、接口的默认方法实现</h2>
+
+<p>在 JDK8 中，接口允许有默认的实现方法，这些默认的实现方法需要使用 <code class="highlighter-rouge">default</code> 关键字修饰即可，同时其实现类可直接调用这些方法；代码示例如下：</p>
+
+<h3 id="1自定义接口">1、自定义接口</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestInterface</span> <span class="o">{</span>
+
+    <span class="c1">// 接口方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">();</span>
+
+    <span class="c1">// 接口默认方法1</span>
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">defaultMethod1</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello World!"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">// 接口默认方法2</span>
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">defaultMethod2</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"World Hello!"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<!--more-->
+
+<h3 id="2实现类及测试">2、实现类及测试</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestInterfaceImpl</span> <span class="kd">implements</span> <span class="nc">TestInterface</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Test 方法实现"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">TestInterfaceImpl</span> <span class="n">testInterface</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TestInterfaceImpl</span><span class="o">();</span>
+        <span class="n">testInterface</span><span class="o">.</span><span class="na">test</span><span class="o">();</span>
+
+        <span class="c1">// default 修饰的默认方法可直接调用</span>
+        <span class="n">testInterface</span><span class="o">.</span><span class="na">defaultMethod1</span><span class="o">();</span>
+        <span class="n">testInterface</span><span class="o">.</span><span class="na">defaultMethod2</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="3默认方法的继承">3、默认方法的继承</h3>
+
+<p>同普通的类一样，接口的默认方法也可以被继承；而一旦被继承就会出现继承的顺序即优先级问题，接口的默认方法继承遵续以下几个原则：</p>
+
+<ul>
+  <li>1、当某一个类实现了某一接口后，那么该类便继承了该接口的默认方法。</li>
+  <li>2、当某一个类实现某一接口，同时又继承另一个类，而另一个类中有一方法和接口中的默认方法相同，那么最终以类中的方法为准，即 <strong>类中的方法优先级高于接口中的方法。</strong></li>
+  <li>3、当某一类实现了两个接口，而两个接口中又有同方法签名的默认方法时，必须显示在该类中覆盖两个接口中的同方法签名的方法，否则编译不通过。</li>
+  <li>4、当某一类实现了两个接口，而其中一个接口的父接口，与另一个接口中的默认方法方法签名一致时，同样需要显示覆盖，否则编译报错。</li>
+  <li>5、当某一类实现了两个接口，而其中一个接口的父接口，与另一个接口中的默认方法方法签名一致，同时该接口又覆盖了父类的默认方法，此时也必须显式覆盖该方法，否则编译报错。</li>
+</ul>
+
+<h4 id="31第2中情况测试1省略">3.1、第2中情况测试(1省略)</h4>
+
+<p><strong>有一默认方法的接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestIntefaceDefaultMethod</span> <span class="o">{</span>
+
+    <span class="c1">// 接口中的默认 test 方法</span>
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestIntefaceDefaultMethod"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>有一普通方法的父类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestInterfaceDefaultMethodClazz</span> <span class="o">{</span>
+
+    <span class="c1">// 类中的 test 方法</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestInterfaceDefaultMethodClazz"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试类，实现并继承上述接口和类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 继承一个类和一个接口</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test</span> <span class="kd">extends</span> <span class="nc">TestInterfaceDefaultMethodClazz</span> <span class="kd">implements</span> <span class="nc">TestIntefaceDefaultMethod</span><span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// 打印 TestInterfaceDefaultMethodClazz</span>
+        <span class="c1">// 说明调用的是类中的 test 方法</span>
+        <span class="k">new</span> <span class="nf">Test</span><span class="o">().</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="32第3中情况测试">3.2、第3中情况测试</h4>
+
+<p><strong>第一个有默认方法的接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestIntefaceDefaultMethod1</span> <span class="o">{</span>
+
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestIntefaceDefaultMethod1"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>第二个有默认方法的接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestIntefaceDefaultMethod2</span> <span class="o">{</span>
+
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestIntefaceDefaultMethod2"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>同时实现两个接口的测试类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestExtendsInteface</span> <span class="kd">implements</span> <span class="nc">TestIntefaceDefaultMethod1</span><span class="o">,</span><span class="nc">TestIntefaceDefaultMethod2</span><span class="o">{</span>
+
+    <span class="c1">// 必须显式覆盖 否则编译不通过</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+        <span class="c1">// 在这里显式的调用要使用 哪个实现接口的方法</span>
+        <span class="nc">TestIntefaceDefaultMethod1</span><span class="o">.</span><span class="na">super</span><span class="o">.</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">TestExtendsInteface</span><span class="o">().</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="33第4种情况测试">3.3、第4种情况测试</h4>
+
+<p><strong>TestIntefaceDefaultMethod1、TestIntefaceDefaultMethod2 接口与上面相同，新增一个 TestIntefaceDefaultMethod3 接口，该接口继承自 TestIntefaceDefaultMethod1，并且是一个空的接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestIntefaceDefaultMethod3</span> <span class="kd">extends</span> <span class="nc">TestIntefaceDefaultMethod1</span><span class="o">{</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试类同时实现 2、3两个接口，其中3接口继承1接口，并且为空接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestExtendsInteface</span> <span class="kd">implements</span> <span class="nc">TestIntefaceDefaultMethod3</span><span class="o">,</span><span class="nc">TestIntefaceDefaultMethod2</span><span class="o">{</span>
+
+    <span class="c1">// 同样必须显式覆盖 否则编译报错</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+        <span class="c1">// 在这里显式的调用要使用 哪个实现接口的方法</span>
+        <span class="nc">TestIntefaceDefaultMethod3</span><span class="o">.</span><span class="na">super</span><span class="o">.</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">TestExtendsInteface</span><span class="o">().</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="34第5种情况">3.4、第5种情况</h4>
+
+<p><strong>TestIntefaceDefaultMethod3 覆盖了 TestIntefaceDefaultMethod1 的默认方法</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestIntefaceDefaultMethod3</span> <span class="kd">extends</span> <span class="nc">TestIntefaceDefaultMethod1</span><span class="o">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="k">default</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestIntefaceDefaultMethod3"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestExtendsInteface</span> <span class="kd">implements</span> <span class="nc">TestIntefaceDefaultMethod3</span><span class="o">,</span><span class="nc">TestIntefaceDefaultMethod2</span><span class="o">{</span>
+
+    <span class="c1">// 同样必须显式覆盖</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"TestExtendsInteface"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">TestExtendsInteface</span><span class="o">().</span><span class="na">test</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="35总结">3.5、总结</h4>
+
+<p><strong>单接口实现情况下，默认方法可以直接用，多接口实现情况下一旦出现同方法签名的默认方法，那么必须显式覆盖，否则编译不通过。</strong></p>
+
+<h2 id="二接口的静态方法">二、接口的静态方法</h2>
+
+<p>JDK 8 中的接口允许使用静态的方法实现，如下所示：</p>
+
+<p><strong>静态方法接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestStaticInterface</span> <span class="o">{</span>
+    <span class="c1">// 静态方法</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">testStaticMethod</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"JDK8 Static Method!"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestStaticInterfaceImpl</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 直接调用</span>
+        <span class="nc">TestStaticInterface</span><span class="o">.</span><span class="na">testStaticMethod</span><span class="o">();</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="三lambda-表达式">三、Lambda 表达式</h2>
+
+<p>Lambda 表达式是 JDK8 新增的重要特性，Lambda 使 Java 具有了类似函数式编程的风格，其实 Lambda 表达式也是一个 “语法糖”，其实质也是由编译器根据表达式推断最终生成原始语法的字节码方式。</p>
+
+<h3 id="1基本语法">1、基本语法</h3>
+
+<p>Lambda 基本语法以 <code class="highlighter-rouge">(argument) -&gt; (body)</code> 表示，以下为具体的一些例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 不需要参数，返回值为5</span>
+<span class="o">()</span> <span class="o">-&gt;</span> <span class="mi">5</span>
+<span class="c1">// 接受一个 String 型的参数，返回值为 字符串+Hello World</span>
+<span class="o">(</span><span class="nc">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">str</span><span class="o">+</span><span class="s">" Hello World"</span>
+<span class="c1">// 接受两个 int 型的参数，返回两数之和</span>
+<span class="o">(</span><span class="kt">int</span> <span class="n">a</span><span class="o">,</span><span class="kt">int</span> <span class="n">b</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+<span class="c1">// 接受一个 String 型的参数，并将其打印到控制台，不反悔任何参数(void)</span>
+<span class="o">(</span><span class="nc">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">str</span><span class="o">)</span>
+</code></pre></div></div>
+
+<h3 id="2lambda-表达式结构">2、Lambda 表达式结构</h3>
+
+<ul>
+  <li>一个 Lambda 可以有零个或者多个参数；</li>
+  <li>参数类型可以声明，也可以由上下文推断，如 <code class="highlighter-rouge">(int a)</code> 与 <code class="highlighter-rouge">(a)</code> 效果一致；</li>
+  <li>所有参数包含在圆括号内，参数之间用分号分隔，如 <code class="highlighter-rouge">(int a,int b)</code> 或 <code class="highlighter-rouge">(a,b)</code>;</li>
+  <li>空圆括号代表参数集为空，如 <code class="highlighter-rouge">() -&gt; 2</code>；</li>
+  <li>当只有一个参数，且类型可被推倒时，圆括号可省略，如 <code class="highlighter-rouge">a -&gt; a+1</code>；</li>
+  <li>Lambda 表达式主体可包含一条或多条语句；</li>
+  <li>如果 Lamdba 表达式主体部分只有一条语句，那么花括号可以省略，同时匿名函数返回类型与该语句返回类型一致，如 <code class="highlighter-rouge">(int a,int b) -&gt; return a+b</code>；</li>
+  <li>如果 Lambda 表达式主体部分含有多条语句，则必须使用花括号，此时匿名函数返回类型与该代码块返回一致，没有返回则为空。</li>
+</ul>
+
+<h3 id="3lambda-表达式原理函数式接口">3、Lambda 表达式原理(函数式接口)</h3>
+
+<p>在 Java 中有两种描述层面的特殊接口：</p>
+
+<p><strong>Marker(标记) 接口</strong>：这种接口内部不定义任何待实现的抽象方法，就像他的名字那样，只用作标记一个类，从而使其能够通过 <code class="highlighter-rouge">instanceof</code> 关键字检查。</p>
+
+<p><strong>Function(函数) 接口</strong>：与标记接口不同的是，这种接口内部内有一个待实现的抽象方法，此种接口的作用是提供函数式编程需要，例如为 Lambda 表达式提供便利。</p>
+
+<p><strong>其实每个 Lambda 表达式都隐式的赋值给了函数式接口，也就是说每个 Lambda 表达式其实都是函数式接口的内部抽象方法实现；</strong>从而我们便可以通过 Lambda 表达式来完成对函数式接口的简化操作，例如下面的 Runnable 接口：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Runnable</span> <span class="n">runnable</span> <span class="o">=</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello World"</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>当不指明 Lambda 表达式是哪个函数式接口的实现时，编译器还可以自动根据构造器将 Lambda 赋值给对应的函数式接口，</strong>如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLambda</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello World!"</span><span class="o">)).</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>以上代码，由于 <code class="highlighter-rouge">Thread</code> 类存在一个接受 <code class="highlighter-rouge">Runnable</code> 接口的构造器，而 <code class="highlighter-rouge">Runnable</code> 又是函数式接口，所以编译器自动推断将 Lambda 表达式隐式的赋值给了 <code class="highlighter-rouge">Runnable</code> 接口。</p>
+
+<p><strong>注意：根据本人测试，当某个类有两个有参构造器，且两个有参构造器入参全部为函数式接口，同时该函数式接口返回值相同时，Lambda 表达式必须强制转换为其中一种类型，因为编译器无法推断出 Lambda 表达式到底是实现的那种函数式接口，测试代码如下：</strong></p>
+
+<p><strong>两个函数式接口：Interface1、Interface2</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Interface1</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sayHello</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Interface2</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sayHello</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>对应的使用类：TestLambdaInterface</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLambdaInterface</span> <span class="o">{</span>
+
+    <span class="c1">// 两个有参构造器，参数都为函数式接口</span>
+    <span class="kd">public</span> <span class="nf">TestLambdaInterface</span> <span class="o">(</span><span class="nc">Interface1</span> <span class="n">interface1</span><span class="o">){</span>
+        <span class="n">interface1</span><span class="o">.</span><span class="na">sayHello</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">TestLambdaInterface</span> <span class="o">(</span><span class="nc">Interface2</span> <span class="n">interface2</span><span class="o">){</span>
+        <span class="n">interface2</span><span class="o">.</span><span class="na">sayHello</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 直接这么干是无法通过编译的</span>
+        <span class="c1">// new TestLambdaInterface(() -&gt; System.out.println("Hello World!"));</span>
+
+        <span class="c1">// 必须强制转换为某一具体接口类型</span>
+        <span class="k">new</span> <span class="nf">TestLambdaInterface</span><span class="o">((</span><span class="nc">Interface1</span><span class="o">)()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello World!"</span><span class="o">));</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="4functionalinterface-注解">4、FunctionalInterface 注解</h3>
+
+<p>JDK 8 新增了 <code class="highlighter-rouge">FunctionalInterface</code> 注解，该注解只能作用在接口上，<strong>用于标注该接口是一个函数式接口；</strong>从而显式的告诉 Lambda 表达式将其赋值到此接口，这个注解标注了函数式接口，<strong>同时也限定了该接口内只能有一个抽象方法，</strong>否则将无法编译通过，示例如下：</p>
+
+<p><strong>标注 @FunctionalInterface 注解的函数式接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FunctionalInterface</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestLambdaAnnotation</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sayHello</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试使用类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLambdaAnnotationImpl</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nf">TestLambdaAnnotationImpl</span><span class="o">(</span><span class="nc">TestLambdaAnnotation</span> <span class="n">lambdaAnnotation</span><span class="o">){</span>
+
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">TestLambdaAnnotationImpl</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello World"</span><span class="o">));</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="5lambda-表达式作用域">5、Lambda 表达式作用域</h3>
+
+<p>Lambda 表达式和原来的匿名内部类相似，但在作用域等方面还有些细微差别：</p>
+
+<h4 id="51局部变量">5.1、局部变量</h4>
+
+<p>局部变量不必使用 <code class="highlighter-rouge">final</code> 关键字修饰，即可在 Lambda 表达式中直接使用，但是此后的该变量不可改变，相当于隐式 final，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLocalVariables</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 不必声明为 final</span>
+        <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+
+        <span class="c1">// 直接使用</span>
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">a</span><span class="o">)).</span><span class="na">start</span><span class="o">();</span>
+
+        <span class="c1">// 不可改变该变量,否则编译报错</span>
+        <span class="c1">// a = 20;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="52对象属性与静态字段">5.2、对象属性与静态字段</h4>
+
+<p>同匿名对象一样，Lambda 表达式对于对象的属性和静态属性既可读又可写，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestField</span> <span class="o">{</span>
+
+    <span class="c1">// 普通属性</span>
+    <span class="nc">String</span> <span class="n">field</span> <span class="o">=</span> <span class="s">"Hello World"</span><span class="o">;</span>
+
+    <span class="c1">// 静态属性</span>
+    <span class="kd">static</span> <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">testScope</span><span class="o">()</span> <span class="o">{</span>
+
+
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+
+            <span class="n">a</span> <span class="o">=</span><span class="mi">20</span><span class="o">;</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">a</span><span class="o">);</span>
+
+            <span class="n">field</span> <span class="o">=</span> <span class="s">"Test Scope"</span><span class="o">;</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">field</span><span class="o">);</span>
+
+        <span class="o">}).</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">TestField</span><span class="o">().</span><span class="na">testScope</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="53接口的默认方法">5.3、接口的默认方法</h4>
+
+<p>在普通的接口中，JDK8后新增的 default 关键字可实现让接口有其默认实现方法，外部接口对象不必实现，且可直接调用，然而在 Lambda 表达式中，不支持直接调用这些默认方法，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestDefaultMethod</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="nc">LambdaInterface</span> <span class="n">lambdaInterface</span> <span class="o">=</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello"</span><span class="o">);</span>
+
+        <span class="c1">// 以下代码无法通过编译</span>
+        <span class="c1">// LambdaInterface lambdaInterface = () -&gt; testDeafaultMethod();</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="54this-关键字">5.4、this 关键字</h4>
+
+<p>在内部类中，this 关键字指向当前内部类对象自己，而在 Lambda 表达式中，this 关键字指向的是 Lambda 表达式外部的类对象。</p>
+
+<h3 id="6lambda-例子">6、Lambda 例子</h3>
+
+<p>以下为一个利用 Lambda 表达式简写 forEach 的例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLambdaForEach</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 首先创建一个待排序的 list</span>
+        <span class="nc">String</span> <span class="n">str</span> <span class="o">[]</span> <span class="o">=</span> <span class="o">{</span><span class="s">"a"</span><span class="o">,</span><span class="s">"b"</span><span class="o">,</span><span class="s">"c"</span><span class="o">,</span><span class="s">"d"</span><span class="o">,</span><span class="s">"e"</span><span class="o">};</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="nc">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="n">str</span><span class="o">);</span>
+
+        <span class="c1">// 原始的 forEach 遍历</span>
+        <span class="k">for</span> <span class="o">(</span><span class="nc">String</span> <span class="nl">strTmp:</span><span class="n">list</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">strTmp</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="c1">// Lambda 表达式遍历</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">forEach</span><span class="o">((</span><span class="nc">String</span> <span class="n">strTmp</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">strTmp</span><span class="o">));</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>除了 forEach 外还可以简写 Thread，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLambdaThread</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Lambda Thread Test!"</span><span class="o">)).</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="四方法引用">四、方法引用</h2>
+
+<p>Lambda 表达式提供了一种匿名方法实现，并允许我么以函数接口的形式使用它；对于已有的方法，JDK8 提供了 <strong>方法引用(Method references)</strong> 来实现同样的特性；方法引用并不需要提供方法体，而只需使用已有的方法名即可直接引用已存在的方法。</p>
+
+<h3 id="1方法引用替代-lambda-表达式">1、方法引用替代 Lambda 表达式</h3>
+
+<p>以下为一个使用方法引用来替代 Lambda 表达式的例子：</p>
+
+<p><strong>POJO</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Persion</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+    <span class="c1">//省略 SET GET</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>一个函数接口</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FunctionalInterface</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TestInterface</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">test</span><span class="o">(</span><span class="nc">Persion</span> <span class="n">persion</span><span class="o">);</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>测试类</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestMethodReferences</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 使用 Lambda 表达式</span>
+        <span class="nc">TestInterface</span> <span class="n">testInterface</span> <span class="o">=</span> <span class="o">(</span><span class="n">persion</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">persion</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
+
+        <span class="c1">// 使用方法引用</span>
+        <span class="nc">TestInterface</span> <span class="n">testInterface1</span> <span class="o">=</span> <span class="nl">Persion:</span><span class="o">:</span><span class="n">getName</span><span class="o">;</span>
+
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2方法引用的种类">2、方法引用的种类</h3>
+
+<p>JDK 8中方法引用大致分为以下6种：</p>
+
+<ul>
+  <li>静态方法引用 <code class="highlighter-rouge">ClassName::methodName</code></li>
+  <li>实例上的实例方法引用 <code class="highlighter-rouge">instanceReference::methodName</code></li>
+  <li>超类上的实例方法引用 <code class="highlighter-rouge">super::methodName</code></li>
+  <li>类型上的实例方法引用 <code class="highlighter-rouge">ClassName::methodName</code></li>
+  <li>构造方法引用 <code class="highlighter-rouge">Class::new</code></li>
+  <li>数组构造方法引用 <code class="highlighter-rouge">TypeName[]::new</code></li>
+</ul>
+
+<h3 id="3方法引用与-lambda-表达式">3、方法引用与 Lambda 表达式</h3>
+
+<p><strong>无论是方法引用还是 Lambda 表达式，其最终原理和所要实现的就是当某一个类中，或者接口中的某一方法，其入参为一个接口类型时，使用方法引用或者 Lambda 表达式可以快速而简洁的实现这个接口，而不必繁琐的创建一个这个接口的对象或者直接实现。</strong></p>
+
+<p>参考文章：</p>
+
+<ul>
+  <li><a href="http://news.oneapm.com/java-8-oneapm-lambda/">http://news.oneapm.com/java-8-oneapm-lambda/</a></li>
+  <li><a href="https://blog.chou.it/2014/03/java-8-new-features/">https://blog.chou.it/2014/03/java-8-new-features/</a></li>
+  <li><a href="http://www.cnblogs.com/figure9/p/java-8-lambdas-insideout-language-features.html">http://www.cnblogs.com/figure9/p/java-8-lambdas-insideout-language-features.html</a></li>
+</ul>
+
+<h2 id="五stream-api">五、Stream API</h2>
+
+<p>JDK 8 带来了强大的流式 API，用于简化集合操作；流式(Stream) API 配合 Lambda 表达式和方法引用 “可变身超级英雄”。</p>
+
+<h3 id="1strean-api-简介">1、Strean API 简介</h3>
+
+<p>新增的 <code class="highlighter-rouge">Stream API</code> 主要围绕 <code class="highlighter-rouge">java.util.stream</code> 包下的 <code class="highlighter-rouge">Stream</code> 类展开，Stream API 并非其语义上的 “流”，它不同于任何 I/O 流，实质上 <strong>Stream 可以看做是一个加强版 Iterator，不同的是 Stream 可以并行并高效的对集合进行 “神的” 奇操作</strong>，如下一个小例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 首先创建一个待处理的 List</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">3</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">4</span><span class="o">);</span>
+
+        <span class="c1">// 传统的过滤掉元素</span>
+
+        <span class="c1">// 定义一个 ArrayList 用于存放结果</span>
+        <span class="nc">List</span> <span class="n">resultList1</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="c1">// 循环遍历</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="nl">tmp:</span><span class="n">list</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">tmp</span><span class="o">&lt;</span><span class="mi">4</span><span class="o">){</span>
+                <span class="n">resultList1</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">tmp</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">resultList1</span><span class="o">);</span>
+
+
+        <span class="c1">// Stream API + Lambda 过滤</span>
+
+        <span class="c1">// 定义结果 List</span>
+        <span class="nc">List</span> <span class="n">resultList2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="c1">// Stream+Lambda 操作</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">filter</span><span class="o">((</span><span class="n">tmp</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">tmp</span> <span class="o">&lt;</span><span class="mi">4</span><span class="o">).</span><span class="na">forEach</span><span class="o">((</span><span class="n">result</span><span class="o">)-&gt;</span> <span class="n">resultList2</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">result</span><span class="o">));</span>
+
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">resultList2</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2stream-语法">2、Stream 语法</h3>
+
+<p>Stream 的大体语法如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java8_stream1.jpg" alt="hexo_java8_stream1" /></p>
+
+<p>如上图所示，红色部分主要是创建一个 Stream，可以使从集合中创建或者选择其它方式，绿色部分代表对这个流的处理操作，可能是一个也可能是多个，比如连续 filter，<strong>每次操作后都可能返回处理后的流对象以便下次重复操作；</strong>最后的蓝色部分代表最终的 “汇聚” 动作，<strong>实质上中间部分对流做的各种动作不会立即执行，因为流不可逆性，无法重复操作，所以只有到最后的汇聚动作时才会一次执行到底。≈</strong></p>
+
+<h3 id="3创建-stream">3、创建 Stream</h3>
+
+<p>创建一个 Stream 可以通过两种方式，一种是通过其静态工厂方法创建，另一种通过 <code class="highlighter-rouge">Collection</code> 接口默认方法创建；</p>
+
+<h4 id="31静态工厂创建-stream">3.1、静态工厂创建 Stream</h4>
+
+<p>Stream 类中提供了三个静态工厂方法 <code class="highlighter-rouge">Stream.of()</code> 、 <code class="highlighter-rouge">Stream.generate()</code> 和 <code class="highlighter-rouge">Stream.iterate()</code> 来创建 Stream，其中 <code class="highlighter-rouge">Stream.of()</code> 有两个重载，一个接受固定长度的参数，一个接受可变长度的参数.</p>
+
+<p><strong>Stream.of() 创建 Stream</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 固定长度参数</span>
+<span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">stream1</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="s">"aa"</span><span class="o">);</span>
+
+<span class="c1">// 可变长度参数</span>
+<span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">stream2</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>Stream.generate() 创建 Stream</strong></p>
+
+<p><code class="highlighter-rouge">Stream.generate()</code> 方法用于生成一个无限长度的 Stream，其接受一个 <code class="highlighter-rouge">Supplier</code> 接口作为入参，该接口可看作是 Stream 内部元素的对象工厂，每次调用必须返回一个对象实例，测试如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Stream</span> <span class="n">stream3</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">generate</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nc">Object</span><span class="o">());</span>
+</code></pre></div></div>
+
+<p><strong>Stream.iterate() 创建 Stream</strong></p>
+
+<p>该方法同样用于创建一个无限长度的 Stream，不同的是 <code class="highlighter-rouge">iterate()</code> 方法接受两个参数，第一个参数可看作是一个种子，第二个参数可看作是一个方法，每次都会使用种子重复的执行方法，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 此代码将一直执行</span>
+<span class="nc">Stream</span><span class="o">.</span><span class="na">iterate</span><span class="o">(</span><span class="mi">1</span><span class="o">,(</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">++).</span><span class="na">forEach</span><span class="o">((</span><span class="n">i</span><span class="o">)-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+</code></pre></div></div>
+
+<h4 id="32collection-创建-stream">3.2、Collection 创建 Stream</h4>
+
+<p>Collection 集合类的父接口提供了一个默认的方法 <code class="highlighter-rouge">ConllectionInstance.stream()</code> 来实现创建 Stream，所以直接使用或使用任意的 Collection 实现类即可创建 Stream，样例代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 使用 ArrayList 创建</span>
+<span class="nc">Stream</span> <span class="n">stream</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">().</span><span class="na">stream</span><span class="o">();</span>
+</code></pre></div></div>
+
+<h3 id="4转换stream">4、转换Stream</h3>
+
+<p>对 Stream 每次操作后其实都会对其进行转换，从而返回一个新的 Stream，Stream 中定义了几个常用的转换方法如下：</p>
+
+<h4 id="41distinct-方法">4.1、distinct 方法</h4>
+
+<p>顾名思义，此方法将对 Stream 中的内容进行去重操作，<strong>注意，此操作依赖于 元素的 equals 方法，所以在对象去重时请重写 equals 和 hashcode 方法。</strong>此操作后新生成的 Stream 没有重复的元素，以下为测试代码：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 创建一个 存放元素的 ArrayList</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"a"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"a"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"b"</span><span class="o">);</span>
+
+<span class="c1">// 去重后的 list</span>
+<span class="nc">List</span> <span class="n">list1</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">distinct</span><span class="o">().</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">list1</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h4 id="42filter-方法">4.2、filter 方法</h4>
+
+<p>同样，从名字可以看出这是个过滤操作，通过 filter 方法可以过滤流，并返回一个新的 Stream，其中 filter 方法入参接受一个 Predicate 函数接口，可使用 Lambda 实现该函数接口，该接口主要作用是需要我们实现一个过滤条件；测试如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//创建一个元素 List</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">3</span><span class="o">);</span>
+
+<span class="c1">// 创建 Stream 并进行过滤</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">list1</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">filter</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">list1</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h4 id="43map-方法">4.3、map 方法</h4>
+
+<p>该方法从名字上看似乎与 Map 有关，实质上该方法主要作用是将 Stream 中的数据按照某种给定的转换策略进行转换，比如将 Stream 中的 字符串全部转化为 Integer 类型，map 方法同样接受一个函数接口，该接口需要我们实现为具体的转换策略，测试代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 创建一个待转换的 List</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"1"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"2"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"3"</span><span class="o">);</span>
+
+<span class="c1">// 获取 Stream 并转换</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">list1</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">((</span><span class="n">str</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">str</span><span class="o">)).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">list1</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>map 方法有其精简版本，如 mapToInt，mapToLong和mapToDouble，从名字可以知道其作用。</strong></p>
+
+<h4 id="44flatmap-方法">4.4、flatMap 方法</h4>
+
+<p>flatMap 方法 和 map 方法类似，同样用于结果转换，但不同的是 flatMap 可以处理返回值为 Stream 的处理，如下面的样例：</p>
+
+<p><strong>使用 map 的处理情况</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestFlatMap</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 创建元素集合</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"123"</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"456"</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"789"</span><span class="o">);</span>
+
+        <span class="c1">// 创建流并转换   此处将返回一个套嵌流</span>
+        <span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;&gt;</span> <span class="n">stream</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">map</span><span class="o">(</span><span class="nl">TestFlatMap:</span><span class="o">:</span><span class="n">toCharterStream</span><span class="o">);</span>
+
+        <span class="c1">// 获取这个 套嵌流中所有内容</span>
+        <span class="n">stream</span><span class="o">.</span><span class="na">forEach</span><span class="o">((</span><span class="n">streamTmp</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">streamTmp</span><span class="o">.</span><span class="na">forEach</span><span class="o">((</span><span class="n">c</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">c</span><span class="o">)));</span>
+
+    <span class="o">}</span>
+
+
+    <span class="c1">// 字符串分解 并返回 Charcater 的 Stream</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;</span> <span class="nf">toCharterStream</span><span class="o">(</span><span class="nc">String</span> <span class="n">s</span><span class="o">){</span>
+
+        <span class="c1">// 缓存结果</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="k">for</span> <span class="o">(</span><span class="kt">char</span> <span class="nl">c:</span> <span class="n">s</span><span class="o">.</span><span class="na">toCharArray</span><span class="o">())</span> <span class="o">{</span>
+            <span class="c1">// 将每一个字符串分解为 char 放入缓存结果中</span>
+            <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="nc">Character</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">c</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="c1">// 返回 一个 Character 的 Stream</span>
+        <span class="k">return</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>从上面可以看出，当转换方法返回另一个流即套嵌流 <code class="highlighter-rouge">Stream&lt;Stream&gt;</code> 时，我们想获取 Stream 中所有内容极其困难和复杂，而 flatMap 方法很好的解决了这个问题：</strong></p>
+
+<p><strong>flatmap 实现</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestFlatMap1</span> <span class="o">{</span>
+
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 创建元素集合</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"123"</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"456"</span><span class="o">);</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"789"</span><span class="o">);</span>
+
+
+        <span class="c1">// 注意 此处套嵌流自动被合并</span>
+        <span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;</span> <span class="n">stream</span> <span class="o">=</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">().</span><span class="na">flatMap</span><span class="o">(</span><span class="nl">TestFlatMap1:</span><span class="o">:</span><span class="n">toCharterStream</span><span class="o">);</span>
+
+        <span class="n">stream</span><span class="o">.</span><span class="na">forEach</span><span class="o">((</span><span class="n">c</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">c</span><span class="o">));</span>
+
+    <span class="o">}</span>
+
+
+    <span class="c1">// 字符串分解 并返回 Charcater 的 Stream</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="nc">Stream</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;</span> <span class="nf">toCharterStream</span><span class="o">(</span><span class="nc">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// 缓存结果</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">Character</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+
+        <span class="k">for</span> <span class="o">(</span><span class="kt">char</span> <span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="o">.</span><span class="na">toCharArray</span><span class="o">())</span> <span class="o">{</span>
+            <span class="c1">// 将每一个字符串分解为 char 放入缓存结果中</span>
+            <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="nc">Character</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">c</span><span class="o">));</span>
+        <span class="o">}</span>
+
+        <span class="c1">// 返回 一个 Character 的 Stream</span>
+        <span class="k">return</span> <span class="n">list</span><span class="o">.</span><span class="na">stream</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>总结：map 方法在实现的转换方法返回 Stream 时，会形成套嵌 <code class="highlighter-rouge">Stream&lt;Stream&gt;</code>，当要遍历时极其困难，而 flatMap 方法则会自动合并套嵌流。</strong></p>
+
+<h4 id="45peek-方法">4.5、peek 方法</h4>
+
+<p>peek 方法用于对 Stream 内元素进行包装，即在外面包装一层我们自定义的方法，当 Stream 内元素被消费(处理/转化)时，则触发该方法执行，如下测试例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestPeek</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">// peek 包装时自定义了一个 输出方法,当每次 map 方法对元素转换(消费)时,都会触发 该方法执行</span>
+        <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="s">"1"</span><span class="o">,</span><span class="s">"2"</span><span class="o">,</span><span class="s">"3"</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">peek</span><span class="o">((</span><span class="n">s</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"元素被消费: "</span><span class="o">+</span><span class="n">s</span><span class="o">))</span>
+                <span class="o">.</span><span class="na">map</span><span class="o">((</span><span class="n">s</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nc">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">s</span><span class="o">))</span>
+                <span class="o">.</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="46limit-方法">4.6、limit 方法</h4>
+
+<p>顾名思义，此方法将对 Stream 内元素进行截断操作，返回的 Stream 中包含截断后的元素，<strong>注意此方法向后截断，即语义为 “保留前面的 N 个元素”；</strong>测试如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 截断操作</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">).</span><span class="na">limit</span><span class="o">(</span><span class="mi">3</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+
+<span class="c1">// 打印 [1, 2, 3]</span>
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">list</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h4 id="47skip-方法">4.7、skip 方法</h4>
+
+<p>skip 方法与 limit 正好相反，<strong>语义为：丢弃前 N 个元素</strong>；测试如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 打印 3,4,5</span>
+<span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">).</span><span class="na">skip</span><span class="o">(</span><span class="mi">2</span><span class="o">).</span><span class="na">forEach</span><span class="o">((</span><span class="n">i</span><span class="o">)-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+</code></pre></div></div>
+
+<h3 id="5汇聚折叠">5、汇聚(折叠)</h3>
+
+<p>汇聚也成折叠，当对一个流进行各种操作后(filter、map等)，实际上该流并不会立即被处理，因为流只能流向性的一次走完，只有在最后进行汇聚(折叠)动作时，该流才会一直被转换/处理完成并最终返回一个新的流。</p>
+
+<p><strong>汇聚一般分为两种：</strong></p>
+
+<p><strong>可变汇聚：</strong>把输入的元素累积到一个可变容器中，比如 Collection或者 StringBuilder。
+<strong>其他汇聚：</strong>其他汇聚即除了可变汇聚之外的都称作其他汇聚，一般这些汇聚都是反复操作结果流，并通过前一次的结果流当做下一次的入参，最终形成一个结果，如 reduce，count，allMatch等。</p>
+
+<h4 id="51可变汇聚">5.1、可变汇聚</h4>
+
+<p>可变汇聚对应的只有一个方法 <code class="highlighter-rouge">Stream.collect()</code>，该方法将流中处理后的元素汇聚到一个 容器中，比如 <code class="highlighter-rouge">Collection</code>；<strong>注意，Stream API 中对流处理操作并不会改变原有容器，比图 List.stream() 返回的流无论怎么处理，原来的 List 都不会受影响。</strong></p>
+
+<h5 id="511默认的-collect-方法">5.1.1、默认的 collect 方法</h5>
+
+<p>查看 collect 方法如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="no">R</span><span class="o">&gt;</span> <span class="no">R</span> <span class="nf">collect</span><span class="o">(</span><span class="nc">Supplier</span><span class="o">&lt;</span><span class="no">R</span><span class="o">&gt;</span> <span class="n">supplier</span><span class="o">,</span>
+      <span class="nc">BiConsumer</span><span class="o">&lt;</span><span class="no">R</span><span class="o">,</span> <span class="o">?</span> <span class="kd">super</span> <span class="no">T</span><span class="o">&gt;</span> <span class="n">accumulator</span><span class="o">,</span>
+      <span class="nc">BiConsumer</span><span class="o">&lt;</span><span class="no">R</span><span class="o">,</span> <span class="no">R</span><span class="o">&gt;</span> <span class="n">combiner</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>Supplier supplier是一个工厂函数，用来生成一个新的容器；BiConsumer accumulator也是一个函数，用来把Stream中的元素添加到结果容器中；BiConsumer combiner还是一个函数，用来把中间状态的多个结果容器合并成为一个（并发的时候会用到），下面举个栗子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span> <span class="n">result</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">).</span><span class="na">filter</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">).</span>
+                <span class="n">collect</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">(),</span>
+                        <span class="o">(</span><span class="n">list</span><span class="o">,</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">i</span><span class="o">),</span>
+                        <span class="o">(</span><span class="n">listAll</span><span class="o">,</span><span class="n">list</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">listAll</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="n">list</span><span class="o">));</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>第一个参数用于生成一个容器(ArrayList),第二个参数用于将 Stream 中的元素加入到前面生成的容器(list)中，第三个参数在并发时，用于将</strong></p>
+
+<h5 id="512collect-简化版本">5.1.2、collect 简化版本</h5>
+
+<p>clooect 还有一个 override 版本，如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="no">R</span><span class="o">,</span> <span class="no">A</span><span class="o">&gt;</span> <span class="no">R</span> <span class="nf">collect</span><span class="o">(</span><span class="nc">Collector</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="no">T</span><span class="o">,</span> <span class="no">A</span><span class="o">,</span> <span class="no">R</span><span class="o">&gt;</span> <span class="n">collector</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>从上面可以看出，该方法接受一个 <code class="highlighter-rouge">Collector</code> 接口，JDK 8 为我们提供了快速创建该接口的工具类 <code class="highlighter-rouge">java.util.stream.Collectors</code>，其中调用该工具类的方法可以快速创建 <code class="highlighter-rouge">Collector</code> 接口的实力，典型的方法有 <code class="highlighter-rouge">Collectors.toList()</code>、<code class="highlighter-rouge">Collectors.toSet()</code>、<code class="highlighter-rouge">Collectors.toCollection()</code> 等等，具体可自行查看源码，从名字也很容易看出其用途，如下是一个汇聚到 List 的代码示例：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span> <span class="n">result</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">).</span><span class="na">filter</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+</code></pre></div></div>
+
+<h4 id="52其他汇聚">5.2、其他汇聚</h4>
+
+<h5 id="521reduce-方法">5.2.1、reduce 方法</h5>
+
+<p>reduce 方法用于迭代累加操作，该方法有三种 override 版本，第一种结构如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nc">Optional</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="nf">reduce</span><span class="o">(</span><span class="nc">BinaryOperator</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">accumulator</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>同样该方法接受一个 BinaryOperator 接口对象，BinaryOperator 接口对象用于实现 “累加动作”，即以何种方式累加；该接口接受两个参数，第一个参数为上次操作结果的临时变量，第二个参数为 Stream 中的元素，测试代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// int 累加</span>
+<span class="kt">int</span> <span class="n">test1</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">4</span><span class="o">).</span><span class="na">filter</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">).</span><span class="na">reduce</span><span class="o">((</span><span class="n">result</span><span class="o">,</span> <span class="n">filed</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">result</span> <span class="o">+</span> <span class="n">filed</span><span class="o">).</span><span class="na">get</span><span class="o">();</span>
+
+<span class="c1">// String 累加</span>
+<span class="nc">String</span> <span class="n">test2</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="s">"He"</span><span class="o">,</span><span class="s">"llo"</span><span class="o">,</span><span class="s">" "</span><span class="o">,</span><span class="s">"Wo"</span><span class="o">,</span><span class="s">"rld"</span><span class="o">).</span><span class="na">reduce</span><span class="o">((</span><span class="n">result</span><span class="o">,</span><span class="n">filed</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">result</span><span class="o">+</span><span class="n">filed</span><span class="o">).</span><span class="na">get</span><span class="o">();</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">test1</span><span class="o">);</span>
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">test2</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>该方法的第二种结构如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">T</span> <span class="nf">reduce</span><span class="o">(</span><span class="no">T</span> <span class="n">identity</span><span class="o">,</span> <span class="nc">BinaryOperator</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">accumulator</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>注意，该版本返回值直接就是一个具体的数据类型，这个数据类型可以根据传入的初始值 <code class="highlighter-rouge">identity</code> 进行推断出来。</strong></p>
+
+<p>此时第一个参数为一个初始值，后面的累加操作基于这个初始值，如果 Stream 为空那么将直接返回初始值，第二个参数同样为累加算法，测试代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 带有初始值的累加</span>
+<span class="nc">String</span> <span class="n">test3</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="s">"llo"</span><span class="o">,</span><span class="s">" "</span><span class="o">,</span><span class="s">"Wo"</span><span class="o">,</span><span class="s">"rld"</span><span class="o">).</span><span class="na">reduce</span><span class="o">(</span><span class="s">"He"</span><span class="o">,(</span><span class="n">result</span><span class="o">,</span><span class="n">filed</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">result</span><span class="o">+</span><span class="n">filed</span><span class="o">);</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">test3</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h5 id="522count-方法">5.2.2、count 方法</h5>
+
+<p>count 方法用于统计元素个数，测试代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 注意返回值为long 类型</span>
+<span class="kt">long</span> <span class="n">count</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">).</span><span class="na">count</span><span class="o">();</span>
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">count</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h5 id="523其他方法">5.2.3、其他方法</h5>
+
+<ul>
+  <li>allMatch 方法用于检测结果中是否都满足某一条件，测试如下：</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">boolean</span> <span class="n">flag</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">,</span><span class="mi">5</span><span class="o">).</span><span class="na">allMatch</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="o">);</span>
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">flag</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>其他方法基本一致，代码就不写了</strong></p>
+
+<ul>
+  <li>anyMatch：Stream中是否存在任何一个元素满足匹配条件</li>
+  <li>findFirst：返回Stream中的第一个元素，如果Stream为空，返回空Optional</li>
+  <li>noneMatch：是不是Stream中的所有元素都不满足给定的匹配条件</li>
+  <li>max和min：使用给定的比较器(Operator)，返回Stream中的最大/最小值。</li>
+</ul>
+
+<p>Stream API  参考自 <a href="http://ifeve.com/stream/">Java8初体验（二）Stream语法详解</a></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/04/09/JAXB-%E7%AC%94%E8%AE%B0/" data-toggle="tooltip" data-placement="top" title="JAXB 笔记">
+                        Previous<br>
+                        <span>JAXB 笔记</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/04/17/List-%E7%9A%84-UnsupportedOperationException-%E5%BC%82%E5%B8%B8/" data-toggle="tooltip" data-placement="top" title="List 的 UnsupportedOperationException 异常">
+                        Next<br>
+                        <span>List 的 UnsupportedOperationException 异常</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/04/11/JDK8-新特性";
+    var disqus_url = "https://mritd.me/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

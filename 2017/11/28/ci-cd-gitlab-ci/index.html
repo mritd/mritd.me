@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="CI/CD 之 GitLab CI">
+    <meta name="keywords"  content="CI/CD,GitLab,CI,Runner">
+    <meta name="theme-color" content="#000000">
+    
+    <title>CI/CD 之 GitLab CI - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/11/28/ci-cd-gitlab-ci/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#CI/CD" title="CI/CD">CI/CD</a>
+                        
+                    </div>
+                    <h1>CI/CD 之 GitLab CI</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on November 28, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>接着上篇文章整理，这篇文章主要介绍一下 GitLab CI 相关功能，并通过 GitLab CI 实现自动化构建项目；项目中所用的示例项目已经上传到了 <a href="https://github.com/mritd/GitLabCI-TestProject">GitHub</a></p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>首先需要有一台 GitLab 服务器，然后需要有个项目；这里示例项目以 Spring Boot 项目为例，然后最好有一台专门用来 Build 的机器，实际生产中如果 Build 任务不频繁可适当用一些业务机器进行 Build；本文示例所有组件将采用 Docker 启动， GitLab HA 等不在本文阐述范围内</p>
+
+<ul>
+  <li>Docker Version : 1.13.1</li>
+  <li>GitLab Version : 10.1.4-ce.0</li>
+  <li>GitLab Runner Version : 10.1.0</li>
+  <li>GitLab IP : 172.16.0.37</li>
+  <li>GitLab Runner IP : 172.16.0.36</li>
+</ul>
+
+<h3 id="二gitlab-ci-简介">二、GitLab CI 简介</h3>
+
+<p>GitLab CI 是 GitLab 默认集成的 CI 功能，GitLab CI 通过在项目内 <code class="highlighter-rouge">.gitlab-ci.yaml</code> 配置文件读取 CI 任务并进行相应处理；GitLab CI 通过其称为 GitLab Runner 的 Agent 端进行 build 操作；Runner 本身可以使用多种方式安装，比如使用 Docker 镜像启动等；Runner 在进行 build 操作时也可以选择多种 build 环境提供者；比如直接在 Runner 所在宿主机 build、通过新创建虚拟机(vmware、virtualbox)进行 build等；同时 Runner 支持 Docker 作为 build 提供者，即每次 build 新启动容器进行 build；GitLab CI 其大致架构如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/wejnz.png" alt="GitLab" /></p>
+
+<h3 id="三搭建-gitlab-服务器">三、搭建 GitLab 服务器</h3>
+
+<h4 id="31gitlab-搭建">3.1、GitLab 搭建</h4>
+
+<p>GitLab 搭建这里直接使用 docker compose 启动，compose 配置如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: <span class="s1">'2'</span>
+services:
+  gitlab:
+    image: <span class="s1">'gitlab/gitlab-ce:10.1.4-ce.0'</span>
+    restart: always
+    container_name: gitlab
+    <span class="nb">hostname</span>: <span class="s1">'git.mritd.me'</span>
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url <span class="s1">'http://git.mritd.me'</span>
+        <span class="c"># Add any other gitlab.rb configuration here, each on its own line</span>
+    ports:
+      - <span class="s1">'80:80'</span>
+      - <span class="s1">'443:443'</span>
+      - <span class="s1">'8022:22'</span>
+    volumes:
+      - <span class="s1">'./data/gitlab/config:/etc/gitlab'</span>
+      - <span class="s1">'./data/gitlab/logs:/var/log/gitlab'</span>
+      - <span class="s1">'./data/gitlab/data:/var/opt/gitlab'</span>
+</code></pre></div></div>
+
+<p>直接启动后，首次登陆需要设置初始密码如下，默认用户为 <code class="highlighter-rouge">root</code></p>
+
+<p><img src="https://cdn.oss.link/markdown/5go94.png" alt="gitkab init" /></p>
+
+<p>登陆成功后创建一个用户(该用户最好给予 Admin 权限，以后操作以该用户为例)，并且创建一个测试 Group 和 Project，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/vtyhi.png" alt="Create User" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/3b7gl.png" alt="Test Project" /></p>
+
+<h4 id="32增加示例项目">3.2、增加示例项目</h4>
+
+<p>这里示例项目采用 Java 的 SpringBoot 项目，并采用 Gradle 构建，其他语言原理一样；<strong>如果不熟悉 Java 的没必要死磕此步配置，任意语言(最好 Java)整一个能用的 Web 项目就行，并不强求一定 Java 并且使用 Gradle 构建，以下只是一个样例项目</strong>；SpringBoot 可以采用 <a href="https://start.spring.io/">Spring Initializr</a> 直接生成(依赖要加入 WEB)，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/0wx6d.png" alt="Spring Initializr" /></p>
+
+<p>将项目导入 IDEA，然后创建一个 index 示例页面，主要修改如下</p>
+
+<ul>
+  <li>build.gradle</li>
+</ul>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">buildscript</span> <span class="o">{</span>
+    <span class="n">ext</span> <span class="o">{</span>
+        <span class="n">springBootVersion</span> <span class="o">=</span> <span class="s1">'1.5.8.RELEASE'</span>
+    <span class="o">}</span>
+    <span class="n">repositories</span> <span class="o">{</span>
+        <span class="n">mavenCentral</span><span class="o">()</span>
+    <span class="o">}</span>
+    <span class="n">dependencies</span> <span class="o">{</span>
+        <span class="n">classpath</span><span class="o">(</span><span class="s2">"org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"</span><span class="o">)</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'java'</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'eclipse'</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'idea'</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'org.springframework.boot'</span>
+
+<span class="n">group</span> <span class="o">=</span> <span class="s1">'me.mritd'</span>
+<span class="n">version</span> <span class="o">=</span> <span class="s1">'0.0.1-SNAPSHOT'</span>
+<span class="n">sourceCompatibility</span> <span class="o">=</span> <span class="mf">1.8</span>
+
+<span class="n">repositories</span> <span class="o">{</span>
+    <span class="n">mavenCentral</span><span class="o">()</span>
+<span class="o">}</span>
+
+
+<span class="n">dependencies</span> <span class="o">{</span>
+    <span class="n">compile</span><span class="o">(</span><span class="s1">'org.springframework.boot:spring-boot-starter'</span><span class="o">)</span>
+    <span class="n">compile</span><span class="o">(</span><span class="s1">'org.springframework.boot:spring-boot-starter-web'</span><span class="o">)</span>
+    <span class="n">compile</span><span class="o">(</span><span class="s1">'org.springframework.boot:spring-boot-starter-thymeleaf'</span><span class="o">)</span>
+    <span class="n">testCompile</span><span class="o">(</span><span class="s1">'org.springframework.boot:spring-boot-starter-test'</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>新建一个 HomeController</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">TestProject</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.springframework.stereotype.Controller</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.springframework.web.bind.annotation.RequestMapping</span><span class="o">;</span>
+
+<span class="cm">/*******************************************************************************
+ * Copyright (c) 2005-2017 Mritd, Inc.
+ * TestProject
+ * me.mritd.TestProject
+ * Created by mritd on 2017/11/24 下午12:23.
+ * Description: 
+ *******************************************************************************/</span>
+<span class="nd">@Controller</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HomeController</span> <span class="o">{</span>
+
+    <span class="nd">@RequestMapping</span><span class="o">(</span><span class="s">"/"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">home</span><span class="o">(){</span>
+        <span class="k">return</span> <span class="s">"index"</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>templates 下新建 index.html</li>
+</ul>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">"en"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"UTF-8"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Title<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+<span class="nt">&lt;h1&gt;</span>Test...<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>最后项目整体结构如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/5k12p.png" alt="TestProject" /></p>
+
+<p>执行 <code class="highlighter-rouge">assemble</code> Task 打包出可执行 jar 包，并运行 <code class="highlighter-rouge">java -jar TestProject-0.0.1-SNAPSHOT.jar</code> 测试下能启动访问页面即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/xoj3d.png" alt="TestProject assemble" /></p>
+
+<p>最后将项目提交到 GitLab 后如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/1fuex.png" alt="init Project" /></p>
+
+<h3 id="四gitlab-ci-配置">四、GitLab CI 配置</h3>
+
+<blockquote>
+  <p>针对这一章节创建基础镜像以及项目镜像，这里仅以 Java 项目为例；其他语言原理相通，按照其他语言对应的运行环境修改即可</p>
+</blockquote>
+
+<h4 id="41增加-runner">4.1、增加 Runner</h4>
+
+<p>GitLab CI 在进行构建时会将任务下发给 Runner，让 Runner 去执行；所以先要添加一个 Runner，Runner 这里采用 Docker Compose 启动，build 方式也使用 Docker 方式 Build；compose 文件如下</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">gitlab-runner</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">gitlab-runner</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">gitlab/gitlab-runner:alpine-v10.1.0</span>
+    <span class="na">restart</span><span class="pi">:</span> <span class="s">always</span>
+    <span class="na">network_mode</span><span class="pi">:</span> <span class="s2">"</span><span class="s">host"</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
+      <span class="pi">-</span> <span class="s">./config.toml:/etc/gitlab-runner/config.toml</span>
+    <span class="na">extra_hosts</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">git.mritd.me:172.16.0.37"</span>
+</code></pre></div></div>
+
+<p><strong>在启动前，我们需要先 touch 一下这个 config.toml 配置文件</strong>；该文件是 Runner 的运行配置，此后 Runner 所有配置都会写入这个文件(不 touch 出来 docker-compose 发现不存在会挂载一个目录进去，导致 Runner 启动失败)；启动 docker-compose 后，<strong>需要进入容器执行注册，让 Runner 主动去连接 GitLab 服务器</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 生成 Runner 配置文件</span>
+<span class="nb">touch </span>config.toml
+<span class="c"># 启动 Runner</span>
+docker-compose up <span class="nt">-d</span>
+<span class="c"># 激活 Runner</span>
+docker <span class="nb">exec</span> <span class="nt">-it</span> gitlab-runner gitlab-runner register
+</code></pre></div></div>
+
+<p>在执行上一条激活命令后，会按照提示让你输入一些信息；<strong>首先输入 GitLab 地址，然后是 Runner Token，Runner Token 可以从 GitLab 设置中查看</strong>，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/mfqg7.png" alt="Runner Token" /></p>
+
+<p>整体注册流程如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/r7xay.png" alt="Runner registry" /></p>
+
+<p>注册完成后，在 GitLab Runner 设置中就可以看到刚刚注册的 Runner，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/xv03e.png" alt="Runner List" /></p>
+
+<p><strong>Runner 注册成功后会将配置写入到 config.toml 配置文件；由于两个测试宿主机都没有配置内网 DNS，所以为了保证 runner 在使用 docker build 时能正确的找到 GitLab 仓库地址，还需要增加一个 docker 的 host 映射( <code class="highlighter-rouge">extra_hosts</code> )；同时为了能调用 宿主机 Docker 和持久化 build 的一些缓存还挂载了一些文件和目录；完整的 配置如下(配置文件可以做一些更高级的配置，具体参考 <a href="https://docs.gitlab.com/runner/configuration/advanced-configuration.html">官方文档</a> )</strong></p>
+
+<ul>
+  <li>config.toml</li>
+</ul>
+
+<div class="language-toml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">concurrent</span> <span class="p">=</span> <span class="mi">1</span>
+<span class="py">check_interval</span> <span class="p">=</span> <span class="mi">0</span>
+
+<span class="nn">[[runners]]</span>
+  <span class="py">name</span> <span class="p">=</span> <span class="s">"Test Runner"</span>
+  <span class="py">url</span> <span class="p">=</span> <span class="s">"http://git.mritd.me"</span>
+  <span class="py">token</span> <span class="p">=</span> <span class="s">"c279ec1ac08aec98c7141c7cf2d474"</span>
+  <span class="py">executor</span> <span class="p">=</span> <span class="s">"docker"</span>
+  <span class="py">builds_dir</span> <span class="p">=</span> <span class="s">"/gitlab/runner-builds"</span>
+  <span class="py">cache_dir</span> <span class="p">=</span> <span class="s">"/gitlab/runner-cache"</span>
+  <span class="nn">[runners.docker]</span>
+    <span class="py">tls_verify</span> <span class="p">=</span> <span class="kc">false</span>
+    <span class="py">image</span> <span class="p">=</span> <span class="s">"debian"</span>
+    <span class="py">privileged</span> <span class="p">=</span> <span class="kc">false</span>
+    <span class="py">disable_cache</span> <span class="p">=</span> <span class="kc">false</span>
+    <span class="py">shm_size</span> <span class="p">=</span> <span class="mi">0</span>
+    <span class="py">volumes</span> <span class="p">=</span> <span class="nn">["/data/gitlab-runner:/gitlab","/var/run/docker.sock:/var/run/docker.sock","/data/maven_repo:/data/repo","/data/maven_repo:/data/maven","/data/gradle:/data/gradle","/data/sonar_cache:/root/.sonar","/data/androidsdk:/usr/local/android","/data/node_modules:/data/node_modules"]</span>
+    <span class="py">extra_hosts</span> <span class="p">=</span> <span class="nn">["git.mritd.me:172.16.0.37"]</span>
+  <span class="nn">[runners.cache]</span>
+</code></pre></div></div>
+
+<p><strong>注意，这里声明的 Volumes 会在每个运行的容器中都生效；也就是说 build 时新开启的每个容器都会被挂载这些目录</strong>；修改完成后重启 runner 容器即可，由于 runner 中没啥可保存的东西，所以可以直接 <code class="highlighter-rouge">docker-compose down &amp;&amp; docker-compose up -d</code> 重启</p>
+
+<h4 id="42创建基础镜像">4.2、创建基础镜像</h4>
+
+<p>由于示例项目是一个 Java 项目，而且是采用 Spring Boot 的，所以该项目想要运行起来只需要一个 java 环境即可，中间件已经被打包到了 jar 包中；以下是一个作为基础运行环境的 openjdk 镜像的 Dockerfile</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:edge 
+
+LABEL <span class="nv">maintainer</span><span class="o">=</span><span class="s2">"mritd &lt;mritd1234@gmail.com&gt;"</span>
+
+ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
+ENV PATH <span class="nv">$PATH</span>:/usr/lib/jvm/java-1.8-openjdk/jre/bin:/usr/lib/jvm/java-1.8-openjdk/bin
+
+RUN apk add <span class="nt">--update</span> bash curl <span class="nb">tar </span>wget ca-certificates unzip <span class="se">\</span>
+        openjdk8 font-adobe-100dpi ttf-dejavu fontconfig <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> /var/cache/apk/<span class="k">*</span> <span class="se">\</span>
+
+CMD <span class="o">[</span><span class="s2">"bash"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p><strong>这个 openjdk Dockerfile 升级到了 8.151 版本，并且集成了一些字体相关的软件，以解决在 Java 中某些验证码库无法运行问题，详见 <a href="https://mritd.me/2017/09/27/alpine-3.6-openjdk-8-bug/">Alpine 3.6 OpenJDK 8 Bug</a></strong>；使用这个 Dockerfile，在当前目录执行 <code class="highlighter-rouge">docker build -t mritd/openjdk:8 .</code> build 一个 openjdk8 的基础镜像，然后将其推送到私服，或者 Docker Hub 即可</p>
+
+<h4 id="43创建项目镜像">4.3、创建项目镜像</h4>
+
+<p>有了基本的 openjdk 的 docker 镜像后，针对于项目每次 build 都应该生成一个包含发布物的 docker 镜像，所以对于项目来说还需要一个项目本身的 Dockerfile；<strong>项目的 Dockerfile 有两种使用方式；一种是动态生成 Dockerfile，然后每次使用新生成的 Dockerfile 去 build；还有一种是写一个通用的 Dockerfile，build 时利用 ARG 参数传入变量</strong>；这里采用第二种方式，以下为一个可以反复使用的 Dockerfile</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM mritd/openjdk:8-144-01
+
+MAINTAINER mritd &lt;mritd1234@gmail.com&gt;
+
+ARG PROJECT_BUILD_FINALNAME
+
+ENV TZ <span class="s1">'Asia/Shanghai'</span>
+ENV PROJECT_BUILD_FINALNAME <span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="k">}</span>
+
+
+COPY build/libs/<span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="k">}</span>.jar /<span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="k">}</span>.jar
+
+CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"</span>,<span class="s2">"java -jar /</span><span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="k">}</span><span class="s2">.jar"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p><strong>该 Dockerfile 通过声明一个 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 变量来表示项目的发布物名称；然后将其复制到根目录下，最终利用 java 执行这个 jar 包；所以每次 build 之前只要能拿到项目发布物的名称即可</strong></p>
+
+<h4 id="44gradle-修改">4.4、Gradle 修改</h4>
+
+<p>上面已经创建了一个标准的通用型 Dockerfile，每次 build 镜像只要传入 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 这个最终发布物名称即可；对于发布物名称来说，最好不要固定死；当然不论是 Java 还是其他语言的项目我们都能将最终发布物变成一个固定名字，最不济可以写脚本重命名一下；但是不建议那么干，最好保留版本号信息，以便于异常情况下进入容器能够分辨；对于当前 Java 项目来说，想要拿到 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 很简单，我们只需要略微修改一下 Gradle 的 build 脚本，让其每次打包 jar 包时将项目的名称及版本号导出到文件中即可；同时这里也加入了镜像版本号的处理，Gradle 脚本修改如下</p>
+
+<ul>
+  <li>build.gradle 最后面增加如下</li>
+</ul>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">bootRepackage</span> <span class="o">{</span>
+
+    <span class="n">mainClass</span> <span class="o">=</span> <span class="s1">'me.mritd.TestProject.TestProjectApplication'</span>
+    <span class="n">executable</span> <span class="o">=</span> <span class="kc">true</span>
+
+    <span class="n">doLast</span> <span class="o">{</span>
+        <span class="n">File</span> <span class="n">envFile</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s2">"build/tmp/PROJECT_ENV"</span><span class="o">)</span>
+
+        <span class="n">println</span><span class="o">(</span><span class="s2">"Create ${archivesBaseName} ENV File ===&gt; "</span> <span class="o">+</span> <span class="n">envFile</span><span class="o">.</span><span class="na">createNewFile</span><span class="o">())</span>
+        <span class="n">println</span><span class="o">(</span><span class="s2">"Export ${archivesBaseName} Build Version ===&gt; ${version}"</span><span class="o">)</span>
+        <span class="n">envFile</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="s2">"export PROJECT_BUILD_FINALNAME=${archivesBaseName}-${version}\n"</span><span class="o">)</span>
+
+        <span class="n">println</span><span class="o">(</span><span class="s2">"Generate Docker image tag..."</span><span class="o">)</span>
+        <span class="n">envFile</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s2">"export BUILD_DATE=`date +%Y%m%d%H%M%S`\n"</span><span class="o">)</span>
+        <span class="n">envFile</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s2">"export IMAGE_NAME=mritd/test:`echo \${CI_BUILD_REF_NAME} | tr '/' '-'`-`echo \${CI_COMMIT_SHA} | cut -c1-8`-\${BUILD_DATE}\n"</span><span class="o">)</span>
+        <span class="n">envFile</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s2">"export LATEST_IMAGE_NAME=mritd/test:latest\n"</span><span class="o">)</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>这一步操作实际上是修改了 <code class="highlighter-rouge">bootRepackage</code> 这个 Task(不了解 Gradle 或者不是 Java 项目的请忽略)，在其结束后创建了一个叫 <code class="highlighter-rouge">PROJECT_ENV</code> 的文件，里面实际上就是写入了一些 bash 环境变量声明，以方便后面 source 一下这个文件拿到一些变量，然后用户 build 镜像使用</strong>，<code class="highlighter-rouge">PROJECT_ENV</code> 最终生成如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="o">=</span>TestProject-0.0.1-SNAPSHOT
+<span class="nb">export </span><span class="nv">BUILD_DATE</span><span class="o">=</span><span class="sb">`</span><span class="nb">date</span> +%Y%m%d%H%M%S<span class="sb">`</span>
+<span class="nb">export </span><span class="nv">IMAGE_NAME</span><span class="o">=</span>mritd/test:<span class="sb">`</span><span class="nb">echo</span> <span class="k">${</span><span class="nv">CI_BUILD_REF_NAME</span><span class="k">}</span> | <span class="nb">tr</span> <span class="s1">'/'</span> <span class="s1">'-'</span><span class="sb">`</span>-<span class="sb">`</span><span class="nb">echo</span> <span class="k">${</span><span class="nv">CI_COMMIT_SHA</span><span class="k">}</span> | <span class="nb">cut</span> <span class="nt">-c1-8</span><span class="sb">`</span>-<span class="k">${</span><span class="nv">BUILD_DATE</span><span class="k">}</span>
+<span class="nb">export </span><span class="nv">LATEST_IMAGE_NAME</span><span class="o">=</span>mritd/test:latest
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/gr6kc.png" alt="PROJECT_ENV" /></p>
+
+<h4 id="45创建-ci-配置文件">4.5、创建 CI 配置文件</h4>
+
+<p>一切准备就绪以后，就可以编写 CI 脚本了；GitLab 依靠读取项目根目录下的 <code class="highlighter-rouge">.gitlab-ci.yml</code> 文件来执行相应的 CI 操作；以下为测试项目的 <code class="highlighter-rouge">.gitlab-ci.yml</code> 配置</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 调试开启</span>
+<span class="c1">#before_script:</span>
+<span class="c1">#  - pwd</span>
+<span class="c1">#  - env</span>
+
+<span class="na">cache</span><span class="pi">:</span>
+  <span class="na">key</span><span class="pi">:</span> <span class="s">$CI_PROJECT_NAME/$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA</span>
+  <span class="na">paths</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">build</span>
+
+<span class="na">stages</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">build</span>
+  <span class="pi">-</span> <span class="s">deploy</span>
+
+<span class="na">auto-build</span><span class="pi">:</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">mritd/build:2.1.1</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">build</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">gradle --no-daemon clean assemble</span>
+  <span class="na">tags</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">test</span>
+
+<span class="na">deploy</span><span class="pi">:</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">mritd/docker-kubectl:v1.7.4</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">deploy</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">source build/tmp/PROJECT_ENV</span>
+    <span class="pi">-</span> <span class="s">echo "Build Docker Image ==&gt; ${IMAGE_NAME}"</span>
+    <span class="pi">-</span> <span class="s">docker build -t ${IMAGE_NAME} --build-arg PROJECT_BUILD_FINALNAME=${PROJECT_BUILD_FINALNAME} .</span>
+<span class="c1">#    - docker push ${IMAGE_NAME}</span>
+    <span class="pi">-</span> <span class="s">docker tag ${IMAGE_NAME} ${LATEST_IMAGE_NAME}</span>
+<span class="c1">#    - docker push ${LATEST_IMAGE_NAME}</span>
+<span class="c1">#    - docker rmi ${IMAGE_NAME} ${LATEST_IMAGE_NAME}</span>
+<span class="c1">#    - kubectl --kubeconfig ${KUBE_CONFIG} set image deployment/test test=$IMAGE_NAME</span>
+  <span class="na">tags</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">test</span>
+  <span class="na">only</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">master</span>
+    <span class="pi">-</span> <span class="s">develop</span>
+    <span class="pi">-</span> <span class="s">/^chore.*$/</span>
+</code></pre></div></div>
+
+<p><strong>关于 CI 配置的一些简要说明如下</strong></p>
+
+<h5 id="stages">stages</h5>
+
+<p>stages 字段定义了整个 CI 一共有哪些阶段流程，以上的 CI 配置中，定义了该项目的 CI 总共分为 <code class="highlighter-rouge">build</code>、<code class="highlighter-rouge">deploy</code> 两个阶段；GitLab CI 会根据其顺序执行对应阶段下的所有任务；<strong>在正常生产环境流程可以定义很多个，比如可以有 <code class="highlighter-rouge">test</code>、<code class="highlighter-rouge">publish</code>，甚至可能有代码扫描的 <code class="highlighter-rouge">sonar</code> 阶段等；这些阶段没有任何限制，完全是自定义的</strong>，上面的阶段定义好后在 CI 中表现如下图</p>
+
+<p><img src="https://cdn.oss.link/markdown/8c7gs.png" alt="stages" /></p>
+
+<h5 id="task">task</h5>
+
+<p>task 隶属于 stages 之下；也就是说一个阶段可以有多个任务，任务执行顺序默认不指定会并发执行；对于上面的 CI 配置来说 <code class="highlighter-rouge">auto-build</code> 和 <code class="highlighter-rouge">deploy</code> 都是 task，他们通过 <code class="highlighter-rouge">stage: xxxx</code> 这个标签来指定他们隶属于哪个 stage；当 Runner 使用 Docker 作为 build 提供者时，我们可以在 task 的 <code class="highlighter-rouge">image</code> 标签下声明该 task 要使用哪个镜像运行，不指定则默认为 Runner 注册时的镜像(这里是 debian)；<strong>同时 task 还有一个 <code class="highlighter-rouge">tags</code> 的标签，该标签指明了这个任务将可以在哪些 Runner 上运行；这个标签可以从 Runner 页面看到，实际上就是 Runner 注册时输入的哪个 tag；对于某些特殊的项目，比如 IOS 项目，则必须在特定机器上执行，所以此时指定 tags 标签很有用</strong>，当 task 运行后如下图所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/qzvlh.png" alt="Task" /></p>
+
+<p>除此之外 task 还能指定 <code class="highlighter-rouge">only</code> 标签用于限定那些分支才能触发这个 task，如果分支名字不满足则不会触发；<strong>默认情况下，这些 task 都是自动执行的，如果感觉某些任务太过危险，则可以通过增加 <code class="highlighter-rouge">when: manual</code> 改为手动执行；注意: 手动执行被 GitLab 认为是高权限的写操作，所以只有项目管理员才能手动运行一个 task，直白的说就是管理员才能点击</strong>；手动执行如下图所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/vcjci.png" alt="manual task" /></p>
+
+<h5 id="cache">cache</h5>
+
+<p>cache 这个参数用于定义全局那些文件将被 cache；<strong>在 GitLab CI 中，跨 stage 是不能保存东西的；也就是说在第一步 build 的操作生成的 jar 包，到第二部打包 docker image 时就会被删除；GitLab 会保证每个 stage 中任务在执行时都将工作目录(Docker 容器 中)还原到跟 GitLab 代码仓库中一模一样，多余文件及变更都会被删除</strong>；正常情况下，第一步 build 生成 jar 包应当立即推送到 nexus 私服；但是这里测试没有搭建，所以只能放到本地；但是放到本地下一个 task 就会删除它，所以利用 <code class="highlighter-rouge">cache</code> 这个参数将 <code class="highlighter-rouge">build</code> 目录 cache 住，保证其跨 stage 也能存在</p>
+
+<p><strong>关于 <code class="highlighter-rouge">.gitlab-ci.yml</code> 具体配置更完整的请参考 <a href="https://docs.gitlab.com/ee/ci/yaml/">官方文档</a></strong></p>
+
+<h3 id="五其他相关">五、其他相关</h3>
+
+<h4 id="51gitlab-内置环境变量">5.1、GitLab 内置环境变量</h4>
+
+<p>上面已经基本搞定了一个项目的 CI，但是有些变量可能并未说清楚；比如在创建的 <code class="highlighter-rouge">PROJECT_ENV</code> 文件中引用了 <code class="highlighter-rouge">${CI_COMMIT_SHA}</code> 变量；这种变量其实是 GitLab CI 的内置隐藏变量，这些变量在每次 CI 调用 Runner 运行某个任务时都会传递到对应的 Runner 的执行环境中；<strong>也就是说这些变量在每次的任务容器 SHELL 环境中都会存在，可以直接引用</strong>，具体的完整环境变量列表可以从 <a href="https://docs.gitlab.com/ee/ci/variables/">官方文档</a> 中获取；如果想知道环境变量具体的值，实际上可以通过在任务执行前用 <code class="highlighter-rouge">env</code> 指令打印出来，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/la9kn.png" alt="env" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/0175j.png" alt="env task" /></p>
+
+<h4 id="52gitlab-自定义环境变量">5.2、GitLab 自定义环境变量</h4>
+
+<p>在某些情况下，我们希望 CI 能自动的发布或者修改一些东西；比如将 jar 包上传到 nexus、将 docker 镜像 push 到私服；这些动作往往需要一个高权限或者说有可写入对应仓库权限的账户来支持，但是这些账户又不想写到项目的 CI 配置里；因为这样很不安全，谁都能看到；此时我们可以将这些敏感变量写入到 GitLab 自定义环境变量中，GitLab 会像对待内置变量一样将其传送到 Runner 端，以供我们使用；GitLab 中自定义的环境变量可以有两种，一种是项目级别的，只能够在当前项目使用，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/ennug.png" alt="project env" /></p>
+
+<p>另一种是组级别的，可以在整个组内的所有项目中使用，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/si8ig.png" alt="group env" /></p>
+
+<p>这两种变量添加后都可以在 CI 的脚本中直接引用</p>
+
+<h4 id="53kubernetes-集成">5.3、Kubernetes 集成</h4>
+
+<p>对于 Kubernetes 集成实际上有两种方案，一种是对接 Kubernetes 的 api，纯代码实现；另一种取巧的方案是调用 kubectl 工具，用 kubectl 工具来实现滚动升级；这里采用后一种取巧的方式，将 kubectl 二进制文件封装到镜像中，然后在 deploy 阶段使用这个镜像直接部署就可以</p>
+
+<p><img src="https://cdn.oss.link/markdown/bu17r.png" alt="kubectl" /></p>
+
+<p>其中 <code class="highlighter-rouge">mritd/docker-kubectl:v1.7.4</code> 这个镜像的 Dockerfile 如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM docker:dind 
+
+LABEL <span class="nv">maintainer</span><span class="o">=</span><span class="s2">"mritd &lt;mritd1234@gmail.com&gt;"</span>
+
+ARG <span class="nv">TZ</span><span class="o">=</span><span class="s2">"Asia/Shanghai"</span>
+
+ENV TZ <span class="k">${</span><span class="nv">TZ</span><span class="k">}</span>
+
+ENV KUBE_VERSION v1.8.0
+
+RUN apk upgrade <span class="nt">--update</span> <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> apk add bash tzdata wget ca-certificates <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> wget https://storage.googleapis.com/kubernetes-release/release/<span class="k">${</span><span class="nv">KUBE_VERSION</span><span class="k">}</span>/bin/linux/amd64/kubectl <span class="nt">-O</span> /usr/local/bin/kubectl <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> <span class="nb">chmod</span> +x /usr/local/bin/kubectl <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> <span class="nb">ln</span> <span class="nt">-sf</span> /usr/share/zoneinfo/<span class="k">${</span><span class="nv">TZ</span><span class="k">}</span> /etc/localtime <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="k">${</span><span class="nv">TZ</span><span class="k">}</span> <span class="o">&gt;</span> /etc/timezone <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> /var/cache/apk/<span class="k">*</span>
+
+CMD <span class="o">[</span><span class="s2">"/bin/bash"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>这里面的 <code class="highlighter-rouge">${KUBE_CONFIG}</code> 是一个自定义的环境变量，对于测试环境我将配置文件直接挂载入了容器中，然后 <code class="highlighter-rouge">${KUBE_CONFIG}</code> 只是指定了一个配置文件位置，实际生产环境中可以选择将配置文件变成自定义环境变量使用</p>
+
+<h4 id="54gitlab-ci-总结">5.4、GitLab CI 总结</h4>
+
+<p>关于 GitLab CI 上面已经讲了很多，但是并不全面，也不算太细致；因为这东西说起来实际太多了，现在目测已经 1W 多字了；以下总结一下 GitLab CI 的总体思想，当思路清晰了以后，我想后面的只是查查文档自己试一试就行了</p>
+
+<p><strong>CS 架构</strong></p>
+
+<p>GitLab 作为 Server 端，控制 Runner 端执行一系列的 CI 任务；代码 clone 等无需关心，GitLab 会自动处理好一切；Runner 每次都会启动新的容器执行 CI 任务</p>
+
+<p><strong>容器即环境</strong></p>
+
+<p>在 Runner 使用 Docker build 的前提下；<strong>所有依赖切换、环境切换应当由切换不同镜像实现，即 build 那就使用 build 的镜像，deploy 就用带有 deploy 功能的镜像；通过不同镜像容器实现完整的环境隔离</strong></p>
+
+<p><strong>CI即脚本</strong></p>
+
+<p>不同的 CI 任务实际上就是在使用不同镜像的容器中执行 SHELL 命令，自动化 CI 就是执行预先写好的一些小脚本</p>
+
+<p><strong>敏感信息走环境变量</strong></p>
+
+<p>一切重要的敏感信息，如账户密码等，不要写到 CI 配置中，直接放到 GitLab 的环境变量中；GitLab 会保证将其推送到远端 Runner 的 SHELL 变量中</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/14/ohmydocker/" data-toggle="tooltip" data-placement="top" title="ohmydocker 镜像加速">
+                        Previous<br>
+                        <span>ohmydocker 镜像加速</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/" data-toggle="tooltip" data-placement="top" title="Kubernetes TLS bootstrapping 那点事">
+                        Next<br>
+                        <span>Kubernetes TLS bootstrapping 那点事</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/11/28/ci-cd-gitlab-ci";
+    var disqus_url = "https://mritd.me/2017/11/28/ci-cd-gitlab-ci/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

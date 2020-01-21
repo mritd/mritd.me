@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Linux 笔记">
+    <meta name="keywords"  content="Linux">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Linux 笔记 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Linux 笔记</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on June 14, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一基础">一、基础</h2>
+
+<h3 id="1基础命令">1、基础命令</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">tty</code> : 查看当前终端类型</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>返回值</th>
+      <th>终端类型</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/dev/pst/#</td>
+      <td>伪终端</td>
+    </tr>
+    <tr>
+      <td>/dev/tty#</td>
+      <td>虚拟终端</td>
+    </tr>
+    <tr>
+      <td>/dev/console</td>
+      <td>物理终端</td>
+    </tr>
+    <tr>
+      <td>/dev/ttys#</td>
+      <td>串行终端</td>
+    </tr>
+  </tbody>
+</table>
+
+<!--more-->
+
+<ul>
+  <li><code class="highlighter-rouge">who</code> : 查看登录用户</li>
+  <li><code class="highlighter-rouge">bashname</code> : 查看目录基名</li>
+  <li><code class="highlighter-rouge">dirname</code> : 查看目录名</li>
+  <li><code class="highlighter-rouge">type</code> : 查看命令类型</li>
+  <li><code class="highlighter-rouge">where</code> : 命令在哪(zsh)</li>
+  <li><code class="highlighter-rouge">hash</code> : 查看命令缓存</li>
+  <li><code class="highlighter-rouge">which</code> : 查看命令所在位置</li>
+  <li><code class="highlighter-rouge">man</code> : 查看命令帮助，可为 命令、程序配置文件格式、系统调用、库调用、游戏及其他不便归类的文件提供操作手册，以下为 man 下的快捷键:
+    <ul>
+      <li>space : 向下翻屏</li>
+      <li>b : 向上翻屏</li>
+      <li>Enter : 向下翻一行</li>
+      <li>k : 向上翻一行</li>
+      <li>/:keyword : 向下查找文字</li>
+      <li>?:keyword : 向上查找文字</li>
+      <li>n : 向下循环查找</li>
+      <li>N : 向上循环查找</li>
+      <li>q : 退出</li>
+    </ul>
+  </li>
+  <li>man 分段机制，<code class="highlighter-rouge">man [num] commond</code> 查看指定章节的帮助手册
+    <ul>
+      <li>1、用户命令</li>
+      <li>2、系统调用</li>
+      <li>3、库调用</li>
+      <li>4、设备文件</li>
+      <li>5、文件格式</li>
+      <li>6、游戏</li>
+      <li>7、杂项</li>
+      <li>8、管理命令</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">man -k</code> : 查看命令章节信息(模糊查找)
+    <ul>
+      <li>whatis : 查看命令章节信息(精确查找)</li>
+      <li>通过 makewhatis 手动生成数据库信息</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">info</code> : 获取在线文档(/usr/share/doc/ 离线文档)</li>
+  <li><code class="highlighter-rouge">shutdown TIME</code> : 关机
+    <ul>
+      <li><code class="highlighter-rouge">-r</code> : 重启</li>
+      <li><code class="highlighter-rouge">-h</code> : 关机</li>
+      <li><code class="highlighter-rouge">-c</code> : 取消重启或关机</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">shutdown</code> 时间格式 :
+    <ul>
+      <li><code class="highlighter-rouge">now</code> : 立即关机</li>
+      <li><code class="highlighter-rouge">+#</code> : n 分钟后关机</li>
+      <li><code class="highlighter-rouge">hh:mm</code> : 指定时间关机</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">date</code> : 时间管理
+    <ul>
+      <li><code class="highlighter-rouge">date MMDDhhmm[[CC]YY][.ss]</code> : 设置时间</li>
+      <li><code class="highlighter-rouge">date [+FORMAT]</code> : 指定格式显示时间，具体 man 查看格式</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">hwclock</code> : 硬件时间管理
+    <ul>
+      <li><code class="highlighter-rouge">-s</code> : 把软件时钟设置为硬件时钟</li>
+      <li><code class="highlighter-rouge">-w</code> : 把硬件时钟设置为软件始终</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">hitory</code> : 查看命令历史
+    <ul>
+      <li><code class="highlighter-rouge">-c</code> : 清除命令历史</li>
+      <li><code class="highlighter-rouge">-d #</code> : 删除指定命令</li>
+      <li><code class="highlighter-rouge">-a</code> : 追加当前命令到命令历史</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">ls</code> : 列出目录中内容
+    <ul>
+      <li><code class="highlighter-rouge">-a</code> : 显示所有文件，包含隐藏文件</li>
+      <li><code class="highlighter-rouge">-A</code> : 显示所有文件，但不现实 . .. 目录</li>
+      <li><code class="highlighter-rouge">--color</code> : 设置文件颜色配置，默认 –color=always</li>
+      <li><code class="highlighter-rouge">-d</code> : 如果是目录，则显示目录本身属性，并非展示其目录下文件内容</li>
+      <li><code class="highlighter-rouge">-r</code> : 逆序显示</li>
+      <li><code class="highlighter-rouge">-R</code> : 递归现实</li>
+      <li><code class="highlighter-rouge">-h</code> : 格式化文件大小</li>
+      <li><code class="highlighter-rouge">-l</code> : 长格式显示每个文件具体信息</li>
+      <li><code class="highlighter-rouge">-i</code> : 显示 索引节点号</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">file</code> : 查看文件内容格式</li>
+  <li><code class="highlighter-rouge">echo</code> : 回显(打印)内容
+    <ul>
+      <li><code class="highlighter-rouge">-e</code> : 支持控制符显示</li>
+      <li><code class="highlighter-rouge">-e "\033[##m文本\033[0m"</code> : 设置文本颜色，## 第一个事前景色，3前景色4背景色，第二个是颜色，1~7，多控制用 ; 分隔</li>
+      <li><code class="highlighter-rouge">-n</code> : 不为显示的内容自动换行</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">cat</code> : 文件连接显示命令
+    <ul>
+      <li><code class="highlighter-rouge">-E</code> : 显示结束符 <code class="highlighter-rouge">$</code>，在 Linux 下 <code class="highlighter-rouge">$</code> 为换行符，Windows 下为 <code class="highlighter-rouge">\n$</code></li>
+      <li><code class="highlighter-rouge">-v</code> : 显示非打印字符</li>
+      <li><code class="highlighter-rouge">-e</code> : 显示全部非打印符，包括换行符，即全字符显示</li>
+      <li><code class="highlighter-rouge">-n</code> : 显示行号</li>
+      <li><code class="highlighter-rouge">-s</code> : 压缩显示空白行，多个连续空白行将显示为一个空白行</li>
+      <li><code class="highlighter-rouge">cat file1 file2</code> : 连接并显示两个文件</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">tac</code> : 与 cat 相同，只不过按行逆序显示</li>
+  <li><code class="highlighter-rouge">more</code> : 分页查看文件内容，翻到文件尾部以后则不可以向前翻页，自动退出</li>
+  <li><code class="highlighter-rouge">less</code> : 与 man 相同，支持前后翻页，q 退出</li>
+  <li><code class="highlighter-rouge">head</code> : 查看文件头部内容，默认 10 行
+    <ul>
+      <li><code class="highlighter-rouge">-n #</code> : 显示头部 N 行</li>
+      <li><code class="highlighter-rouge">#</code> : 与 -n # 相同</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">tail</code> : 查看文件尾部内容,默认 10行
+    <ul>
+      <li><code class="highlighter-rouge">-f</code> : 持续监测并显示文件内容</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">cp</code> : 复制文件
+    <ul>
+      <li><code class="highlighter-rouge">-r</code> : 递归复制</li>
+      <li><code class="highlighter-rouge">-i</code> : 交互式</li>
+      <li><code class="highlighter-rouge">-a</code> : 归档模式，相当于 <code class="highlighter-rouge">-dr</code>，链接文件不追溯源文件，cp 默认追溯源文件</li>
+      <li><code class="highlighter-rouge">-p</code> : 保持原有属性</li>
+      <li><code class="highlighter-rouge">-f</code> : 强制覆盖</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">touch</code> : 更改时间戳
+    <ul>
+      <li><code class="highlighter-rouge">-c</code> : 不创建文件</li>
+      <li><code class="highlighter-rouge">-t</code> : 明确指定时间</li>
+      <li><code class="highlighter-rouge">-a</code> : 改变访问时间</li>
+      <li><code class="highlighter-rouge">-m</code> : 改变修改时间</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">stat</code> : 查看文件状态元数据</li>
+  <li><code class="highlighter-rouge">wc</code> : 文本统计命令
+    <ul>
+      <li><code class="highlighter-rouge">-l</code> : 查看文件有多少行</li>
+      <li><code class="highlighter-rouge">-c</code> : 统计文本有多少字节</li>
+      <li><code class="highlighter-rouge">-w</code> : 统计文本有多少单词</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">tr</code> : 从标准输入到标准输出的字符替换，如 <code class="highlighter-rouge">cat /etc/passwd | tr 'a-z' 'A-Z'</code>
+    <ul>
+      <li><code class="highlighter-rouge">-d</code> : 删除指定字符</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">cut</code> : 切割字符
+    <ul>
+      <li><code class="highlighter-rouge">-d'字符'</code> : 指定分段字符</li>
+      <li><code class="highlighter-rouge">-f#</code> : 指定要显示 的列，如 <code class="highlighter-rouge">cut -d':' -f1 /etc/passwd</code></li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">tee</code> : 将标准输入内容重定向到标准输出并在此发出标准输出，常用于同时要显示/保存标准输入的内容并且再将其通过管道转发至另一个程序的标准输入</li>
+  <li><code class="highlighter-rouge">sort</code> : 文本排序
+    <ul>
+      <li><code class="highlighter-rouge">-f</code> : 忽略大小写</li>
+      <li><code class="highlighter-rouge">-n</code> : 对数值排序</li>
+      <li><code class="highlighter-rouge">-t</code> : 指定分隔符</li>
+      <li><code class="highlighter-rouge">-k</code> : 指定排序字段</li>
+      <li><code class="highlighter-rouge">-u</code> : 重复行只显示一次</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">uniq</code> : 去重统计
+    <ul>
+      <li><code class="highlighter-rouge">-c</code> : 显示每行的重复次数</li>
+      <li><code class="highlighter-rouge">-d</code> : 仅显示重复的行(&gt;1)</li>
+      <li><code class="highlighter-rouge">-u</code> : 显示从未重复的行</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">md5sum</code> : 获取 md5 摘要</li>
+  <li><code class="highlighter-rouge">sha1sum</code> : 获取 sha1 加密信息</li>
+  <li><code class="highlighter-rouge">read VARNAME</code> : 从标准输入读取一个输入值并赋值给变量
+    <ul>
+      <li><code class="highlighter-rouge">-p</code> : 显示提示信息</li>
+      <li><code class="highlighter-rouge">-t</code> : 设置超时时间</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">watch</code> : 持续运行命令
+    <ul>
+      <li><code class="highlighter-rouge">-n #</code> : 每隔 # 秒运行其后面的命令</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="2linux-哲学">2、Linux 哲学</h3>
+
+<ul>
+  <li>一切皆文件</li>
+  <li>没有返回消息就是最好的消息，不要打扰用户</li>
+  <li>由众多目的单一的小应用程序组成，每个程序完成单一功能</li>
+  <li>组合目的单一的小程序完成复杂任务</li>
+  <li>使用文本保存配置文件</li>
+  <li>提供机制，而非策略</li>
+</ul>
+
+<h3 id="3bash-特性">3、bash 特性</h3>
+
+<h4 id="31引用">3.1、引用</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">''</code> : 强引用，不会出现变量替换</li>
+  <li><code class="highlighter-rouge">""</code> : 弱引用，会产生变量替换</li>
+  <li><code class="highlighter-rouge"> </code><code class="highlighter-rouge"> </code> : 命令引用，用于替换成命令执行结果</li>
+  <li><code class="highlighter-rouge">${}</code> : 引用变量，同上
+    <ul>
+      <li><code class="highlighter-rouge">${VARNAME:-VALUE}</code> : 如果 VARNAME 不为空，则返回其本身，否则返回 VALUE 的值，常用于设置变量默认值，<strong>注意 VARNAME 并未被改变</strong></li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="32命令行展开">3.2、命令行展开</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">{}</code> 代表命令行展开，最简单的应用就是创建多层目录，如 <code class="highlighter-rouge">mkdir -p a/{b,c}</code>，最终将创建 <code class="highlighter-rouge">a/b</code> 和 <code class="highlighter-rouge">a/c</code> 文件夹。</li>
+</ul>
+
+<h4 id="33命令历史">3.3、命令历史</h4>
+
+<p>bash 默认保存以前执行过的命令，使用 <code class="highlighter-rouge">history</code> 命令查看，默认保存1000行在 <code class="highlighter-rouge">~/.bash_history</code> 中。</p>
+
+<ul>
+  <li><code class="highlighter-rouge">!#</code> : 快速执行命令历史中#号命令</li>
+  <li><code class="highlighter-rouge">!!</code> : 快速执行上一条命令</li>
+  <li><code class="highlighter-rouge">!-#</code> : 快速执行命令历史中倒数#号命令</li>
+  <li><code class="highlighter-rouge">!$</code> : 引用上条命令的参数</li>
+  <li><code class="highlighter-rouge">!str</code> : 快速执行历史中最近的以str 开始的命令</li>
+</ul>
+
+<h4 id="34命令别名">3.4、命令别名</h4>
+
+<p>使用 <code class="highlighter-rouge">alias</code> 命令可显示系统上所有创建的别名。
+在命令前加反斜杠代表使用命令本身，如 <code class="highlighter-rouge">\ls</code>。
+使用 <code class="highlighter-rouge">alias 命令别名='原始命令'</code> 定义命令别名。
+使用 <code class="highlighter-rouge">unalias 命令别名</code> 撤销一个命令的别名。</p>
+
+<h4 id="35globbing-文件名通配符">3.5、globbing 文件名通配符</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">*</code> : 表示任意长度的任意字符</li>
+  <li><code class="highlighter-rouge">?</code> : 任意单个字符</li>
+  <li><code class="highlighter-rouge">[]</code> : 匹配指定字符范围内的任意单个字符
+    <ul>
+      <li>[a-z] : 所有英文字符，不区分大小写</li>
+      <li>[0-9] : 所有数字</li>
+      <li>[[:upper:]] : 所有大写字母</li>
+      <li>[[:lower:]] : 所有小写字母</li>
+      <li>[[:alpha:]] : 所有字母</li>
+      <li>[[:digit:]] : 所有数字</li>
+      <li>[[:alnum:]] : 数字加字母</li>
+      <li>[[:space:]] : 空白符</li>
+      <li>[[:punct:]] : 所有标点符号</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">[^]</code> : 指定范围以外，取反操作</li>
+</ul>
+
+<h4 id="36bash-快捷键">3.6、bash 快捷键</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">Ctrl+a</code> : 跳转到行首</li>
+  <li><code class="highlighter-rouge">Ctrl+e</code> : 跳转到行尾</li>
+  <li><code class="highlighter-rouge">Ctrl+u</code> : 删除光标到行首</li>
+  <li><code class="highlighter-rouge">Ctrl+k</code> : 删除光标到行尾</li>
+  <li><code class="highlighter-rouge">Ctrl+z</code> : 后台当前程序</li>
+</ul>
+
+<h4 id="37bash-补全">3.7、bash 补全</h4>
+
+<ul>
+  <li>命令补全 : tab 执行命令补全，默认从 PATH 变量从左向右补全</li>
+  <li>路径补全 : tab 执行路径不全</li>
+</ul>
+
+<h4 id="38bash-变量">3.8、bash 变量</h4>
+
+<ul>
+  <li>本地变量 : 只对当前 shell 进程有效，对其子 shell 其他 shell 都无效，使用 <code class="highlighter-rouge">[set] var=Value</code> 声明</li>
+  <li>局部变量 : 只对指定代码块有效，使用 <code class="highlighter-rouge">local var=value</code> 声明</li>
+  <li>环境变量 : 对当前 shell 和其子 shell 有效，使用 <code class="highlighter-rouge">export var=value</code> 声明</li>
+  <li>位置变量 : 用于在脚本中引用传递的参数，如 <code class="highlighter-rouge">$1</code></li>
+  <li>特殊变量 :
+    <ul>
+      <li><code class="highlighter-rouge">$0</code> : 脚本名称本身</li>
+      <li><code class="highlighter-rouge">$?</code> : 上一条命令执行状态，范围是 <code class="highlighter-rouge">0~255</code>；<code class="highlighter-rouge">0</code> 成功，<code class="highlighter-rouge">1~255</code> 失败</li>
+      <li><code class="highlighter-rouge">$$</code> :</li>
+      <li><code class="highlighter-rouge">$!</code> :</li>
+      <li><code class="highlighter-rouge">$#</code> :</li>
+      <li><code class="highlighter-rouge">$*</code> :</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="4fhs-文件目录层级标准">4、FHS 文件目录层级标准</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>目录</th>
+      <th>功能</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/boot</td>
+      <td>系统启动文件以及grub(引导加载器bootloader)、vmlinuz(内核)、initrd(完整的小Linux系统)、ramfs文件</td>
+    </tr>
+    <tr>
+      <td>/dev</td>
+      <td>设备文件：块设备(随机访问无顺序)、字符设备(线性访问有顺序)、设备号(主设备号(major)和次设备号(minor))</td>
+    </tr>
+    <tr>
+      <td>/etc</td>
+      <td>配置文件</td>
+    </tr>
+    <tr>
+      <td>/etc/sysconfig</td>
+      <td>系统级别的软件配置</td>
+    </tr>
+    <tr>
+      <td>/etc/init.d</td>
+      <td>系统运行级别脚本</td>
+    </tr>
+    <tr>
+      <td>/home</td>
+      <td>普通用户家目录</td>
+    </tr>
+    <tr>
+      <td>/lib</td>
+      <td>库文件和内核模块文件(.a 静态库、.so 动态库)</td>
+    </tr>
+    <tr>
+      <td>/lost+found</td>
+      <td>存储断电等情况造成的尚未保存的文件</td>
+    </tr>
+    <tr>
+      <td>/media</td>
+      <td>挂载移动设备目录</td>
+    </tr>
+    <tr>
+      <td>/mnt</td>
+      <td>挂载硬盘等设备目录</td>
+    </tr>
+    <tr>
+      <td>/misc</td>
+      <td>杂项</td>
+    </tr>
+    <tr>
+      <td>/opt</td>
+      <td>早起安装第三方软件目录</td>
+    </tr>
+    <tr>
+      <td>/proc</td>
+      <td>伪文件系统，默认是空，系统启动后则不为空，存放内核映射文件，一般为内核可调参数、内核工作数据；主要用于内核调优</td>
+    </tr>
+    <tr>
+      <td>/sys</td>
+      <td>伪文件系统；硬件设备相关属性 映射文件  比如修改磁盘I/O调度</td>
+    </tr>
+    <tr>
+      <td>/srv</td>
+      <td>为服务提供数据存储位置</td>
+    </tr>
+    <tr>
+      <td>/tmp</td>
+      <td>临时文件 任何人都可以在里面创建文件 但只能删除自己的  drwxrwxrwt</td>
+    </tr>
+    <tr>
+      <td>/var</td>
+      <td>可变化文件</td>
+    </tr>
+    <tr>
+      <td>/bin</td>
+      <td>二进制可执行文件(任意用户可执行)</td>
+    </tr>
+    <tr>
+      <td>/sbin</td>
+      <td>管理员二进制可执行程序</td>
+    </tr>
+    <tr>
+      <td>/usr</td>
+      <td>shared read-only 全局共享只读文件</td>
+    </tr>
+    <tr>
+      <td>/usr/include</td>
+      <td>头文件，编译安装软件时会使用</td>
+    </tr>
+    <tr>
+      <td>/usr/bin</td>
+      <td>全局只读共享二进制程序</td>
+    </tr>
+    <tr>
+      <td>/usr/sbin</td>
+      <td>全局只读共享管理员二进制程序</td>
+    </tr>
+    <tr>
+      <td>/usr/local</td>
+      <td>第三方软件安装目录</td>
+    </tr>
+    <tr>
+      <td>/usr/local/bin</td>
+      <td>第三方软件二进制可执行文件</td>
+    </tr>
+    <tr>
+      <td>/usr/local/sbin</td>
+      <td>第三方软件管理员命令</td>
+    </tr>
+    <tr>
+      <td>/usr/local/lib</td>
+      <td>第三方软件库文件</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="5linux-文件类型">5、Linux 文件类型</h3>
+
+<h4 id="51linux-文件类型">5.1、Linux 文件类型</h4>
+
+<ul>
+  <li>普通文件 : <code class="highlighter-rouge">-/f</code> 普通存储的文件，Linux 并不根据文件后缀区分文件类型</li>
+  <li>目录文件 : <code class="highlighter-rouge">d</code> 实现路径映射</li>
+  <li>链接文件 : <code class="highlighter-rouge">l</code> 软连接用于映射具体文件；硬链接实际上与源文件的 <strong>索引节点号</strong> 相同，可视为同源文件一样操作，参考 <a href="https://www.ibm.com/developerworks/cn/linux/l-cn-hardandsymb-links/">Linux软连接与硬连接</a>。</li>
+  <li>设备文件 <code class="highlighter-rouge">c/b</code> : 鼠标键盘等为 <strong>字符设备</strong>，有存取顺序，c 标识；硬盘等称之为 <strong>块设备</strong>，可实现随机存取，b 标识。</li>
+  <li>管道文件 <code class="highlighter-rouge">p</code> : 用于链接两个命令的文件</li>
+  <li>套接字文件 <code class="highlighter-rouge">s</code> : 用于网络传输时进程间通讯</li>
+</ul>
+
+<h4 id="52linux-时间戳">5.2、Linux 时间戳</h4>
+
+<ul>
+  <li>访问时间: 最近一次访问文件的时间。</li>
+  <li>修改时间: 修改文件内容的最近时间，即文件真实内容的写时间。</li>
+  <li>改变时间: 文件元数据改变时间，即文件的实际类型、权限等改变时间，注意修改时间、访问时间也算是文件的元数据，当两者改变时，改变时间同样会更新。</li>
+</ul>
+
+<h3 id="6用户管理">6、用户管理</h3>
+
+<h4 id="61用户类别">6.1、用户类别</h4>
+
+<ul>
+  <li>管理员 : 0</li>
+  <li>普通用户 : 1-65535
+    <ul>
+      <li>系统用户 : 1-499</li>
+      <li>登录用户 : 500-65535</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="62相关配置文件">6.2、相关配置文件</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">/etc/passwd</code> : 用户主信息存储文件
+    <ul>
+      <li>文件格式 : <code class="highlighter-rouge">用户名:x:UID:GID:finger(备注信息):HOME:SHELL</code></li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">/etc/shadow</code> : 用户密码存储文件
+    <ul>
+      <li>文件格式 : <code class="highlighter-rouge">用户名:加密后的密码:最近一次密码修改时间:最短使用期限:最长使用期限:警告区间:非活动区间:账号过期时间:预留</code></li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">/etc/group</code> : 用户组信息存储文件</li>
+  <li><code class="highlighter-rouge">/etc/gshadow</code> : 用户组密码存储文件</li>
+</ul>
+
+<h4 id="63创建用户及用户组">6.3、创建用户及用户组</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">useradd USERNAME</code> : 用于创建用户
+    <ul>
+      <li><code class="highlighter-rouge">-u</code> : 指定用户 UID</li>
+      <li><code class="highlighter-rouge">-g</code> : 指定用户的基本组 GID，但是GID必须预先存在</li>
+      <li><code class="highlighter-rouge">-G</code> : 指定用户的额外组 GID，组必须事先存在</li>
+      <li><code class="highlighter-rouge">-d</code> : 设置用户的家目录，不能实现复制</li>
+      <li><code class="highlighter-rouge">-c</code> : 备注信息</li>
+      <li><code class="highlighter-rouge">-s</code> : 指定用户 shell，应使用 <code class="highlighter-rouge">/etc/shells</code> 文件中指定的安全 shell，否则可能无法登录系统</li>
+      <li><code class="highlighter-rouge">-r</code> : 指定用户为系统用户，UID 在 1~499 之间，不会给用户创建家目录</li>
+      <li><code class="highlighter-rouge">-p</code> : 直接指定密码</li>
+      <li><code class="highlighter-rouge">-m</code> : 创建用户时自动创建家目录(默认)</li>
+      <li><code class="highlighter-rouge">-M</code> : 创建用户时不创建家目录</li>
+      <li><code class="highlighter-rouge">-D</code> : 为 useradd 命令指定创建用户时的默认值</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">groupadd GRPNAME</code> : 用于创建用户组
+    <ul>
+      <li><code class="highlighter-rouge">-g</code> : 创建组并为其指定 GID</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="65删除用户及用户组">6.5、删除用户及用户组</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">userdel USERNAME</code> : 删除指定用户，默认不移除家目录
+    <ul>
+      <li><code class="highlighter-rouge">-f</code>, <code class="highlighter-rouge">--force</code> : 即使不属于此用户，也强制删除文件</li>
+      <li><code class="highlighter-rouge">-h</code>, <code class="highlighter-rouge">--help</code> : 显示此帮助信息并推出</li>
+      <li><code class="highlighter-rouge">-r</code>, <code class="highlighter-rouge">--remove</code> : 删除主目录和邮件池</li>
+      <li><code class="highlighter-rouge">-R</code>, <code class="highlighter-rouge">--root CHROOT_DIR</code> : chroot 到的目录</li>
+      <li><code class="highlighter-rouge">-Z</code>, <code class="highlighter-rouge">--selinux-user</code> : 为用户删除所有的 SELinux 用户映射</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">groupdel GRPNAME</code> : 删除用户组，删除用户基本组，用户未删除时无法操作</li>
+</ul>
+
+<h4 id="66用户修改">6.6、用户修改</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">chsh USERNAME</code> : 改变用户默认 shell</li>
+  <li><code class="highlighter-rouge">chfn USERNAME</code> : 更改用户描述信息</li>
+  <li><code class="highlighter-rouge">usermod USERNAME</code> : 改变用户信息
+    <ul>
+      <li><code class="highlighter-rouge">-u</code> : 改变用户 UID</li>
+      <li><code class="highlighter-rouge">-g</code> : 改变用户 GID</li>
+      <li><code class="highlighter-rouge">-G</code> : 改变用户附加组，默认会覆盖原来的附加组，通常和 <code class="highlighter-rouge">-a</code> 一起使用</li>
+      <li><code class="highlighter-rouge">-a</code> : 修改附加组时保持追加，不覆盖原有附加组</li>
+      <li><code class="highlighter-rouge">-c</code> : 修改用户注释</li>
+      <li><code class="highlighter-rouge">-d</code> : 修改用户家目录，默认不会迁移用户的家目录，如果要迁移需要配合 <code class="highlighter-rouge">-m</code></li>
+      <li><code class="highlighter-rouge">-m</code> : 修改时家目录时迁移文件</li>
+      <li><code class="highlighter-rouge">-s</code> : 指定新的 shell</li>
+      <li><code class="highlighter-rouge">-l</code> : 更改用户名</li>
+      <li><code class="highlighter-rouge">-L</code> : 锁定用户账号</li>
+      <li><code class="highlighter-rouge">-U</code> : 解锁用户账号</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">chage</code> : 设置密码期限
+    <ul>
+      <li><code class="highlighter-rouge">-d</code> : 设置最近密码修改时间</li>
+      <li><code class="highlighter-rouge">-E</code> : 设置密码过期时间</li>
+      <li><code class="highlighter-rouge">-I</code> : 设置密码失效时间</li>
+      <li><code class="highlighter-rouge">-m</code> : 设置密码最短使用期限</li>
+      <li><code class="highlighter-rouge">-M</code> : 设置密码最长使用期限</li>
+      <li><code class="highlighter-rouge">-W</code> : 设置警告时间</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">groupmod GRPNAME</code> : 用户组信息修改
+    <ul>
+      <li><code class="highlighter-rouge">-g</code> : 改变组的 GID</li>
+      <li><code class="highlighter-rouge">-n</code> : 改变组名</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">newgrp GRPNAME</code> : 切换用户组</li>
+</ul>
+
+<h3 id="7管道与重定向">7、管道与重定向</h3>
+
+<h4 id="71输入重定向">7.1、输入重定向</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">&lt;</code> : 用于输入重定向，比如讲一个文本内容重定向到一个命令，如<code class="highlighter-rouge">tr 'a-z' 'A-Z' &lt; /etc/passwd</code></li>
+  <li><code class="highlighter-rouge">&lt;&lt;</code> : 此处文档，常用于生成菜单，同 <code class="highlighter-rouge">EOF</code> 结束符一起使用，如下所示 :</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
+1、test1
+2、test2
+3、test4
+4、test4
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<h4 id="72输出重定向">7.2、输出重定向</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">&gt;</code> : 覆盖输出重定向，该重定向会覆盖文件上一次的内容，重新写入新内容。</li>
+  <li><code class="highlighter-rouge">&gt;&gt;</code> : 追加输出重定向，该重定向会将新内容追加到文件末尾，不会覆盖原来的文件内容</li>
+  <li><code class="highlighter-rouge">set -C</code> : 禁止使用覆盖重定向到已存在的文件</li>
+  <li><code class="highlighter-rouge">set +C</code> : 与上面的相反</li>
+  <li><code class="highlighter-rouge">&gt;|</code> : 在 <code class="highlighter-rouge">set -C</code> 下强制覆盖重定向</li>
+  <li><code class="highlighter-rouge">2&gt;</code> : 错误输出覆盖重定向</li>
+  <li><code class="highlighter-rouge">2&gt;&gt;</code> : 错误输出追加重定向</li>
+  <li><code class="highlighter-rouge">&amp;&gt;</code> : 同时重定向错误输出和标准输出</li>
+</ul>
+
+<h4 id="73管道">7.3、管道</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">|</code> : 管道用于将前一个命令的输出重定向为第二个命令的输入，配合 <code class="highlighter-rouge">tee</code> 命令可实现 T 形管道</li>
+</ul>
+
+<h2 id="二bash-编程">二、bash 编程</h2>
+
+<ul>
+  <li><code class="highlighter-rouge">bash -n FILE</code> : 测试 bash 脚本语法</li>
+</ul>
+
+<h3 id="1基础语法">1、基础语法</h3>
+
+<h4 id="11列表生成">1.1、列表生成</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">{startNum..endNum}</code> : 生成数字列表，如 <code class="highlighter-rouge">{1..10}</code> 展开为1~10</li>
+  <li><code class="highlighter-rouge">seq</code> : 生成列表命令
+    <ul>
+      <li><code class="highlighter-rouge">seq start end</code> : 从一个指定的数值开始，依次生成到另一个数直接薇</li>
+      <li><code class="highlighter-rouge">seq start Steps end</code> : 从第一个数值开始，以指定步长生成列表，如 <code class="highlighter-rouge">seq 1 3 10</code> 表示从 1 开始，每次步长为 3 生成列表，到 10 截止。</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="12for-循环">1.2、for 循环</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for </span>varName <span class="k">in </span>arry<span class="p">;</span><span class="k">do
+  </span>somrthing
+<span class="k">done</span>
+</code></pre></div></div>
+
+<h4 id="13bash-算术运算">1.3、bash 算术运算</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">declare</code> : 指定变量声明类型
+    <ul>
+      <li><code class="highlighter-rouge">i</code> : 声明变量为整型</li>
+      <li><code class="highlighter-rouge">x</code> : 声明变量为环境变量，与 <code class="highlighter-rouge">export</code> 类似</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">let COMMOND</code> : 将后面的表达式视为算是运算</li>
+  <li><code class="highlighter-rouge">$[COMMOND]</code> : 同 <code class="highlighter-rouge">let</code> 相同</li>
+  <li><code class="highlighter-rouge">$((COMMOND))</code> : 同 <code class="highlighter-rouge">let</code> 相同</li>
+  <li><code class="highlighter-rouge">`expr COMMOND`</code> : 同 <code class="highlighter-rouge">let</code> 相同</li>
+</ul>
+
+<p><strong>bash 支持常见的算术运算，如 <code class="highlighter-rouge">+、-、*、/、++、--、%</code> 等，但是 bash <code class="highlighter-rouge">/</code> 运算时进行圆整操作，不会产生小数。</strong></p>
+
+<h4 id="14位置变量">1.4、位置变量</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">$0</code> : 脚本自身</li>
+  <li><code class="highlighter-rouge">$1 ...</code> : 脚本的第 N 个参数</li>
+  <li><code class="highlighter-rouge">$#</code> : 位置参数的个数</li>
+  <li><code class="highlighter-rouge">$*</code> : 显示所有位置参数</li>
+  <li><code class="highlighter-rouge">$@</code> : 显示所有位置参数</li>
+</ul>
+
+<h3 id="2grep-与-正则">2、grep 与 正则</h3>
+
+<p>grep 用于根据 <strong>指定的模式</strong> 在文本中搜索内容，其语法如下：</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">grep</span> <span class="o">[</span>选项]... PATTERN <span class="o">[</span>FILE]...
+</code></pre></div></div>
+
+<ul>
+  <li>v : 反向过滤，显示所有非命中字符的行</li>
+  <li>o : 只显示行当中被模式匹配到的字符，而非整行</li>
+  <li>i : 不区分字符大小写匹配</li>
+  <li>E : 支持扩展正则表达式</li>
+  <li>A # : 显示被模式匹配到的行，极其后面的 # 行</li>
+  <li>B # : 显示被模式匹配到的行，极其前面的 # 行</li>
+  <li>C # : 显示被模式匹配到的行，极其前后的 # 行</li>
+</ul>
+
+<h4 id="21基本正则表达式">2.1、基本正则表达式</h4>
+
+<p><strong>默认的 grep 正则工作在贪婪模式下，即尽可能多的匹配更多的字符。</strong></p>
+
+<ul>
+  <li>字符匹配
+    <ul>
+      <li><code class="highlighter-rouge">.</code> : 匹配任意单个字符</li>
+      <li><code class="highlighter-rouge">[]</code> : 指定范围内的单个字符，如 <code class="highlighter-rouge">[a-z]</code></li>
+      <li><code class="highlighter-rouge">[^]</code> : 指定范围外的单个字符，如 <code class="highlighter-rouge">[^A-Z]</code></li>
+    </ul>
+  </li>
+  <li>常用字符匹配规则
+    <ul>
+      <li><code class="highlighter-rouge">[0-9]</code>，<code class="highlighter-rouge">[[:digit:]]</code> : 所有数字</li>
+      <li><code class="highlighter-rouge">[a-z]</code>，<code class="highlighter-rouge">[[:lower:]]</code> : 所有小写字母</li>
+      <li><code class="highlighter-rouge">[A-Z]</code>，<code class="highlighter-rouge">[[:upper:]]</code> : 所有大写字母</li>
+      <li><code class="highlighter-rouge">[a-zA-Z]</code>，<code class="highlighter-rouge">[[:alpha:]]</code> : 所有大小写字母</li>
+      <li><code class="highlighter-rouge">[a-zA-Z0-9]</code>，<code class="highlighter-rouge">[[:alnum:]]</code> : 所有大小写字母加数字</li>
+      <li><code class="highlighter-rouge">[[:space:]]</code> : 所有空白字符</li>
+      <li><code class="highlighter-rouge">[[:punct:]]</code> : 所有标点符号</li>
+    </ul>
+  </li>
+  <li>次数匹配
+    <ul>
+      <li><code class="highlighter-rouge">*</code> : 匹配其前面的字符任意次，<strong><code class="highlighter-rouge">.*</code> 代表匹配任意长度任意字符</strong></li>
+      <li><code class="highlighter-rouge">\?</code> : 匹配其前面的字符0次或1次,<strong><code class="highlighter-rouge">\</code> 代表转义</strong></li>
+      <li><code class="highlighter-rouge">\{m\}</code> : 匹配其前面的字符m次</li>
+      <li><code class="highlighter-rouge">\{m,n\}</code> : 匹配其前面的字符至少每次最多n次</li>
+      <li><code class="highlighter-rouge">\{m,\}</code> : 匹配其前面的字符至少m次</li>
+      <li><code class="highlighter-rouge">\{0,n\}</code> : 匹配其前面的字符最多n次</li>
+    </ul>
+  </li>
+  <li>位置锚定
+    <ul>
+      <li><code class="highlighter-rouge">^</code> : 锚定行首，必须出现在模式行首</li>
+      <li><code class="highlighter-rouge">$</code>: 锚定行尾，必须写在模式行尾</li>
+      <li><code class="highlighter-rouge">^$</code> : <strong>表示空白行</strong></li>
+      <li><code class="highlighter-rouge">\&lt;</code> : 锚定词首</li>
+      <li><code class="highlighter-rouge">\&gt;</code> : 锚定词尾</li>
+    </ul>
+  </li>
+  <li>分组
+    <ul>
+      <li><code class="highlighter-rouge">\(\)</code> : 分组，括号内内容当做一个整体对待</li>
+    </ul>
+  </li>
+  <li>引用
+    <ul>
+      <li><code class="highlighter-rouge">\1</code> : 后向引用，引用前面第一个分组模式所匹配的内容，其中数字可根据需要变动，如 <code class="highlighter-rouge">\2</code></li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="22扩展正则表达式">2.2、扩展正则表达式</h4>
+
+<ul>
+  <li>字符匹配
+    <ul>
+      <li><code class="highlighter-rouge">.</code> : 任意单个字符</li>
+      <li><code class="highlighter-rouge">[]</code> : 指定范围单个字符</li>
+      <li><code class="highlighter-rouge">[^]</code> : 指定范围外单个字符</li>
+    </ul>
+  </li>
+  <li>次数匹配
+    <ul>
+      <li><code class="highlighter-rouge">*</code> : 任意次</li>
+      <li><code class="highlighter-rouge">?</code> : 0次或1次</li>
+      <li><code class="highlighter-rouge">+</code> : 至少1次</li>
+      <li><code class="highlighter-rouge">{m}</code> : m次</li>
+      <li><code class="highlighter-rouge">{m,n}</code> : 至少m次，最多n次</li>
+      <li><code class="highlighter-rouge">{m,}</code> : 至少m次</li>
+      <li><code class="highlighter-rouge">{0,n}</code> : 最多n次</li>
+    </ul>
+  </li>
+  <li>位置锚定
+    <ul>
+      <li><code class="highlighter-rouge">^</code> : 锚定行首</li>
+      <li><code class="highlighter-rouge">$</code> : 锚定行尾</li>
+      <li><code class="highlighter-rouge">\&lt;</code>、<code class="highlighter-rouge">\b</code> : 锚定词首</li>
+      <li><code class="highlighter-rouge">\&gt;</code>、<code class="highlighter-rouge">\b</code> : 锚定词尾</li>
+    </ul>
+  </li>
+  <li>分组匹配
+    <ul>
+      <li><code class="highlighter-rouge">()</code> : 分组</li>
+      <li><code class="highlighter-rouge">|</code> : 或者</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="3bash-条件判断">3、bash 条件判断</h3>
+
+<h4 id="31bash-测试">3.1、bash 测试</h4>
+
+<p>bash 中使用如下格式进行测试</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">test </span>EXPRESSION
+<span class="o">[</span> EXPRESSION <span class="o">]</span>
+<span class="o">[[</span> EXPREXXION <span class="o">]]</span>
+</code></pre></div></div>
+
+<h4 id="32bash-判断">3.2、bash 判断</h4>
+
+<p>bash 一般有以下3种判断</p>
+
+<h5 id="321单分支判断">3.2.1、单分支判断</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if </span>条件测试<span class="p">;</span> <span class="k">then
+    </span>分支语句
+<span class="k">fi</span>
+</code></pre></div></div>
+
+<h5 id="322双分支判断">3.2.2、双分支判断</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if </span>条件测试<span class="p">;</span> <span class="k">then
+    </span>分支语句1
+<span class="k">else
+    </span>分支语句2
+<span class="k">fi</span>
+</code></pre></div></div>
+
+<h5 id="323多分支判断">3.2.3、多分支判断</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if </span>条件测试1<span class="p">;</span> <span class="k">then
+    </span>分支语句1
+<span class="k">elif </span>条件测试2<span class="p">;</span> <span class="k">then
+    </span>分支语句2
+<span class="k">elif </span>条件测试3<span class="p">;</span> <span class="k">then
+    </span>分支语句3
+...
+<span class="k">else
+    </span>分支语句n
+<span class="k">fi</span>
+</code></pre></div></div>
+
+<h4 id="33整数测试">3.3、整数测试</h4>
+
+<p>整数测试为二元表达式，其格式大致为 <code class="highlighter-rouge">[ num1 OPRAND num2 ]</code>，基本操作如下</p>
+
+<ul>
+  <li><code class="highlighter-rouge">-gt</code> : 大于</li>
+  <li><code class="highlighter-rouge">-lt</code> : 小于</li>
+  <li><code class="highlighter-rouge">-ge</code> : 大于等于</li>
+  <li><code class="highlighter-rouge">-le</code> : 小于等于</li>
+  <li><code class="highlighter-rouge">eq</code> : 等于</li>
+</ul>
+
+<h4 id="34字符测试">3.4、字符测试</h4>
+
+<ul>
+  <li><code class="highlighter-rouge">&gt;</code> : 大于</li>
+  <li><code class="highlighter-rouge">&lt;</code> : 小于</li>
+  <li><code class="highlighter-rouge">==</code> : 等于，在 bash 中，事实上由于变量赋值时变量不加 <code class="highlighter-rouge">$</code>，而等值比较时则会加上 <code class="highlighter-rouge">$</code>，所以使用一个 <code class="highlighter-rouge">=</code> 也是可以做等值判断的，不过鉴于规范一般不这么写</li>
+  <li><code class="highlighter-rouge">=~</code> : 左侧是一个字符串，右侧是一个模式，用于判断某个字符串是否满足给定的模式，通常在 <code class="highlighter-rouge">[[]]</code> 中使用；<strong>模式不要加引号</strong></li>
+  <li><code class="highlighter-rouge">-n</code> : 测试字符串是否为空，不空为真，空为假</li>
+  <li><code class="highlighter-rouge">-z</code> : 测试字符串是否为空，空为真，不空为假</li>
+</ul>
+
+<p><strong>注意，测试时操作符两边要有空格，如 <code class="highlighter-rouge">[ "str1" == "str2" ]</code></strong></p>
+
+<h4 id="35文件测试">3.5、文件测试</h4>
+
+<p><code class="highlighter-rouge">-e</code>、<code class="highlighter-rouge">-a</code> : 测试文件是否存在，如果存在则返回 true
+<code class="highlighter-rouge">-f</code> : 测试文件是否存在并且为普通文件
+<code class="highlighter-rouge">-d</code> : 测试文件是否存在并且为目录文件
+<code class="highlighter-rouge">-b</code> : 测试文件是否存在并且为块设备
+<code class="highlighter-rouge">-c</code> : 测试文件是否存在并且为字符设备文件
+<code class="highlighter-rouge">-h</code>、<code class="highlighter-rouge">-L</code> : 测试文件是否存在并且为符号链接文件
+<code class="highlighter-rouge">-p</code> : 测试文件是否存在并且为管道文件
+<code class="highlighter-rouge">-r</code> : 测试文件是否存在并且对当前用户具有读权限
+<code class="highlighter-rouge">-w</code> : 测试文件是否存在并且对当前用户具有写权限
+<code class="highlighter-rouge">-x</code> : 测试文件是否存在并且对当前用户具有执行权限
+<code class="highlighter-rouge">-S</code> : 测试文件是否存在并且为套接字文件
+<code class="highlighter-rouge">-s</code> : 测试文件是否存在并且文件不为空
+<code class="highlighter-rouge">file1 -nt file2</code> : 测试 file1 是否比 file2 更新(最近修改时间)
+<code class="highlighter-rouge">file1 -ot file2</code> : 测试 file1 是否比 file2 更老(最近修改时间)
+<code class="highlighter-rouge">file1 -ef file2</code> : 测试 file1 和 file2 是否是相同的设备以及 inode 是否相同</p>
+
+<h4 id="36脚本自定义退出">3.6、脚本自定义退出</h4>
+
+<h5 id="361脚本退出状态码">3.6.1、脚本退出状态码</h5>
+
+<p><strong>默认 bash 脚本执行完成后，使用 <code class="highlighter-rouge">$?</code> 获取脚本执行状态码，其中 <code class="highlighter-rouge">0</code> 表示成功，<code class="highlighter-rouge">1~255</code> 表示失败。</strong></p>
+
+<h5 id="362自定义退出状态码">3.6.2、自定义退出状态码</h5>
+
+<p><strong>bash 中使用 <code class="highlighter-rouge">exit NUM</code> 命令自定义脚本的退出状态码，如果不指定，那么 bash 默认采用最后一条命令的执行状态作为整个脚本执行状态码；也就是说不论前面的命令执行是否失败，只返回最后一条命令的执行状态码。</strong></p>
+
+<h4 id="37shift">3.7、shift</h4>
+
+<p><code class="highlighter-rouge">shift</code> : 位置参数轮替</p>
+
+<p>shift 用于动态替换位置参数，如下所示，当该脚本有多个参数是，使用 shift 将自动替换 $1 为后面的参数，类似于 java 的迭代器</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="nb">sum</span><span class="o">=</span>0
+<span class="k">for </span>i <span class="k">in</span> <span class="sb">`</span><span class="nb">seq </span>1 <span class="nv">$#`</span><span class="p">;</span><span class="k">do
+  </span><span class="nb">let sum</span>+<span class="o">=</span><span class="nv">$1</span>
+  <span class="nb">shift
+</span><span class="k">done
+</span><span class="nb">echo</span> <span class="nv">$sum</span>
+</code></pre></div></div>
+
+<h2 id="三磁盘管理">三、磁盘管理</h2>
+
+<h3 id="1文件系统">1、文件系统</h3>
+
+<ul>
+  <li>按名称存取是文件系统存在的一个主要目的</li>
+  <li>文件系统是一个软件，对磁盘上存在的二进制进行管理</li>
+  <li>为了能在一个磁盘上安装多个系统，引入了分区的概念</li>
+  <li>track: 磁道是有厂商划分好的</li>
+  <li>任意磁盘上的任意扇区，读取的平均时间称为平均寻道时间</li>
+</ul>
+
+<h3 id="2mbrmaster-boot-record">2、MBR(Master Boot Record)</h3>
+
+<p>MBR(Master Boot Record) 被称为主引导记录，通常存放与磁盘的第0个扇区，其保存着磁盘分区、引导信息。</p>
+
+<p><strong>通常 MBR 为 512 byte，其中 bootloader(引导加载器) 占用 446 byte，剩下的每16个字节引导一个分区，2个字节被填充了2个5A，称之为MBR有效性标记，所以 MBR 分区表状态下的磁盘最多有 4 个主分区。</strong></p>
+
+<h3 id="3硬盘接口">3、硬盘接口</h3>
+
+<ul>
+  <li>IDE(ATA) : 并口，每个控制器可接两个硬盘，master/slave，133MB/S</li>
+  <li>/dev/hd[a-z]
+    <ul>
+      <li>/dev/hda[1-4]</li>
+      <li>/dev/hda[5+] 逻辑分区5开始</li>
+    </ul>
+  </li>
+  <li>SCSI : Small Computer System Interface 小型计算机接口，理论速率320mb/s</li>
+  <li>SATA(Serial) : 300Mbps,600Mbps,6Gbps</li>
+  <li>SAS : 6Gbps</li>
+  <li>从 CentOS6 开始磁盘全部识别为 sda</li>
+</ul>
+
+<h3 id="4常用命令">4、常用命令</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">fdisk</code> : 磁盘分区命令
+    <ul>
+      <li><code class="highlighter-rouge">-l</code> : 列出当前系统所有磁盘和分区</li>
+      <li><code class="highlighter-rouge">-d</code> : 删除分区</li>
+      <li><code class="highlighter-rouge">-n</code> : 新建一个分区</li>
+      <li><code class="highlighter-rouge">-p</code> : 列出已有分区</li>
+      <li><code class="highlighter-rouge">-t</code> : 调至分区ID</li>
+      <li><code class="highlighter-rouge">-l</code> : 列出内核支持的分区id</li>
+      <li><code class="highlighter-rouge">-w</code> : 保存退出</li>
+      <li><code class="highlighter-rouge">-q</code> : 不保存退</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">partprobe</code> : 重读系统磁盘信息(CentOS5)</li>
+  <li><code class="highlighter-rouge">partx</code>、<code class="highlighter-rouge">kpartx</code> : 重读系统磁盘信息(CentOS6)</li>
+</ul>
+
+<p><strong>一般 CentOS6 后两个命令有时不生效，所以规律是按照以下执行可能会生效，实在不行重启…</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kpartx <span class="nt">-l</span> /dev/sda
+kpartx <span class="nt">-af</span> /dev/sda
+partx <span class="nt">-a</span> /dev/sda
+</code></pre></div></div>
+
+<ul>
+  <li><strong>显示内核当前读取的硬盘信息 <code class="highlighter-rouge">cat /proc/partitions</code></strong></li>
+  <li><strong>显示内核当前读取的内存信息 <code class="highlighter-rouge">cat /proc/meminfo</code></strong></li>
+  <li><strong>显示内核当前已识别的文件系统 <code class="highlighter-rouge">cat /proc/filesystem</code></strong></li>
+  <li>
+    <p><strong>查看当前系统识别了那些磁盘设备 <code class="highlighter-rouge">ls /dev/sda*</code></strong></p>
+  </li>
+  <li><code class="highlighter-rouge">mkfs DEV</code> : 创建文件系统(格式化)
+    <ul>
+      <li><code class="highlighter-rouge">-t FSTYPE DEV</code> : 将指定设备格式化成指定文件系统</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">mke2fs DEV</code> : ext2 文件系统创建的快捷命令，可用于创建其他文件系统，<strong>其配置文件位于 <code class="highlighter-rouge">/etc/mke2fs</code>，定义了命令默认的创建文件系统行为</strong>
+    <ul>
+      <li><code class="highlighter-rouge">-t</code> : 指定创建的文件系统，同 <code class="highlighter-rouge">mkfs -t</code></li>
+      <li><code class="highlighter-rouge">-j</code> : 快速创建 ext3 文件系统，同 <code class="highlighter-rouge">mkfs -t ext3</code></li>
+      <li><code class="highlighter-rouge">-L</code> : 指定卷标</li>
+      <li><code class="highlighter-rouge">-b</code> : 指定块大小，一般可选值 <code class="highlighter-rouge">1024|2018|4096</code>，默认4k</li>
+      <li><code class="highlighter-rouge">-i</code> : 设置 inode 值(多少字节预留一个 inode)，配置文件中有默认值</li>
+      <li><code class="highlighter-rouge">-N</code> : 直接指定预留多少 inode</li>
+      <li><code class="highlighter-rouge">-I</code> : 直接指定 inode 大小</li>
+      <li><code class="highlighter-rouge">-m</code> : 预留管理员空间百分比(用于磁盘沾满时操作数据使用)，默认 5%</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">e2label DEV</code> : 查看卷标</li>
+  <li><code class="highlighter-rouge">e2label DEV LABEL_NAME</code> : 设置卷标</li>
+  <li><code class="highlighter-rouge">blkid DEV</code> : 查看磁盘信息，包括全局唯一标示 UUID 和 文件系统类型 TYPE</li>
+  <li><code class="highlighter-rouge">dumpe2fs DEV</code> : 查看磁盘块信息，包括超级块、块组、块位图、inode 位图、inode 表、空闲块、空闲 inode 等
+    <ul>
+      <li><code class="highlighter-rouge">-h</code> : 仅显示 超级块信息</li>
+      <li><code class="highlighter-rouge">-o</code> : 指定显示超级块信息</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">tune2fs</code> : 调整磁盘信息，<strong>块大小不能调整</strong>
+    <ul>
+      <li><code class="highlighter-rouge">-l DEV</code> : 显示超级块信息</li>
+      <li><code class="highlighter-rouge">-L LABEL</code> : 设置卷标</li>
+      <li><code class="highlighter-rouge">-m #</code> : 调整预留百分比</li>
+      <li><code class="highlighter-rouge">-j</code> : 调整文件系统，如果原来的文件系统为 ext2，则此选项将无损数据将其转换为 ext3，ext3 转 ext2 直接在挂载时挂载为 ext2 即可</li>
+      <li><code class="highlighter-rouge">-c #</code> : 每挂载 # 次检查文件系统</li>
+      <li><code class="highlighter-rouge">-o [^]mount-options[,...]</code> : 指定默认挂载选项(<code class="highlighter-rouge">^</code>代表关闭，不加代表启动)，如 acl 文件访问控制列表等</li>
+      <li><code class="highlighter-rouge">-O [^]feature[,...]</code> : 调整其分区特性</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">fsck</code> : 文件系统检测命令
+    <ul>
+      <li><code class="highlighter-rouge">-t FSTYPE DEV</code> : 以指定文件系统类型检测磁盘</li>
+      <li><code class="highlighter-rouge">-f DEV</code> : 强行检测</li>
+      <li><code class="highlighter-rouge">-r</code> : 交互式提醒修复错误</li>
+      <li><code class="highlighter-rouge">-a</code> : 自动修复错误</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">e2fsck</code> : 快速检测文件系统(相当于快捷命令，文件系统自动判定)
+    <ul>
+      <li><code class="highlighter-rouge">-f</code> : 强制检测</li>
+      <li><code class="highlighter-rouge">-t</code> : 指定执行时间计数</li>
+      <li><code class="highlighter-rouge">-y</code> : 自动回答所有问题，默认全部 yes</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">交换分区</code> : 虚拟内存</li>
+  <li><code class="highlighter-rouge">mkswap DEV</code> : 格式化为交换分区
+    <ul>
+      <li><code class="highlighter-rouge">-L</code> : 指定卷标</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">swapon</code>、<code class="highlighter-rouge">swapoff</code> : 启动、禁用交换区
+    <ul>
+      <li><code class="highlighter-rouge">-a</code> : 启用所有交换区</li>
+      <li><code class="highlighter-rouge">-p #</code> : 指定优先级(仅 on)</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">hdparm</code> : 读取磁盘硬件信息
+    <ul>
+      <li><code class="highlighter-rouge">i</code> : 显示磁盘磁头信息(通过内核)</li>
+      <li><code class="highlighter-rouge">I</code> : 显示磁盘磁头信息(通过硬件)</li>
+      <li><code class="highlighter-rouge">g</code> : 显示磁盘硬件布局信息</li>
+      <li><code class="highlighter-rouge">t</code> : 测试磁盘 buffer cache 信息</li>
+      <li><code class="highlighter-rouge">T</code> : 测试磁盘直接读取写入信息</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="5磁盘挂载">5、磁盘挂载</h3>
+
+<ul>
+  <li><strong>挂载:</strong>
+    <ul>
+      <li><strong>手动挂载</strong></li>
+      <li><strong>自动挂载</strong></li>
+      <li><strong>按需挂载</strong> : 进程访问时挂载，访问结束卸载</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">挂载点</code> : 一旦某个目录被作为挂载点，则原目录下所有文件将被暂时隐藏，挂载点空闲时才可被卸载，也可以强制卸载</li>
+  <li><code class="highlighter-rouge">mount [options] [-t fstype] [-o options] DEV DIR</code> : 挂载命令，不带任何选项默认显示当前系统所有已挂在设备，实质是读取了 <code class="highlighter-rouge">/proc/mounts</code>，<strong><code class="highlighter-rouge">/etc/mtab</code> 文件存放了所有 mount 命令的挂载点信息</strong>
+    <ul>
+      <li><code class="highlighter-rouge">-t</code> : 指定文件系统类型</li>
+      <li><code class="highlighter-rouge">-r</code> : 只读方式挂载</li>
+      <li><code class="highlighter-rouge">-w</code> : 读写挂载</li>
+      <li><code class="highlighter-rouge">-o</code> : 指定额外的 options</li>
+      <li><code class="highlighter-rouge">-L</code> : 根据卷边挂载</li>
+      <li><code class="highlighter-rouge">LABLE='XXXX'</code> : 根据卷标挂载</li>
+      <li><code class="highlighter-rouge">-U</code> : 以 UUID 方式挂载</li>
+      <li><code class="highlighter-rouge">UUID='xxxx'</code> : 以 UUID 方式挂载</li>
+      <li><code class="highlighter-rouge">-a</code> : 自动挂载所有的支持自动挂载的设备(需先在/etc/fstab中定义)</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">mount -o</code> : 设置磁盘硬件属性
+    <ul>
+      <li><code class="highlighter-rouge">async</code> : 启用异步 I/O</li>
+      <li><code class="highlighter-rouge">sync</code> : 启用同步 I/O</li>
+      <li><code class="highlighter-rouge">atime</code> : 启用实时更新文件时间戳</li>
+      <li><code class="highlighter-rouge">noatime</code> : 禁用实时更新文件时间戳</li>
+      <li><code class="highlighter-rouge">auto</code> : 启用自动挂载(-a 支持设备)</li>
+      <li><code class="highlighter-rouge">noauto</code> : 禁用自动挂载(-a 支持设备)</li>
+      <li><code class="highlighter-rouge">exec</code> : 开启自动执行</li>
+      <li><code class="highlighter-rouge">noexec</code> : 禁止自动执行</li>
+      <li><code class="highlighter-rouge">group</code> : 此组内用户可挂载该设备</li>
+      <li><code class="highlighter-rouge">_netdev</code> : 禁止网络设备未初始化前挂载，在需要挂载网络硬盘时，如果设置了开机自动挂载，当网络设备未完全初始化前挂载网络硬盘，则可能造成卡死，此选项可确保网络谁被初始化后才被允许挂载</li>
+      <li><code class="highlighter-rouge">remount</code> : 自动重新挂载</li>
+      <li><code class="highlighter-rouge">ro</code> : 挂载为只读</li>
+      <li><code class="highlighter-rouge">rw</code> : 挂载为读写</li>
+      <li><code class="highlighter-rouge">acl</code> : 启用文件访问控制列表</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">umount DEV|MOUNT_POINT</code> : 卸载命令</li>
+  <li><code class="highlighter-rouge">fuser OPTIONS DEV</code> : 查看磁盘访问占用信息
+    <ul>
+      <li><code class="highlighter-rouge">-v</code> : 查看哪些用户正在访问目标磁盘</li>
+      <li><code class="highlighter-rouge">-k</code> : 杀死正在访问磁盘进程</li>
+      <li><code class="highlighter-rouge">-m</code> : 指明挂载点(一般km一起使用踢出占用磁盘的用户)</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">df DEV</code> : 查看磁盘占用情况，不加设备显示所有
+    <ul>
+      <li><code class="highlighter-rouge">-h</code> : 以以人易读的格式进行显示</li>
+      <li><code class="highlighter-rouge">-i</code> : 显示 inode 信息</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">du</code> : 评估文件占用磁盘空间情况
+    <ul>
+      <li><code class="highlighter-rouge">-s</code> : 显示目录大小</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="6开机自动挂载">6、开机自动挂载</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">/etc/rc.d/rc.sysinit</code> : 系统初始化脚本，包括挂载 <code class="highlighter-rouge">/etc/fstab</code> 文件中定义的文件系统挂载点等</li>
+  <li><code class="highlighter-rouge">/etc/fstab</code> : 系统自动挂载配置文件，格式如下 :</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>待挂载设备</th>
+      <th>挂载点</th>
+      <th>文件系统格式</th>
+      <th>挂载参数</th>
+      <th>转储频率</th>
+      <th>自检顺序</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>proc</td>
+      <td>/proc</td>
+      <td>proc</td>
+      <td>defaults</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>/dev/mapper/vg0-usr</td>
+      <td>/usr</td>
+      <td>ext4</td>
+      <td>defaults</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li>待挂载设备 : 通常为设备文件，也支持卷标 LABEL=xxxx 或 UUID=xxxx 方式</li>
+  <li>挂载点 : 通常是一个目录，但有些文件系统没有挂载点，如 swap 分区，挂载点即为 swap</li>
+  <li>挂载选项 : 一般为 defaults，自定义多个的话用逗号隔开</li>
+  <li>转储频率 : 系统对其进行 dump 频率，0是从不备份，1为每天备份，2为2天备份一次</li>
+  <li>自检顺序 : 系统开机自检文件系统顺序，1为首先自检，通常是根目录独有，2~9为先后顺序，0为不自检</li>
+</ul>
+
+<h3 id="7交换分区">7、交换分区</h3>
+
+<p><strong>交换分区用于在系统内存不够用时将其转储到硬盘，在 <code class="highlighter-rouge">/proc/sys/vm/swapiness</code> 文件中有其使用倾向定义；一般当物理内存小于 2G 通常设置为 2*物理内存，2~4G 设置为4G，当大于4G时署名服务器对性能要求很高，基本没有什么要求</strong></p>
+
+<ul>
+  <li><code class="highlighter-rouge">free</code> : 查看内存使用情况
+    <ul>
+      <li><code class="highlighter-rouge">-h</code> : 以人类可读的形式显示</li>
+      <li><code class="highlighter-rouge">-s #</code> : 每隔 # 秒打印一次内存使用情况</li>
+      <li><code class="highlighter-rouge">-c #</code> : 与 -s 配合使用，表示打印 # 次后停止打印</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">dd</code> : 低级复制命令，dd 命令会跨过文件系统直接复制磁盘块，相对于cp属于更低级的复制命令
+    <ul>
+      <li><code class="highlighter-rouge">if</code> : input file，源文件</li>
+      <li><code class="highlighter-rouge">of</code> : out file，目标文件</li>
+      <li><code class="highlighter-rouge">bs</code> : 每次复制块大小，可选 <code class="highlighter-rouge">[b|kb|m|g]</code></li>
+      <li><code class="highlighter-rouge">count</code> : 复制块次数</li>
+      <li><code class="highlighter-rouge">oflag=FLAGS</code> : 创建稀疏文件</li>
+      <li><code class="highlighter-rouge">dd if=/dev/sda of=/dev/sdb</code> : 磁盘对拷</li>
+      <li><code class="highlighter-rouge">dd if=/dev/cdrom of=/tmp/linux.iso</code> : iso 镜像提取</li>
+      <li><code class="highlighter-rouge">dd if=/dev/zero of=/dev/sda bs=512 count=1</code> : 抹掉MBR</li>
+      <li><code class="highlighter-rouge">dd if=/dev/zero of=/swapfile bs=512M count=1</code> : 创建一个  512M 的本地回环设备文件</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="8软链接与硬链接">8、软链接与硬链接</h3>
+
+<p><strong>硬链接 :</strong> 硬链接实质上是对同一分区上多个路径指向了同一 inode 的文件，<strong>硬链接不可跨分区，目录无法创建硬链接。</strong></p>
+
+<p><strong>软链接 :</strong> 软链接实质上与源文件是两个文件，且 inode 不同，但是软连接文件的 inode 中会存储源文件的路径信息，可跨分区，可对目录创建。</p>
+
+<ul>
+  <li><code class="highlighter-rouge">ln SOURCE_FILE TARGET_FILE</code> : 创建硬链接文件
+    <ul>
+      <li><code class="highlighter-rouge">-s</code> : 创建软链接</li>
+      <li><code class="highlighter-rouge">-v</code> : 显示创建过程</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="9压缩工具">9、压缩工具</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">zip</code> : 归档压缩工具，需要指定输出文件，可压缩目录；但是想压缩目录下的文件时必须指定到文件，如 <code class="highlighter-rouge">zip tmp.zip /tmp/*</code></li>
+  <li><code class="highlighter-rouge">gzip</code>、<code class="highlighter-rouge">gunzip</code> : gzip SRC TARGET 压缩(删除源文件)
+    <ul>
+      <li><code class="highlighter-rouge">-d</code> : 同 gunzip 解压缩(删除源文件)</li>
+      <li><code class="highlighter-rouge">-c</code> : 将压缩结果输出到 STDOUT，可使用管道等进行重定向操作</li>
+      <li><code class="highlighter-rouge">-r</code> : 递归压缩指定目录下的所有文件</li>
+      <li><code class="highlighter-rouge">-#</code> : 设置压缩率，默认6，取值1~9，其他压缩命令同样支持</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">zcat</code> : 不解压查看 gzip 压缩包内容
+    <ul>
+      <li><code class="highlighter-rouge">-l</code> : 列出压缩包内文件列表</li>
+      <li><code class="highlighter-rouge">-r</code> : 递归列出文件列表</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">bzip2</code>、<code class="highlighter-rouge">bunzip2</code> : bzip2 压缩命令
+    <ul>
+      <li><code class="highlighter-rouge">-d</code> : 解压文件</li>
+      <li><code class="highlighter-rouge">k</code> : 保留原文件压缩/解压</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">bzcat</code> : 不解压查看 bzip2 压缩包内容</li>
+  <li><code class="highlighter-rouge">xz</code> : xz 压缩命令，更高级的压缩工具，压缩删除源文件
+    <ul>
+      <li><code class="highlighter-rouge">-d</code> : 解压文件</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">xzcat</code> : 不解压查看 xz 压缩包内容</li>
+</ul>
+
+<h3 id="10归档工具">10、归档工具</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">tar</code> : 创建归档命令，一般命令格式为 <code class="highlighter-rouge">tar [options] -f FILE.tar File1...</code>，其中源文件可以是文件也可以是目录
+    <ul>
+      <li><code class="highlighter-rouge">-c</code> : 创建归档</li>
+      <li><code class="highlighter-rouge">-x</code> : 展开归档</li>
+      <li><code class="highlighter-rouge">-t</code> : 不展开查看归档文件列表</li>
+      <li><code class="highlighter-rouge">-z</code> : 调用 gzip 压缩</li>
+      <li><code class="highlighter-rouge">-j</code> : 调用 bzip2 压缩</li>
+      <li><code class="highlighter-rouge">-J</code> : 调用 xz 压缩</li>
+      <li><code class="highlighter-rouge">-v</code> : 展示过程
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+    </ul>
+  </li>
+</ul>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/" data-toggle="tooltip" data-placement="top" title="Redundent Array of Inexpensive Disks">
+                        Previous<br>
+                        <span>Redundent Array of Inexpensive Disks</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/06/19/AspectJ-Hello-World/" data-toggle="tooltip" data-placement="top" title="AspectJ Hello World">
+                        Next<br>
+                        <span>AspectJ Hello World</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/06/14/Linux-笔记";
+    var disqus_url = "https://mritd.me/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

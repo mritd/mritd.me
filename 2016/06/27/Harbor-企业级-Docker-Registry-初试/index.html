@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Harbor 企业级 Docker Registry 初试">
+    <meta name="keywords"  content="Docker,Linux,Harbor,Registry">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Harbor 企业级 Docker Registry 初试 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                    </div>
+                    <h1>Harbor 企业级 Docker Registry 初试</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on June 27, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一介绍">一、介绍</h2>
+
+<blockquote>
+  <p>Project Harbor is an enterprise-class registry server, which extends the open source Docker Registry server by adding the functionality usually required by an enterprise, such as security, control, and management. Harbor is primarily designed to be a private registry - providing the needed security and control that enterprises require. It also helps minimize bandwidth usage, which is helpful to both improve productivity (local network access) as well as performance (for those with poor internet connectivity).</p>
+</blockquote>
+
+<p>简单的说，Harbor 是一个企业级的 Docker Registry，可以实现 images 的私有存储和日志统计权限控制等功能，并支持创建多项目(Harbor 提出的概念)，基于官方 Registry V2 实现。</p>
+
+<!--more-->
+
+<h2 id="二环境准备">二、环境准备</h2>
+
+<p>本文所使用的环境如下 :</p>
+
+<ul>
+  <li>Ubuntu 14.04</li>
+  <li>Docker 1.11.2</li>
+  <li>docker-compose 1.6.2</li>
+</ul>
+
+<h3 id="21安装-docker">2.1、安装 Docker</h3>
+
+<p>执行以下命令安装 Docker</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-fsSL</span> https://get.docker.io | bash
+</code></pre></div></div>
+
+<h3 id="22安装-docker-compose">2.2、安装 docker-compose</h3>
+
+<p>默认的 <a href="https://docs.docker.com/compose/install/">官方文档</a> 安装命令如下 :</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-L</span> https://github.com/docker/compose/releases/download/1.6.2/docker-compose-<span class="sb">`</span><span class="nb">uname</span> <span class="nt">-s</span><span class="sb">`</span>-<span class="sb">`</span><span class="nb">uname</span> <span class="nt">-m</span><span class="sb">`</span> <span class="o">&gt;</span> /usr/local/bin/docker-compose
+</code></pre></div></div>
+
+<p><strong>经过本人测试，其文件托管在亚马逊上，伟大的防火墙成功阻止下载……</strong></p>
+
+<p><strong>有能力的童鞋可以使用梯子，我已经下载好了一个 <a href="https://cdn.oss.link/files/docker-compose">点击下载</a></strong>；下载后直接 cp 到 <code class="highlighter-rouge">/usr/local/bin</code> 下并给与可执行权限即可。</p>
+
+<h2 id="三搭建-harbor">三、搭建 Harbor</h2>
+
+<h3 id="31克隆源码">3.1、克隆源码</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/vmware/harbor
+</code></pre></div></div>
+
+<h3 id="32修改配置">3.2、修改配置</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>harbor/Deploy/
+vim harbor.cfg
+</code></pre></div></div>
+
+<p>配置样例如下 :</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">## Configuration file of Harbor</span>
+
+<span class="c">#The IP address or hostname to access admin UI and registry service.</span>
+<span class="c">#DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.</span>
+<span class="c"># 指定 hostname，一般为IP，或者域名，用于登录 Web UI 界面</span>
+<span class="nb">hostname</span> <span class="o">=</span> 10.211.55.17
+
+<span class="c">#The protocol for accessing the UI and token/notification service, by default it is http.</span>
+<span class="c">#It can be set to https if ssl is enabled on nginx.</span>
+<span class="c"># URL 访问方式，SSL 需要配置 nginx</span>
+ui_url_protocol <span class="o">=</span> http
+
+<span class="c">#Email account settings for sending out password resetting emails.</span>
+<span class="c"># 邮件相关信息配置，如忘记密码发送邮件</span>
+email_server <span class="o">=</span> smtp.xxxxxx.com
+email_server_port <span class="o">=</span> 465
+email_username <span class="o">=</span> reg@mritd.me
+email_password <span class="o">=</span> xxxxxx
+email_from <span class="o">=</span> docker &lt;reg@mritd.me&gt;
+email_ssl <span class="o">=</span> <span class="nb">true</span>
+
+<span class="c">##The password of Harbor admin, change this before any production use.</span>
+<span class="c"># 默认的 Harbor 的管理员密码，管理员用户名默认 admin</span>
+harbor_admin_password <span class="o">=</span> Harbor12345
+
+<span class="c">##By default the auth mode is db_auth, i.e. the credentials are stored in a local database.</span>
+<span class="c">#Set it to ldap_auth if you want to verify a user's credentials against an LDAP server.</span>
+<span class="c"># 指定 Harbor 的权限验证方式，Harbor 支持本地的 mysql 数据存储密码，同时也支持 LDAP</span>
+auth_mode <span class="o">=</span> db_auth
+
+<span class="c">#The url for an ldap endpoint.</span>
+<span class="c"># 如果采用了 LDAP，此处填写 LDAP 地址</span>
+ldap_url <span class="o">=</span> ldaps://ldap.mydomain.com
+
+<span class="c">#The basedn template to look up a user in LDAP and verify the user's password.</span>
+<span class="c"># LADP 验证密码的方式(我特么没用过这么高级的玩意)</span>
+ldap_basedn <span class="o">=</span> <span class="nv">uid</span><span class="o">=</span>%s,ou<span class="o">=</span>people,dc<span class="o">=</span>mydomain,dc<span class="o">=</span>com
+
+<span class="c">#The password for the root user of mysql db, change this before any production use.</span>
+<span class="c"># mysql 数据库 root 账户密码</span>
+db_password <span class="o">=</span> root123
+
+<span class="c">#Turn on or off the self-registration feature</span>
+<span class="c"># 是否允许开放注册</span>
+self_registration <span class="o">=</span> on
+
+<span class="c">#Turn on or off the customize your certicate</span>
+<span class="c"># 允许自签名证书</span>
+customize_crt <span class="o">=</span> on
+
+<span class="c">#fill in your certicate message</span>
+<span class="c"># 自签名证书信息</span>
+crt_country <span class="o">=</span> CN
+crt_state <span class="o">=</span> State
+crt_location <span class="o">=</span> CN
+crt_organization <span class="o">=</span> mritd
+crt_organizationalunit <span class="o">=</span> mritd
+crt_commonname <span class="o">=</span> mritd.me
+crt_email <span class="o">=</span> reg.mritd.me
+<span class="c">#####</span>
+</code></pre></div></div>
+
+<h3 id="33生成相关配置">3.3、生成相关配置</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>harbor/Deploy/
+./prepare
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_prepare.png" alt="hexo_docker_harbor_prepare" /></p>
+
+<h3 id="34编译-image-并启动">3.4、编译 image 并启动</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>harbor/Deploy/
+docker-compose up <span class="nt">-d</span>
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_up.png" alt="hexo_docker_harbor_up" /></p>
+
+<h3 id="35启动后相关容器">3.5、启动后相关容器</h3>
+
+<p><strong>正常启动成功后会有 5 个 Contianer :</strong></p>
+
+<ul>
+  <li>Proxy : 由Nginx 服务器构成的反向代理</li>
+  <li>Registry : 由Docker官方的开源registry 镜像构成的容器实例</li>
+  <li>UI : 即架构中的core services, 构成此容器的代码是Harbor项目的主体</li>
+  <li>Mysql : 由官方MySql镜像构成的数据库容器</li>
+  <li>Log : 运行着rsyslogd的容器，通过log-driver的形式收集其他容器的日志</li>
+</ul>
+
+<p><strong>这几个 Contianer 通过 Docker link 的形式连接在一起，在容器之间通过容器名字互相访问。对终端用户而言，只需要暴露 proxy（即Nginx）的服务端口</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_contianer.png" alt="hexo_docker_harbor_contianer" /></p>
+
+<h2 id="四访问-web-ui-并测试">四、访问 Web UI 并测试</h2>
+
+<h3 id="41主页">4.1、主页</h3>
+
+<p><strong>默认的访问地址即为 <code class="highlighter-rouge">harbor.cfg</code> 中 <code class="highlighter-rouge">hostname</code> 地址，直接访问即可，如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_homepage.png" alt="hexo_docker_harbor_homepage" /></p>
+
+<p><strong>如果 <code class="highlighter-rouge">harbor.cfg</code> 中 <code class="highlighter-rouge">self_registration</code> 属性设置为 <code class="highlighter-rouge">off</code>，那么普通用户将无法自己实现注册，只能由管理员创建用户，主页右上角的注册按钮也会消失。</strong></p>
+
+<h3 id="42登录">4.2、登录</h3>
+
+<p><strong>Harbor 默认管理员用户为 <code class="highlighter-rouge">admin</code>，密码在 <code class="highlighter-rouge">harbor.cfg</code> 中设置过，默认的是 <code class="highlighter-rouge">Harbor12345</code>，可直接登陆</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_userspace.png" alt="hexo_docker_harbor_userspace" /></p>
+
+<h3 id="43创建私有项目">4.3、创建私有项目</h3>
+
+<p><strong>Harbor 有一个项目的概念，项目名可以理解为 Docker Hub 的用户名，其下可以后很多 images，Harbor 的项目必须登录后方可 push，公有项目和私有项目的区别是对其他用户是否可见</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_createproject.png" alt="hexo_docker_harbor_createproject" /></p>
+
+<h3 id="44push-镜像">4.4、push 镜像</h3>
+
+<h4 id="441设置-http-仓库地址">4.4.1、设置 http 仓库地址</h4>
+
+<p>由于采用了默认的 http 方式连接，而 Docker 认为这是不安全的，所以在 push 之前需要调整一下 docker 配置，编辑 <code class="highlighter-rouge">/etc/default/docker</code> 增加如下内容</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">DOCKER_OPTS</span><span class="o">=</span><span class="s2">"</span><span class="nv">$DOCKER_OPTS</span><span class="s2"> --insecure-registry 10.211.55.17"</span>
+</code></pre></div></div>
+
+<p><strong>其中 IP 地址要指向 <code class="highlighter-rouge">harbor.cfg</code> 中的 <code class="highlighter-rouge">hostname</code></strong>，然后执行 <code class="highlighter-rouge">docker-compose stop</code> 停掉所有 Contianer，再执行 <code class="highlighter-rouge">service docker restart</code> 重启 Dokcer 服务，最后执行 <code class="highlighter-rouge">docker-compose start</code> 即可。</p>
+
+<p><strong>注意 : Docker 服务重启后，执行 <code class="highlighter-rouge">docker-compose start</code> 时有一定几率出现如下错误(或者目录已存在等错误)，此时在 <code class="highlighter-rouge">docker-compose stop</code> 一下然后在启动即可，实在不行再次重启 Dokcer 服务，千万不要手贱的去删文件(别问我怎么知道的)</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_composeerror.jpeg" alt="hexo_docker_harbor_composeerror" /></p>
+
+<h4 id="442harbor-项目和权限角色">4.4.2、Harbor 项目和权限(角色)</h4>
+
+<p><strong>用户本身拥有的项目，登陆后可直接 push，其他的用户创建的项目取决于项目是否添加了对应用户和权限，</strong></p>
+
+<p><strong>也就是说用户是否可以向一个项目 push 镜像，取决于权限(角色)设置，如下所示，在项目中可以设置成员和其权限</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_projectuser.png" alt="hexo_docker_harbor_projectuser" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_projectuserrole.png" alt="hexo_docker_harbor_projectuserrole" /></p>
+
+<p><strong>对于权限(角色)，<code class="highlighter-rouge">Project Admin</code> 和 <code class="highlighter-rouge">Developer</code> 可以有 push 的权限，而 <code class="highlighter-rouge">Guest</code> 只能查看和 pull</strong></p>
+
+<h4 id="443push-镜像">4.4.3、push 镜像</h4>
+
+<p>首先使用一个对目标项目具有 push 权限的用户登录，以下 push 的目标是 mritd 项目，test1 用户在项目里定义为 <code class="highlighter-rouge">Developer</code>，所以登录后 push 即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_loginmritd.png" alt="hexo_docker_harbor_loginmritd" /></p>
+
+<p>然后 <code class="highlighter-rouge">tag</code> 一个 image，名称一定要标准( <code class="highlighter-rouge">registryAddress[:端口]/项目/imageName[:tag]</code> )，最后将其 push 即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_pushmritdimages.png" alt="hexo_docker_harbor_pushmritdimages" /></p>
+
+<p>最后可在 Web UI 中查看刚刚 push 的 image</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_mritdshow.png" alt="hexo_docker_harbor_mritdshow" /></p>
+
+<p><strong>到此结束 Thanks</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/06/22/%E5%85%8D%E8%B4%B9%E7%94%B3%E8%AF%B7-StartSSL-%E8%AF%81%E4%B9%A6/" data-toggle="tooltip" data-placement="top" title="免费申请 StartSSL 证书">
+                        Previous<br>
+                        <span>免费申请 StartSSL 证书</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" data-toggle="tooltip" data-placement="top" title="互联网加密及OpenSSL介绍和简单使用">
+                        Next<br>
+                        <span>互联网加密及OpenSSL介绍和简单使用</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/06/27/Harbor-企业级-Docker-Registry-初试";
+    var disqus_url = "https://mritd.me/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

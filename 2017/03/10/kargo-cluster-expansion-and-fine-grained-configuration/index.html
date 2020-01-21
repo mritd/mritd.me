@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="kargo 集群扩展及细粒度配置">
+    <meta name="keywords"  content="kargo,Kubernetes,Docker,HA">
+    <meta name="theme-color" content="#000000">
+    
+    <title>kargo 集群扩展及细粒度配置 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>kargo 集群扩展及细粒度配置</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on March 10, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>上一篇写了一下一下使用 kargo 快速部署 Kubernetes 高可用集群，但是一些细节部分不算完善，这里准备补一下，详细说明一下一些问题；比如后期如何扩展、一些配置如何自定义等</p>
+</blockquote>
+
+<h3 id="一集群扩展">一、集群扩展</h3>
+
+<p>如果已经有了一个 kargo 搭建的集群，那么扩展其极其容易；只需要修改集群 <code class="highlighter-rouge">inventory</code> 配置，加入新节点重新运行命令价格参数即可，如下新增一个 node6 节点</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim inventory/inventory.cfg
+
+<span class="c"># 在 Kubernetes node 组中加入新的 node6 节点</span>
+<span class="o">[</span>all]
+node1    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.11 <span class="nv">ip</span><span class="o">=</span>192.168.1.11
+node2    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.12 <span class="nv">ip</span><span class="o">=</span>192.168.1.12
+node3    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.13 <span class="nv">ip</span><span class="o">=</span>192.168.1.13
+node4    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.14 <span class="nv">ip</span><span class="o">=</span>192.168.1.14
+node5    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.15 <span class="nv">ip</span><span class="o">=</span>192.168.1.15
+node6    <span class="nv">ansible_host</span><span class="o">=</span>192.168.1.16 <span class="nv">ip</span><span class="o">=</span>192.168.1.16
+
+<span class="o">[</span>kube-master]
+node1
+node2
+node3
+node5
+
+<span class="o">[</span>kube-node]
+node1
+node2
+node3
+node4
+node5
+node6
+
+<span class="o">[</span>etcd]
+node1
+node2
+node3
+
+<span class="o">[</span>k8s-cluster:children]
+kube-node
+kube-master
+
+<span class="o">[</span>calico-rr]
+</code></pre></div></div>
+
+<p><strong>然后重新运行集群命令，注意增加 <code class="highlighter-rouge">--limit</code> 参数</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ansible-playbook <span class="nt">-i</span> inventory/inventory.cfg cluster.yml <span class="nt">-b</span> <span class="nt">-v</span> <span class="nt">--private-key</span><span class="o">=</span>~/.ssh/id_rsa <span class="nt">--limit</span> node6
+</code></pre></div></div>
+
+<p><strong>稍等片刻 node6 节点便加入现有集群，如果有多个节点加入，只需要以逗号分隔即可，如 <code class="highlighter-rouge">--limit node5,node6</code>；在此过程中只会操作新增的 node 节点，不会影响现有集群，可以实现动态集群扩容(master 也可以扩展)</strong></p>
+
+<h3 id="二kargo-细粒度控制">二、kargo 细粒度控制</h3>
+
+<p>对于 kargo 高度自动化的工具，可能有些东西我们已经预先处理好了，<strong>比如事先已经安装了 docker，而且 docker 配置了一些参数(日志驱动、存储驱动等)；这时候我们可能并不希望 kargo 再去处理，因为 kargo 会进行覆盖，可能导致一些问题</strong></p>
+
+<p><strong>kargo 是基于 ansible 的，实际上也就是 ansible，只不过它帮我们写好了配置文件而已；按照 ansible 的规则，Play Book 首先执行 roles 目录下的 roles，在这些 roles 中定义了如何配置集群、如何初始化网络、怎么配置 docker 等等，所以只要我们去更改这些 roles 规则就可以实现一些功能的定制，roles 目录位置如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/jmy7o.jpg" alt="roles" /></p>
+
+<p>如果需要更改某些默认配置，那么只需要更改对应目录下的 role 即可，<strong>每个 role 子目录都是一个组件的配置过程(动作)，动作实际上就是不同的 task，所有的 task 定义在 <code class="highlighter-rouge">tasks/main.yml</code> 中，如果我们注释(删掉)了相关 task，那么也就关闭了 kargo 对应的处理；如下禁用了 kargo 安装 docker，但是允许 kargo 覆盖 docker service 文件</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/vv2px.jpg" alt="docker task" /></p>
+
+<p><strong>禁用掉 docker 仓库以及 docker 的安装动作</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim roles/docker/tasks/main.yml
+
+<span class="nt">---</span>
+- name: gather os specific variables
+  include_vars: <span class="s2">"{ { item } }"</span>
+  with_first_found:
+    - files:
+      - <span class="s2">"{ { ansible_distribution|lower } }-{ { ansible_distribution_version|lower|replace('/', '_') } }.yml"</span>
+      - <span class="s2">"{ { ansible_distribution|lower } }-{ { ansible_distribution_release } }.yml"</span>
+      - <span class="s2">"{ { ansible_distribution|lower } }-{ { ansible_distribution_major_version|lower|replace('/', '_') } }.yml"</span>
+      - <span class="s2">"{ { ansible_distribution|lower } }.yml"</span>
+      - <span class="s2">"{ { ansible_os_family|lower } }.yml"</span>
+      - defaults.yml
+      paths:
+      - ../vars
+      skip: <span class="nb">true
+  </span>tags: facts
+
+- include: set_facts_dns.yml
+  when: dns_mode <span class="o">!=</span> <span class="s1">'none'</span> and resolvconf_mode <span class="o">==</span> <span class="s1">'docker_dns'</span>
+  tags: facts
+
+- name: check <span class="k">for </span>minimum kernel version
+  fail:
+    msg: <span class="o">&gt;</span>
+          docker requires a minimum kernel version of
+          <span class="o">{</span> <span class="o">{</span> docker_kernel_min_version <span class="o">}</span> <span class="o">}</span> on
+          <span class="o">{</span> <span class="o">{</span> ansible_distribution <span class="o">}</span> <span class="o">}</span>-<span class="o">{</span> <span class="o">{</span> ansible_distribution_version <span class="o">}</span> <span class="o">}</span>
+  when: <span class="o">(</span>not ansible_os_family <span class="k">in</span> <span class="o">[</span><span class="s2">"CoreOS"</span>, <span class="s2">"Container Linux by CoreOS"</span><span class="o">])</span> and <span class="o">(</span>ansible_kernel|version_compare<span class="o">(</span>docker_kernel_min_version, <span class="s2">"&lt;"</span><span class="o">))</span>
+  tags: facts
+
+<span class="c"># 禁用 docker 仓库处理，因为默认 kargo 会写入国外 docker 源，我已经自己设置了清华大学的镜像源</span>
+
+<span class="c">#- name: ensure docker repository public key is installed</span>
+<span class="c">#  action: "{ { docker_repo_key_info.pkg_key } }"</span>
+<span class="c">#  args:</span>
+<span class="c">#    id: "{ {item} }"</span>
+<span class="c">#    keyserver: "{ {docker_repo_key_info.keyserver} }"</span>
+<span class="c">#    state: present</span>
+<span class="c">#  register: keyserver_task_result</span>
+<span class="c">#  until: keyserver_task_result|success</span>
+<span class="c">#  retries: 4</span>
+<span class="c">#  delay: "{ { retry_stagger | random + 3 } }"</span>
+<span class="c">#  with_items: "{ { docker_repo_key_info.repo_keys } }"</span>
+<span class="c">#  when: not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]</span>
+<span class="c">#</span>
+<span class="c">#- name: ensure docker repository is enabled</span>
+<span class="c">#  action: "{ { docker_repo_info.pkg_repo } }"</span>
+<span class="c">#  args:</span>
+<span class="c">#    repo: "{ {item} }"</span>
+<span class="c">#    state: present</span>
+<span class="c">#  with_items: "{ { docker_repo_info.repos } }"</span>
+<span class="c">#  when: (not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]) and (docker_repo_info.repos|length &gt; 0)</span>
+<span class="c">#</span>
+<span class="c">#- name: Configure docker repository on RedHat/CentOS</span>
+<span class="c">#  template:</span>
+<span class="c">#    src: "rh_docker.repo.j2"</span>
+<span class="c">#    dest: "/etc/yum.repos.d/docker.repo"</span>
+<span class="c">#  when: ansible_distribution in ["CentOS","RedHat"]</span>
+<span class="c">#</span>
+
+<span class="c"># 这步 kargo 会重新安装 docker，已经装好了，所以不需要再覆盖安装</span>
+
+<span class="c">#- name: ensure docker packages are installed</span>
+<span class="c">#  action: "{ { docker_package_info.pkg_mgr } }"</span>
+<span class="c">#  args:</span>
+<span class="c">#    pkg: "{ {item.name} }"</span>
+<span class="c">#    force: "{ {item.force|default(omit)} }"</span>
+<span class="c">#    state: present</span>
+<span class="c">#  register: docker_task_result</span>
+<span class="c">#  until: docker_task_result|success</span>
+<span class="c">#  retries: 4</span>
+<span class="c">#  delay: "{ { retry_stagger | random + 3 } }"</span>
+<span class="c">#  with_items: "{ { docker_package_info.pkgs } }"</span>
+<span class="c">#  notify: restart docker</span>
+<span class="c">#  when: (not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]) and (docker_package_info.pkgs|length &gt; 0)</span>
+<span class="c">#</span>
+
+<span class="c"># 对于 docker 版本的检查个人感觉还是有点必要的</span>
+
+- name: check minimum docker version <span class="k">for </span>docker_dns mode. You need at least docker version <span class="o">&gt;=</span> 1.12 <span class="k">for </span><span class="nv">resolvconf_mode</span><span class="o">=</span>docker_dns
+  <span class="nb">command</span>: <span class="s2">"docker version -f '{ { '{ {' } }.Client.Version{ { '} }' } }'"</span>
+  register: docker_version
+  failed_when: docker_version.stdout|version_compare<span class="o">(</span><span class="s1">'1.12'</span>, <span class="s1">'&lt;'</span><span class="o">)</span>
+  changed_when: <span class="nb">false
+  </span>when: dns_mode <span class="o">!=</span> <span class="s1">'none'</span> and resolvconf_mode <span class="o">==</span> <span class="s1">'docker_dns'</span>
+
+<span class="c"># kargo 对 docker service 的配置会在此写入，我感觉还不错，所以留着了；但是注意的是它会把原来的覆盖掉</span>
+
+- name: Set docker systemd config
+  include: systemd.yml
+
+- name: ensure docker service is started and enabled
+  service:
+    name: <span class="s2">"{ { item } }"</span>
+    enabled: <span class="nb">yes
+    </span>state: started
+  with_items:
+    - docker
+</code></pre></div></div>
+
+<p><strong>kargo 在进行各种任务(task)时可能会释放一些配置文件，比如 docker service 配置文件、kubernetes 配置文件等；这些文件一般位于 <code class="highlighter-rouge">roles/组件/templates</code> 目录，比如 docker 的 service 配置位于如下位置；我们可以更改，甚至直接换一个，把里面写死变成我们自己的</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/f1f9g.jpg" alt="docker service template" /></p>
+
+<h3 id="三其他相关">三、其他相关</h3>
+
+<p><strong>以上只是介绍了自定义配置的大体思路，更深度的处理需要去玩转  ansible，如果玩明白了 ansible 那么基本上这个 kargo 就可以随便搞了；要写的差不多也就这么多了，感觉这东西比 kubeadm 要好的多，所有操作都是可视化的，没有莫名其妙的问题；其他的可以参考 <a href="http://ansible-tran.readthedocs.io/en/latest/">ansible 中文文档</a>、<a href="https://github.com/kubernetes-incubator/kargo/blob/master/README.md">kargo 官方文档</a></strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/03/04/how-to-use-nginx-ingress/" data-toggle="tooltip" data-placement="top" title="Kubernetes Nginx Ingress 教程">
+                        Previous<br>
+                        <span>Kubernetes Nginx Ingress 教程</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/03/18/set-up-vnc-server-on-centos-7/" data-toggle="tooltip" data-placement="top" title="CentOS 7 配置 VNC Server">
+                        Next<br>
+                        <span>CentOS 7 配置 VNC Server</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration";
+    var disqus_url = "https://mritd.me/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

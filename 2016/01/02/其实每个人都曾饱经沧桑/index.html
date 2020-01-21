@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="其实每个人都曾饱经沧桑">
+    <meta name="keywords"  content="沧桑">
+    <meta name="theme-color" content="#000000">
+    
+    <title>其实每个人都曾饱经沧桑 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/01/02/%E5%85%B6%E5%AE%9E%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E6%9B%BE%E9%A5%B1%E7%BB%8F%E6%B2%A7%E6%A1%91/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#随笔" title="随笔">随笔</a>
+                        
+                    </div>
+                    <h1>其实每个人都曾饱经沧桑</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on January 2, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <p><img src="https://cdn.oss.link/markdown/hexo_cangsang.png" alt="hexo_cangsang" /></p>
+
+<blockquote>
+  <p>我们误以为只有自己的经历才算壮怀激烈。然后难免夸夸其谈，希望得到更多的认同，来缅怀心中那点被拼命放大的伤口与遗憾。</p>
+</blockquote>
+
+<!--more-->
+
+<hr />
+
+<p>上学时，班上有个“富二代”男生。</p>
+
+<p>同学们都很羡慕他，因为感觉他的钱总是多得花不完。穿最贵的名牌衣服，用最好的文具，生日聚会在最豪华的餐厅办，动不动中午就请全班同学吃冰激凌，还是当时我们都不舍得买的“和路雪”。就连班费用完了，班长打个招呼，他立刻掏出钱包补齐，一点儿都不含糊。</p>
+
+<p>那时候还没有“土豪”或者“有钱任性”这样的说法，但他的确是全班最耀眼的那个人。女生围着他转，男生乐意跟他做朋友，老师都对他和蔼一些，算得上是“天之骄子”了。</p>
+
+<p>我们坐前后桌，有一次放学，他磨蹭着不动。我问他怎么了，他说不想回家。我问为什么，他说我三妈和四爸都在，今天家里肯定特别乱。</p>
+
+<p>我第一次听到“三妈”和“四爸”的说法，一头雾水。问他什么是三妈四爸，他竟也没避讳，跟我说了。</p>
+
+<p>原来他很小的时候父母就离异了，他跟着亲妈生活。亲妈是个女强人，白手起家，先卖鞋子，再卖貂皮，后来居然倒起了房地产，一夜暴富。有钱了，给他找了个继父。结果亲爸闻声又回来骚扰亲妈，称自己是孩子的父亲，要给钱才不闹，亲妈一气之下把他和一笔钱全甩给了亲爸，声称给完钱以后就跟他们父子毫无关系。亲爸同意了，带着他回家。</p>
+
+<p>亲爸此前已经为他找了个继母，有了钱又嫌人家不够年轻漂亮，随即离了，找了个新女人结婚。继母跑回来问他爸要钱。他那时年纪小还分不太清，索性叫“二妈”和“三妈”。</p>
+
+<p>他亲妈那边也乱成一团，接连离了两次婚。她并没有真如自己所说那样完全不管他，还会偶尔带着新找的男人来看他，给他塞零花钱，他就叫那些人“二爸”、“三爸”、“四爸”… …后来上了高中，家里太乱，亲妈又出钱给他租了个房子，偶尔让新晋的四爸来给他送钱和东西，每次都留个几万块。</p>
+
+<p>亲爸知道他有钱，让三妈经常来他这里，硬是要钱回去贴补自己。他烦不胜烦，就想了个办法，把四爸和三妈约在同一天见面。“都不是善茬儿，估计这会儿正打得热闹呢。”他说。</p>
+
+<p>我听得脑袋轰轰响，乱成糨糊，简直无法想象这是一个十几岁男孩的人生。看上去锦衣玉食，私下的日子却是一团乱麻，甚至已经开始学着应对无解难题。再看他那张貌似满不在乎的脸，却是读出了几分与年龄不符的沉郁和哀伤。</p>
+
+<p>在泰国普吉的一座小岛上，我认识了一家餐馆的老板。</p>
+
+<p>他们家店面很小，却在当地非常有名，专卖烤龙虾和椰子饭，味道不错。墙上贴满了顾客们的手写贴纸，有的写“龙虾真好吃”，有的向女朋友表白，还有的画一些稀奇古怪的画和文字… …世界各地的语言都有。店名则叫“LOVE”（爱），听起来就温暖无比。</p>
+
+<p>每天晚上我们出海潜水回来，披着湿漉漉的头发去他们家吃饭，大老远就能闻到扑鼻的香味。据说老板是土生土长的当地人，从不在白天营业，只是出海晒太阳或是在家休息，晚上才亲自下厨，不多的食材，做完就打烊，端的是轻松洒脱。</p>
+
+<p>我们都很喜欢这里的店员，永远笑眯眯的，还经常过来问菜合不合口味。有时候来了坏脾气的客人也从不计较，送杯果汁就打发了。</p>
+
+<p>我想他们应该是世界上生活得最轻松幸福的那类人，经济有保障，没有竞争压力，在如此美丽的小岛度日，心情愉悦，身体健康。这几乎可以称得上是未经任何风浪的完美人生了。</p>
+
+<p>有次我跟一位店员聊天，说起我的感受。他听过后却笑起来，指着店口的招牌问：“你知道这里为什么叫‘LOVE’吗？”</p>
+
+<p>“大约是因为纪念某段爱情？”我猜测。</p>
+
+<p>他摇头：“你记得2004年印尼地震引发的东南亚大海啸吗？”</p>
+
+<p>我当然记得。那场海啸死了几十万人，举世震惊。李连杰也险些遭难，回国后还因此成立了壹基金。</p>
+
+<p>他说：“在那场海啸到来之前，我们的确像你形容的那样幸福。”</p>
+
+<p>那场巨大的灾难突如其来，一夜之间吞没了他的房子和全部财产，变得一无所有。许多亲友被海浪卷走再无音讯，连自己的命也是别人搭救回来。那个时候，他孤零零地站在废墟之中，赤手空拳，身无长物，哭得像个傻瓜，绝望无比。</p>
+
+<p>幸好，岛上的人互相施以援手，一起盖起房子，重新建了餐馆，他们悉心经营，辛苦工作，依然亏损了很久。好在害怕海啸的客人们在几年后陆续回到了这座岛上，人流渐渐多了起来，才开始盈利。老板把餐馆起名叫“LOVE”就是为了感恩这段经历。</p>
+
+<p>我听得唏嘘，然而故事并未完结。后来的某个夏天，我重回这座岛时，正遇上一次大规模海啸预警，地震级数与上次一模一样。尽管最后海啸未啸，仍然惊魂不已。我置身其中，更觉震撼与恐惧。</p>
+
+<p>没想到海啸第二天，那家饭店便开门营业，我惊奇又不解，问店员难道不害怕吗？连续经历几次这样的心惊肉跳，为什么还愿意停留在这座小岛上？真的不要命了吗？</p>
+
+<p>他的表情很平和，对我说：LOVE的意义不仅仅在于爱身边的人，更是爱着命运的安排。上帝让他们重新活过一次，不是让人学会畏惧，而要学会无畏。在经历生死之后，反而可以坦然安定地生活在这座小岛上。相信一切自然而然地到来，不害怕可能重来的危险，不再顾虑未来行向何方。</p>
+
+<p>彼时他坐在长尾船上，我们同看着安达曼海缓缓下沉的夕阳。他的笑容融化在身后的金红色霞光中。</p>
+
+<p>那是我以为的无忧无怖，却不知包容了多少惊涛拍岸，卷起千堆雪。</p>
+
+<p>她是一所小镇学校的化学老师。貌不惊人，能力平平。她的生活节奏毫无亮点，按部就班，出生、升学、上班、结婚、生子。她从不试图出人头地，没想过一夜暴富，和大多数人一样，只想安安稳稳地过好庸碌的一辈子。</p>
+
+<p>当我认识她的时候，她的身影几乎缩到不存在的角落。我从未想过这样一个人身上会有任何火花。任何问题都只有简单几个字的乏味回答，然后便开始露出满足的笑，看上去相当苍白无力。一个毫无亮点的人，我不明白为什么杂志要安排我来采访她。</p>
+
+<p>直到别的老师偷偷地跟我说，她家有一个傻儿子。</p>
+
+<p>“傻儿子？什么样的傻儿子？”我有些吃惊。</p>
+
+<p>“脑瘫，生下来就带的病。现在已经16岁了，根本治不好，智商还像两三岁一样，在床上吃床上拉，可糟心了。这些年她拼命在外面教课赚钱，就是为给儿子治病。”</p>
+
+<p>当时的我不太能理解。面临这样的困境，她为什么丝毫没有表现出压力，没有痛不欲生歇斯底里，反而平静到让人忽视她的情绪。</p>
+
+<p>我们聊了很久，并没有得到具体的答案，她也不能描述出内心最深处的感受。那大概是所有像她这样的人在寡淡世界里唯一的私有。</p>
+
+<p>她只是反复地说着一句话，试图让我多明白一点点。</p>
+
+<p>“… …再苦再难，日子还不是要这样，拼了命地过。”</p>
+
+<p>那些看上去幸福的、平静的、超脱的人生，常常会让人生出错觉：他们是与烦恼绝缘的，他们已经看破世情，或者世情压根与他们无关。</p>
+
+<p>在这样的错觉下，我们误以为只有自己的经历才算壮怀激烈。然后难免夸夸其谈，希望得到更多的认同，来缅怀心中那点被拼命放大的伤口与遗憾。</p>
+
+<p>直到有个声音狠狠地迎头砸下，带着不屑一顾的嘲讽。</p>
+
+<p>别傻了，哪有什么独一无二，是个人就饱经沧桑。</p>
+
+<p>前些天，我无意中看到刚上小学一年级的小侄女QQ签名改成了“你不像他”。</p>
+
+<p>正好周末她来我家玩，我就逗她：“这个‘你’是谁啊？”</p>
+
+<p>她居然脸红娇羞：“当然是我男朋友。”</p>
+
+<p>然后她给我看小男生的照片。虽然清秀可爱，我也不知该如何置评，只好敷衍几句。刚要转身离开，她拉住我，说还有另一个的照片。</p>
+
+<p>我说另一个是什么人？她害羞地笑：“刚刚问的是‘你’，这个是‘他’啊。”</p>
+
+<p>我张大了嘴看着她。</p>
+
+<p>小侄女一脸苦恼：“他们两个，一个是班长，一个是学委，好难选，我夹在中间好尴尬好纠结啊。”</p>
+
+<p>她又说：“小姑姑，曾经沧海难为水，其实我还是最爱幼儿园大班的浩浩。可惜我们再也不能在一起了。小姑姑，你说浩浩会不会也很在意我？”</p>
+
+<p>我努力地想了又想，实在不知如何回答。最后只得点了点头说：“爱过。”</p>
+
+<p>她满意地点点头，然后长长叹息了一声—</p>
+
+<p>“我这一生，真是沧桑呵。”</p>
+
+<hr />
+
+<ul>
+  <li>Author <strong>辉姑娘</strong></li>
+  <li>转载自 <strong><a href="http://guo.lu/5473">素锦</a></strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+</ul>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/01/02/%E5%81%9A%E8%87%AA%E5%B7%B1%E5%B0%8A%E9%87%8D%E7%9A%84%E4%BA%BA-2015%E5%8C%97%E5%A4%A7%E6%9C%80%E7%9F%AD%E6%AF%95%E4%B8%9A%E8%87%B4%E8%BE%9E/" data-toggle="tooltip" data-placement="top" title="做自己尊重的人-2015北大最短毕业致辞">
+                        Previous<br>
+                        <span>做自己尊重的人-2015北大最短毕业致辞</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/01/02/%E6%9C%AA%E6%9D%A5%E7%A7%91%E6%8A%80%E6%B8%B2%E6%9F%93%E8%A7%86%E9%A2%91/" data-toggle="tooltip" data-placement="top" title="未来科技渲染视频">
+                        Next<br>
+                        <span>未来科技渲染视频</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/01/02/其实每个人都曾饱经沧桑";
+    var disqus_url = "https://mritd.me/2016/01/02/%E5%85%B6%E5%AE%9E%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E6%9B%BE%E9%A5%B1%E7%BB%8F%E6%B2%A7%E6%A1%91/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

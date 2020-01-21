@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Go ssh 交互式执行命令">
+    <meta name="keywords"  content="golang,ssh">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Go ssh 交互式执行命令 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2018/11/09/go-interactive-shell/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Golang" title="Golang">Golang</a>
+                        
+                    </div>
+                    <h1>Go ssh 交互式执行命令</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on November 9, 2018</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>最近在写一个跳板机登录的小工具，其中涉及到了用 Go 来进行交互式执行命令，简单地说就是弄个终端出来；一开始随便 Google 了一下，copy 下来基本上就是能跑了…但是后来发现了一些各种各样的小问题，强迫症的我实在受不了，最后翻了一下 Teleport 的源码，从中学到了不少有用的知识，这里记录一下</p>
+</blockquote>
+
+<h2 id="一原始版本">一、原始版本</h2>
+
+<blockquote>
+  <p>不想看太多可以直接跳转到 <a href="#三完整代码">第三部分</a> 拿代码</p>
+</blockquote>
+
+<h3 id="11样例代码">1.1、样例代码</h3>
+
+<p>一开始随便 Google 出来的代码，copy 上就直接跑；代码基本如下:</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="c">// 创建 ssh 配置</span>
+	<span class="n">sshConfig</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">ssh</span><span class="o">.</span><span class="n">ClientConfig</span><span class="p">{</span>
+		<span class="n">User</span><span class="o">:</span> <span class="s">"root"</span><span class="p">,</span>
+		<span class="n">Auth</span><span class="o">:</span> <span class="p">[]</span><span class="n">ssh</span><span class="o">.</span><span class="n">AuthMethod</span><span class="p">{</span>
+			<span class="n">ssh</span><span class="o">.</span><span class="n">Password</span><span class="p">(</span><span class="s">"password"</span><span class="p">),</span>
+		<span class="p">},</span>
+		<span class="n">HostKeyCallback</span><span class="o">:</span> <span class="n">ssh</span><span class="o">.</span><span class="n">InsecureIgnoreHostKey</span><span class="p">(),</span>
+		<span class="n">Timeout</span><span class="o">:</span>         <span class="m">5</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">,</span>
+	<span class="p">}</span>
+
+	<span class="c">// 创建 client</span>
+	<span class="n">client</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">ssh</span><span class="o">.</span><span class="n">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="s">"192.168.1.20:22"</span><span class="p">,</span> <span class="n">sshConfig</span><span class="p">)</span>
+	<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="k">defer</span> <span class="n">client</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+	<span class="c">// 获取 session</span>
+	<span class="n">session</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">client</span><span class="o">.</span><span class="n">NewSession</span><span class="p">()</span>
+	<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="k">defer</span> <span class="n">session</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+	<span class="c">// 拿到当前终端文件描述符</span>
+	<span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
+	<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+	<span class="c">// request pty</span>
+	<span class="n">err</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">RequestPty</span><span class="p">(</span><span class="s">"xterm-256color"</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">termWidth</span><span class="p">,</span> <span class="n">ssh</span><span class="o">.</span><span class="n">TerminalModes</span><span class="p">{})</span>
+	<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+	<span class="c">// 对接 std</span>
+	<span class="n">session</span><span class="o">.</span><span class="n">Stdout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdout</span>
+	<span class="n">session</span><span class="o">.</span><span class="n">Stderr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stderr</span>
+	<span class="n">session</span><span class="o">.</span><span class="n">Stdin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdin</span>
+
+	<span class="n">err</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">Shell</span><span class="p">()</span>
+	<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="n">err</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">Wait</span><span class="p">()</span>
+	<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">checkErr</span><span class="p">(</span><span class="n">err</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="12遇到的问题">1.2、遇到的问题</h3>
+
+<p>以上代码跑起来后，基本上遇到了以下问题:</p>
+
+<ul>
+  <li>执行命令有回显，表现为敲一个 <code class="highlighter-rouge">ls</code> 出现两行</li>
+  <li>本地终端大小调整，远端完全无反应，导致显示不全</li>
+  <li>Tmux 下终端连接后窗口标题显示的是原始命令，而不是目标机器 shell 环境的目录位置</li>
+  <li>首次连接一些刚装完系统的机器可能出现执行命令后回显不换行</li>
+</ul>
+
+<h2 id="二改进代码">二、改进代码</h2>
+
+<h3 id="21回显问题">2.1、回显问题</h3>
+
+<p>关于回显问题，实际上解决方案很简单，设置当前终端进入 <code class="highlighter-rouge">raw</code> 模式即可；代码如下:</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// 拿到当前终端文件描述符</span>
+<span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
+<span class="c">// make raw</span>
+<span class="n">state</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">MakeRaw</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="k">defer</span> <span class="n">terminal</span><span class="o">.</span><span class="n">Restore</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>代码很简单，网上一大堆，But…基本没有文章详细说这个 <code class="highlighter-rouge">raw</code> 模式到底是个啥玩意；好在万能的 StackOverflow 对于不熟悉 Linux 的人给出了一个很清晰的解释: <a href="https://unix.stackexchange.com/questions/21752/what-s-the-difference-between-a-raw-and-a-cooked-device-driver">What’s the difference between a “raw” and a “cooked” device driver?</a></p>
+
+<p>大致意思就是说 <strong>在终端处于 <code class="highlighter-rouge">Cooked</code> 模式时，当你输入一些字符后，默认是被当前终端 cache 住的，在你敲了回车之前这些文本都在 cache 中，这样允许应用程序做一些处理，比如捕获 <code class="highlighter-rouge">Cntl-D</code> 等按键，这时候就会出现敲回车后本地终端帮你打印了一下，导致出现类似回显的效果；当设置终端为 <code class="highlighter-rouge">raw</code> 模式后，所有的输入将不被 cache，而是发送到应用程序，在我们的代码中表现为通过 <code class="highlighter-rouge">io.Copy</code> 直接发送到了远端 shell 程序</strong></p>
+
+<h3 id="22终端大小问题">2.2、终端大小问题</h3>
+
+<p>当本地调整了终端大小后，远程终端毫无反应；后来发现在 <code class="highlighter-rouge">*ssh.Session</code> 上有一个 <code class="highlighter-rouge">WindowChange</code> 方法，用于向远端发送窗口调整事件；解决方案就是启动一个 <code class="highlighter-rouge">goroutine</code> 在后台不断监听窗口改变事件，然后调用 <code class="highlighter-rouge">WindowChange</code> 即可；代码如下:</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+	<span class="c">// 监听窗口变更事件</span>
+	<span class="n">sigwinchCh</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="n">os</span><span class="o">.</span><span class="n">Signal</span><span class="p">,</span> <span class="m">1</span><span class="p">)</span>
+	<span class="n">signal</span><span class="o">.</span><span class="n">Notify</span><span class="p">(</span><span class="n">sigwinchCh</span><span class="p">,</span> <span class="n">syscall</span><span class="o">.</span><span class="n">SIGWINCH</span><span class="p">)</span>
+
+	<span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
+	<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">select</span> <span class="p">{</span>
+		<span class="c">// 阻塞读取</span>
+		<span class="k">case</span> <span class="n">sigwinch</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">sigwinchCh</span><span class="o">:</span>
+			<span class="k">if</span> <span class="n">sigwinch</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="k">return</span>
+			<span class="p">}</span>
+			<span class="n">currTermWidth</span><span class="p">,</span> <span class="n">currTermHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+			<span class="c">// 判断一下窗口尺寸是否有改变</span>
+			<span class="k">if</span> <span class="n">currTermHeight</span> <span class="o">==</span> <span class="n">termHeight</span> <span class="o">&amp;&amp;</span> <span class="n">currTermWidth</span> <span class="o">==</span> <span class="n">termWidth</span> <span class="p">{</span>
+				<span class="k">continue</span>
+			<span class="p">}</span>
+			<span class="c">// 更新远端大小</span>
+			<span class="n">session</span><span class="o">.</span><span class="n">WindowChange</span><span class="p">(</span><span class="n">currTermHeight</span><span class="p">,</span> <span class="n">currTermWidth</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Unable to send window-change reqest: %s."</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+				<span class="k">continue</span>
+			<span class="p">}</span>
+
+			<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span> <span class="o">=</span> <span class="n">currTermWidth</span><span class="p">,</span> <span class="n">currTermHeight</span>
+
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}()</span>
+</code></pre></div></div>
+
+<h3 id="23tmux-标题以及回显不换行">2.3、Tmux 标题以及回显不换行</h3>
+
+<p>这两个问题实际上都是由于我们直接对接了 <code class="highlighter-rouge">stderr</code>、<code class="highlighter-rouge">stdout</code> 和 <code class="highlighter-rouge">stdin</code> 造成的，实际上我们应当启动一个异步的管道式复制行为，并且最好带有 buf 的发送；代码如下:</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">stdin</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">session</span><span class="o">.</span><span class="n">StdinPipe</span><span class="p">()</span>
+<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="n">stdout</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">session</span><span class="o">.</span><span class="n">StdoutPipe</span><span class="p">()</span>
+<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="n">stderr</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">session</span><span class="o">.</span><span class="n">StderrPipe</span><span class="p">()</span>
+<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+<span class="k">go</span> <span class="n">io</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stderr</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+<span class="k">go</span> <span class="n">io</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdout</span><span class="p">,</span> <span class="n">stdout</span><span class="p">)</span>
+<span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+	<span class="n">buf</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="m">128</span><span class="p">)</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="n">n</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Read</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+			<span class="k">return</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+			<span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">stdin</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="o">:</span><span class="n">n</span><span class="p">])</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}()</span>
+</code></pre></div></div>
+
+<h2 id="三完整代码">三、完整代码</h2>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">SSHTerminal</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">Session</span> <span class="o">*</span><span class="n">ssh</span><span class="o">.</span><span class="n">Session</span>
+	<span class="n">exitMsg</span> <span class="kt">string</span>
+	<span class="n">stdout</span>  <span class="n">io</span><span class="o">.</span><span class="n">Reader</span>
+	<span class="n">stdin</span>   <span class="n">io</span><span class="o">.</span><span class="n">Writer</span>
+	<span class="n">stderr</span>  <span class="n">io</span><span class="o">.</span><span class="n">Reader</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="n">sshConfig</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">ssh</span><span class="o">.</span><span class="n">ClientConfig</span><span class="p">{</span>
+		<span class="n">User</span><span class="o">:</span> <span class="s">"root"</span><span class="p">,</span>
+		<span class="n">Auth</span><span class="o">:</span> <span class="p">[]</span><span class="n">ssh</span><span class="o">.</span><span class="n">AuthMethod</span><span class="p">{</span>
+			<span class="n">ssh</span><span class="o">.</span><span class="n">Password</span><span class="p">(</span><span class="s">"password"</span><span class="p">),</span>
+		<span class="p">},</span>
+		<span class="n">HostKeyCallback</span><span class="o">:</span> <span class="n">ssh</span><span class="o">.</span><span class="n">InsecureIgnoreHostKey</span><span class="p">(),</span>
+	<span class="p">}</span>
+
+	<span class="n">client</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">ssh</span><span class="o">.</span><span class="n">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="s">"192.168.1.20:22"</span><span class="p">,</span> <span class="n">sshConfig</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="n">client</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+	
+	<span class="n">err</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="p">(</span><span class="n">t</span> <span class="o">*</span><span class="n">SSHTerminal</span><span class="p">)</span> <span class="n">updateTerminalSize</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="c">// SIGWINCH is sent to the process when the window size of the terminal has</span>
+		<span class="c">// changed.</span>
+		<span class="n">sigwinchCh</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="k">chan</span> <span class="n">os</span><span class="o">.</span><span class="n">Signal</span><span class="p">,</span> <span class="m">1</span><span class="p">)</span>
+		<span class="n">signal</span><span class="o">.</span><span class="n">Notify</span><span class="p">(</span><span class="n">sigwinchCh</span><span class="p">,</span> <span class="n">syscall</span><span class="o">.</span><span class="n">SIGWINCH</span><span class="p">)</span>
+
+		<span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
+		<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="p">}</span>
+
+		<span class="k">for</span> <span class="p">{</span>
+			<span class="k">select</span> <span class="p">{</span>
+			<span class="c">// The client updated the size of the local PTY. This change needs to occur</span>
+			<span class="c">// on the server side PTY as well.</span>
+			<span class="k">case</span> <span class="n">sigwinch</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="n">sigwinchCh</span><span class="o">:</span>
+				<span class="k">if</span> <span class="n">sigwinch</span> <span class="o">==</span> <span class="no">nil</span> <span class="p">{</span>
+					<span class="k">return</span>
+				<span class="p">}</span>
+				<span class="n">currTermWidth</span><span class="p">,</span> <span class="n">currTermHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+				<span class="c">// Terminal size has not changed, don't do anything.</span>
+				<span class="k">if</span> <span class="n">currTermHeight</span> <span class="o">==</span> <span class="n">termHeight</span> <span class="o">&amp;&amp;</span> <span class="n">currTermWidth</span> <span class="o">==</span> <span class="n">termWidth</span> <span class="p">{</span>
+					<span class="k">continue</span>
+				<span class="p">}</span>
+
+				<span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">WindowChange</span><span class="p">(</span><span class="n">currTermHeight</span><span class="p">,</span> <span class="n">currTermWidth</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+					<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Unable to send window-change reqest: %s."</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+					<span class="k">continue</span>
+				<span class="p">}</span>
+
+				<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span> <span class="o">=</span> <span class="n">currTermWidth</span><span class="p">,</span> <span class="n">currTermHeight</span>
+
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}()</span>
+
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="p">(</span><span class="n">t</span> <span class="o">*</span><span class="n">SSHTerminal</span><span class="p">)</span> <span class="n">interactiveSession</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+
+	<span class="k">defer</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">exitMsg</span> <span class="o">==</span> <span class="s">""</span> <span class="p">{</span>
+			<span class="n">fmt</span><span class="o">.</span><span class="n">Fprintln</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdout</span><span class="p">,</span> <span class="s">"the connection was closed on the remote side on "</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">Now</span><span class="p">()</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">RFC822</span><span class="p">))</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="n">fmt</span><span class="o">.</span><span class="n">Fprintln</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdout</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">exitMsg</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}()</span>
+
+	<span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
+	<span class="n">state</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">MakeRaw</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="n">terminal</span><span class="o">.</span><span class="n">Restore</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+	<span class="n">termWidth</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+
+	<span class="n">termType</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"TERM"</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">termType</span> <span class="o">==</span> <span class="s">""</span> <span class="p">{</span>
+		<span class="n">termType</span> <span class="o">=</span> <span class="s">"xterm-256color"</span>
+	<span class="p">}</span>
+
+	<span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">RequestPty</span><span class="p">(</span><span class="n">termType</span><span class="p">,</span> <span class="n">termHeight</span><span class="p">,</span> <span class="n">termWidth</span><span class="p">,</span> <span class="n">ssh</span><span class="o">.</span><span class="n">TerminalModes</span><span class="p">{})</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+
+	<span class="n">t</span><span class="o">.</span><span class="n">updateTerminalSize</span><span class="p">()</span>
+
+	<span class="n">t</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">StdinPipe</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="n">t</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">StdoutPipe</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="n">t</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">StderrPipe</span><span class="p">()</span>
+
+	<span class="k">go</span> <span class="n">io</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stderr</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+	<span class="k">go</span> <span class="n">io</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdout</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+	<span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="n">buf</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="m">128</span><span class="p">)</span>
+		<span class="k">for</span> <span class="p">{</span>
+			<span class="n">n</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Read</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+				<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+				<span class="k">return</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+				<span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="o">:</span><span class="n">n</span><span class="p">])</span>
+				<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+					<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+					<span class="n">t</span><span class="o">.</span><span class="n">exitMsg</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">Error</span><span class="p">()</span>
+					<span class="k">return</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}()</span>
+
+	<span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">Shell</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">Wait</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="no">nil</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">New</span><span class="p">(</span><span class="n">client</span> <span class="o">*</span><span class="n">ssh</span><span class="o">.</span><span class="n">Client</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+
+	<span class="n">session</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">client</span><span class="o">.</span><span class="n">NewSession</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">err</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="n">session</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+	<span class="n">s</span> <span class="o">:=</span> <span class="n">SSHTerminal</span><span class="p">{</span>
+		<span class="n">Session</span><span class="o">:</span> <span class="n">session</span><span class="p">,</span>
+	<span class="p">}</span>
+
+	<span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">interactiveSession</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2018/10/23/golang-code-plugin/" data-toggle="tooltip" data-placement="top" title="Go 代码的扩展套路">
+                        Previous<br>
+                        <span>Go 代码的扩展套路</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2018/11/23/extract-jdk-to-folder-on-mac/" data-toggle="tooltip" data-placement="top" title="Mac: Extract JDK to folder, without running installer">
+                        Next<br>
+                        <span>Mac: Extract JDK to folder, without running installer</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2018/11/09/go-interactive-shell";
+    var disqus_url = "https://mritd.me/2018/11/09/go-interactive-shell/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

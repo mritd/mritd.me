@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Nothing is impossible to a willing heart!">
+    <meta name="keywords"  content="漠然, 漠然的博客, mritd, Docker, Kubernetes, @mritd, mritd blog, 博客, 个人网站, Java, Web">
+    <meta name="theme-color" content="#000000">
+    
+    <title>漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/page12/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/home-bg.jpg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>漠然</h1>
+                    <!--<hr class="small">-->
+                    <span class="subheading">Nothing is impossible to a willing heart!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+	<div class="row">
+        
+
+<!-- USE SIDEBAR -->
+    <!-- PostList Container -->
+    		<div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                postlist-container
+            ">
+    			
+<div class="post-preview">
+    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/">
+        <h2 class="post-title">
+            Java 内存之 Java 堆
+        </h2>
+        
+        <div class="post-content-preview">
+            一、基本概念和特性
+
+
+  Java 堆内存是全局共享的
+  Java 堆通常是 JVM 中最大的一块内存区域
+  Java 堆得主要作用是用于存放创建的对象实例
+  JVMS 明确要求，此区域必须实现内存自动管理，即 GC；但不要求具体的 GC 实现，包括实现算法和技术
+  Java 堆可以在物理上不连续空间分配，只要逻辑上连续即可
+  Java 堆可能出现 OutOfMemoryErro...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 21, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/20/Java-%E5%A4%9A%E7%BA%BF%E7%A8%8B-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98/">
+        <h2 class="post-title">
+            Java 多线程-可见性问题
+        </h2>
+        
+        <div class="post-content-preview">
+            一、相关定义
+
+1、可见性
+
+在多线程中，如果一个线程对某一 共享变量 的修改，能及时被其他线程所感知，这个特性或者说过程称之为线程可见性。
+
+2、共享变量
+
+当多线程同时操作一个变量时，该变量在多线程的 工作内存(私有内存) 中都存在一个副本，那么这个变量称之为这几个线程的共享变量。
+
+
+
+3、工作内存
+
+多线程工作时，每个线程都会复制主内存中的变量副本到自己的私有内存，这个私有内存称之为...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 20, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/14/SQL%E4%B8%AD-OR-%E5%85%B3%E9%94%AE%E5%AD%97%E4%BC%98%E5%85%88%E7%BA%A7%E9%97%AE%E9%A2%98/">
+        <h2 class="post-title">
+            SQL中 OR 关键字优先级问题
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  今天群里哥们偶尔问道一个问题，顺便查查找到了答案，记录一下。
+
+
+问题
+
+问题大致如下:
+
+SQL1
+
+SELECT * FROM TABLE WHERE NAME='ZHANGSAN' OR 1=1 OR '1'='1' AND AGE=10;
+
+
+
+
+SQL2
+
+SELECT * FROM TABLE WHERE NAME='ZAHNGSAN' OR 1=1 AND AGE=10;...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 14, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/14/Java-%E5%86%85%E7%BD%AE%E5%91%BD%E4%BB%A4-jps/">
+        <h2 class="post-title">
+            Java 内置命令-jps
+        </h2>
+        
+        <div class="post-content-preview">
+            jps 命令
+
+
+  本文参考自 HollisChuang’s Blog
+
+
+简介
+
+jps 命令用于查看当前 java 进程及其 pid 等相关信息，同 ps -aux | grep java 这种命令不同的是，jps 并不依赖于应用程序名来搜索进程(比如 grep java )； 这使得它可以显示出没有执行体的 java 进程；该命令 1.5+ 可用。
+
+
+
+原理
+
+在 Java 程序运...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 14, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/08/%E7%A8%8B%E5%BA%8F%E7%8C%BF%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/">
+        <h2 class="post-title">
+            程序猿的自我修养
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+
+  最近在看到很多人问一些基本的东西，或者说一些资源、一些简单问题等，其实很好找到答案，在这里总结一下自己1年工作经验的学习经历。
+
+
+
+
+一、善用搜索引擎
+
+
+  搜索引擎对于程序猿屌丝来说最熟悉不过了；但在实际使用中，你会发现经常出现 “我擦，我怎么没搜到” 这种问题，以下做了几点建议：
+
+
+1、摒弃百度
+
+对于习惯了从小从教科书开始学习的我们来说，”有问题找度娘” 这似乎是铁律；...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 8, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/08/JetBrains-%E7%B3%BB%E5%88%97%E6%BF%80%E6%B4%BB%E6%95%99%E7%A8%8B-%E7%A6%BB%E7%BA%BF-Server/">
+        <h2 class="post-title">
+            JetBrains 系列激活教程(离线 Server)
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+一、前言
+
+  激活采用离线服务器激活方式，如有网的情况下可直接采用 http://idea.lanyus.com/ 的激活方法。经济许可的情况下请购买正版 https://www.jetbrains.com/idea/buy/。
+
+
+
+
+二、激活教程
+
+工具下载
+
+首先下载激活工具，地址：百度网盘  密码：ns3u 然后解压的任意目录
+
+Windows 下激活
+
+复制解压后的 wind...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 8, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/">
+        <h2 class="post-title">
+            Hexo 添加 Rss 订阅
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+一、安装RSS插件
+
+执行以下命令安装 RSS 插件
+
+npm install hexo-generator-feed --save
+
+
+
+
+二、开启网站 RSS 支持
+
+编辑网站根目录下的 _config.yml，添加以下代码开启
+
+# RSS订阅支持
+plugin:
+- hexo-generator-feed
+
+# Feed Atom
+feed:
+type: atom
+path: a...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 8, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
+        <h2 class="post-title">
+            Gradle 构建基础笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+
+  本文参考自 Gradle User Guide 中文版 感谢其翻译贡献者
+
+
+
+
+安装Gradle
+
+  下载安装包 下载地址
+  配置环境变量 如下
+
+
+
+
+
+
+Gradle 基本概念
+
+Projects
+
+  每一个构建由一个或者多个 Project 构成，每个 Project 代表一个资源，具体做什么取决与如何定义该 Project，它可能代表一个发布的 zip 文件，也可能...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on February 18, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
+        <h2 class="post-title">
+            JAVA 异常处理
+        </h2>
+        
+        <div class="post-content-preview">
+            一、异常分类
+
+在JAVA中，所有异常都由 Throwable 继承而来；但在下一层立即分解为两个分支：Error 和 Exception。
+
+Error
+
+
+  Error 类层次结构描述了JAVA运行时系统的内部错误和资源耗尽。应用程序不该抛出此种异常；如果出现了内部错误，除了告知用户和安全的退出，对于其他处理我们是无能为力的；比如出现 断电、硬盘损坏等等；但这种情况一般很少出现。
+
+
+...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on February 5, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/">
+        <h2 class="post-title">
+            浅谈 java中的 equals 和 hashcode
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+equals 方法
+
+  equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。
+
+
+Object 中的 equals
+
+
+  在 java 源码中，Object 的 equals 实现如下
+
+
+public boolean equals(Object obj) {
+    return (this == obj);
+}
+
+
+
+
+
+  由此可见，Obj...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on February 2, 2016
+    </p>
+</div>
+<hr>
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+    <li class="previous">
+        <a href="/page11">&larr; Newer Posts</a>
+    </li>
+    
+    
+    <li class="next">
+        <a href="/page13">Older Posts &rarr;</a>
+    </li>
+    
+</ul>
+
+
+    		</div>
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
+                    <div class="short-about">
+                        
+                            <img src="/img/avatar.jpg" />
+                        
+                        
+                            <p>Nothing is impossible to a willing heart!</p>
+                        
+                        <!-- SNS Link -->
+                        <ul class="list-inline">
+                            
+                            <li>
+                                <a href="/feed.xml">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                            <li>
+                                <a href="https://twitter.com/mritd1234">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                            
+                            
+                            
+                            <li>
+                                <a target="_blank" href="https://t.me/mritd">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                            <li>
+                                <a target="_blank" href="https://github.com/mritd">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                        </ul>
+                    </div>
+                </section>
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+    		</div>
+        
+	</div>
+</div>
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

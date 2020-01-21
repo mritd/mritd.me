@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="shadowsocks 多用户版搭建教程">
+    <meta name="keywords"  content="ShadowSocks,翻墙">
+    <meta name="theme-color" content="#000000">
+    
+    <title>ShadowSocks 多用户版搭建教程 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/01/10/ShadowSocks-%E5%A4%9A%E7%94%A8%E6%88%B7%E7%89%88%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                    </div>
+                    <h1>ShadowSocks 多用户版搭建教程</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on January 10, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <p><img src="https://cdn.oss.link/markdown/hexo_shadowsocks_logo.png" alt="ShadowSocks" /></p>
+
+<blockquote>
+  <p>众所周知，由于某种原因，大天朝的网络对外网(国际网路)的访问是封锁的，但作为搞IT的，个人感觉翻墙是必备的技能；因为很多东西(IT资料)谷歌出来的更准确一些，忍不住吐槽百度的垃圾搜索，我已经大约2年没用百度了，因为百度点东西你会发现很多情况都是 <strong>一大片都一样的</strong>，要不就是不同网站，但是内容一样……下面记录一下目前最屌的爬墙工具 <strong>ShadowSocks</strong> 简称 ss 的搭建过程。</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="一准备工作">一、准备工作</h2>
+<ol>
+  <li>一台能连接公网的VPS( <strong>VPS必须能访问Google等，一般是在国外购买</strong>)</li>
+  <li>一个自己的域名，可以到万网什么的购买</li>
+  <li>会点Linux基础、会点Git基础</li>
+  <li>没了。。。没了。。。真没了。。。</li>
+</ol>
+
+<h2 id="二相关工具准备">二、相关工具准备</h2>
+<p>1、 VPS安装CentOS系统，建议6版本(略过)
+2、 获取 <code class="highlighter-rouge">ShadowSocks</code> 后端源码( <strong>需要git，没有的话自行安装</strong> )</p>
+
+<blockquote>
+  <p>克隆(拉取) <code class="highlighter-rouge">ShadowSocks</code> 源码到本地
+ssh 连接VPS，执行如下命令</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 克隆后端代码(多用户版本)</span>
+git clone <span class="nt">-b</span> manyuser https://github.com/mengskysama/shadowsocks-rm.git
+</code></pre></div></div>
+
+<p>3、 下载前端代码( <strong>需要wget <code class="highlighter-rouge">yum install wget</code> 安装</strong> )</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/orvice/ss-panel/archive/v2.4.7.tar.gz
+</code></pre></div></div>
+
+<p>也可下载到本地再上传 <a href="https://github.com/orvice/ss-panel/branches">下载地址</a></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_ss-panel_download.png" alt="hexo_ss-panel_download" /></p>
+
+<h2 id="三安装lnmp环境">三、安装LNMP环境</h2>
+<ol>
+  <li>LNMP一键安装脚本地址 <a href="http://lnmp.org/install.html">点这里</a></li>
+  <li>根据教程安装好LNMP环境</li>
+  <li>创建一个域名映射(站点目录)，执行 <code class="highlighter-rouge">lnmp vhost add</code> ，然后根据提示操作即可</li>
+  <li>完成后可在 <code class="highlighter-rouge">/home/wwwroot/</code> 下找到对应的域名目录</li>
+</ol>
+
+<h2 id="四安装-shadowsocks-后端">四、安装 ShadowSocks 后端</h2>
+<p>1、移动后端源码到任意目录，一般习惯 <code class="highlighter-rouge">/usr/local/</code></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>shadowsocks-rm/shadowsocks/ /usr/local/
+</code></pre></div></div>
+
+<p>2、创建数据库</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录 mysql</span>
+mysql <span class="nt">-uroot</span> <span class="nt">-p</span>       <span class="c"># 然后输入安装lnmp时设置的mysql密码</span>
+<span class="c"># 创建数据库</span>
+create database shadowsocks<span class="p">;</span>
+<span class="c"># 切换数据库</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 创建用户</span>
+insert into mysql.user<span class="o">(</span>Host,User,Password<span class="o">)</span> values<span class="o">(</span><span class="s2">"localhost"</span>,<span class="s2">"shadowsocks"</span>,password<span class="o">(</span><span class="s2">"密码"</span><span class="o">))</span><span class="p">;</span>
+<span class="c"># 刷新权限表</span>
+flush privileges<span class="p">;</span>
+<span class="c"># 用户授权</span>
+grant all privileges on shadowsocks.<span class="k">*</span> to <span class="s1">'shadowsocks'</span>@<span class="s1">'localhost'</span> identified by <span class="s1">'密码'</span><span class="p">;</span>
+<span class="c"># 刷新权限表</span>
+flush privileges<span class="p">;</span>
+</code></pre></div></div>
+
+<p>3、导入相关SQL，创建表结构</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 解压前端代码(前端代码下载下来后应该是个 tar.gz 格式的压缩包，执行以下命令解压它)</span>
+<span class="nb">tar</span> <span class="nt">-zxvf</span> v2.4.7.tar.gz
+<span class="c"># 进入解压后的 sql 存放目录</span>
+<span class="nb">cd </span>ss-panel-2.4.7/sql/
+<span class="c"># 登录mysql 切换数据库</span>
+mysql <span class="nt">-ushadowsocks</span> <span class="nt">-p</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 设置编码</span>
+<span class="nb">set </span>names utf8<span class="p">;</span>
+<span class="c"># 执行导入</span>
+<span class="nb">source </span>invite_code.sql<span class="p">;</span>
+<span class="nb">source </span>ss_node.sql<span class="p">;</span>
+<span class="nb">source </span>ss_reset_pwd.sql<span class="p">;</span>
+<span class="nb">source </span>ss_user_admin.sql<span class="p">;</span>
+<span class="nb">source </span>user.sql<span class="p">;</span>
+</code></pre></div></div>
+
+<p>4、安装相关工具</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 pip</span>
+yum <span class="nb">install </span>python-setuptools <span class="o">&amp;&amp;</span> easy_install pip
+<span class="c"># 安装 cymysql</span>
+pip <span class="nb">install </span>cymysql
+</code></pre></div></div>
+
+<p>5、设置数据库配置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 vim</span>
+yum <span class="nb">install </span>vim
+<span class="c"># 编辑配置文件 vim使用方法自行谷歌</span>
+vim /usr/local/shadowsocks/config.py
+</code></pre></div></div>
+
+<blockquote>
+  <p>样例配置文件如下，其中 <strong>使用 <code class="highlighter-rouge">aes-256-cfb</code> 加密需要安装其他组件，自行Google</strong></p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import logging
+
+<span class="c">#Config</span>
+MYSQL_HOST <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+MYSQL_PORT <span class="o">=</span> 3306
+MYSQL_USER <span class="o">=</span> <span class="s1">'shadowsocks'</span>
+MYSQL_PASS <span class="o">=</span> <span class="s1">'mysql密码'</span>
+MYSQL_DB <span class="o">=</span> <span class="s1">'shadowsocks'</span>
+
+<span class="c">#if you want manage in other server you should set this value to global ip</span>
+MANAGE_PASS <span class="o">=</span> <span class="s1">'passwd'</span>
+MANAGE_BIND_IP <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+<span class="c">#make sure this port is idle</span>
+MANAGE_PORT <span class="o">=</span> 23333
+<span class="c">#BIND IP</span>
+<span class="c">#if you want bind ipv4 and ipv6 '[::]'</span>
+<span class="c">#if you want bind all of ipv4 if '0.0.0.0'</span>
+<span class="c">#if you want bind all of if only '4.4.4.4'</span>
+SS_BIND_IP <span class="o">=</span> <span class="s1">'0.0.0.0'</span>
+SS_METHOD <span class="o">=</span> <span class="s1">'rc4-md5'</span>
+<span class="c">#</span>
+LOG_ENABLE <span class="o">=</span> False
+LOG_LEVEL <span class="o">=</span> logging.WARNING
+LOG_FILE <span class="o">=</span> <span class="s1">'./shadowsocks.log'</span>
+</code></pre></div></div>
+<p>6、启动后端</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 切换目录</span>
+<span class="nb">cd</span> /usr/local/shadowsocks/
+<span class="c"># 后台运行</span>
+<span class="nb">nohup </span>python /usr/local/shadowsocks/servers.py &amp;
+</code></pre></div></div>
+
+<h2 id="五安装-shadowsocks-前端">五、安装 ShadowSocks 前端</h2>
+<p>1、复制 <code class="highlighter-rouge">ss-panel</code> 文件到网站根目录</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>ss-panel-2.4.7/<span class="k">*</span> /home/wwwroot/网站名称/
+</code></pre></div></div>
+
+<p>2、修改相关配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /home/wwwroot/网站名称/lib/config-simple.php
+</code></pre></div></div>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/* 配置样例 */
+<span class="cp">&lt;?php</span>
+<span class="cm">/*
+ * ss-panel配置文件
+ * https://github.com/orvice/ss-panel
+ * Author @orvice
+ * https://orvice.org
+ */</span>
+
+<span class="c1">//定义流量</span>
+<span class="nv">$tokb</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">;</span>
+<span class="nv">$tomb</span> <span class="o">=</span> <span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">;</span>
+<span class="nv">$togb</span> <span class="o">=</span> <span class="nv">$tomb</span><span class="o">*</span><span class="mi">1024</span><span class="p">;</span>
+<span class="c1">//Define DB Connection  数据库信息</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_HOST'</span><span class="p">,</span><span class="s1">'localhost'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_USER'</span><span class="p">,</span><span class="s1">'shadowsocks'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_PWD'</span><span class="p">,</span><span class="s1">'密码'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_DBNAME'</span><span class="p">,</span><span class="s1">'shadowsocks'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_CHARSET'</span><span class="p">,</span><span class="s1">'utf8'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_TYPE'</span><span class="p">,</span><span class="s1">'mysql'</span><span class="p">);</span>
+<span class="cm">/*
+ * 下面的东西根据需求修改
+ */</span>
+<span class="c1">//define Plan</span>
+<span class="c1">//注册用户的初始化流量</span>
+<span class="c1">//默认5GiB</span>
+<span class="nv">$a_transfer</span> <span class="o">=</span> <span class="nv">$togb</span><span class="o">*</span><span class="mi">5</span><span class="p">;</span>
+
+<span class="c1">//签到设置 签到活的的最低最高流量,单位MB</span>
+<span class="nv">$check_min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nv">$check_max</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+<span class="c1">//name</span>
+<span class="nv">$site_name</span> <span class="o">=</span> <span class="s2">"Mritd-Shadowsocks"</span><span class="p">;</span>
+<span class="nv">$site_url</span>  <span class="o">=</span> <span class="s2">"http://域名"</span><span class="p">;</span>
+<span class="cd">/**
+ * 站点盐值，用于加密密码
+ * 第一次安装请修改此值，安装后请勿修改！！否则会使所有密码失效，仅限加密方式不为1的时候有效
+ */</span>
+<span class="nv">$salt</span> <span class="o">=</span> <span class="s2">"随便填"</span><span class="p">;</span>
+<span class="cm">/*
+ * 剩下的省略......
+ */</span>
+</code></pre></div></div>
+
+<p>3、重命名配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>config-simple.php config.php
+</code></pre></div></div>
+
+<p>4、更新管理员用户名密码等信息</p>
+
+<blockquote>
+  <p>注意：下面的pass字段是你登陆后台的密码，最新版的默认管理账户的默认密码我也不知道是多少，我的方案是在 config-simple.php 里使用md5加密，然后去 <a href="http://tool.chinaz.com/tools/md5.aspx">在线md5加密</a> 随便写个密码，做一个32位小写的md5，用md5后的字符串覆盖默认用户的pass，这样就能改掉密码了。另一种方案是新注册一个账户，然后这个账户在user表中的uid应该是2；把他加入到 ss_user_admin 表中即可使其成为管理员，再把默认的管理员删了。</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录数据库</span>
+mysql-ushadowsocks <span class="nt">-p</span>
+<span class="c"># 切换数据库</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 更新管理员信息</span>
+update user <span class="nb">set </span><span class="nv">user_name</span><span class="o">=</span><span class="s1">'用户名'</span>,email<span class="o">=</span><span class="s1">'登录邮箱'</span>, <span class="nv">pass</span><span class="o">=</span><span class="s1">'密码'</span>, <span class="nv">passwd</span><span class="o">=</span><span class="s1">'ss连接密码'</span> where <span class="nv">uid</span><span class="o">=</span>1<span class="p">;</span>
+</code></pre></div></div>
+
+<p>5、登录后台，测试ss连接</p>
+
+<blockquote>
+  <p>管理后台默认是 <code class="highlighter-rouge">http://域名/admin</code>，可用刚刚创建的管理员登录测试，关于具体使用过程不再详细叙述，如遇到网站可访问，但ss无法连接的情况，请查看防火墙相关设置和ss日志。本人使用的 <strong>ConoHa VPS</strong> 目前速度不错，这个VPS 还需要在控制面板中设置入站端口，否则关了防火墙也没用。</p>
+</blockquote>
+
+<blockquote>
+  <p><strong>到此 ShadowSocks 搭建结束。</strong></p>
+</blockquote>
+
+<hr />
+
+<p>如果购买 <strong>ConoHa VPS</strong> 的话可使用这个邀请链接 <a href="https://www.conoha.jp/referral/?token=pVMnGJDqY5jjnek.R4GhJnoqv7zaJ2PAMh5lvfWg9PKZ0PppokI-189">ConoHa VPS</a> 注册有优惠。</p>
+
+<h4 id="如果本文对你有帮助可以考虑用支付宝请我喝杯咖啡---_-">如果本文对你有帮助，可以考虑用支付宝请我喝杯咖啡  ( ^_^ )</h4>
+
+<p><img src="https://cdn.oss.link/markdown/zhifubao.png" alt="支付宝" />
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/01/08/DBA%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/" data-toggle="tooltip" data-placement="top" title="DBA视频笔记">
+                        Previous<br>
+                        <span>DBA视频笔记</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/01/11/Redis3-0-6%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85/" data-toggle="tooltip" data-placement="top" title="Redis3.0.6编译安装">
+                        Next<br>
+                        <span>Redis3.0.6编译安装</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/01/10/ShadowSocks-多用户版搭建教程";
+    var disqus_url = "https://mritd.me/2016/01/10/ShadowSocks-%E5%A4%9A%E7%94%A8%E6%88%B7%E7%89%88%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

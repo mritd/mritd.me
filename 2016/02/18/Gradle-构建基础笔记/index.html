@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Gradle 构建基础笔记">
+    <meta name="keywords"  content="Gradle">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Gradle 构建基础笔记 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>Gradle 构建基础笔记</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on February 18, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <p><img src="https://cdn.oss.link/markdown/hexo_gradle_logo.png" alt="Gradle_logo" /></p>
+
+<blockquote>
+  <p>本文参考自 <a href="https://www.gitbook.com/book/dongchuan/gradle-user-guide-/details">Gradle User Guide 中文版</a> 感谢其翻译贡献者</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="安装gradle">安装Gradle</h2>
+<ul>
+  <li>下载安装包 <a href="http://gradle.org/gradle-download/">下载地址</a></li>
+  <li>配置环境变量 如下</li>
+</ul>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_gradle_home.jpg" alt="GRADLE_HOME" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_gradle_path.jpg" alt="GRADLE_PATH" /></p>
+
+<h2 id="gradle-基本概念">Gradle 基本概念</h2>
+
+<h3 id="projects">Projects</h3>
+<blockquote>
+  <p>每一个构建由一个或者多个 Project 构成，每个 Project 代表一个资源，具体做什么取决与如何定义该 Project，它可能代表一个发布的 zip 文件，也可能代表某项动作，比如部署应用等。</p>
+</blockquote>
+
+<h3 id="tasks">Tasks</h3>
+<blockquote>
+  <p>每个 Project 由一个或者多个 task 组成，每个 task 可以是更细致化的构建操作，比如编译 class文件，创建 jar 文件，生成 javadoc 文档等。</p>
+</blockquote>
+
+<h2 id="gradle-hello-world">Gradle Hello World</h2>
+
+<blockquote>
+  <p>我们可以通过 <code class="highlighter-rouge">gradle</code> 命令来完成一次构建，<strong><code class="highlighter-rouge">gradle</code> 命令会在当前目录查找一个叫 <code class="highlighter-rouge">build.gradle</code> 的描述文件来完成构建</strong>。严格来说它是一个构建脚本，类似于 Maven 的 <code class="highlighter-rouge">POM.xml</code> 文件；用来描述整个构建过程；以下是一个 <code class="highlighter-rouge">Hello World</code> 示例。</p>
+</blockquote>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">{</span>
+    <span class="n">doLast</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s1">'Hello World!'</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>将以上脚本保存为 <code class="highlighter-rouge">build.gradle</code>；并在当前目录执行 <code class="highlighter-rouge">gradle -q helloWorld</code> 尝试运行该 task。
+<strong>注意：<code class="highlighter-rouge">-q</code> 代表 quite 模式，不显示 Gradle 的日志信息。</strong></p>
+
+<h2 id="快捷定义任务">快捷定义任务</h2>
+
+<p>以上代码，<code class="highlighter-rouge">doLast</code> 作为 <code class="highlighter-rouge">helloWorld</code> 的一个 Action，此时可以通过如下方式快捷定义：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s1">'Hello World!'</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="在-gradle-中使用-groovy">在 Gradle 中使用 Groovy</h2>
+<p>Gradle 是基于 Groovy 的，在 build.gradle 中可以使用 Groovy 书写(虽然我不会…)；样例如下(测试命令行中文乱码)：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">upper</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">testStr</span> <span class="o">=</span> <span class="s2">"AbcD"</span>
+    <span class="n">println</span> <span class="s2">"原始字符："</span> <span class="o">+</span> <span class="n">testStr</span>
+    <span class="n">println</span> <span class="s2">"转换大写："</span> <span class="o">+</span> <span class="n">testStr</span><span class="o">.</span><span class="na">toUpperCase</span><span class="o">()</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="任务依赖性">任务依赖性</h2>
+
+<p>Gradle 支持任务间的依赖关系，如下所示：</p>
+
+<pre><code class="language-grovvy">task testDepends &lt;&lt; {
+    println "taskDepends"
+}
+
+// 设置依赖关系
+task test1(dependsOn: testDepends) &lt;&lt; {
+    println "test1"
+}
+
+</code></pre>
+
+<p>执行 <code class="highlighter-rouge">gradle -q test1</code> 命令运行 task1 任务，此时由于 task1 任务依赖于 testDepends 任务，所以会先执行 testDepends 任务，在执行 test1 任务。</p>
+
+<p><strong>注意：build.gradle 脚本中，任务依赖时没有顺序区分，也就是说可以先声明一个任务依赖于另一个任务，而后定义另一个任务，总结来说就是 task 书写顺序不会影响 任务间依赖关系。</strong></p>
+
+<h2 id="任务的动态性">任务的动态性</h2>
+
+<p>由于 Gradle 使用 Groovy 作为构建语言，Groovy 函数式的特性可以让我们动态的创建任务，而无需预先设定好(个人认为实际构建可能没这么变态的需要)；样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 此时相当于定义了 4个 task 分别是 taskDynamic0、...1、...2、...3</span>
+<span class="mi">4</span><span class="o">.</span><span class="na">times</span> <span class="o">{</span> <span class="n">counter</span> <span class="o">-&gt;</span>
+    <span class="n">task</span> <span class="s2">"taskDynamic$counter"</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s2">"taskDynamic$counter"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="通过api使用已存在的任务">通过API使用已存在的任务</h2>
+
+<p>Gradle 中可以先定义 task，然后再指定这些 task 之间的关系，就像下面这样：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 先利用动态性 创建4个任务</span>
+<span class="mi">4</span><span class="o">.</span><span class="na">times</span> <span class="o">{</span> <span class="n">counter</span> <span class="o">-&gt;</span>
+    <span class="n">task</span> <span class="s2">"task$counter"</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s2">"task----&gt; $counter"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// 再指定依赖关系</span>
+<span class="n">task0</span><span class="o">.</span><span class="na">dependsOn</span> <span class="n">task1</span><span class="o">,</span><span class="n">task3</span>
+
+</code></pre></div></div>
+
+<p>同时 Gradle 还允许在任务定以后动态的改变或添加其行为，如下所示：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义任务</span>
+<span class="n">task</span> <span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"default"</span>
+<span class="o">}</span>
+
+<span class="c1">// 然后动态添加 任务开始动作</span>
+<span class="n">test1</span><span class="o">.</span><span class="na">doFirst</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"First"</span>
+<span class="o">}</span>
+
+<span class="c1">// 动态添加 任务结束动作</span>
+<span class="n">test1</span><span class="o">.</span><span class="na">doLast</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"Last"</span>
+<span class="o">}</span>
+
+<span class="c1">// 在添加一个结束动作</span>
+<span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"the end"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>注意：上面一直使用的 <code class="highlighter-rouge">&lt;&lt;</code> 实际是 doLast 的简写形式。</strong></p>
+
+<h2 id="任务引用短标记语法">任务引用(短标记语法)</h2>
+
+<p>Gradle 可以通过 <code class="highlighter-rouge">$</code> 符号引用另一个任务，可以是另一个任务的执行结果；也可以是其属性，比如 <code class="highlighter-rouge">task.name</code> 将返回某个任务的名字，样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义一个任务</span>
+<span class="n">task</span> <span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">prinln</span> <span class="s2">"test1111111"</span>
+<span class="o">}</span>
+<span class="c1">// 然后在另一个任务里引用</span>
+<span class="n">task</span> <span class="n">test2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"test2---&gt;$test1.name"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="自定义任务属性">自定义任务属性</h2>
+
+<p>在 Gradle 中我们可以自定义任务的属性，然后再恰当的时候加以引用，在设置某个任务属性时 <strong>采用 <code class="highlighter-rouge">ext</code> 关键字定义该属性</strong>；个人理解类似 java 的 this 关键字；样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 testTask1 的两个属性</span>
+<span class="n">task</span> <span class="n">testTask1</span> <span class="o">{</span>
+    <span class="n">ext</span><span class="o">.</span><span class="na">property1</span> <span class="o">=</span> <span class="s2">"1"</span>
+    <span class="n">ext</span><span class="o">.</span><span class="na">property2</span> <span class="o">=</span> <span class="s2">"2"</span>
+<span class="o">}</span>
+<span class="c1">// 可直接打印引用，字符串中可采用短标记 $ 引用</span>
+<span class="n">task</span> <span class="n">testTask2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="n">testTask1</span><span class="o">.</span><span class="na">property1</span>
+    <span class="n">println</span> <span class="s2">"$testTask1.property2"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>注意：定义任务属性时必须在任务体中，而不能在 doLast 或 doFirst Action 中定义！</strong></p>
+
+<h2 id="调用-ant-任务">调用 Ant 任务</h2>
+
+<blockquote>
+  <p>以下直接 copy 的，本人没玩过 Ant……</p>
+</blockquote>
+
+<p>Ant 任务是 Gradle 的一等公民. Gradle 通过 Groovy 出色的集成了 Ant 任务. Groovy 自带了一个 AntBuilder. 相比于从一个 build.xml 文件中使用 Ant 任务, 在 Gradle 里使用 Ant 任务更为方便和强大. 从下面的例子中, 你可以学习如何执行 Ant 任务以及如何访问 ant 属性：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">loadfile</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="kt">def</span> <span class="n">files</span> <span class="o">=</span> <span class="n">file</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">listFiles</span><span class="o">().</span><span class="na">sort</span><span class="o">()</span>
+        <span class="n">files</span><span class="o">.</span><span class="na">each</span> <span class="o">{</span> <span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">file</span><span class="o">.</span><span class="na">isFile</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">ant</span><span class="o">.</span><span class="na">loadfile</span><span class="o">(</span><span class="nl">srcFile:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">)</span>
+            <span class="n">println</span> <span class="s2">" *** $file.name ***"</span>
+            <span class="n">println</span> <span class="s2">"${ant.properties[file.name]}"</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="使用方法">使用方法</h2>
+
+<blockquote>
+  <p>又用 Ant…… My God ….. 接着 copy</p>
+</blockquote>
+
+<p>Gradle 能很好地衡量你编写脚本的逻辑能力. 首先要做的是如何提取一个方法.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">checksum</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">fileList</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">each</span> <span class="o">{</span><span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="n">ant</span><span class="o">.</span><span class="na">checksum</span><span class="o">(</span><span class="nl">file:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="s2">"cs_$file.name"</span><span class="o">)</span>
+        <span class="n">println</span> <span class="s2">"$file.name Checksum: ${ant.properties["</span><span class="n">cs_$file</span><span class="o">.</span><span class="na">name</span><span class="s2">"]}"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">loadfile</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">fileList</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">each</span> <span class="o">{</span><span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="n">ant</span><span class="o">.</span><span class="na">loadfile</span><span class="o">(</span><span class="nl">srcFile:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">)</span>
+        <span class="n">println</span> <span class="s2">"I'm fond of $file.name"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">File</span><span class="o">[]</span> <span class="nf">fileList</span><span class="o">(</span><span class="n">String</span> <span class="n">dir</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">file</span><span class="o">(</span><span class="n">dir</span><span class="o">).</span><span class="na">listFiles</span><span class="o">({</span><span class="n">file</span> <span class="o">-&gt;</span> <span class="n">file</span><span class="o">.</span><span class="na">isFile</span><span class="o">()</span> <span class="o">}</span> <span class="k">as</span> <span class="n">FileFilter</span><span class="o">).</span><span class="na">sort</span><span class="o">()</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="默认任务">默认任务</h2>
+
+<blockquote>
+  <p>终于没有 Ant 了……</p>
+</blockquote>
+
+<p>Gradle 允许在一个构建脚本(<code class="highlighter-rouge">build.gradle</code>) 中定义默认需要执行的任务，只需要使用 <code class="highlighter-rouge">defaultTasks</code> 关键字即可，此时可直接在构建脚本目录执行 <code class="highlighter-rouge">gradle [-q]</code> 来执行构建过程，样例如下</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 默认的任务</span>
+<span class="n">defaultTasks</span> <span class="s2">"testTask1"</span><span class="o">,</span><span class="s2">"testTask2"</span>
+<span class="n">task</span> <span class="n">testTask1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask1"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">testTask2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask2"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">testTask3</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask3"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="dag-配置">DAG 配置</h2>
+<p><strong>原文：</strong>正如我们之后的详细描述, Gradle 有一个配置阶段和执行阶
+段. 在配置阶段后, Gradle 将会知道应执行的所有任务. Gradle 为你提供一个”钩子”, 以便利用这些信息. 举个例子, 判断发布的任务是否在要被执行的任务当中. 根据这一点, 你可以给一些变量指定不同的值.</p>
+
+<p><strong>样例代码：</strong></p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">distribution</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"We build the zip with version=$version"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="nf">release</span><span class="o">(</span><span class="nl">dependsOn:</span> <span class="s1">'distribution'</span><span class="o">)</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s1">'We release now'</span>
+<span class="o">}</span>
+<span class="n">gradle</span><span class="o">.</span><span class="na">taskGraph</span><span class="o">.</span><span class="na">whenReady</span> <span class="o">{</span><span class="n">taskGraph</span> <span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">taskGraph</span><span class="o">.</span><span class="na">hasTask</span><span class="o">(</span><span class="n">release</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s1">'1.0'</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s1">'1.0-SNAPSHOT'</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>个人理解：</strong>关于 DAG 配置的描述，大致意思应该是说，Gradle 构建时会执行两个阶段：配置阶段、执行阶段；在配置阶段；Gradle 主要完成所有的配置工作，应该会读取整个构建脚本，分析里面的语义；这也可能是 Gradle 定义 task 等不分先后顺序的原因；在这个阶段，我们可以通过内置变量(DAG)和内置方法来动态的判断并调整后续的构建流程；当所有构建流程确定后，再进行第二个构建阶段。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" data-toggle="tooltip" data-placement="top" title="JAVA 异常处理">
+                        Previous<br>
+                        <span>JAVA 异常处理</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/" data-toggle="tooltip" data-placement="top" title="Hexo 添加 Rss 订阅">
+                        Next<br>
+                        <span>Hexo 添加 Rss 订阅</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/02/18/Gradle-构建基础笔记";
+    var disqus_url = "https://mritd.me/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

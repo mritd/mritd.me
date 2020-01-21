@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="CI/CD 之 Dockerfile">
+    <meta name="keywords"  content="CI/CD,Dockerfile">
+    <meta name="theme-color" content="#000000">
+    
+    <title>CI/CD 之 Dockerfile - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/11/12/ci-cd-dockerfile/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>CI/CD 之 Dockerfile</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on November 12, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>最近准备整理一下关于 CI/CD 的相关文档，写一个关于 CI/CD 的系列文章，这篇先从最基本的 Dockerfile 书写开始，本系列文章默认读者已经熟悉 Docker、Kubernetes 相关工具</p>
+</blockquote>
+
+<h3 id="一基础镜像选择">一、基础镜像选择</h3>
+
+<p>这里的基础镜像指的是实际项目运行时的基础环境镜像，比如 Java 的 JDK 基础镜像、Nodejs 的基础镜像等；在制作项目的基础镜像时，我个人认为应当考虑一下几点因素:</p>
+
+<h4 id="11可维护性">1.1、可维护性</h4>
+
+<p>可维护性应当放在首要位置，如果在制作基础镜像时，选择了一个你根本不熟悉的基础镜像，或者说你完全不知道这个基础镜像里有哪些环境变量、Entrypoint 脚本做了什么时，请果断放弃这个基础镜像，选择一个你自己更加熟悉的基础镜像，不要为以后挖坑；还有就是如果对应的应用已经有官方镜像，那么尽量采用官方的，因为你可以省去维护 <strong>自己造的轮子</strong> 的精力，<strong>除非你对基础镜像制作已经得心应手，否则请不要造轮子</strong></p>
+
+<h4 id="12稳定性">1.2、稳定性</h4>
+
+<p>基础镜像稳定性实际上是个很微妙的话题，因为普遍来说成熟的 Linux 发行版都很稳定；但是对于不同发行版镜像之间还是存在差异的，比如 alpine 的镜像用的是 musl libc，而 debian 用的是 glibc，某些依赖 glibc 的程序可能无法在 alpine 上工作；alpine 版本的 nginx 能使用 http2，debian 版本 nginx 则不行，因为 openssl 版本不同；甚至在相同发行版不同版本之间也会有差异，譬如 openjdk alpine 3.6 版本 java 某些图形库无法工作，在 alpine edge 上安装最新的 openjdk 却没问题等；所以稳定性这个话题对于基础镜像自己来说，他永远稳定，但是对于你的应用来说，则不同基础镜像会产生不同的稳定性；<strong>最后，如果你完全熟悉你的应用，甚至应用层代码也是你写的，那么你可以根据你的习惯和喜好去选择基础镜像，因为你能把控应用运行时依赖；否则的话，请尽量选择 debian 这种比较成熟的发行版作为基础镜像，因为它在普遍上兼容性更好一点；还有尽量不要使用 CentOS 作为基础镜像，因为他的体积将会成为大规模网络分发瓶颈</strong></p>
+
+<h4 id="13易用性">1.3、易用性</h4>
+
+<p>易用性简单地说就是是否可调试，因为有些极端情况下，并不是应用只要运行起来就没事了；可能出现一些很棘手的问题需要你进入容器进行调试，此时你的镜像易用性就会体现出来；譬如一个 Java 项目你的基础镜像是 JRE，那么 JDK 的调试工具将完全不可用，还有就是如果你的基础镜像选择了 alpine，那么它默认没有 bash，可能你的脚本无法在里面工作；<strong>所有在选择基础镜像的时候最好也考虑一下未来极端情况的可调试性</strong></p>
+
+<h3 id="二格式化及注意事项">二、格式化及注意事项</h3>
+
+<h4 id="21书写格式">2.1、书写格式</h4>
+
+<p>Dockerfile 类似一堆 shell 命令的堆砌，实际上在构建阶段也可以简单的看做是一个 shell 脚本；但是为了更高效的利用缓存层，通常都会在一个 RUN 命令中连续书写大量的脚本命令，这时候一个良好的书写格式可以使 Dockerfile 看起来更加清晰易懂，也方便以后维护；我个人比较推崇的格式是按照 <a href="https://github.com/nginxinc/docker-nginx/blob/master/mainline/alpine/Dockerfile">nginx-alpine官方 Dockerfile</a> 的样式来书写，这个 Dockerfile 大致包括了以下规则:</p>
+
+<ul>
+  <li>换行以 <code class="highlighter-rouge">&amp;&amp;</code> 开头保持每行对齐，看起来干净又舒服</li>
+  <li>安装大量软件包时，每个包一行并添加换行符，虽然会造成很多行，但是看起来很清晰；也可根据实际需要增加每行软件包个数，但是建议不要超过 5 个</li>
+  <li>configure 的配置尽量放在统一的变量里，并做好合理换行，方便以后集中化修改</li>
+  <li>注释同样和对应命令对齐，并保持单行长度不超出视野，即不能造成拉动滚动条才能看完你的注释</li>
+  <li>alpine 作为基础镜像的话，必要时可以使用 scanelf 来减少安装依赖</li>
+</ul>
+
+<p>除了以上规则，说下我个人的一些小习惯，仅供参考:</p>
+
+<ul>
+  <li>当需要编译时，尽量避免多次 <code class="highlighter-rouge">cd</code> 目录，必须进入目录编译时可以开启子 shell 使其完成后还停留但在当前目录，避免 <code class="highlighter-rouge">cd</code> 进去再 <code class="highlighter-rouge">cd</code> 回来，如</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>xxxx <span class="se">\</span>
+<span class="o">&amp;&amp;</span> ./configure <span class="se">\</span>
+<span class="o">&amp;&amp;</span> make <span class="se">\</span>
+<span class="o">&amp;&amp;</span> make <span class="nb">install</span> <span class="se">\</span>
+<span class="o">&amp;&amp;</span> <span class="nb">cd</span> ../
+</code></pre></div></div>
+<p>可以变为</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">(</span><span class="nb">cd </span>xxx <span class="se">\</span>
+<span class="o">&amp;&amp;</span> ./configure <span class="se">\</span>
+<span class="o">&amp;&amp;</span> make <span class="se">\</span>
+<span class="o">&amp;&amp;</span> make <span class="nb">install</span><span class="o">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>同样意义的操作统一放在相邻行处理，比如镜像需要安装两个软件，做两次 <code class="highlighter-rouge">wget</code>，那么没必要安装完一个删除一个安装包，可以在最后统一的进行清理动作，简而言之是 <strong>合并具有相同目的的命令</strong></li>
+  <li>尽量使用网络资源，也就是说尽量不要在当前目录下放置那种二进制文件，然后进行 <code class="highlighter-rouge">ADD</code>/<code class="highlighter-rouge">COPY</code> 操作，因为一般 Dockerfile 都是存放到 git 仓库的，同目录下的二进制变动会给 git 仓库带来很大负担</li>
+  <li>调整好镜像时区，最好内置一下 bash，可能以后临时进入容器会处理一些东西</li>
+  <li><code class="highlighter-rouge">FROM</code> 时指定具体的版本号，防止后续升级或者更换主机 build 造成不可预知的结果</li>
+</ul>
+
+<h4 id="22合理利用缓存">2.2、合理利用缓存</h4>
+
+<p>Docker 在 build 或者说是拉取镜像时是以层为单位作为缓存的；通俗的讲，一个 Dockerfile 命令就会形成一个镜像层(不绝对)，尤其是 <code class="highlighter-rouge">RUN</code> 命令形成的镜像层可能会很大；此时应当合理组织 Dockerfile，以便每次拉取或者 build 时高效的利用缓存层</p>
+
+<ul>
+  <li>重复 build 的缓存利用</li>
+</ul>
+
+<p>Docker 在进行 build 操作时，对于同一个 Dockerfile 来说，<strong>只要执行过一次 build，那么下次 build 将从命令更改处开始</strong>；简单的例子如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
+
+COPY test.jar /test.jar
+
+RUN apk add openjdk8 <span class="nt">--no-cache</span>
+
+CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>假设我们的项目发布物为 <code class="highlighter-rouge">test.jar</code>，那么以上 Dockerfile 放到 CI 里每次 build 都会相当慢，原因就是 <strong>每次更改的发布物为 <code class="highlighter-rouge">test.jar</code>，那么也就是相当于每次 build 失效位置从 <code class="highlighter-rouge">COPY</code> 命令开始，这将导致下面的 <code class="highlighter-rouge">RUN</code> 命令每次都会不走缓存重复执行，当 <code class="highlighter-rouge">RUN</code> 命令涉及网络下载等复杂动作时这会极大拖慢 build 进度</strong>，解决方案很简单，移动一下 <code class="highlighter-rouge">COPY</code> 命令即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
+
+RUN apk add openjdk8 <span class="nt">--no-cache</span>
+
+COPY test.jar /test.jar
+
+CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>此时每次 build 失效位置仍然是 <code class="highlighter-rouge">COPY</code> 命令，但是上面的 <code class="highlighter-rouge">RUN</code> 命令层已经被 build 过，而且无任何改变，那么每次 build 时 <code class="highlighter-rouge">RUN</code> 命令都会命中缓存层从而秒过</p>
+
+<ul>
+  <li>多次拉取的缓存利用</li>
+</ul>
+
+<p>同上面的 build 一个原理，在 Docker 进行 pull 操作时，也是按照镜像层来进行缓存；当项目进行更新版本，那么只要当前主机 pull 过一次上一个版本的项目，那么下一次将会直接 pull 变更的层，也就是说上面安装 openjdk 的层将会复用；这种情况为了看起来清晰一点也可以将 Dockerfile 拆分成两个</p>
+
+<p><strong>OpenJDK8 base</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
+
+RUN RUN apk add openjdk8 <span class="nt">--no-cache</span>
+</code></pre></div></div>
+
+<p><strong>Java Web image</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM xxx.com/base/openjdk8
+
+COPY test.jar /test.jar
+
+CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<h3 id="三镜像安全">三、镜像安全</h3>
+
+<h4 id="31用户切换">3.1、用户切换</h4>
+
+<p>当我们不在 Dockerfile 中指定内部用户时，那么默认以 root 用户运行；由于 Linux 系统权限判定是根据 UID、GID 来进行的，也就是说 <strong>容器里面的 root 用户有权限访问宿主机 root 用户的东西；所以一旦挂载错误(比如将 <code class="highlighter-rouge">/root/.ssh</code> 目录挂载进去)，并且里面的用户具有高权限那么就很危险</strong>；通常习惯是遵从最小权限原则，也就是说尽量保证容器里的程序以低权限运行，此时可以在 Dockerfile 中通过 <code class="highlighter-rouge">USER</code> 命令指定后续运行命令所使用的账户，通过 <code class="highlighter-rouge">WORKDIR</code> 指定后续命令在那个目录下执行</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
+
+RUN apk add openjdk8 <span class="nt">--no-cache</span>
+
+COPY test.jar /test.jar
+
+USER testuser:testuser
+
+WORKDIR /tmp
+
+CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>有时直接使用 <code class="highlighter-rouge">USER</code> 指令来切换用户并不算方便，比如你的镜像需要挂载外部存储，如果外部存储中文件权限被意外修改，你的程序接下来可能就会启动失败；此时可以使用一下两个小工具来动态切换用户，巧妙的做法是 <strong>在正式运行程序之前先使用 root 用户进行权限修复，然后使用以下工具切换到具体用户运行</strong></p>
+
+<ul>
+  <li><a href="https://github.com/tianon/gosu">gosu</a> Golang 实现的一个切换用户身份执行其他程序的小工具</li>
+  <li><a href="https://github.com/hlovdal/su-exec">su-exec</a> C 实现的一个更轻量级的用户切换工具</li>
+</ul>
+
+<p>具体的 Dockerfile 可以参见我写的 elasticsearch 的 <a href="https://github.com/mritd/dockerfile/blob/master/elasticsearch/docker-entrypoint.sh">entrypoint 脚本</a></p>
+
+<h4 id="32容器运行时">3.2、容器运行时</h4>
+
+<p>并不是每个容器都一定能切换到低权限用户来运行的，可能某些程序就希望在 root 下运行，此时一定要确认好容器是否需要 <strong>特权模式</strong> 运行；因为一旦开启了特权模式运行的容器将有能力修改宿主机内核参数等重要设置；具体的 Docker 容器运行设置前请参考 <a href="https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities">官方文档</a></p>
+
+<p>关于 Dockerfile 方面暂时总结出这些，可能也会有遗漏，待后续补充吧；同时欢迎各位提出相关修改意见 😊</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/09/set-up-teleport/" data-toggle="tooltip" data-placement="top" title="Teleport 跳板机部署">
+                        Previous<br>
+                        <span>Teleport 跳板机部署</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/11/14/ohmydocker/" data-toggle="tooltip" data-placement="top" title="ohmydocker 镜像加速">
+                        Next<br>
+                        <span>ohmydocker 镜像加速</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/11/12/ci-cd-dockerfile";
+    var disqus_url = "https://mritd.me/2017/11/12/ci-cd-dockerfile/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

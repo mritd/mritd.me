@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Java 内存自动管理-虚拟机和内存区域概述">
+    <meta name="keywords"  content="Java,内存,虚拟机,虚拟机栈,局部参数表,操作数栈">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Java 内存自动管理-虚拟机和内存区域概述 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>Java 内存自动管理-虚拟机和内存区域概述</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on March 21, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>本文参考 <a href="http://www.jikexueyuan.com/course/1793_1.html?ss=2">JVM自动内存管理：内存区域基础概念</a></p>
+</blockquote>
+
+<h2 id="一虚拟机及其定义">一、虚拟机及其定义</h2>
+
+<h3 id="1虚拟机概述">1、虚拟机概述</h3>
+
+<p><strong>虚拟机：</strong> 模拟某种计算机体系结构，执行特定指令的软件；虚拟机一般分为 <strong>系统虚拟机、进程虚拟机。</strong></p>
+
+<p><strong>系统虚拟机：</strong>如 <code class="highlighter-rouge">Virtual Box</code>、<code class="highlighter-rouge">VMware</code> 等，完整的模拟整个操作系统。</p>
+
+<p><strong>进程虚拟机：</strong>如 <code class="highlighter-rouge">JVM</code>、<code class="highlighter-rouge">Adobe Flash Player</code>、<code class="highlighter-rouge">FC模拟器</code> 等，<strong>进程虚拟机不会完整的模拟系统，而只是模拟某个特定指令级的虚拟机。</strong></p>
+
+<p><strong>高级语言虚拟机：</strong>如 <code class="highlighter-rouge">JVM</code>、<code class="highlighter-rouge">.NET CLR</code>、<code class="highlighter-rouge">P-Code</code> 等，高级语言虚拟机属于进程虚拟机的一种，只不过更加细致化，将模拟某个指令级限定为某个高级语言。</p>
+
+<!--more-->
+
+<p><strong>Java 语言虚拟机：</strong>将高级语言限定为 Java 语言，<strong>但是并不一定所有的 Java 虚拟机都能称之为 JVM；</strong></p>
+
+<p><strong>JVM：</strong></p>
+
+<ul>
+  <li>必须通过 <code class="highlighter-rouge">Java TCK</code> (Technology Compatibility Kit) 的兼容性测试才能称之为 JVM。</li>
+  <li>JVM 并非一定执行 “Java” 程序，JVM 面对的是 class 字节码；比如 Scala 语言，其生成也是 class ，便可运行在 JVM 上。</li>
+  <li>业界三大商用虚拟机：Oracle HotSpot、Oracle JRockit VM、IBM J9 VM</li>
+</ul>
+
+<p><strong>Java 虚拟机概念遵循 “公有设计，私有实现”，即设计规范必须遵循，但是具体实现可以不同，只要在外表上一致即可，比如 JVM 规范要求内存可以自动释放，但每个虚拟机所采用的 GC 算法实现可能不尽相同；但最终要保证和达到的目的就是：同一份代码不做任何修改，在不同 JVM 上都能正确运行，</strong></p>
+
+<h3 id="2java虚拟机运行时数据区">2、Java虚拟机运行时数据区</h3>
+
+<p><strong>JVM 数据区定义：</strong></p>
+
+<p>在 JVM 规范中定义了若干种程序运行时需要的存储不同数据类型的数据区域；某些区域是全局共享的，随着虚拟机启动而创建，随着虚拟机关闭而销毁；某系区域是线程私有的，随着线程启动而创建，随着线程停止而销毁。所有的 Java 虚拟机都遵从该规范。</p>
+
+<p><strong>JVM 数据区划分：</strong></p>
+
+<p><strong>Java 虚拟机数据区主要分为5大区块：程序计数器、Java 堆、Java 虚拟机栈、本地方法栈、方法区</strong>；图例如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_VM_data_area.png" alt="数据区截图" /></p>
+
+<p>从上图可以看出，<strong>方法区和堆是所有线程共享的，虚拟机栈、本地方法栈、程序计数器是每个线程私有的。</strong></p>
+
+<p><strong>程序计数器：</strong></p>
+
+<p>程序计数器是一块非常小的内存空间，其作用是记录当前线程执行字节码的行号。<strong>如果当前线程执行的是一个 Java 方法，则该区域记录的是 class 地址，如果执行的是一个 本地的 Native 方法，则此区域为空。此区域是唯一一个在 JVM 规范中没有规定内存溢出等内存异常的区域。</strong></p>
+
+<h2 id="二java-虚拟机栈和本地方法栈">二、Java 虚拟机栈和本地方法栈</h2>
+
+<h3 id="1java-虚拟机栈的特征">1、Java 虚拟机栈的特征</h3>
+
+<ul>
+  <li>线程私有：Java虚拟机栈是线程私有的，其生命周期与线程相同；Java 虚拟机栈描述的是 Java 方法执行时的内存模型；<strong>每个方法在执行时都会创建一个栈帧，用来保存这个方法的操作数栈、局部变量表、方法出口、动态链接等信息；每个方法运行的过程就对应了一个栈帧在 Java 虚拟机栈中入栈和出栈的过程。</strong></li>
+  <li>后进先出(LIFO)栈：Java 虚拟机栈是一个后进先出的栈，后面进入的栈帧会优先出栈；</li>
+  <li>存储栈帧：每个 Java 方法的调用、执行和退出，都和存储的栈帧有着密切的联系。</li>
+  <li>异常：<strong>JVM 规范对此定义了两种异常状况：OutOfMemoryError、StackOverflowError；</strong>如果线程请求的栈深度大于 JVM 允许的栈深度，就会抛出 StackOverflowError异常。</li>
+</ul>
+
+<h3 id="2本地方法栈的特征">2、本地方法栈的特征</h3>
+
+<ul>
+  <li>线程私有：同上</li>
+  <li>后进先出(LIFO)栈：同上</li>
+  <li>作用是支撑 Native 的调用、执行和退出</li>
+  <li>异常：同上</li>
+</ul>
+
+<p><strong>本地方法栈实现各不相同，如 Oracle HotSport 直接将 Java 虚拟机栈和 本地方法栈合二为一。</strong></p>
+
+<h3 id="3栈帧的概念和特征">3、栈帧的概念和特征</h3>
+
+<ul>
+  <li>栈帧被设计为用于存储数据和部分过程结果的数据结构，同时也被用于存储动态链接、方法返回值和异常分派。</li>
+  <li>每一个完整的栈帧都包含：局部变量表、操作数栈、动态链接信息、方法正常完成和异常完成信息；<strong>在程序运行时，栈帧需要多大的局部变量表、多深的操作数栈在编译期就已经确定了；Java 编译器会将其写入 class 字节码的 code 表中。</strong></li>
+  <li>在程序执行时，方法调用链可能会很长，很多方法都处于执行状态，对于执行引擎而言，<strong>在活动线程中只有位于 Java 虚拟机栈栈顶的栈帧才是有效的；</strong>该栈帧被称为当前栈帧，与之对应的关联方法被称之为当前方法，虚拟机执行中所有执行的字节码指令都针对当前栈帧和当前方法进行操作；</li>
+</ul>
+
+<p><strong>关于局部变量表和操作数栈大体内存图如下：</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_jmm_jvm_stack.png" alt="Java 虚拟机栈内存图" /></p>
+
+<h3 id="4局部变量表">4、局部变量表</h3>
+
+<p><strong>定义：</strong>局部变量表是一组局部变量值得存储空间，用于存储方法参数、方法内部定义的变量等；</p>
+
+<p><strong>在 JVM 编译时，就已经在 class code表中确定了该方法所需要局部变量表的最大容量；局部变量表以变量槽(Slot)为最小单位，JVM 规范并未明确说明一个 Solt 所占用的空间大小。</strong>只是非常有导向性的描述了一个 Solt 应该能存放一个布尔型、字节型、字符型、短整型、整型、浮点型、引用型(
+reference)、返回地址(returnAddress)型的数据(两个 Solat 可以存放 long 或 double 型的数据)；在这8中数据类型中，他们都可以使用32位甚至更小的内存空间来存储；这种规定允许 Solt 的大小随着不同 JVM 实现、不同操作系统、甚至是不同硬件如 CPU 等而变化，但是必须保证每个 JVM 上栈帧的 Solt 至少在外观上保持一致。</p>
+
+<ul>
+  <li>reference：即对象实例引用类型，JVM 规范并未完全说明该类型应该是何种数据结构甚至占用空间大小等，<strong>但此类型至少能完成2件事：1、通过该 reference 至少能直接或者间接的找到该引用引用的对象在 Java 堆中实例的具体内存地址；2、通过该 reference 能直接或者间接的找到这个对象所属的数据类型在 Java 方法区中的类型信息。</strong></li>
+  <li>returnAddress：即返回地址型，该种类型目前已经不被使用，以前主要是为了字节码的3条指令：jsr、jsrw、ret服务的；他指向了一条字节码指令的地址，在以前的 JVM 中使用这几条命令和 returnAddress 实现异常处理。</li>
+  <li>long &amp; double：同 JMM 规范类似，在 Solt 中同样允许对64位的 long、double类型分成2个32位的操作进行，<strong>不同的是由于局部变量表建立在 Java 虚拟机栈之上，属于线程私有，所以不会产生原子性的线程安全问题，同时 JVM 也不允许通过 class 直接访问 Solt 中的 long 和 double 类型。</strong></li>
+</ul>
+
+<p>JVM 通过索引值方式定位局部变量表中的数据，<strong>索引值从0开始，到局部变量表最大范围结束，</strong>对于32位的类型数据，索引n就代表访问第n个Solt中的数据，<strong>对于64位的类型数据，索引n代表第n和n+1个Solt中的数据。对于64位的数据，JVM不允许通过任何方式单独访问其中一个 Solt 数据。</strong></p>
+
+<p><strong>局部变量表用于方法间参数传递，以及方法执行过程中存储基础数据类型和对象引用；如果正在执行的方法是实例方法(new 的对象里的)，那么该方法的局部变量表第0个Solt将存储该方法所对应的实例引用；可以通过关键字 bis(不一定对) 来访问这个隐含参数，其他变量按顺序存储在局部变量表中；为节省空间，Solt可以被重用，如果方法体中定义的变量作用域，如果当前程序计数器范围查过了其作用域，那么该变量所占用的局部变量表中的 Solt 将被释放并重用；</strong></p>
+
+<h3 id="5操作数栈">5、操作数栈</h3>
+
+<p><strong>定义：</strong>操作数栈也称操作栈，与局部变量表相同，其大小在编译期确定。</p>
+
+<p>操作数栈由若干个 Entry 组成，JVM 规范定义，在操作数栈中，任意一个栈元素(Entry)都可以存储任意数据类型的数据，包括64位的 long 和 double；但普通32位的数据类型 Entry 深度为1，long 和 double Entry 深度为2；</p>
+
+<p>在方法执行过程中，操作数栈栈帧用于存储计算参数和计算结果；在方法调用时，<strong>操作数栈也用来准备调用方法的参数以及接收返回值；在方法刚开始执行时，操作数栈是空的，在执行过程中，各种不同的字节码指令向操作数栈中写入和读取数据。</strong>比如一个int型加法操作，JVM必须保证操作数栈栈最接近栈顶的两个元素都是int型，相加的过程对应两个元素出栈相加并入栈的过程。<strong>出栈的数据类型必须与字节码的类型严格匹配，在编译时，编译器会严格检查该项。</strong></p>
+
+<p>在 Java 虚拟机栈中，往往两个栈帧是相互独立的，<strong>但在 JVM 实现中，往往对其进行优化，比如让两个逻辑上独立的栈帧出现一部分重叠，让下面栈帧的操作数栈和上面栈帧的局部变量表重叠，这样在方法互相调用参数传递时他们就共用一部分数据，从而避免了数据复制带来的性能损失。</strong></p>
+
+<blockquote>
+  <p>可参考视频 <a href="http://www.jikexueyuan.com/course/1793_2.html?ss=2">Java 虚拟机栈和本地方法栈</a> ，<strong>个人理解：局部变量表类似于方法执行时的永久存储区，而操作数栈类似于temp缓存区，所有运算借助操作数栈完成，最终结果返回到方法局部变量表。</strong></p>
+</blockquote>
+
+<h3 id="6异常情况">6、异常情况</h3>
+
+<ul>
+  <li>如果线程请求的栈容量超出 Java 虚拟机栈容量，那么将抛出 <code class="highlighter-rouge">StackOverflowError</code> 异常。</li>
+  <li>如果 Java 虚拟机栈可以动态扩展，但尝试扩展的动作无法申请到足够的内存去完成扩展，或者在建立新线程时无法获得足够的内存去创建对应的虚拟机栈，那么将抛出 <code class="highlighter-rouge">OutOfMemoryError</code> 异常。</li>
+  <li><strong>JVM 参数：-Xss用于控制 Java 虚拟机栈的栈深度，注意：Oracle HotSpot 虚拟机 Java 虚拟机栈和本地方法栈是一个，所以此参数将控制两个栈的总体栈深度。</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+</ul>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/" data-toggle="tooltip" data-placement="top" title="Java 内存之 Java 堆">
+                        Previous<br>
+                        <span>Java 内存之 Java 堆</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/" data-toggle="tooltip" data-placement="top" title="Java 内存之方法区和运行时常量池">
+                        Next<br>
+                        <span>Java 内存之方法区和运行时常量池</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/03/21/Java-内存自动管理-虚拟机和内存区域概述";
+    var disqus_url = "https://mritd.me/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

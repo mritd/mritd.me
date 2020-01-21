@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Calico 部署踩坑记录">
+    <meta name="keywords"  content="Kubernetes,Calico">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Calico 部署踩坑记录 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/07/31/calico-yml-bug/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>Calico 部署踩坑记录</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on July 31, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>自从上次在虚拟机中手动了部署了 Kubernetes 1.7.2 以后，自己在测试环境就来了一下，结果网络组件死活起不来，最后找到原因记录一下</p>
+</blockquote>
+
+<h3 id="一calico-部署注意事项">一、Calico 部署注意事项</h3>
+
+<p>在使用 Calico 前当然最好撸一下官方文档，地址在这里 <a href="http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/">Calico 官方文档</a>，其中部署前需要注意以下几点</p>
+
+<ul>
+  <li><strong>官方文档中要求 <code class="highlighter-rouge">kubelet</code> 配置必须增加 <code class="highlighter-rouge">--network-plugin=cni</code> 选项</strong></li>
+  <li><strong><code class="highlighter-rouge">kube-proxy</code> 组件必须采用 <code class="highlighter-rouge">iptables</code> proxy mode 模式(1.2 以后是默认模式)</strong></li>
+  <li><strong><code class="highlighter-rouge">kubec-proxy</code> 组件不能采用 <code class="highlighter-rouge">--masquerade-all</code> 启动，因为会与 Calico policy 冲突</strong></li>
+  <li><strong><code class="highlighter-rouge">NetworkPolicy API</code> 只要需要 Kubernetes 1.3 以上</strong></li>
+  <li><strong>启用 RBAC 后需要设置对应的 RoleBinding，参考 <a href="http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/hosted/">官方文档 RBAC 部分</a></strong></li>
+</ul>
+
+<h3 id="二calico-官方部署方式">二、Calico 官方部署方式</h3>
+
+<p>在已经有了一个 Kubernetes 集群的情况下，官方部署方式描述的很简单，只需要改一改 yml 配置，然后 create 一下即可，具体描述见 <a href="http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/hosted/">官方文档</a></p>
+
+<p>官方文档中大致给出了三种部署方案:</p>
+
+<ul>
+  <li><strong>Standard Hosted Install:</strong> 修改 calico.yml etcd 相关配置，直接创建，证书配置等参考 <a href="https://mritd.me/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/#%E5%85%AD%E9%83%A8%E7%BD%B2-calico">手动部署 Kubernetes 文档</a></li>
+  <li><strong>Kubeadm Hosted Install:</strong> 根据 <code class="highlighter-rouge">1.6 or high</code> 和 <code class="highlighter-rouge">1.5</code> 区分两个 yml 配置，直接创建即可</li>
+  <li><strong>Kubernetes Datastore:</strong> 不使用 Etcd 存储数据，不推荐，这里也不做说明</li>
+</ul>
+
+<h3 id="三standard-hosted-install-的坑">三、Standard Hosted Install 的坑</h3>
+
+<p>当我从虚拟机中测试完全没问题以后，就在测试环境尝试创建 Calico 网络，结果出现的问题是<strong>某个(几个) Calico 节点无法启动，同时创建 deployment 后，执行 <code class="highlighter-rouge">route -n</code> 会发现每个 node 只有自己节点 Pod 的路由，正常每个 node 上会有所有 node 上 Pod 网段的路由，如下(正常情况)</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/c44e7.jpg" alt="calico route" /></p>
+
+<p>此时观察每个 node 上 Calico Pod 日志，会有提示 <strong>未知节点 xxxx</strong> 等错误日志，大体意思就是 <strong>未知的一个(几个)节点在进行 BGP 协议时被拒绝</strong>，偶尔某些 node 上还可能出现 <strong>IP 已经被占用</strong> 的神奇错误提示</p>
+
+<p>后来经过翻查 <a href="http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/integration">Calico 自定义部署文档</a> 和 <a href="https://github.com/kubernetes-incubator/kubespray">Kargo 项目源码</a> 发现了主要问题在于 <strong>官方文档中直接创建的 calico.yml 文件中，使用 DaemonSet 方式启动 calico-node，同时 calico-node 的 IP 设置和 NODENAME 设置均为空，此时 calico-node 会进行自动获取，网络复杂情况下获取会出现问题；比如 IP 拿到了 docker 网桥的 IP，NODENAME 获取不正确等，最终导致出现很奇怪的错误</strong></p>
+
+<h3 id="四解决方案">四、解决方案</h3>
+
+<p>一开始想到的解决方案很简单，直接照着 Kargo 抄，使用 Systemd 来启动 calico-node，然后在拆分过程中需要各种配置信息直接也根据 Kargo 的做法生成；当然鼓捣了 1/3 的时候就炸了，Kargo 是 ansible 批量部署的，有些变量找起来要人命；最后选择了一个折中(偷懒)的方案: <strong>使用官方的 calico.yml 创建相关组件，这样 ConfigMap、Etcd 配置、Calico policy 啥的直接创建好，然后把 DaemonSet 中 calico-node 容器单独搞出来，使用 Systemd 启动，这样就即方便又简单(我真特么机智)；最终操作如下:</strong></p>
+
+<h4 id="41首先修改-calicoyml">4.1、首先修改 calico.yml</h4>
+
+<p>在进行网络组件部署前，请确保集群已经满足 Calico 部署要求(本文第一部分)；然后获取 calico.yml，注释掉 DaemonSet 中 calico-node 部分，如下所示</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calico Version v2.3.0</span>
+<span class="c1"># http://docs.projectcalico.org/v2.3/releases#v2.3.0</span>
+<span class="c1"># This manifest includes the following component versions:</span>
+<span class="c1">#   calico/node:v1.3.0</span>
+<span class="c1">#   calico/cni:v1.9.1</span>
+<span class="c1">#   calico/kube-policy-controller:v0.6.0</span>
+
+<span class="c1"># This ConfigMap is used to configure a self-hosted Calico installation.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ConfigMap</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+<span class="na">data</span><span class="pi">:</span>
+  <span class="c1"># Configure this with the location of your etcd cluster.</span>
+  <span class="na">etcd_endpoints</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://192.168.1.11:2379,https://192.168.1.12:2379,https://192.168.1.13:2379"</span>
+
+  <span class="c1"># Configure the Calico backend to use.</span>
+  <span class="na">calico_backend</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bird"</span>
+
+  <span class="c1"># The CNI network configuration to install on each node.</span>
+  <span class="na">cni_network_config</span><span class="pi">:</span> <span class="pi">|-</span>
+    <span class="s">{</span>
+        <span class="s">"name": "k8s-pod-network",</span>
+        <span class="s">"cniVersion": "0.1.0",</span>
+        <span class="s">"type": "calico",</span>
+        <span class="s">"etcd_endpoints": "__ETCD_ENDPOINTS__",</span>
+        <span class="s">"etcd_key_file": "__ETCD_KEY_FILE__",</span>
+        <span class="s">"etcd_cert_file": "__ETCD_CERT_FILE__",</span>
+        <span class="s">"etcd_ca_cert_file": "__ETCD_CA_CERT_FILE__",</span>
+        <span class="s">"log_level": "info",</span>
+        <span class="s">"ipam": {</span>
+            <span class="s">"type": "calico-ipam"</span>
+        <span class="s">},</span>
+        <span class="s">"policy": {</span>
+            <span class="s">"type": "k8s",</span>
+            <span class="s">"k8s_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",</span>
+            <span class="s">"k8s_auth_token": "__SERVICEACCOUNT_TOKEN__"</span>
+        <span class="s">},</span>
+        <span class="s">"kubernetes": {</span>
+            <span class="s">"kubeconfig": "__KUBECONFIG_FILEPATH__"</span>
+        <span class="s">}</span>
+    <span class="s">}</span>
+
+  <span class="c1"># If you're using TLS enabled etcd uncomment the following.</span>
+  <span class="c1"># You must also populate the Secret below with these files.</span>
+  <span class="na">etcd_ca</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/calico-secrets/etcd-ca"</span>
+  <span class="na">etcd_cert</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/calico-secrets/etcd-cert"</span>
+  <span class="na">etcd_key</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/calico-secrets/etcd-key"</span>
+
+<span class="nn">---</span>
+
+<span class="c1"># The following contains k8s Secrets for use with a TLS enabled etcd cluster.</span>
+<span class="c1"># For information on populating Secrets, see http://kubernetes.io/docs/user-guide/secrets/</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Secret</span>
+<span class="na">type</span><span class="pi">:</span> <span class="s">Opaque</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-etcd-secrets</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+<span class="na">data</span><span class="pi">:</span>
+  <span class="c1"># Populate the following files with etcd TLS configuration if desired, but leave blank if</span>
+  <span class="c1"># not using TLS for etcd.</span>
+  <span class="c1"># This self-hosted install expects three files with the following names.  The values</span>
+  <span class="c1"># should be base64 encoded strings of the entire contents of each file.</span>
+  <span class="na">etcd-key</span><span class="pi">:</span> <span class="s">这块自己对 etcd 相关证书做 base64</span>
+  <span class="na">etcd-cert</span><span class="pi">:</span> <span class="s">这块自己对 etcd 相关证书做 base64</span>
+  <span class="na">etcd-ca</span><span class="pi">:</span> <span class="s">这块自己对 etcd 相关证书做 base64</span>
+
+<span class="nn">---</span>
+
+<span class="c1"># This manifest installs the calico/node container, as well</span>
+<span class="c1"># as the Calico CNI plugins and network config on</span>
+<span class="c1"># each master and worker node in a Kubernetes cluster.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">DaemonSet</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-node</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">calico-node</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">calico-node</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">calico-node</span>
+      <span class="na">annotations</span><span class="pi">:</span>
+        <span class="s">scheduler.alpha.kubernetes.io/critical-pod</span><span class="pi">:</span> <span class="s1">'</span><span class="s">'</span>
+        <span class="s">scheduler.alpha.kubernetes.io/tolerations</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">[{"key": "dedicated", "value": "master", "effect": "NoSchedule" },</span>
+           <span class="s">{"key":"CriticalAddonsOnly", "operator":"Exists"}]</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">serviceAccountName</span><span class="pi">:</span> <span class="s">calico-node</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="c1"># Runs calico/node container on each Kubernetes node.  This</span>
+        <span class="c1"># container programs network policy and routes on each</span>
+        <span class="c1"># host.</span>
+<span class="c1"># calico-node 注释掉，移动到 Systemd 中</span>
+<span class="c1">#        - name: calico-node</span>
+<span class="c1">#          image: quay.io/calico/node:v1.3.0</span>
+<span class="c1">#          env:</span>
+<span class="c1">#            # The location of the Calico etcd cluster.</span>
+<span class="c1">#            - name: ETCD_ENDPOINTS</span>
+<span class="c1">#              valueFrom:</span>
+<span class="c1">#                configMapKeyRef:</span>
+<span class="c1">#                  name: calico-config</span>
+<span class="c1">#                  key: etcd_endpoints</span>
+<span class="c1">#            # Choose the backend to use.</span>
+<span class="c1">#            - name: CALICO_NETWORKING_BACKEND</span>
+<span class="c1">#              valueFrom:</span>
+<span class="c1">#                configMapKeyRef:</span>
+<span class="c1">#                  name: calico-config</span>
+<span class="c1">#                  key: calico_backend</span>
+<span class="c1">#            # Disable file logging so `kubectl logs` works.</span>
+<span class="c1">#            - name: CALICO_DISABLE_FILE_LOGGING</span>
+<span class="c1">#              value: "true"</span>
+<span class="c1">#            # Set Felix endpoint to host default action to ACCEPT.</span>
+<span class="c1">#            - name: FELIX_DEFAULTENDPOINTTOHOSTACTION</span>
+<span class="c1">#              value: "ACCEPT"</span>
+<span class="c1">#            # Configure the IP Pool from which Pod IPs will be chosen.</span>
+<span class="c1">#            - name: CALICO_IPV4POOL_CIDR</span>
+<span class="c1">#              value: "10.254.64.0/18"</span>
+<span class="c1">#            - name: CALICO_IPV4POOL_IPIP</span>
+<span class="c1">#              value: "always"</span>
+<span class="c1">#            # Disable IPv6 on Kubernetes.</span>
+<span class="c1">#            - name: FELIX_IPV6SUPPORT</span>
+<span class="c1">#              value: "false"</span>
+<span class="c1">#            # Set Felix logging to "info"</span>
+<span class="c1">#            - name: FELIX_LOGSEVERITYSCREEN</span>
+<span class="c1">#              value: "info"</span>
+<span class="c1">#            # Location of the CA certificate for etcd.</span>
+<span class="c1">#            - name: ETCD_CA_CERT_FILE</span>
+<span class="c1">#              valueFrom:</span>
+<span class="c1">#                configMapKeyRef:</span>
+<span class="c1">#                  name: calico-config</span>
+<span class="c1">#                  key: etcd_ca</span>
+<span class="c1">#            # Location of the client key for etcd.</span>
+<span class="c1">#            - name: ETCD_KEY_FILE</span>
+<span class="c1">#              valueFrom:</span>
+<span class="c1">#                configMapKeyRef:</span>
+<span class="c1">#                  name: calico-config</span>
+<span class="c1">#                  key: etcd_key</span>
+<span class="c1">#            # Location of the client certificate for etcd.</span>
+<span class="c1">#            - name: ETCD_CERT_FILE</span>
+<span class="c1">#              valueFrom:</span>
+<span class="c1">#                configMapKeyRef:</span>
+<span class="c1">#                  name: calico-config</span>
+<span class="c1">#                  key: etcd_cert</span>
+<span class="c1">#            # Auto-detect the BGP IP address.</span>
+<span class="c1">#            - name: IP</span>
+<span class="c1">#              value: ""</span>
+<span class="c1">#          securityContext:</span>
+<span class="c1">#            privileged: true</span>
+<span class="c1">#          resources:</span>
+<span class="c1">#            requests:</span>
+<span class="c1">#              cpu: 250m</span>
+<span class="c1">#          volumeMounts:</span>
+<span class="c1">#            - mountPath: /lib/modules</span>
+<span class="c1">#              name: lib-modules</span>
+<span class="c1">#              readOnly: true</span>
+<span class="c1">#            - mountPath: /var/run/calico</span>
+<span class="c1">#              name: var-run-calico</span>
+<span class="c1">#              readOnly: false</span>
+<span class="c1">#            - mountPath: /calico-secrets</span>
+<span class="c1">#              name: etcd-certs</span>
+<span class="c1">#        # This container installs the Calico CNI binaries</span>
+<span class="c1">#        # and CNI network config file on each node.</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">install-cni</span>
+          <span class="na">image</span><span class="pi">:</span> <span class="s">quay.io/calico/cni:v1.9.1</span>
+          <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">/install-cni.sh"</span><span class="pi">]</span>
+          <span class="na">env</span><span class="pi">:</span>
+            <span class="c1"># The location of the Calico etcd cluster.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ETCD_ENDPOINTS</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">etcd_endpoints</span>
+            <span class="c1"># The CNI network config to install on each node.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">CNI_NETWORK_CONFIG</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">cni_network_config</span>
+          <span class="na">volumeMounts</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/host/opt/cni/bin</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">cni-bin-dir</span>
+            <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/host/etc/cni/net.d</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">cni-net-dir</span>
+            <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/calico-secrets</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">etcd-certs</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+        <span class="c1"># Used by calico/node.</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">lib-modules</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/lib/modules</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">var-run-calico</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/var/run/calico</span>
+        <span class="c1"># Used to install CNI.</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">cni-bin-dir</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/opt/cni/bin</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">cni-net-dir</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/etc/cni/net.d</span>
+        <span class="c1"># Mount in the etcd TLS secrets.</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">etcd-certs</span>
+          <span class="na">secret</span><span class="pi">:</span>
+            <span class="na">secretName</span><span class="pi">:</span> <span class="s">calico-etcd-secrets</span>
+
+<span class="nn">---</span>
+
+<span class="c1"># This manifest deploys the Calico policy controller on Kubernetes.</span>
+<span class="c1"># See https://github.com/projectcalico/k8s-policy</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-policy-controller</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">calico-policy</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="s">scheduler.alpha.kubernetes.io/critical-pod</span><span class="pi">:</span> <span class="s1">'</span><span class="s">'</span>
+    <span class="s">scheduler.alpha.kubernetes.io/tolerations</span><span class="pi">:</span> <span class="pi">|</span>
+      <span class="s">[{"key": "dedicated", "value": "master", "effect": "NoSchedule" },</span>
+       <span class="s">{"key":"CriticalAddonsOnly", "operator":"Exists"}]</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="c1"># The policy controller can only have a single active instance.</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">strategy</span><span class="pi">:</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">Recreate</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">calico-policy-controller</span>
+      <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">calico-policy</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="c1"># The policy controller must run in the host network namespace so that</span>
+      <span class="c1"># it isn't governed by policy that would prevent it from working.</span>
+      <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">serviceAccountName</span><span class="pi">:</span> <span class="s">calico-policy-controller</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">calico-policy-controller</span>
+          <span class="na">image</span><span class="pi">:</span> <span class="s">quay.io/calico/kube-policy-controller:v0.6.0</span>
+          <span class="na">env</span><span class="pi">:</span>
+            <span class="c1"># The location of the Calico etcd cluster.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ETCD_ENDPOINTS</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">etcd_endpoints</span>
+            <span class="c1"># Location of the CA certificate for etcd.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ETCD_CA_CERT_FILE</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">etcd_ca</span>
+            <span class="c1"># Location of the client key for etcd.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ETCD_KEY_FILE</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">etcd_key</span>
+            <span class="c1"># Location of the client certificate for etcd.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ETCD_CERT_FILE</span>
+              <span class="na">valueFrom</span><span class="pi">:</span>
+                <span class="na">configMapKeyRef</span><span class="pi">:</span>
+                  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-config</span>
+                  <span class="na">key</span><span class="pi">:</span> <span class="s">etcd_cert</span>
+            <span class="c1"># The location of the Kubernetes API.  Use the default Kubernetes</span>
+            <span class="c1"># service for API access.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">K8S_API</span>
+              <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://kubernetes.default:443"</span>
+            <span class="c1"># Since we're running in the host namespace and might not have KubeDNS</span>
+            <span class="c1"># access, configure the container's /etc/hosts to resolve</span>
+            <span class="c1"># kubernetes.default to the correct service clusterIP.</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">CONFIGURE_ETC_HOSTS</span>
+              <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+          <span class="na">volumeMounts</span><span class="pi">:</span>
+            <span class="c1"># Mount in the etcd TLS secrets.</span>
+            <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/calico-secrets</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">etcd-certs</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+        <span class="c1"># Mount in the etcd TLS secrets.</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">etcd-certs</span>
+          <span class="na">secret</span><span class="pi">:</span>
+            <span class="na">secretName</span><span class="pi">:</span> <span class="s">calico-etcd-secrets</span>
+
+<span class="nn">---</span>
+
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-policy-controller</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+
+<span class="nn">---</span>
+
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">calico-node</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+
+</code></pre></div></div>
+
+<p><strong>修改完成后直接 create 即可</strong></p>
+
+<h4 id="42增加-calico-node-systemd-配置">4.2、增加 calico-node Systemd 配置</h4>
+
+<p>最后写一个 service 文件(我放到了 <code class="highlighter-rouge">/etc/systemd/system/calico-node.service</code>)，使用 Systemd 启动即可；<strong>注意以下配置中 <code class="highlighter-rouge">IP</code>、<code class="highlighter-rouge">NODENAME</code> 是自己手动定义的，IP 为宿主机 IP，NODENAME 最好与 hostname 相同</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>calico node
+<span class="nv">After</span><span class="o">=</span>docker.service
+<span class="nv">Requires</span><span class="o">=</span>docker.service
+
+<span class="o">[</span>Service]
+<span class="nv">User</span><span class="o">=</span>root
+<span class="nv">PermissionsStartOnly</span><span class="o">=</span><span class="nb">true
+</span><span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/docker run   <span class="nt">--net</span><span class="o">=</span>host <span class="nt">--privileged</span> <span class="nt">--name</span><span class="o">=</span>calico-node <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">ETCD_ENDPOINTS</span><span class="o">=</span>https://192.168.1.11:2379,https://192.168.1.12:2379,https://192.168.1.13:2379 <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">ETCD_CA_CERT_FILE</span><span class="o">=</span>/etc/etcd/ssl/etcd-root-ca.pem <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">ETCD_CERT_FILE</span><span class="o">=</span>/etc/etcd/ssl/etcd.pem <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">ETCD_KEY_FILE</span><span class="o">=</span>/etc/etcd/ssl/etcd-key.pem <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">NODENAME</span><span class="o">=</span>docker1.node <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">IP</span><span class="o">=</span>192.168.1.11 <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">IP6</span><span class="o">=</span> <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">AS</span><span class="o">=</span> <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">CALICO_IPV4POOL_CIDR</span><span class="o">=</span>10.20.0.0/16 <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">CALICO_IPV4POOL_IPIP</span><span class="o">=</span>always <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">CALICO_LIBNETWORK_ENABLED</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">CALICO_NETWORKING_BACKEND</span><span class="o">=</span>bird <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">CALICO_DISABLE_FILE_LOGGING</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">FELIX_IPV6SUPPORT</span><span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">FELIX_DEFAULTENDPOINTTOHOSTACTION</span><span class="o">=</span>ACCEPT <span class="se">\</span>
+                                <span class="nt">-e</span> <span class="nv">FELIX_LOGSEVERITYSCREEN</span><span class="o">=</span>info <span class="se">\</span>
+                                <span class="nt">-v</span> /etc/etcd/ssl/etcd-root-ca.pem:/etc/etcd/ssl/etcd-root-ca.pem <span class="se">\</span>
+                                <span class="nt">-v</span> /etc/etcd/ssl/etcd.pem:/etc/etcd/ssl/etcd.pem <span class="se">\</span>
+                                <span class="nt">-v</span> /etc/etcd/ssl/etcd-key.pem:/etc/etcd/ssl/etcd-key.pem <span class="se">\</span>
+                                <span class="nt">-v</span> /var/run/calico:/var/run/calico <span class="se">\</span>
+                                <span class="nt">-v</span> /lib/modules:/lib/modules <span class="se">\</span>
+                                <span class="nt">-v</span> /run/docker/plugins:/run/docker/plugins <span class="se">\</span>
+                                <span class="nt">-v</span> /var/run/docker.sock:/var/run/docker.sock <span class="se">\</span>
+                                <span class="nt">-v</span> /var/log/calico:/var/log/calico <span class="se">\</span>
+                                quay.io/calico/node:v1.3.0
+<span class="nv">ExecStop</span><span class="o">=</span>/usr/bin/docker <span class="nb">rm</span> <span class="nt">-f</span> calico-node
+<span class="nv">Restart</span><span class="o">=</span>always
+<span class="nv">RestartSec</span><span class="o">=</span>10
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/" data-toggle="tooltip" data-placement="top" title="手动档搭建 Kubernetes HA 集群">
+                        Previous<br>
+                        <span>手动档搭建 Kubernetes HA 集群</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/09/05/git-flow-note/" data-toggle="tooltip" data-placement="top" title="CI/CD Git Flow">
+                        Next<br>
+                        <span>CI/CD Git Flow</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/07/31/calico-yml-bug";
+    var disqus_url = "https://mritd.me/2017/07/31/calico-yml-bug/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

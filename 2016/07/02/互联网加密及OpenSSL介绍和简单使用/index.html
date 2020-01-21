@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="互联网加密及OpenSSL介绍和简单使用">
+    <meta name="keywords"  content="Linux,OpenSSL,CA,证书,crt">
+    <meta name="theme-color" content="#000000">
+    
+    <title>互联网加密及OpenSSL介绍和简单使用 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>互联网加密及OpenSSL介绍和简单使用</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on July 2, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一互联网通信安全简述">一、互联网通信安全简述</h2>
+
+<h3 id="11安全问题">1.1、安全问题</h3>
+
+<p>随着互联网不断发展，网络安全日益重要，而在互联网上的两台主机间通讯安全成为隐患，其主要面临两大问题 : <strong>身份认证与数据安全</strong>。</p>
+
+<h3 id="12身份认证">1.2、身份认证</h3>
+
+<p>当互联网上两台从未通讯过的主机进行通讯时，比如我们第一次访问支付宝网站，我们如何确信对方主机是真实的，比如我们在浏览器中输入支付宝的地址最终到达的主机是支付宝的主机，而并非别人仿造的假的钓鱼网站？此时面临的问题就是一个 <strong>身份认证</strong> 问题，即对方要能证明其身份。</p>
+
+<!--more-->
+
+<h3 id="13数据安全">1.3、数据安全</h3>
+
+<p>假设已经解决了身份认证问题，那么接下来的操作如何保证数据不被窃取？比如在支付宝网站进行转账操作，如何保证密码传输过程中不会被别人窃取；此时面临的就是 <strong>数据安全</strong> 问题。</p>
+
+<h2 id="二加密算法">二、加密算法</h2>
+
+<h3 id="21加密方式分类">2.1、加密方式分类</h3>
+
+<p>目前互联网上的加密算法主要分为三大类 : <strong>对称加密(双向加密)、非对称加密、公钥加密。</strong></p>
+
+<h3 id="22对称加密">2.2、对称加密</h3>
+
+<p>对称加密也称作双向加密，即 <strong>加密与解密使用同一密码</strong>，对明文使用密码加密后，对方可以通过同一密码进行反向解密，<strong>加密安全性完全依赖于加密密码。</strong>常见的加密算法有 <code class="highlighter-rouge">DES(56bits)</code>、<code class="highlighter-rouge">3DES</code>、<code class="highlighter-rouge">AES(128bits)</code>、<code class="highlighter-rouge">Blowfish</code>、<code class="highlighter-rouge">Twofish</code>、<code class="highlighter-rouge">IDEA</code>、<code class="highlighter-rouge">RC6</code>、<code class="highlighter-rouge">CAST5</code>、<code class="highlighter-rouge">Serpent</code>等等；此种方式加密容易遭受 <strong>字典攻击</strong>，同时解密方需要得到加密密码，中间可能涉及密码传输泄露问题；此种加密一般都是 <strong>将原文分割成固定大小的数据块，对这些块进行加密(ECB，CBC)。</strong></p>
+
+<h3 id="23非对称加密">2.3、非对称加密</h3>
+
+<p>非对称加密与对称加密相反，其加密解密可使用不同的密码，常见的如 <code class="highlighter-rouge">RSA</code>、<code class="highlighter-rouge">EIGmal</code>、<code class="highlighter-rouge">DSA</code> 等。</p>
+
+<h4 id="231单向加密">2.3.1、单向加密</h4>
+
+<p>在非对称加密中，有一种比较特殊的加密叫做单向加密，<strong>单向机密也称消息摘要算法，其主要目的是提取消息特征码，加密后的密文不可逆。</strong>常见的单向加密算法有 : <code class="highlighter-rouge">MD5</code>、<code class="highlighter-rouge">SHA1</code>、<code class="highlighter-rouge">SHA512</code>、<code class="highlighter-rouge">CRC-32(循环冗余校验码)</code> 等；单向加密有两个重要的特性 : <strong>定长输出、雪崩效应；</strong>定长输出可以理解为 <strong>无论消息体多大，最终输出加密后结果长度一致，雪崩效应顾名思义，即消息体的微小变化，会导致加密结果的巨大变化。</strong></p>
+
+<h3 id="24公钥加密">2.4、公钥加密</h3>
+
+<p>公钥加密时会有两个文件，即一个公钥一个私钥；并且公钥与私钥成对出现，其特性是 <strong>使用公钥加密的内容必须使用与其匹配的私钥解密，反之亦然。</strong></p>
+
+<h2 id="三解决方案">三、解决方案</h2>
+
+<h3 id="31身份认证的解决">3.1、身份认证的解决</h3>
+
+<p>由上可知，首先我们面临的第一个问题就是身份认证问题，即 “支付宝要能证明他是支付宝”；纵观以上3中加密算法，比较适合做身份认证的就是 <strong>公钥加密</strong>，<strong>即在互联网上从未通讯过的主机想向对方证明自己的身份，只需先生成一对密钥，然后将公钥放在互联网上大家可任意获取，私钥自己保留；需要证明身份时只需用自己的私钥加密一段信息发给对方，对方若能使用其公钥解密，就能证明其身份。</strong>简单的例子如下所示，支付宝服务器先将自己的公钥放到互联网上，然后我们需要支付宝服务器证明其身份的时候，支付宝服务器先用自己的私钥加密一段文字，若我们使用互联网上的支付宝公钥能够将其解密，则就能证明此服务器是真实的</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_shenfenrenzheng1.png" alt="hexo_openssl_shenfenrenzheng1" /></p>
+
+<h3 id="32ca-机构">3.2、CA 机构</h3>
+
+<p>上面的做法似乎完美的解决了身份认证问题，但并非如此，这中间存在一个巨大漏洞；即 <strong>如何保证从互联网上获取的公钥就是对方的，而不是别人恶意放到互联网上的假冒公钥。</strong>此时的解决方案就是 <strong>大家找一个公认的知名机构，把公钥全部放到这个机构那，然后谁需要谁从那里下载</strong>，此时这个机构称之为 CA，CA 为每个使用者颁发一个证书，证书中包含其公钥和CA 的私钥签名，以及一些使用者信息；<strong>同时证书具有级联信任关系，即 我们信任了一家 CA 的根证书，那么由其颁发的其他证书将都被信任，类似于一棵树的结构，一旦我们信任了根节点那么以下所有子节点将全部被信任。</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_shenfenrenzheng2.png" alt="hexo_openssl_shenfenrenzheng2" /></p>
+
+<h3 id="33数据加密的解决">3.3、数据加密的解决</h3>
+
+<p>当我们使用公钥加密和 CA 机制解决了身份认证以后，接下来的问题就是数据传输过程中的加密问题；既然是传输数据，那么数据内容肯定需要双向加密才可以被接收方解密读取，但是很大的问题是 <strong>双向加密时，解密方需要知道解密密码；</strong>而将密码在互联网上传输明显是不明智的，此时出现了另一种解决方案，即 <strong>密钥交换算法</strong>，专门用于在互联网上传输密钥信息。</p>
+
+<h4 id="331diffie-hellman-算法">3.3.1、Diffie-Hellman 算法</h4>
+
+<p>Diffie–Hellman 是著名的密钥交换算法，其基本原理如下：</p>
+
+<ul>
+  <li>首先两台计算机互相通讯，并约定选取一个大素数 g</li>
+  <li>然后两台计算机再协商一个计算数 p</li>
+  <li>接下来每台计算机随机选定一个随机数，此随机数并不会发给对方(x、y)</li>
+  <li>通讯时，A 计算机计算 <code class="highlighter-rouge">g^x % p</code> 发给 B 计算机</li>
+  <li>接下来同样 B 计算机计算 <code class="highlighter-rouge">g^y % p</code> 发给 A 计算机</li>
+  <li>B 计算机拿到 <code class="highlighter-rouge">g^x % p</code> 后再进行 <code class="highlighter-rouge">(g^x % p)^y</code> 即最终结果为 <code class="highlighter-rouge">g^xy % p</code></li>
+  <li>同样 A 计算机拿到 <code class="highlighter-rouge">g^y % p</code> 后再进行 <code class="highlighter-rouge">(g^y % p)^x</code> 即最终结果为 <code class="highlighter-rouge">g^xy % p</code></li>
+  <li>此时两台计算机结果将一致，接下来传送的数据便以此结果为密码进行加密即可</li>
+</ul>
+
+<p><strong>此过程中双方都保留了私有的 x、y 随机数，x、y 并未在互联网上传输，所以是安全的，并且由离散数学原理 x、y 被推测的可能性很小，以当前计算机性能基本不可能推测(不要提超级计算机，黑客没那个资源)。</strong></p>
+
+<h4 id="332diffie-hellman-算法示意图">3.3.2、Diffie-Hellman 算法示意图</h4>
+
+<p>Diffie-Hellman 算法示意图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_DH.png" alt="hexo_openssl_DH" /></p>
+
+<h3 id="34数据完整性">3.4、数据完整性</h3>
+
+<p>以上部分已经实现了身份校验以及数据加密操作，接下来我们需要保证数据的完整性，对于完整性最好的应用就是采用单向加密即消息摘要算法，提取数据的特征码；<strong>简单地说就是每发送一段数据，就对发送的数据做一次数据特征提取，然后将特征码一并发送，接收方接收到数据并解密后可对其使用同样的算法进行特征码提取比对，如果计算结果不一致则证明数据被篡改，直接丢弃即可。</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_datawanzheng.png" alt="hexo_openssl_datawanzheng" /></p>
+
+<h2 id="四openssl-使用">四、OpenSSL 使用</h2>
+
+<h3 id="41openssl-简介">4.1、OpenSSL 简介</h3>
+
+<p>OpenSSL 是一组加密套件，其提供了功能强大的加密解密功能，以及证书相关的操作工具，OpenSSL 分为三大部分 : <code class="highlighter-rouge">libcrypto</code> 通用功能的加密库、<code class="highlighter-rouge">libssl</code> 用于实现TLS/SSL的功能 和 <code class="highlighter-rouge">openssl</code> 多功能命令工具；而一般 OpenSSL 使用指的就是多功能命令行工具的使用。</p>
+
+<p>OpenSSL 有许多子命令，可通过 <code class="highlighter-rouge">openssl ?</code> 查看其支持子命令和加密算法等信息</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Standard commands
+asn1parse         ca                ciphers           cms
+crl               crl2pkcs7         dgst              dh
+dhparam           dsa               dsaparam          ec
+ecparam           enc               engine            errstr
+gendh             gendsa            genpkey           genrsa
+nseq              ocsp              passwd            pkcs12
+pkcs7             pkcs8             pkey              pkeyparam
+pkeyutl           prime             rand              req
+rsa               rsautl            s_client          s_server
+s_time            sess_id           smime             speed
+spkac             srp               ts                verify
+version           x509
+
+Message Digest commands <span class="o">(</span>see the <span class="sb">`</span>dgst<span class="s1">' command for more details)
+md4               md5               rmd160            sha
+sha1
+
+Cipher commands (see the `enc'</span> <span class="nb">command </span><span class="k">for </span>more details<span class="o">)</span>
+aes-128-cbc       aes-128-ecb       aes-192-cbc       aes-192-ecb
+aes-256-cbc       aes-256-ecb       <span class="nb">base64            </span>bf
+bf-cbc            bf-cfb            bf-ecb            bf-ofb
+camellia-128-cbc  camellia-128-ecb  camellia-192-cbc  camellia-192-ecb
+camellia-256-cbc  camellia-256-ecb  cast              cast-cbc
+cast5-cbc         cast5-cfb         cast5-ecb         cast5-ofb
+des               des-cbc           des-cfb           des-ecb
+des-ede           des-ede-cbc       des-ede-cfb       des-ede-ofb
+des-ede3          des-ede3-cbc      des-ede3-cfb      des-ede3-ofb
+des-ofb           des3              desx              rc2
+rc2-40-cbc        rc2-64-cbc        rc2-cbc           rc2-cfb
+rc2-ecb           rc2-ofb           rc4               rc4-40
+seed              seed-cbc          seed-cfb          seed-ecb
+seed-ofb
+</code></pre></div></div>
+
+<h3 id="42openssl-实现加解密">4.2、OpenSSL 实现加解密</h3>
+
+<h4 id="421加密操作">4.2.1、加密操作</h4>
+
+<p>OpenSSL 使用子命令 <code class="highlighter-rouge">enc</code> 实现加密，命令格式如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc -算法 <span class="nt">-salt</span> <span class="nt">-a</span> <span class="nt">-salt</span> <span class="nt">-in</span> 输入文件 <span class="nt">-out</span> 输出文件 <span class="nt">-k</span> passwd
+</code></pre></div></div>
+
+<p>如下为加密一个文件示例</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc <span class="nt">-aes-256-ecb</span>  <span class="nt">-a</span> <span class="nt">-salt</span> <span class="nt">-in</span> /etc/profile <span class="nt">-out</span> ~/test <span class="nt">-k</span> test123
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">-a</code> 选项用于将加密后内容以 base64 格式输出，加密后内容如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>U2FsdGVkX1/tVWQ7cGR5rTLU9Phnx7csis12ukuGpZTWx7sDiJ8Qdb4Jn8hvShnW
+7gPouyOwJlKufoDHXT2hqOnw/i8Rf5QisLc+EOXgUWDFun3AqHte6YmNbelDFchu
+hDsph4Vq7TNBmZ/C1LHSCnMoA39qHBWxyrIstpOWs5TWkdPjDgEVZkIXNiWIwoRF
+CDVv7AuZXO9qF3sMb4fLWPF9cM7FkbvGkkhzBJZ0dAdq8DetKaZyjOX4UfeWPSav
+U61t9s7hlmjEPmXpUSSfnO8/7u0B/EEnujpkwyNZXbQBcQ9QFDh7x1vdzQIAuMRw
+0SLsVm1OSOifvMOpOAJCmvhExrKsznWgQlQabLOWsr29yrs0YBuwSl6oUSf8Qx1S
+3z/GC7l13zzmHwXJTgPRe0WzdLYsy6GMj2/0DveLvcXT/cXGid69tzIf4JaczIEX
+zSS4N12C3CFS/60poXZmiwoNsC3n6ESBf3dZum6LKA9sNPdxveb/RTZ4KYl/iw9S
+NgAqNGa9Yp1xdyl2NBaruvDxVAGbwC+rGn9UjbIYbEdT7ZjKPjJ6BP8yzwv6jnOU
+3E58UVIuIEVWJY3kF77+Vk99JuQepFRGX9sHYdafQR7AISiS88eipn6qkMMDmrkT
+kwZtebWyhvmWTZABOa7tckzzYxJ/Ke1jkBudasUJr9RUEiNNmSASdRr0dlZvM/tS
+COuPeNo8ZU7ad/yd/OpvPKShn9Hh9oXCKSB4vl/DQVefVXWAaTp49FFAGFrQThiQ
+rAwHwrJ/N2ab0Do0iArctNTqz5u7MtEHwVtFsV45YJfAGQRwTg06Y6qKjhgWmBjX
+EGNGbP7c0A1SiI/g8maKl3ciTwWPWXCcpf14MFcYBvjpA7EVYSYTh7hSxzUtY0gk
+l3EUVrqnY0M8u+0LBgAcrA<span class="o">==</span>
+</code></pre></div></div>
+
+<h4 id="422解密操作">4.2.2、解密操作</h4>
+
+<p>解密操作与加密基本相同，只不过需要加上 <code class="highlighter-rouge">-d</code> 选项，代表解密，命令格式如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc -算法 <span class="nt">-salt</span> <span class="nt">-d</span> <span class="nt">-a</span> <span class="nt">-in</span> 输入文件 <span class="nt">-out</span> 输出文件 <span class="nt">-k</span> passwd
+</code></pre></div></div>
+
+<p>如下为解密一个文件的示例</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc <span class="nt">-aes-256-ecb</span> <span class="nt">-salt</span> <span class="nt">-d</span> <span class="nt">-a</span> <span class="nt">-in</span> <span class="nb">test</span> <span class="nt">-out</span> test1 <span class="nt">-k</span> test123
+</code></pre></div></div>
+
+<p>解密后文件即为原来的 <code class="highlighter-rouge">/etc/profile</code> 文件内容</p>
+
+<h3 id="43openssl-创建-ca">4.3、OpenSSL 创建 CA</h3>
+
+<p>关于 CA 证书本文并未做过多解释，限于篇幅，完全解释完太多，以下为一篇写的比较好的文章 <a href="http://seanlook.com/2015/01/15/openssl-certificate-encryption/">点这里</a>；下面主要介绍 OpenSSL 工具建立私有 CA。</p>
+
+<h4 id="431openssl-ca-相关配置">4.3.1、OpenSSL CA 相关配置</h4>
+
+<p>默认的 Ubuntu 下 OpenSSL 的配置文件位于 <code class="highlighter-rouge">/etc/ssl/openssl.cnf</code>，CentOS 位于 <code class="highlighter-rouge">/etc/pki/tls/openssl.cnf</code>，我们只需要关注如下部分，关于具体配置含义 Google 之。</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">####################################################################</span>
+<span class="o">[</span> ca <span class="o">]</span>
+default_ca      <span class="o">=</span> CA_default            <span class="c"># The default ca section</span>
+
+<span class="c">####################################################################</span>
+<span class="o">[</span> CA_default <span class="o">]</span>
+
+<span class="nb">dir</span>             <span class="o">=</span> ./demoCA              <span class="c"># Where everything is kept</span>
+certs           <span class="o">=</span> <span class="nv">$dir</span>/certs            <span class="c"># Where the issued certs are kept</span>
+crl_dir         <span class="o">=</span> <span class="nv">$dir</span>/crl              <span class="c"># Where the issued crl are kept</span>
+database        <span class="o">=</span> <span class="nv">$dir</span>/index.txt        <span class="c"># database index file.</span>
+<span class="c">#unique_subject = no                    # Set to 'no' to allow creation of</span>
+                                        <span class="c"># several ctificates with same subject.</span>
+new_certs_dir   <span class="o">=</span> <span class="nv">$dir</span>/newcerts         <span class="c"># default place for new certs.</span>
+
+certificate     <span class="o">=</span> <span class="nv">$dir</span>/cacert.pem       <span class="c"># The CA certificate</span>
+serial          <span class="o">=</span> <span class="nv">$dir</span>/serial           <span class="c"># The current serial number</span>
+crlnumber       <span class="o">=</span> <span class="nv">$dir</span>/crlnumber        <span class="c"># the current crl number</span>
+                                        <span class="c"># must be commented out to leave a V1 CRL</span>
+crl             <span class="o">=</span> <span class="nv">$dir</span>/crl.pem          <span class="c"># The current CRL</span>
+private_key     <span class="o">=</span> <span class="nv">$dir</span>/private/cakey.pem# The private key
+RANDFILE        <span class="o">=</span> <span class="nv">$dir</span>/private/.rand    <span class="c"># private random number file</span>
+
+x509_extensions <span class="o">=</span> usr_cert              <span class="c"># The extentions to add to the cert</span>
+
+<span class="c"># Comment out the following two lines for the "traditional"</span>
+<span class="c"># (and highly broken) format.</span>
+name_opt        <span class="o">=</span> ca_default            <span class="c"># Subject Name options</span>
+cert_opt        <span class="o">=</span> ca_default            <span class="c"># Certificate field options</span>
+
+<span class="c"># Extension copying option: use with caution.</span>
+<span class="c"># copy_extensions = copy</span>
+
+<span class="c"># Extensions to add to a CRL. Note: Netscape communicator chokes on V2 CRLs</span>
+<span class="c"># so this is commented out by default to leave a V1 CRL.</span>
+<span class="c"># crlnumber must also be commented out to leave a V1 CRL.</span>
+<span class="c"># crl_extensions        = crl_ext</span>
+
+default_days    <span class="o">=</span> 365                   <span class="c"># how long to certify for</span>
+<span class="nv">default_crl_days</span><span class="o">=</span> 30                    <span class="c"># how long before next CRL</span>
+default_md      <span class="o">=</span> default               <span class="c"># use public key default MD</span>
+preserve        <span class="o">=</span> no                    <span class="c"># keep passed DN ordering</span>
+
+<span class="c"># A few difference way of specifying how similar the request should look</span>
+<span class="c"># For type CA, the listed attributes must be the same, and the optional</span>
+<span class="c"># and supplied fields are just that :-)</span>
+policy          <span class="o">=</span> policy_match
+
+<span class="c"># For the CA policy</span>
+<span class="o">[</span> policy_match <span class="o">]</span>
+countryName             <span class="o">=</span> match
+stateOrProvinceName     <span class="o">=</span> match
+organizationName       <span class="o">=</span> match
+organizationalUnitName  <span class="o">=</span> optional
+commonName              <span class="o">=</span> supplied
+emailAddress            <span class="o">=</span> optional
+</code></pre></div></div>
+
+<h4 id="432生成密钥对">4.3.2、生成密钥对</h4>
+
+<p>由配置文件可知，OpenSSL 默认的工作目录在 <code class="highlighter-rouge">./demoCA</code> 下，所以需要先创建 CA 所需相关目录，执行 <code class="highlighter-rouge">mkdir -p demoCA/{private,certs,crl,newcerts}</code>，目录结构如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_dirtree.png" alt="hexo_openssl_dirtree" /></p>
+
+<p>然后生成一个私钥(<strong>公钥其实是从私钥中提取的，所以创建私钥就可以从中提取出公钥</strong>)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 使用 () 开启子 shell 执行，同时设置掩码</span>
+<span class="o">(</span><span class="nb">umask </span>077<span class="p">;</span> openssl genrsa <span class="nt">-out</span> demoCA/private/cakey.pem 2048<span class="o">)</span>
+<span class="c"># 如果想查看公钥可执行以下命令(非必须)</span>
+openssl rsa <span class="nt">-in</span> demoCA/private/cakey.pem <span class="nt">-pubout</span>
+</code></pre></div></div>
+
+<h4 id="433生成自签证书">4.3.3、生成自签证书</h4>
+
+<p>作为根 CA，可以生成一个自签名的证书，来标明自己的身份，签名方法如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="nt">-new</span> <span class="nt">-x509</span> <span class="nt">-key</span> demoCA/private/cakey.pem <span class="nt">-days</span> 3655 <span class="nt">-out</span> demoCA/cacert.pem
+</code></pre></div></div>
+
+<p>然后输入相关信息，注意不要乱输入，其中 <code class="highlighter-rouge">Common Name</code> 一般为使用者域名，这里暂时填写的是 IP，截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_createcapb.png" alt="hexo_openssl_createcapb" /></p>
+
+<p><strong>最后要创建用于签名证书的相关文件，</strong>执行 <code class="highlighter-rouge">touch demoCA/{index.txt,serial,crlnumber}</code> 创建所需文件，执行 <code class="highlighter-rouge">echo "01" &gt; demoCA/serial</code> 初始化序列号，最终文件目录结构如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_createcafiledirtree.png" alt="hexo_openssl_createcafiledirtree" /></p>
+
+<h3 id="44opnessl-申请证书">4.4、OpneSSL 申请证书</h3>
+
+<p>同样，先生成一对密钥</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建目录</span>
+<span class="nb">mkdir </span>mycrt
+<span class="c"># 生成公钥 扩展名随便取</span>
+openssl genrsa <span class="nt">-out</span> mritd.key 2048
+<span class="c"># 提取公钥</span>
+openssl rsa <span class="nt">-in</span> mritd.key <span class="nt">-pubout</span> <span class="o">&gt;</span> mritd.public.key
+</code></pre></div></div>
+
+<p><strong>接下来要申请一个证书签署请求，信息要保证与 CA 创建时一致(具体可调整 openssl.cnf 配置文件)，密码直接回车默认为空密码</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="nt">-new</span> <span class="nt">-key</span> mritd.key <span class="nt">-out</span> mritd.csr
+</code></pre></div></div>
+
+<p>截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_createprivatekey.png" alt="hexo_openssl_createprivatekey" /></p>
+
+<p>最后使用 CA 进行签署即可(注意，要回到 <code class="highlighter-rouge">demoCA</code> 上一级目录)，提示是否确认全部 y 即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl ca <span class="nt">-in</span> mycrt/mritd.csr <span class="nt">-out</span> mycrt/mritd.crt <span class="nt">-days</span> 3655
+</code></pre></div></div>
+
+<p>截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_openssl_signedcrt.png" alt="hexo_openssl_signedcrt" /></p>
+
+<p><strong>最终生成的  <code class="highlighter-rouge">mritd.crt</code> 即为可用的证书</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/" data-toggle="tooltip" data-placement="top" title="Harbor 企业级 Docker Registry 初试">
+                        Previous<br>
+                        <span>Harbor 企业级 Docker Registry 初试</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/" data-toggle="tooltip" data-placement="top" title="Harbor 企业级 Docker Registry HTTPS配置">
+                        Next<br>
+                        <span>Harbor 企业级 Docker Registry HTTPS配置</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/07/02/互联网加密及OpenSSL介绍和简单使用";
+    var disqus_url = "https://mritd.me/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

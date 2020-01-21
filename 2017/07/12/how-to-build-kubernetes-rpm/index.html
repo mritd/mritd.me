@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="记录 build kubernetes 的过程">
+    <meta name="keywords"  content="kubernetes">
+    <meta name="theme-color" content="#000000">
+    
+    <title>How to build Kubernetes RPM - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/07/12/how-to-build-kubernetes-rpm/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>How to build Kubernetes RPM</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on July 12, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>一直使用 Centos 运行 Kubernetes,有些时候基于二进制部署的情况下,手动复制二进制文件和创建 Systemd service 配置略显繁琐;最近找了一下 Kubernetes RPM 的 build 方式,以下记录一下 build 过程</p>
+</blockquote>
+
+<h3 id="一rpm-build-方式选择">一、RPM build 方式选择</h3>
+
+<p>目前我所知道的 build kubernetes RPM 的方式(测试过)总共 3 种,大致分为 2 类</p>
+
+<ul>
+  <li>基于源码 build</li>
+  <li>基于已有 rpm 替换</li>
+</ul>
+
+<p>第一种方案的好处就是配置文件等能始终保持最新的,编译版本等不受限制;但是从源码 build 非常耗时,尤其是网络环境复杂的情况下,没有高配置国外服务器很难完成 build,而且要维护 build 所需 spec 文件等,自己维护这些未必能够尽善尽美;</p>
+
+<p>第二种方式是创建速度快,build 方式简单可靠,但是由于是替换方式,所以 rpm 中的配置不一定能够即使更新,而且只能基于官方build 好以后的二进制文件进行替换,如果想要尝试 master 最新代码则无法实现</p>
+
+<h3 id="二基于源码-build">二、基于源码 Build</h3>
+
+<p>对于 Centos RPM build 原理方式这里不再细说，基于源码 build 的关键就在于 spec 文件，我尝试过自己去写，后来对比一些开源项目的感觉 low 得很，所以以前一直采用一个国外哥们写的脚本 build(参见 <a href="https://github.com/mritd/kubernetes-rpm-builder">这里</a>)；这个脚本不太好的地方是作者已经停止了维护；经过不懈努力，找到了 Fedora 系统的 rpm 仓库，鼓捣了一阵摸清了套路；以下主要以 Fedora 仓库为例进行 build</p>
+
+<p><strong>以下 Build 在一台 Do 8核心 16G VPS 上进行，由于众所周知的原因，国内 Build 很费劲，一般国外 VPS 都是按小时收费，有个 2 块钱就够了</strong></p>
+
+<h4 id="21安装-build-所需依赖">2.1、安装 build 所需依赖</h4>
+
+<p><strong>由于 spec 文件中定义了依赖于 golang 这个包，所以如果不装的话会报错；事实上如果使用刚刚安装的这个 golang 去 build 还是会挂掉，因为实际编译要求 golang &gt; 1.7，直接 yum 装的是 1.6，故下面又使用 gvm 装了一个 1.8 的 golang，上面的 golang 安装只是为了通过 spec 检查</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># EPEL</span>
+yum <span class="nb">install </span>epel-release <span class="nt">-y</span>
+<span class="c"># update 系统组件</span>
+yum update <span class="nt">-y</span> <span class="o">&amp;&amp;</span> yum upgrade <span class="nt">-y</span>
+<span class="c"># 安装基本的编译依赖</span>
+yum <span class="nb">install </span>golang go-md2man go-bindata gcc bison git rpm-build vim <span class="nt">-y</span>
+<span class="c"># 安装 gvm(用于 golang 版本管理)</span>
+bash &lt; &lt;<span class="o">(</span>curl <span class="nt">-s</span> <span class="nt">-S</span> <span class="nt">-L</span> https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer<span class="o">)</span>
+<span class="nb">source</span> /root/.gvm/scripts/gvm
+<span class="c"># 安装 1.8 之前需要先安装 1.4</span>
+gvm <span class="nb">install </span>go1.4 <span class="nt">-B</span>
+gvm use go1.4
+<span class="c"># 使用 golang 1.8 版本 build</span>
+gvm <span class="nb">install </span>go1.8
+gvm use go1.8
+</code></pre></div></div>
+<h4 id="22克隆-build-仓库">2.2、克隆 build 仓库</h4>
+
+<p><strong>Fedora 官方 Kubernetes 仓库地址在 <a href="https://src.fedoraproject.org/cgit/rpms/kubernetes.git/">这里</a>，如果有版本选择请自行区分</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://src.fedoraproject.org/git/rpms/kubernetes.git
+</code></pre></div></div>
+
+<h4 id="23从-spec-获取所需文件">2.3、从 spec 获取所需文件</h4>
+
+<p>克隆好 build 仓库后首先查看 kubernetes.spec 文件，确定 build 所需文件，spec 文件如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 省略...</span>
+
+%global provider                github
+%global provider_tld            com
+%global project                 kubernetes
+%global repo                    kubernetes
+<span class="c"># https://github.com/kubernetes/kubernetes</span>
+
+%global provider_prefix         %<span class="o">{</span>provider<span class="o">}</span>.%<span class="o">{</span>provider_tld<span class="o">}</span>/%<span class="o">{</span>project<span class="o">}</span>/%<span class="o">{</span>repo<span class="o">}</span>
+%global import_path             k8s.io/kubernetes
+%global commit                  095136c3078ccf887b9034b7ce598a0a1faff769
+%global shortcommit              %<span class="o">(</span><span class="nv">c</span><span class="o">=</span>%<span class="o">{</span>commit<span class="o">}</span><span class="p">;</span> <span class="nb">echo</span> <span class="k">${</span><span class="nv">c</span>:0:7<span class="k">}</span><span class="o">)</span>
+
+%global con_provider            github
+%global con_provider_tld        com
+%global con_project             kubernetes
+%global con_repo                contrib
+<span class="c"># https://github.com/kubernetes/contrib</span>
+%global con_provider_prefix     %<span class="o">{</span>con_provider<span class="o">}</span>.%<span class="o">{</span>con_provider_tld<span class="o">}</span>/%<span class="o">{</span>con_project<span class="o">}</span>/%<span class="o">{</span>con_repo<span class="o">}</span>
+%global con_commit              0f5b210313371ff769da24d8264f5a7869c5a3f3
+%global con_shortcommit         %<span class="o">(</span><span class="nv">c</span><span class="o">=</span>%<span class="o">{</span>con_commit<span class="o">}</span><span class="p">;</span> <span class="nb">echo</span> <span class="k">${</span><span class="nv">c</span>:0:7<span class="k">}</span><span class="o">)</span>
+
+%global kube_version            1.6.7
+%global kube_git_version        v%<span class="o">{</span>kube_version<span class="o">}</span>
+
+<span class="c"># 省略...</span>
+</code></pre></div></div>
+
+<p><strong>从 spec 文件中可以看到 build 主要需要两个仓库的源码，一个是 kubernetes 主仓库，存放着主要的 build 源码；另一个是 contrib 仓库，存放着一些配置文件，如 systemd 配置等</strong></p>
+
+<p><strong>接下来从 spec 文件的 source 段中可以解读到(source0、source1)最终所需的两个仓库压缩文件名为 <code class="highlighter-rouge">kubernetes-SHORTCOMMIT</code>、<code class="highlighter-rouge">contrib-SHORTCOMIT</code>，source 段如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Name:           kubernetes
+Version:        %<span class="o">{</span>kube_version<span class="o">}</span>
+Release:        1%<span class="o">{</span>?dist<span class="o">}</span>
+Summary:        Container cluster management
+License:        ASL 2.0
+URL:            https://%<span class="o">{</span>import_path<span class="o">}</span>
+ExclusiveArch:  x86_64 aarch64 ppc64le s390x
+Source0:        https://%<span class="o">{</span>provider_prefix<span class="o">}</span>/archive/%<span class="o">{</span>commit<span class="o">}</span>/%<span class="o">{</span>repo<span class="o">}</span>-%<span class="o">{</span>shortcommit<span class="o">}</span>.tar.gz
+Source1:        https://%<span class="o">{</span>con_provider_prefix<span class="o">}</span>/archive/%<span class="o">{</span>con_commit<span class="o">}</span>/%<span class="o">{</span>con_repo<span class="o">}</span>-%<span class="o">{</span>con_shortcommit<span class="o">}</span>.tar.gz
+Source3:        kubernetes-accounting.conf
+Source4:        kubeadm.conf
+Source33:       genmanpages.sh
+</code></pre></div></div>
+
+<p><strong>我们准备 build 一个最新的 1.7.0 的 rpm，所以从 github 获取到 commitID 为 <code class="highlighter-rouge">d3ada0119e776222f11ec7945e6d860061339aad</code>，contrib 仓库同理，不过 contrib 一般直接取 master 即可 <code class="highlighter-rouge">7d344989fe6a3f11a6d84104b024a50960b021db</code>；接下来首要任务是替换 spec 中原有的 版本号和 commitID 如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%global kube_version            1.7.0
+%global con_commit              7d344989fe6a3f11a6d84104b024a50960b021db
+%global commit                  d3ada0119e776222f11ec7945e6d860061339aad
+</code></pre></div></div>
+
+<h4 id="24准备源码">2.4、准备源码</h4>
+
+<p>修改好文件以后，就可以下载源码文件了，源码下载不必去克隆 github 项目，直接从 spec 中给出的地址下载即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>kubernetes
+wget https://github.com/kubernetes/kubernetes/archive/d3ada0119e776222f11ec7945e6d860061339aad/kubernetes-d3ada01.tar.gz
+wget https://github.com/kubernetes/contrib/archive/7d344989fe6a3f11a6d84104b024a50960b021db/contrib-7d34498.tar.gz
+</code></pre></div></div>
+
+<h4 id="25build-rpm">2.5、build rpm</h4>
+
+<p>在正式开始 build 之前，还有一点需要注意的是 <strong>默认的 <code class="highlighter-rouge">kubernetes.spec</code> 文件中指定了该 rpm 依赖于 docker 这个包，在 CentOS 上可能我们会安装 docker-engine 或者 docker-ce，此时安装 kubernetes rpm 是无法安装的，因为他以来的包不存在，解决的办法就是编译之前删除 spec 文件中的 <code class="highlighter-rouge">Requires: docker</code> 即可</strong>，最后创建好 build 目录，并放置好源码文件开始 build 即可，当然 build 可以有不同选择</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 由于我是 root 用户，所以目录位置在这</span>
+<span class="c"># 实际生产 强烈不推荐使用 root build(操作失误会损毁宿主机)</span>
+<span class="c"># 我的是一台临时 vps，所以无所谓了</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /root/rpmbuild/SOURCES/
+<span class="nb">mv</span> ~/kubernetes/<span class="k">*</span> /root/rpmbuild/SOURCES/
+<span class="nb">cd</span> /root/rpmbuild/SOURCES/
+<span class="c"># 执行 build</span>
+rpmbuild <span class="nt">-ba</span> kubernetes.spec
+</code></pre></div></div>
+
+<p><strong>注意，由于我们选择的版本已经超出了仓库所支持的最大版本，所以有些 Patch 已经不再适用，如 spec 中的 <code class="highlighter-rouge">Patch12</code>、<code class="highlighter-rouge">Patch19</code> 会出错，所需要注释掉(%prep 段中也有一个)</strong></p>
+
+<p><strong><code class="highlighter-rouge">rpmbuild 可选项有很多，常用的 3 个，可以根据自己实际需要进行 build:</code></strong></p>
+
+<ul>
+  <li><code class="highlighter-rouge">-ba</code> : build 源码包+二进制包</li>
+  <li><code class="highlighter-rouge">-bb</code> : 只 build 二进制包</li>
+  <li><code class="highlighter-rouge">-bs</code> : 只 build 源码包</li>
+</ul>
+
+<p>最后 build 完成后如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/7tn2a.jpg" alt="rpms" /></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/06/03/use-ceph-storage-on-kubernetes/" data-toggle="tooltip" data-placement="top" title="Kubernetes 使用 Ceph 存储">
+                        Previous<br>
+                        <span>Kubernetes 使用 Ceph 存储</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/07/17/kubernetes-rbac-chinese-translation/" data-toggle="tooltip" data-placement="top" title="Kubernetes RBAC">
+                        Next<br>
+                        <span>Kubernetes RBAC</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/07/12/how-to-build-kubernetes-rpm";
+    var disqus_url = "https://mritd.me/2017/07/12/how-to-build-kubernetes-rpm/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

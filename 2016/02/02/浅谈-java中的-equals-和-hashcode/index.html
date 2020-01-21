@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="浅谈 java中的 equals 和 hashcode">
+    <meta name="keywords"  content="equals,hashcode">
+    <meta name="theme-color" content="#000000">
+    
+    <title>浅谈 java中的 equals 和 hashcode - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>浅谈 java中的 equals 和 hashcode</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on February 2, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <p><img src="https://cdn.oss.link/markdown/hexo_java_equals_hashcode.jpg" alt="hexo_java_equals_hashcode.jpg" /></p>
+
+<h2 id="equals-方法">equals 方法</h2>
+<blockquote>
+  <p>equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。</p>
+</blockquote>
+
+<h3 id="object-中的-equals">Object 中的 equals</h3>
+
+<blockquote>
+  <p>在 java 源码中，Object 的 equals 实现如下</p>
+</blockquote>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">obj</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<!--more-->
+
+<blockquote>
+  <p>由此可见，Object 中 equals 默认比较的是两个对象的 内存地址(==)，即 <strong>默认比较两个对象的引用，引用相同返回true，反之返回false。</strong>这看起来似乎合情合理，但实际开发中，这种比较方式则不适用；比如我们要比较两个 pserson 对象是否相等，<strong>从业务角度来说，只要这两个人 名字、年龄、身份证号相同，我们就可以认为两个对象相等。但由于是两个 pserson对象，所以所以引用肯定不同，这样调用默认的 equals 方法就会返回 false，显然是不合理的。</strong></p>
+</blockquote>
+
+<h3 id="重写-equals">重写 equals</h3>
+<blockquote>
+  <p>从上面的例子可以看出，Object 中的 equals 并不适用与实际业务场景，此时我们应该 对 equals进行重写；但是 重写 equals 必须满足以下规则(特性)：</p>
+</blockquote>
+
+<ul>
+  <li>自反性
+    <blockquote>
+      <p>对于对象 x ，<code class="highlighter-rouge">x.equals(x)</code> 应当始终返回 true。</p>
+    </blockquote>
+  </li>
+  <li>对称性
+    <blockquote>
+      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么 <code class="highlighter-rouge">y.equals(x)</code> 也必须返回 true。</p>
+    </blockquote>
+  </li>
+  <li>传递性
+    <blockquote>
+      <p>对于对象 x、y、z，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，<code class="highlighter-rouge">y.equals(z)</code> 返回 true；那么 <code class="highlighter-rouge">x.equals(z)</code> 也必须返回 true。</p>
+    </blockquote>
+  </li>
+  <li>一致性
+    <blockquote>
+      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么反复调用的结果应当一直为 true。</p>
+    </blockquote>
+  </li>
+  <li>空值不行等性
+    <blockquote>
+      <p>对于任意非空对象 x，<code class="highlighter-rouge">x.equals(null)</code> 应当永远返回 false。</p>
+    </blockquote>
+  </li>
+</ul>
+
+<hr />
+
+<p><strong>然而，对于以上5种特性，在某些特殊情况下需要严格考虑。</strong></p>
+
+<ul>
+  <li>对象属性的冲突</li>
+</ul>
+
+<p>假设我们将对象内的属性看作是对象内容，在实际业务场景，可能一个 汽车 Car 对象 和一个人 pserson 对象具有相同的名字，比如 <code class="highlighter-rouge">特斯拉</code>；此时如果我们重写 equals 时仅仅比较对象内容的话，很可能误判为 <strong>一辆汽车和一个人相等</strong>；是的，这很滑稽。</p>
+
+<h3 id="getclass-的使用">getClass 的使用</h3>
+
+<p>在上面列举的情况来看，我们似乎再重写 equals 时还需要考虑对象的类型；在 java 里，对象类型我们 采用 Class 描述。那么此时 我们在重写的 equals 方法里应当 增加 <code class="highlighter-rouge">car.getClass()==pserson.getClass()</code> 的检测，这样能有效避免上述情况的发生；伪代码如下</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">){</span>
+    <span class="c1">// 进行完全匹配检测(引用)</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">==</span><span class="n">obj</span><span class="o">)</span> <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="c1">// 进行空值检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">obj</span><span class="o">==</span><span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行类型匹配检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行属性相等检测，省略...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="instanceof-的使用">instanceof 的使用</h3>
+
+<p>然而，即使我们考虑了属性相等的情况，我们还是忽略了很多其他的业务场合。比如 一个学生 Student 对象和一个人 pserson 对象；当使用上面的检测方法时，很明显 pserson 对象和 Student 对象的 Class 不一致，直接返回了 false；而实际业务场景是 一个 Student 对象也是一个人 pserson；<strong>Student 对象可能继承于pserson对象。</strong>而此时我们应当使用 instanceof 进行检测，伪代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">){</span>
+    <span class="c1">// 进行完全匹配检测(引用)</span>
+    <span class="k">if</span><span class="o">(!(</span><span class="k">this</span> <span class="n">instaceof</span> <span class="n">obj</span><span class="o">))</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行空值检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">obj</span><span class="o">==</span><span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行类型匹配检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行属性相等检测，省略...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="getclass-与-instaceof-的取舍">getClass 与 instaceof 的取舍</h3>
+
+<p>或许从上两个例子中我们感觉使用 instaceof 更 “靠谱一些”；但其实我们注意到，<strong>采用 instaceof 检测实际上违反了 <code class="highlighter-rouge">对称性</code> 原则；</strong> 因为 <code class="highlighter-rouge">pserson instaceof Student</code> 返回 false，反之返回 true。</p>
+
+<p>所以对于 <code class="highlighter-rouge">instanceof</code> 有时候并不那么完美；就连 JDK的开发者也遇到了这个问题；在 <code class="highlighter-rouge">Timestamp</code> 类中，由于继承自 <code class="highlighter-rouge">java.util.Date</code>；而不幸的是 Date 类的 equals 采用的是 instanceof，这就导致对称性出了问题。从上可知，我们根据实际业务进行取舍，取舍原则如下：</p>
+
+<ul>
+  <li>如果子类拥有自己的相等性概念，则对称性强制要求采用 getClass 方式检测。</li>
+  <li>如果由超类决定相等性概念，那么就可以采用 instanceof 检测，保证我们可以在子类对象间进行相等性判断。</li>
+</ul>
+
+<h3 id="重写-equals-的建议">重写 equals 的建议</h3>
+
+<ul>
+  <li>首先检测 this 与 otherObject 是否引用同一对象</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">==</span><span class="n">otherObject</span><span class="o">)</span> <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>然后检测 otherObject是否为 null，如果为 null 返回 false，这是必须的</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="n">otherObject</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>其次比较 this 与 otherObject 是否同属于一个类；如果 equals 语义在子类中有所改变，则 使用 getClass 检测</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">otherObject</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>最后将 otherObject强制转换为 当前类型，并进行属性值检测；注意：<strong>如果在子类中重写的equals，则需要在重写时首先进行 <code class="highlighter-rouge">super.equals(other)</code> 判断</strong></li>
+</ul>
+
+<h2 id="hashcode-方法">hashcode 方法</h2>
+
+<blockquote>
+  <p>写这篇博客之前，也看过很多博客，大部分大家写的都是这样的一句话：<strong>重写 equals 必须重写 hashcode，两个对象 equals 返回 true 则 hashcode 必须保证相同。</strong>但是，接下来就没有然后了；搞的我刚学 java 时候也挺晕的，就像是 “知其然而不知所以然”。</p>
+</blockquote>
+
+<blockquote>
+  <p>总结一下一般会有这几个问题：</p>
+</blockquote>
+
+<ul>
+  <li>hashcode 方法是干啥的？</li>
+  <li>hashcode(哈希值) 是个什么玩意？</li>
+  <li>hashcode 有什么用？</li>
+  <li>我为啥要重写 hashcode？</li>
+  <li>我不重写它有啥后果？</li>
+</ul>
+
+<h3 id="hashcode-方法是干啥的">hashcode 方法是干啥的？</h3>
+
+<blockquote>
+  <p>官方的解释是这样的：<strong>hashcode 方法用于返回一个对象的 哈希值。</strong>说白了就是 hashcode 方法能返回一个 哈希值，这玩意是个整数。</p>
+</blockquote>
+
+<h3 id="hashcode哈希值-是个什么玩意">hashcode(哈希值) 是个什么玩意？</h3>
+
+<blockquote>
+  <p>由上面可知，这个 哈希值就是一个整数，可能是正数也可能是负数。</p>
+</blockquote>
+
+<h3 id="hashcode-有什么用">hashcode 有什么用？</h3>
+
+<blockquote>
+  <p>hashcode(哈希值) 的作用就是用于在使用 Hash算法实现的集合中确定元素位置。</p>
+</blockquote>
+
+<p>拿我们最常见的 HashMap 来说，我们都知道 HashMap 里通过 key 取 value 时的速度 是 O(1) 级别的；</p>
+
+<p>什么是 O(1)级别？</p>
+
+<p>O(1)级别说白了就是 <strong>在任意数据大小的容器中，取出一个元素所使用的时间与元素个数无关；通俗的说法就是 不论你这个 HashMap 里有100个元素还是有9999999个元素，我通过 key 取出一个元素所使用的时间是一样的。</strong></p>
+
+<p>为何是 O(1) 级别？为何这么吊？</p>
+
+<p>这个问题就要谈一下 HashMap 等 hash 容器的存储方式了；这些容器在存储元素是是这样的：首先获取你要存储元素的 hashcode(一个整数)，然后再定义一个固定整数(标准叫桶数)，最后用 hashcode 对 另一个整数(桶数) 取余；取余的结果即为元素要存储的下标(可能存放到数组里)。当然这里是简单的取余，可能更复杂。</p>
+
+<p>当我们要从一个 HashMap 中取出一个 value 时，实际上他就是通过这套算法，用 key 的 hashcode 计算出元素位置，直接取出来了；所以说 无论你这里面有多少元素，它取的时候始终是用着一个算法、一个流程，不会因为你数据多少而产生影响，这就是 O(1) 级别的存储。</p>
+
+<p><strong>总结：由上面可知，这个 hashcode 的作用就是 通过算法来确立元素存放的位置，以便于放入元素或者获取元素。</strong></p>
+
+<h3 id="我为啥要重写-hashcode--不重写有啥后果">我为啥要重写 hashcode &amp;&amp; 不重写有啥后果</h3>
+
+<blockquote>
+  <p>回顾一下上面：hashcode 是个整数，hashcode 方法的作用就是计算并返回这个整数；这个整数用于存放 Hash 算法实现的容器时 确定元素位置。</p>
+</blockquote>
+
+<p>接下来考虑一个业务场景：有两个对象 pserson1 和 pserson2 ，pserson1 和 pserson2 都只有两个属性，分别是名字(name)和年龄(age)。现在 pserson1 和 pserson2 的名字(name)、年龄(age) 都相同；那么我们是否可以根据业务场景来说 <strong>pserson1 和 pserson2 是同一个人</strong>？</p>
+
+<p>如果说 “是” 的话，我们刚刚所认为的 “从业务角度理解 pserson1 和 pserson2 是一个人” 是不是就相当于 重写了 Pserson 的 equals 方法呢？就像下面这样：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Pserson</span> <span class="o">{</span>
+	<span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+	<span class="kd">private</span> <span class="kt">int</span> <span class="n">age</span><span class="o">;</span>
+
+	<span class="c1">// 重写 equals</span>
+	<span class="nd">@Override</span>
+	<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">obj</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">obj</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">getClass</span><span class="o">()</span> <span class="o">!=</span> <span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+
+		<span class="c1">// 主要在这，我们根据业务逻辑，即 姓名和年龄 确立相等关系</span>
+		<span class="n">pserson</span> <span class="n">other</span> <span class="o">=</span> <span class="o">(</span><span class="n">pserson</span><span class="o">)</span> <span class="n">obj</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">age</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="na">age</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">name</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">other</span><span class="o">.</span><span class="na">name</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+				<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">name</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">other</span><span class="o">.</span><span class="na">name</span><span class="o">))</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>我们注意到，我们根据业务逻辑重写 equals 后，造成的结果就是，两个 属性相同的 Pserson 对象 我们就认为是相同的，即 equals 返回了 true；
+<strong>但我们没有重写 hashcode，Object 中的 hashcode 是 native(本地的)，也就是很可能不同对象返回不同的 hashcode，即使属性相同也没用。</strong></p>
+
+<hr />
+
+<p>到这里我们再总结一下：</p>
+
+<ul>
+  <li><strong>hashcode 方法返回对象的 哈希值；</strong></li>
+  <li><strong>我们通过 哈希值 的运算(与指定数取余等)来确立元素在 hash 算法实现的容器中的位置；</strong></li>
+  <li><strong>Object 中的 hashcode 方法 对于业务逻辑上相等的两个对象(属性相同，不同引用) 返回的 hashcode 是不同的。</strong></li>
+</ul>
+
+<hr />
+
+<p><strong>墨迹了那么多最终问题来了：假设我们只重写了 pserson 的 equals 方法，使之 “属性相同即为相等”，当我们把两个 “相等的(属性相同的)” Pserson 对象 放入 HashSet 中会怎样？</strong></p>
+
+<p>友情提示：HashSet中默认是不许放重复元素的，放重复的是会被过滤掉的，如下代码所示：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
+	<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">Pserson</span> <span class="n">pserson1</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Pserson</span><span class="o">();</span>
+		<span class="n">pserson1</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"张三"</span><span class="o">);</span>
+		<span class="n">pserson1</span><span class="o">.</span><span class="na">setAge</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+
+		<span class="nc">Pserson</span> <span class="n">pserson2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Pserson</span><span class="o">();</span>
+		<span class="n">pserson2</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"张三"</span><span class="o">);</span>
+		<span class="n">pserson2</span><span class="o">.</span><span class="na">setAge</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+
+		<span class="nc">HashSet</span><span class="o">&lt;</span><span class="nc">Pserson</span><span class="o">&gt;</span> <span class="n">hashSet</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashSet</span><span class="o">&lt;</span><span class="nc">Pserson</span><span class="o">&gt;();</span>
+
+		<span class="n">hashSet</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">pserson1</span><span class="o">);</span>
+		<span class="n">hashSet</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">pserson2</span><span class="o">);</span>
+
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">hashSet</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>结论&amp;&amp;后果：当我们仅重写了 equals 保证了 “名字和年龄一样的就是一个人” 这条业务以后；把两个 pserson 对象放入 HashSet 容器里时，由于 HashSet 是通过 hashcode 来区分两个 对象存放位置，而我们又 没有根据业务逻辑重写 hashcode 方法；导致了两个 在业务上相同的对象 放到了 HashSet里，HashSet 会认为他是两个不同的对象，故最后不会去重，hashset.size()打印出来是2。</p>
+</blockquote>
+
+<h2 id="最终结论">最终结论</h2>
+
+<blockquote>
+  <p>对于重写 euqals ，要很据实际业务逻辑来，并满足上述的设计要求；一旦重写了 equals 那就必须重写 hashcode，除非你保证你的对象不会被放到 Hash 实现的容器里；不重写的话就会导致 Hash 容器认为两个属性相同的对象是2个，而不是业务上的1个。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+</blockquote>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/01/24/Redis-Key-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" data-toggle="tooltip" data-placement="top" title="Redis Key 常用命令">
+                        Previous<br>
+                        <span>Redis Key 常用命令</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" data-toggle="tooltip" data-placement="top" title="JAVA 异常处理">
+                        Next<br>
+                        <span>JAVA 异常处理</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/02/02/浅谈-java中的-equals-和-hashcode";
+    var disqus_url = "https://mritd.me/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

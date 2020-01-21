@@ -1,0 +1,3699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="keep hungry keep foolish">
+    <meta name="keywords"  content="漠然, 漠然的博客, mritd, Docker, Kubernetes, @mritd, mritd blog, 博客, 个人网站, Java, Web">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Tags - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/tags/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/tag-bg.jpg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="site-heading" id="tag-heading">
+                    <h1>Tags</h1>
+                    <span class="subheading">keep hungry keep foolish</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <!-- 标签云 -->
+            <div id='tag_cloud' class="tags">
+                
+                <a href="#Linux" title="Linux" rel="81">Linux</a>
+                
+                <a href="#SQL" title="SQL" rel="4">SQL</a>
+                
+                <a href="#Java" title="Java" rel="25">Java</a>
+                
+                <a href="#随笔" title="随笔" rel="9">随笔</a>
+                
+                <a href="#GitHub" title="GitHub" rel="3">GitHub</a>
+                
+                <a href="#Docker" title="Docker" rel="43">Docker</a>
+                
+                <a href="#Kubernetes" title="Kubernetes" rel="39">Kubernetes</a>
+                
+                <a href="#CI/CD" title="CI/CD" rel="4">CI/CD</a>
+                
+                <a href="#Golang" title="Golang" rel="6">Golang</a>
+                
+                <a href="#Mac" title="Mac" rel="1">Mac</a>
+                
+                <a href="#Podman" title="Podman" rel="1">Podman</a>
+                
+            </div>
+
+            <!--<blockquote class="tag-comments">
+                标签命名规范：
+                    <li>行业观察、职位、公司优先使用中文</li>
+                    <li>外国产品、术语优先使用英文</li>
+            </blockquote>-->
+
+            <!-- 标签列表 -->
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Linux">
+                    <span class="tag-text">Linux</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-03-19">2019-03-19</time>
+                  <a href="/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/" title="Ubuntu 设置多个源">Ubuntu 设置多个源</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/">
+                        <h2 class="post-title">
+                            Ubuntu 设置多个源
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-03-19</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-27">2018-11-27</time>
+                  <a href="/2018/11/27/simple-tool-written-in-golang/" title="Go 编写的一些常用小工具">Go 编写的一些常用小工具</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/27/simple-tool-written-in-golang/">
+                        <h2 class="post-title">
+                            Go 编写的一些常用小工具
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-30">2018-03-30</time>
+                  <a href="/2018/03/30/set-up-drone-ci/" title="Drone CI 搭建">Drone CI 搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/30/set-up-drone-ci/">
+                        <h2 class="post-title">
+                            Drone CI 搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-28">2018-03-28</time>
+                  <a href="/2018/03/28/unix-proxy-setting/" title="Unix 平台下各种加速配置">Unix 平台下各种加速配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/28/unix-proxy-setting/">
+                        <h2 class="post-title">
+                            Unix 平台下各种加速配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-20">2018-03-20</time>
+                  <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/" title="使用 RBAC 控制 kubectl 权限">使用 RBAC 控制 kubectl 权限</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/">
+                        <h2 class="post-title">
+                            使用 RBAC 控制 kubectl 权限
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-01-07">2018-01-07</time>
+                  <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/" title="Kubernetes TLS bootstrapping 那点事">Kubernetes TLS bootstrapping 那点事</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/">
+                        <h2 class="post-title">
+                            Kubernetes TLS bootstrapping 那点事
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-01-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-28">2017-11-28</time>
+                  <a href="/2017/11/28/ci-cd-gitlab-ci/" title="CI/CD 之 GitLab CI">CI/CD 之 GitLab CI</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/28/ci-cd-gitlab-ci/">
+                        <h2 class="post-title">
+                            CI/CD 之 GitLab CI
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-14">2017-11-14</time>
+                  <a href="/2017/11/14/ohmydocker/" title="ohmydocker 镜像加速">ohmydocker 镜像加速</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/14/ohmydocker/">
+                        <h2 class="post-title">
+                            ohmydocker 镜像加速
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-12">2017-11-12</time>
+                  <a href="/2017/11/12/ci-cd-dockerfile/" title="CI/CD 之 Dockerfile">CI/CD 之 Dockerfile</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/12/ci-cd-dockerfile/">
+                        <h2 class="post-title">
+                            CI/CD 之 Dockerfile
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-09">2017-11-09</time>
+                  <a href="/2017/11/09/set-up-teleport/" title="Teleport 跳板机部署">Teleport 跳板机部署</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/09/set-up-teleport/">
+                        <h2 class="post-title">
+                            Teleport 跳板机部署
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-03">2017-11-03</time>
+                  <a href="/2017/11/03/deep-learning-on-kubernetes/" title="Kubernetes 深度学习笔记">Kubernetes 深度学习笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/03/deep-learning-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 深度学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-10">2017-10-10</time>
+                  <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/" title="Kubernetes 1.8 kube-proxy 开启 ipvs">Kubernetes 1.8 kube-proxy 开启 ipvs</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 kube-proxy 开启 ipvs
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-09">2017-10-09</time>
+                  <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/" title="Kubernetes 1.8 集群搭建">Kubernetes 1.8 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-27">2017-09-27</time>
+                  <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/" title="Alpine 3.6 OpenJDK 8 Bug">Alpine 3.6 OpenJDK 8 Bug</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/">
+                        <h2 class="post-title">
+                            Alpine 3.6 OpenJDK 8 Bug
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-21">2017-09-21</time>
+                  <a href="/2017/09/21/set-up-ha-consul-cluster/" title="Consul 集群搭建">Consul 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/21/set-up-ha-consul-cluster/">
+                        <h2 class="post-title">
+                            Consul 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-20">2017-09-20</time>
+                  <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/" title="阿里云部署 Kubernetes">阿里云部署 Kubernetes</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
+                        <h2 class="post-title">
+                            阿里云部署 Kubernetes
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-31">2017-07-31</time>
+                  <a href="/2017/07/31/calico-yml-bug/" title="Calico 部署踩坑记录">Calico 部署踩坑记录</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/31/calico-yml-bug/">
+                        <h2 class="post-title">
+                            Calico 部署踩坑记录
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-31</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-21">2017-07-21</time>
+                  <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/" title="手动档搭建 Kubernetes HA 集群">手动档搭建 Kubernetes HA 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">
+                        <h2 class="post-title">
+                            手动档搭建 Kubernetes HA 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-17">2017-07-17</time>
+                  <a href="/2017/07/17/kubernetes-rbac-chinese-translation/" title="Kubernetes RBAC">Kubernetes RBAC</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/17/kubernetes-rbac-chinese-translation/">
+                        <h2 class="post-title">
+                            Kubernetes RBAC
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-12">2017-07-12</time>
+                  <a href="/2017/07/12/how-to-build-kubernetes-rpm/" title="How to build Kubernetes RPM">How to build Kubernetes RPM</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/12/how-to-build-kubernetes-rpm/">
+                        <h2 class="post-title">
+                            How to build Kubernetes RPM
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-06-03">2017-06-03</time>
+                  <a href="/2017/06/03/use-ceph-storage-on-kubernetes/" title="Kubernetes 使用 Ceph 存储">Kubernetes 使用 Ceph 存储</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/06/03/use-ceph-storage-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 使用 Ceph 存储
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-06-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-05-30">2017-05-30</time>
+                  <a href="/2017/05/30/ceph-note-2/" title="Ceph 笔记(二)">Ceph 笔记(二)</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/05/30/ceph-note-2/">
+                        <h2 class="post-title">
+                            Ceph 笔记(二)
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-05-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-05-27">2017-05-27</time>
+                  <a href="/2017/05/27/ceph-note-1/" title="Ceph 笔记(一)">Ceph 笔记(一)</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/05/27/ceph-note-1/">
+                        <h2 class="post-title">
+                            Ceph 笔记(一)
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-05-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-05-12">2017-05-12</time>
+                  <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/" title="Docker 分配宿主机网段 IP">Docker 分配宿主机网段 IP</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/">
+                        <h2 class="post-title">
+                            Docker 分配宿主机网段 IP
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-05-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-21">2017-03-21</time>
+                  <a href="/2017/03/21/private-maintenance-docker-mirror-registry/" title="个人维护的 Docker 加速仓库">个人维护的 Docker 加速仓库</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/21/private-maintenance-docker-mirror-registry/">
+                        <h2 class="post-title">
+                            个人维护的 Docker 加速仓库
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-21">2017-03-21</time>
+                  <a href="/2017/03/21/vim-e492-not-an-editor-command-plugin-xxxx/" title="vim E492 Not an editor command Plugin xxxx">vim E492 Not an editor command Plugin xxxx</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/21/vim-e492-not-an-editor-command-plugin-xxxx/">
+                        <h2 class="post-title">
+                            vim E492 Not an editor command Plugin xxxx
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-20">2017-03-20</time>
+                  <a href="/2017/03/20/btrfs-note/" title="Btrfs 笔记">Btrfs 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/20/btrfs-note/">
+                        <h2 class="post-title">
+                            Btrfs 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-18">2017-03-18</time>
+                  <a href="/2017/03/18/set-up-vnc-server-on-centos-7/" title="CentOS 7 配置 VNC Server">CentOS 7 配置 VNC Server</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/18/set-up-vnc-server-on-centos-7/">
+                        <h2 class="post-title">
+                            CentOS 7 配置 VNC Server
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-18</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-10">2017-03-10</time>
+                  <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/" title="kargo 集群扩展及细粒度配置">kargo 集群扩展及细粒度配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
+                        <h2 class="post-title">
+                            kargo 集群扩展及细粒度配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-04">2017-03-04</time>
+                  <a href="/2017/03/04/how-to-use-nginx-ingress/" title="Kubernetes Nginx Ingress 教程">Kubernetes Nginx Ingress 教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/04/how-to-use-nginx-ingress/">
+                        <h2 class="post-title">
+                            Kubernetes Nginx Ingress 教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-04</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-03">2017-03-03</time>
+                  <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/" title="快速部署 kubernetes 高可用集群">快速部署 kubernetes 高可用集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/">
+                        <h2 class="post-title">
+                            快速部署 kubernetes 高可用集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-01">2017-03-01</time>
+                  <a href="/2017/03/01/how-to-use-vagrant/" title="Vagrant 使用">Vagrant 使用</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/01/how-to-use-vagrant/">
+                        <h2 class="post-title">
+                            Vagrant 使用
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-27">2017-02-27</time>
+                  <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/" title="如何下载 Kubernetes 镜像和 rpm">如何下载 Kubernetes 镜像和 rpm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/">
+                        <h2 class="post-title">
+                            如何下载 Kubernetes 镜像和 rpm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-25">2017-02-25</time>
+                  <a href="/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/" title="Jekyll + Travis CI 自动化部署博客">Jekyll + Travis CI 自动化部署博客</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/">
+                        <h2 class="post-title">
+                            Jekyll + Travis CI 自动化部署博客
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-09">2017-02-09</time>
+                  <a href="/2017/02/09/gcr.io-registy-proxy/" title="gcr.io 仓库代理">gcr.io 仓库代理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/09/gcr.io-registy-proxy/">
+                        <h2 class="post-title">
+                            gcr.io 仓库代理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-01-27">2017-01-27</time>
+                  <a href="/2017/01/27/logical-volume-manager-note/" title="Logical Volume Manager 笔记">Logical Volume Manager 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/01/27/logical-volume-manager-note/">
+                        <h2 class="post-title">
+                            Logical Volume Manager 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-01-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-01-21">2017-01-21</time>
+                  <a href="/2017/01/21/use-frp-for-internal-network-wear/" title="利用 frp 进行内网穿透">利用 frp 进行内网穿透</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/01/21/use-frp-for-internal-network-wear/">
+                        <h2 class="post-title">
+                            利用 frp 进行内网穿透
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-01-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-01-12">2017-01-12</time>
+                  <a href="/2017/01/12/git-uses-the-socks5-proxy/" title="Git 使用 socks5 代理">Git 使用 socks5 代理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/01/12/git-uses-the-socks5-proxy/">
+                        <h2 class="post-title">
+                            Git 使用 socks5 代理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-01-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-01-08">2017-01-08</time>
+                  <a href="/2017/01/08/set-up-docker-registry-by-nexus/" title="使用 Nexus 搭建 Docker 仓库">使用 Nexus 搭建 Docker 仓库</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/01/08/set-up-docker-registry-by-nexus/">
+                        <h2 class="post-title">
+                            使用 Nexus 搭建 Docker 仓库
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-01-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-30">2016-12-30</time>
+                  <a href="/2016/12/30/configure-nginx-https-under-centos-to-support-ios-ats/" title="从 WWDC16 ATS 说起">从 WWDC16 ATS 说起</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/30/configure-nginx-https-under-centos-to-support-ios-ats/">
+                        <h2 class="post-title">
+                            从 WWDC16 ATS 说起
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-06">2016-12-06</time>
+                  <a href="/2016/12/06/try-traefik-on-kubernetes/" title="Traefik-kubernetes 初试">Traefik-kubernetes 初试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/06/try-traefik-on-kubernetes/">
+                        <h2 class="post-title">
+                            Traefik-kubernetes 初试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-06</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-05">2016-12-05</time>
+                  <a href="/2016/12/05/lvs-note/" title="LVS 笔记">LVS 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/05/lvs-note/">
+                        <h2 class="post-title">
+                            LVS 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-05</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-01">2016-12-01</time>
+                  <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/" title="Kubernetes 网络搭建-Calico">Kubernetes 网络搭建-Calico</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-Calico
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-30">2016-11-30</time>
+                  <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/" title="Kubernetes 网络搭建-flannel">Kubernetes 网络搭建-flannel</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-flannel
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-21">2016-11-21</time>
+                  <a href="/2016/11/21/kubeadm-other-problems/" title="kubeadm 续坑篇">kubeadm 续坑篇</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/21/kubeadm-other-problems/">
+                        <h2 class="post-title">
+                            kubeadm 续坑篇
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-08">2016-11-08</time>
+                  <a href="/2016/11/08/update-centos-kernel/" title="CentOS 升级 kernel">CentOS 升级 kernel</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/08/update-centos-kernel/">
+                        <h2 class="post-title">
+                            CentOS 升级 kernel
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-29">2016-10-29</time>
+                  <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/" title="kubeadm 搭建 kubernetes 集群">kubeadm 搭建 kubernetes 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/">
+                        <h2 class="post-title">
+                            kubeadm 搭建 kubernetes 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-29</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-18">2016-10-18</time>
+                  <a href="/2016/10/18/set-up-vpn-with-strongswan/" title="StrongSwan 搭建 VPN">StrongSwan 搭建 VPN</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/18/set-up-vpn-with-strongswan/">
+                        <h2 class="post-title">
+                            StrongSwan 搭建 VPN
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-18</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-14">2016-10-14</time>
+                  <a href="/2016/10/14/arukas-docker-fq/" title="樱花 Docker 免费高速翻墙教程">樱花 Docker 免费高速翻墙教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/14/arukas-docker-fq/">
+                        <h2 class="post-title">
+                            樱花 Docker 免费高速翻墙教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-09">2016-10-09</time>
+                  <a href="/2016/10/09/kubernetes-1.4-create-cluster/" title="kubernetes 1.4 集群搭建">kubernetes 1.4 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/09/kubernetes-1.4-create-cluster/">
+                        <h2 class="post-title">
+                            kubernetes 1.4 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-09">2016-10-09</time>
+                  <a href="/2016/10/09/jekyll-create-a-static-blog/" title="Jekyll 搭建静态博客">Jekyll 搭建静态博客</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/09/jekyll-create-a-static-blog/">
+                        <h2 class="post-title">
+                            Jekyll 搭建静态博客
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-24">2016-09-24</time>
+                  <a href="/2016/09/24/Docker-mirror-Registry/" title="Docker mirror Registry">Docker mirror Registry</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/24/Docker-mirror-Registry/">
+                        <h2 class="post-title">
+                            Docker mirror Registry
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-24</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-17">2016-09-17</time>
+                  <a href="/2016/09/17/Minio-AWS-S3-%E5%AD%98%E5%82%A8%E5%BC%80%E6%BA%90%E5%AE%9E%E7%8E%B0/" title="Minio - AWS S3 存储开源实现">Minio - AWS S3 存储开源实现</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/17/Minio-AWS-S3-%E5%AD%98%E5%82%A8%E5%BC%80%E6%BA%90%E5%AE%9E%E7%8E%B0/">
+                        <h2 class="post-title">
+                            Minio - AWS S3 存储开源实现
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-17">2016-09-17</time>
+                  <a href="/2016/09/17/GlusterFS-%E7%AC%94%E8%AE%B0/" title="GlusterFS 笔记">GlusterFS 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/17/GlusterFS-%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            GlusterFS 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-15">2016-09-15</time>
+                  <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Harbor 企业级 Docker Registry 第二弹">Harbor 企业级 Docker Registry 第二弹</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry 第二弹
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-15</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-13">2016-09-13</time>
+                  <a href="/2016/09/13/%E5%9F%BA%E4%BA%8E%E5%AE%98%E6%96%B9-rpm-%E5%BF%AB%E9%80%9F%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89-rpm/" title="基于官方 rpm 快速创建自定义 rpm">基于官方 rpm 快速创建自定义 rpm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/13/%E5%9F%BA%E4%BA%8E%E5%AE%98%E6%96%B9-rpm-%E5%BF%AB%E9%80%9F%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89-rpm/">
+                        <h2 class="post-title">
+                            基于官方 rpm 快速创建自定义 rpm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-13</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-11">2016-09-11</time>
+                  <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/" title="kubernetes 双向 TLS 配置">kubernetes 双向 TLS 配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            kubernetes 双向 TLS 配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-07">2016-09-07</time>
+                  <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="Kubernetes 集群搭建">Kubernetes 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            Kubernetes 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-03">2016-09-03</time>
+                  <a href="/2016/09/03/Dokcer-%E4%BD%BF%E7%94%A8-Flannel-%E8%B7%A8%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF/" title="Dokcer 使用 Flannel 跨主机通讯">Dokcer 使用 Flannel 跨主机通讯</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/03/Dokcer-%E4%BD%BF%E7%94%A8-Flannel-%E8%B7%A8%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF/">
+                        <h2 class="post-title">
+                            Dokcer 使用 Flannel 跨主机通讯
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-01">2016-09-01</time>
+                  <a href="/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="Etcd 集群搭建">Etcd 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            Etcd 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-01">2016-09-01</time>
+                  <a href="/2016/09/01/10%E5%88%86%E9%92%9F-dnsmasq-%E6%90%AD%E5%BB%BA/" title="10分钟 dnsmasq 搭建">10分钟 dnsmasq 搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/01/10%E5%88%86%E9%92%9F-dnsmasq-%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            10分钟 dnsmasq 搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-08-02">2016-08-02</time>
+                  <a href="/2016/08/02/yum-%E7%AC%94%E8%AE%B0/" title="yum 笔记">yum 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/08/02/yum-%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            yum 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-08-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-07-22">2016-07-22</time>
+                  <a href="/2016/07/22/Linux-%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8B%E4%BD%BF%E7%94%A8-Shadowsocks-%E4%BB%A3%E7%90%86/" title="Linux 命令行下使用 Shadowsocks 代理">Linux 命令行下使用 Shadowsocks 代理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/07/22/Linux-%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8B%E4%BD%BF%E7%94%A8-Shadowsocks-%E4%BB%A3%E7%90%86/">
+                        <h2 class="post-title">
+                            Linux 命令行下使用 Shadowsocks 代理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-07-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-07-03">2016-07-03</time>
+                  <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/" title="Harbor 企业级 Docker Registry HTTPS配置">Harbor 企业级 Docker Registry HTTPS配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry HTTPS配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-07-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-07-02">2016-07-02</time>
+                  <a href="/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" title="互联网加密及OpenSSL介绍和简单使用">互联网加密及OpenSSL介绍和简单使用</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+                        <h2 class="post-title">
+                            互联网加密及OpenSSL介绍和简单使用
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-07-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-27">2016-06-27</time>
+                  <a href="/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/" title="Harbor 企业级 Docker Registry 初试">Harbor 企业级 Docker Registry 初试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry 初试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-22">2016-06-22</time>
+                  <a href="/2016/06/22/%E5%85%8D%E8%B4%B9%E7%94%B3%E8%AF%B7-StartSSL-%E8%AF%81%E4%B9%A6/" title="免费申请 StartSSL 证书">免费申请 StartSSL 证书</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/22/%E5%85%8D%E8%B4%B9%E7%94%B3%E8%AF%B7-StartSSL-%E8%AF%81%E4%B9%A6/">
+                        <h2 class="post-title">
+                            免费申请 StartSSL 证书
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-20">2016-06-20</time>
+                  <a href="/2016/06/20/Docker-Contianer-%E6%8C%82%E6%8E%89%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6/" title="Docker Contianer 挂掉强制修改文件">Docker Contianer 挂掉强制修改文件</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/20/Docker-Contianer-%E6%8C%82%E6%8E%89%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6/">
+                        <h2 class="post-title">
+                            Docker Contianer 挂掉强制修改文件
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-14">2016-06-14</time>
+                  <a href="/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/" title="Linux 笔记">Linux 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            Linux 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-13">2016-06-13</time>
+                  <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/" title="Redundent Array of Inexpensive Disks">Redundent Array of Inexpensive Disks</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/13/Redundent-Array-of-Inexpensive-Disks/">
+                        <h2 class="post-title">
+                            Redundent Array of Inexpensive Disks
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-13</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-05-26">2016-05-26</time>
+                  <a href="/2016/05/26/vim-%E7%AC%94%E8%AE%B0/" title="vim 笔记">vim 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/05/26/vim-%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            vim 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-05-26</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-08">2016-03-08</time>
+                  <a href="/2016/03/08/JetBrains-%E7%B3%BB%E5%88%97%E6%BF%80%E6%B4%BB%E6%95%99%E7%A8%8B-%E7%A6%BB%E7%BA%BF-Server/" title="JetBrains 系列激活教程(离线 Server)">JetBrains 系列激活教程(离线 Server)</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/08/JetBrains-%E7%B3%BB%E5%88%97%E6%BF%80%E6%B4%BB%E6%95%99%E7%A8%8B-%E7%A6%BB%E7%BA%BF-Server/">
+                        <h2 class="post-title">
+                            JetBrains 系列激活教程(离线 Server)
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-24">2016-01-24</time>
+                  <a href="/2016/01/24/Redis-Key-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" title="Redis Key 常用命令">Redis Key 常用命令</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/24/Redis-Key-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
+                        <h2 class="post-title">
+                            Redis Key 常用命令
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-24</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-14">2016-01-14</time>
+                  <a href="/2016/01/14/CentOS%E4%B8%8A%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85Git/" title="CentOS 上编译安装 Git">CentOS 上编译安装 Git</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/14/CentOS%E4%B8%8A%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85Git/">
+                        <h2 class="post-title">
+                            CentOS 上编译安装 Git
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-11">2016-01-11</time>
+                  <a href="/2016/01/11/Redis%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Redis学习笔记">Redis学习笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/11/Redis%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            Redis学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-11">2016-01-11</time>
+                  <a href="/2016/01/11/Redis3-0-6%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85/" title="Redis3.0.6编译安装">Redis3.0.6编译安装</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/11/Redis3-0-6%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85/">
+                        <h2 class="post-title">
+                            Redis3.0.6编译安装
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-02">2016-01-02</time>
+                  <a href="/2016/01/02/Git-%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" title="Git 中文乱码解决方案">Git 中文乱码解决方案</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/02/Git-%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+                        <h2 class="post-title">
+                            Git 中文乱码解决方案
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-31">2015-12-31</time>
+                  <a href="/2015/12/31/Raspberry-Pi2-%E6%8A%98%E8%85%BE/" title="Raspberry Pi2 折腾">Raspberry Pi2 折腾</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/31/Raspberry-Pi2-%E6%8A%98%E8%85%BE/">
+                        <h2 class="post-title">
+                            Raspberry Pi2 折腾
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-31</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-29">2015-12-29</time>
+                  <a href="/2015/12/29/CentOS-6-7-x64-minimal-%E7%BD%91%E7%BB%9C%E5%88%9D%E5%A7%8B%E5%8C%96%E9%85%8D%E7%BD%AE/" title="CentOS 6.7_x64 minimal 网络初始化配置">CentOS 6.7_x64 minimal 网络初始化配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/29/CentOS-6-7-x64-minimal-%E7%BD%91%E7%BB%9C%E5%88%9D%E5%A7%8B%E5%8C%96%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            CentOS 6.7_x64 minimal 网络初始化配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-29</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-28">2015-12-28</time>
+                  <a href="/2015/12/28/Linux%E4%B8%8BMySQL%E5%AF%86%E7%A0%81%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9/" title="Linux 下 MySQL 密码强制修改">Linux 下 MySQL 密码强制修改</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/28/Linux%E4%B8%8BMySQL%E5%AF%86%E7%A0%81%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9/">
+                        <h2 class="post-title">
+                            Linux 下 MySQL 密码强制修改
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-06">2015-12-06</time>
+                  <a href="/2015/12/06/apt-get%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" title="apt-get 常用命令">apt-get 常用命令</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/06/apt-get%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
+                        <h2 class="post-title">
+                            apt-get 常用命令
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-06</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="SQL">
+                    <span class="tag-text">SQL</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-08">2016-06-08</time>
+                  <a href="/2016/06/08/Can-t-connect-to-MySQL-server-on-xxxx-61/" title="Can't connect to MySQL server on 'xxxx' (61)">Can't connect to MySQL server on 'xxxx' (61)</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/08/Can-t-connect-to-MySQL-server-on-xxxx-61/">
+                        <h2 class="post-title">
+                            Can't connect to MySQL server on 'xxxx' (61)
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-14">2016-03-14</time>
+                  <a href="/2016/03/14/SQL%E4%B8%AD-OR-%E5%85%B3%E9%94%AE%E5%AD%97%E4%BC%98%E5%85%88%E7%BA%A7%E9%97%AE%E9%A2%98/" title="SQL中 OR 关键字优先级问题">SQL中 OR 关键字优先级问题</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/14/SQL%E4%B8%AD-OR-%E5%85%B3%E9%94%AE%E5%AD%97%E4%BC%98%E5%85%88%E7%BA%A7%E9%97%AE%E9%A2%98/">
+                        <h2 class="post-title">
+                            SQL中 OR 关键字优先级问题
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-08">2016-01-08</time>
+                  <a href="/2016/01/08/DBA%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/" title="DBA视频笔记">DBA视频笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/08/DBA%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            DBA视频笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-28">2015-12-28</time>
+                  <a href="/2015/12/28/MySQL-%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/" title="MySQL 常用操作">MySQL 常用操作</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/28/MySQL-%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/">
+                        <h2 class="post-title">
+                            MySQL 常用操作
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-28</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Java">
+                    <span class="tag-text">Java</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-23">2018-11-23</time>
+                  <a href="/2018/11/23/extract-jdk-to-folder-on-mac/" title="Mac: Extract JDK to folder, without running installer">Mac: Extract JDK to folder, without running installer</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/23/extract-jdk-to-folder-on-mac/">
+                        <h2 class="post-title">
+                            Mac: Extract JDK to folder, without running installer
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-23</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-27">2017-09-27</time>
+                  <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/" title="Alpine 3.6 OpenJDK 8 Bug">Alpine 3.6 OpenJDK 8 Bug</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/">
+                        <h2 class="post-title">
+                            Alpine 3.6 OpenJDK 8 Bug
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-25">2017-03-25</time>
+                  <a href="/2017/03/25/java-capturing-https-packets-use-mitmproxy/" title="Java 配合 mitmproxy HTTPS 抓包调试">Java 配合 mitmproxy HTTPS 抓包调试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/25/java-capturing-https-packets-use-mitmproxy/">
+                        <h2 class="post-title">
+                            Java 配合 mitmproxy HTTPS 抓包调试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-06">2017-02-06</time>
+                  <a href="/2017/02/06/java-cas/" title="Java CAS 理解">Java CAS 理解</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/06/java-cas/">
+                        <h2 class="post-title">
+                            Java CAS 理解
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-06</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-19">2016-06-19</time>
+                  <a href="/2016/06/19/AspectJ-Hello-World/" title="AspectJ Hello World">AspectJ Hello World</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/19/AspectJ-Hello-World/">
+                        <h2 class="post-title">
+                            AspectJ Hello World
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-19</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-07">2016-06-07</time>
+                  <a href="/2016/06/07/Quartz-%E4%BB%BB%E5%8A%A1%E5%BC%BA%E5%88%B6%E5%88%A0%E9%99%A4/" title="Quartz 任务强制删除">Quartz 任务强制删除</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/07/Quartz-%E4%BB%BB%E5%8A%A1%E5%BC%BA%E5%88%B6%E5%88%A0%E9%99%A4/">
+                        <h2 class="post-title">
+                            Quartz 任务强制删除
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-04-22">2016-04-22</time>
+                  <a href="/2016/04/22/WebLogic-request-getContextPath-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98/" title="WebLogic request.getContextPath() 为 null 问题">WebLogic request.getContextPath() 为 null 问题</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/04/22/WebLogic-request-getContextPath-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98/">
+                        <h2 class="post-title">
+                            WebLogic request.getContextPath() 为 null 问题
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-04-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-04-17">2016-04-17</time>
+                  <a href="/2016/04/17/List-%E7%9A%84-UnsupportedOperationException-%E5%BC%82%E5%B8%B8/" title="List 的 UnsupportedOperationException 异常">List 的 UnsupportedOperationException 异常</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/04/17/List-%E7%9A%84-UnsupportedOperationException-%E5%BC%82%E5%B8%B8/">
+                        <h2 class="post-title">
+                            List 的 UnsupportedOperationException 异常
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-04-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-04-11">2016-04-11</time>
+                  <a href="/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/" title="JDK8 新特性">JDK8 新特性</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/">
+                        <h2 class="post-title">
+                            JDK8 新特性
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-04-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-04-09">2016-04-09</time>
+                  <a href="/2016/04/09/JAXB-%E7%AC%94%E8%AE%B0/" title="JAXB 笔记">JAXB 笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/04/09/JAXB-%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            JAXB 笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-04-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-24">2016-03-24</time>
+                  <a href="/2016/03/24/HotSpot-%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0/" title="HotSpot 虚拟机的算法实现">HotSpot 虚拟机的算法实现</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/24/HotSpot-%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0/">
+                        <h2 class="post-title">
+                            HotSpot 虚拟机的算法实现
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-24</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-23">2016-03-23</time>
+                  <a href="/2016/03/23/JVM-%E5%AF%B9%E8%B1%A1%E5%88%A4%E5%AE%9A%E5%92%8C%E5%8F%AF%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95/" title="JVM 对象判定和可回收算法">JVM 对象判定和可回收算法</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/23/JVM-%E5%AF%B9%E8%B1%A1%E5%88%A4%E5%AE%9A%E5%92%8C%E5%8F%AF%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95/">
+                        <h2 class="post-title">
+                            JVM 对象判定和可回收算法
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-23</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-22">2016-03-22</time>
+                  <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98/" title="Java 内存之直接内存">Java 内存之直接内存</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98/">
+                        <h2 class="post-title">
+                            Java 内存之直接内存
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-22">2016-03-22</time>
+                  <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/" title="Java 内存之方法区和运行时常量池">Java 内存之方法区和运行时常量池</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/">
+                        <h2 class="post-title">
+                            Java 内存之方法区和运行时常量池
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-21">2016-03-21</time>
+                  <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/" title="Java 内存自动管理-虚拟机和内存区域概述">Java 内存自动管理-虚拟机和内存区域概述</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/">
+                        <h2 class="post-title">
+                            Java 内存自动管理-虚拟机和内存区域概述
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-21">2016-03-21</time>
+                  <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/" title="Java 内存之 Java 堆">Java 内存之 Java 堆</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/">
+                        <h2 class="post-title">
+                            Java 内存之 Java 堆
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-20">2016-03-20</time>
+                  <a href="/2016/03/20/Java-%E5%A4%9A%E7%BA%BF%E7%A8%8B-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98/" title="Java 多线程-可见性问题">Java 多线程-可见性问题</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/20/Java-%E5%A4%9A%E7%BA%BF%E7%A8%8B-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98/">
+                        <h2 class="post-title">
+                            Java 多线程-可见性问题
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-14">2016-03-14</time>
+                  <a href="/2016/03/14/Java-%E5%86%85%E7%BD%AE%E5%91%BD%E4%BB%A4-jps/" title="Java 内置命令-jps">Java 内置命令-jps</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/14/Java-%E5%86%85%E7%BD%AE%E5%91%BD%E4%BB%A4-jps/">
+                        <h2 class="post-title">
+                            Java 内置命令-jps
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-02-18">2016-02-18</time>
+                  <a href="/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/" title="Gradle 构建基础笔记">Gradle 构建基础笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            Gradle 构建基础笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-02-18</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-02-05">2016-02-05</time>
+                  <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" title="JAVA 异常处理">JAVA 异常处理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
+                        <h2 class="post-title">
+                            JAVA 异常处理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-02-05</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-02-02">2016-02-02</time>
+                  <a href="/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/" title="浅谈 java中的 equals 和 hashcode">浅谈 java中的 equals 和 hashcode</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/">
+                        <h2 class="post-title">
+                            浅谈 java中的 equals 和 hashcode
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-02-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-02">2016-01-02</time>
+                  <a href="/2016/01/02/Spring4-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="Spring4 学习笔记">Spring4 学习笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/02/Spring4-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+                        <h2 class="post-title">
+                            Spring4 学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-31">2015-12-31</time>
+                  <a href="/2015/12/31/Maven-%E6%95%99%E7%A8%8B/" title="Maven 教程">Maven 教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/31/Maven-%E6%95%99%E7%A8%8B/">
+                        <h2 class="post-title">
+                            Maven 教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-31</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-29">2015-12-29</time>
+                  <a href="/2015/12/29/Nexus-2-11-CentOS%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/" title="Nexus 2.11 CentOS搭建教程">Nexus 2.11 CentOS搭建教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/29/Nexus-2-11-CentOS%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/">
+                        <h2 class="post-title">
+                            Nexus 2.11 CentOS搭建教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-29</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-28">2015-12-28</time>
+                  <a href="/2015/12/28/Nexus-%E7%A7%81%E6%9C%8D%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" title="Nexus 私服使用教程">Nexus 私服使用教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/28/Nexus-%E7%A7%81%E6%9C%8D%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">
+                        <h2 class="post-title">
+                            Nexus 私服使用教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-28</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="随笔">
+                    <span class="tag-text">随笔</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-02">2016-11-02</time>
+                  <a href="/2016/11/02/wanyue/" title="晚月">晚月</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/02/wanyue/">
+                        <h2 class="post-title">
+                            晚月
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-25">2016-10-25</time>
+                  <a href="/2016/10/25/waved-goodbye/" title="人生就是会不断挥手说再见的啊">人生就是会不断挥手说再见的啊</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/25/waved-goodbye/">
+                        <h2 class="post-title">
+                            人生就是会不断挥手说再见的啊
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-25">2016-10-25</time>
+                  <a href="/2016/10/25/twenty-love-so-hard/" title="二十多岁的我们，为什么觉得谈恋爱好难">二十多岁的我们，为什么觉得谈恋爱好难</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/25/twenty-love-so-hard/">
+                        <h2 class="post-title">
+                            二十多岁的我们，为什么觉得谈恋爱好难
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-08">2016-03-08</time>
+                  <a href="/2016/03/08/%E7%A8%8B%E5%BA%8F%E7%8C%BF%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/" title="程序猿的自我修养">程序猿的自我修养</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/08/%E7%A8%8B%E5%BA%8F%E7%8C%BF%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/">
+                        <h2 class="post-title">
+                            程序猿的自我修养
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-13">2016-01-13</time>
+                  <a href="/2016/01/13/%E6%88%91%E5%92%8C%E6%88%91%E7%9A%84%E5%80%94%E5%BC%BA/" title="我和我的倔强">我和我的倔强</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/13/%E6%88%91%E5%92%8C%E6%88%91%E7%9A%84%E5%80%94%E5%BC%BA/">
+                        <h2 class="post-title">
+                            我和我的倔强
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-13</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-02">2016-01-02</time>
+                  <a href="/2016/01/02/%E6%9C%AA%E6%9D%A5%E7%A7%91%E6%8A%80%E6%B8%B2%E6%9F%93%E8%A7%86%E9%A2%91/" title="未来科技渲染视频">未来科技渲染视频</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/02/%E6%9C%AA%E6%9D%A5%E7%A7%91%E6%8A%80%E6%B8%B2%E6%9F%93%E8%A7%86%E9%A2%91/">
+                        <h2 class="post-title">
+                            未来科技渲染视频
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-02">2016-01-02</time>
+                  <a href="/2016/01/02/%E5%85%B6%E5%AE%9E%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E6%9B%BE%E9%A5%B1%E7%BB%8F%E6%B2%A7%E6%A1%91/" title="其实每个人都曾饱经沧桑">其实每个人都曾饱经沧桑</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/02/%E5%85%B6%E5%AE%9E%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E6%9B%BE%E9%A5%B1%E7%BB%8F%E6%B2%A7%E6%A1%91/">
+                        <h2 class="post-title">
+                            其实每个人都曾饱经沧桑
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-01-02">2016-01-02</time>
+                  <a href="/2016/01/02/%E5%81%9A%E8%87%AA%E5%B7%B1%E5%B0%8A%E9%87%8D%E7%9A%84%E4%BA%BA-2015%E5%8C%97%E5%A4%A7%E6%9C%80%E7%9F%AD%E6%AF%95%E4%B8%9A%E8%87%B4%E8%BE%9E/" title="做自己尊重的人-2015北大最短毕业致辞">做自己尊重的人-2015北大最短毕业致辞</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/01/02/%E5%81%9A%E8%87%AA%E5%B7%B1%E5%B0%8A%E9%87%8D%E7%9A%84%E4%BA%BA-2015%E5%8C%97%E5%A4%A7%E6%9C%80%E7%9F%AD%E6%AF%95%E4%B8%9A%E8%87%B4%E8%BE%9E/">
+                        <h2 class="post-title">
+                            做自己尊重的人-2015北大最短毕业致辞
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-01-02</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-28">2015-12-28</time>
+                  <a href="/2015/12/28/%E6%A1%83%E8%8A%B1%E4%BE%9D%E6%97%A7%E7%AC%91/" title="桃花依旧笑">桃花依旧笑</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/28/%E6%A1%83%E8%8A%B1%E4%BE%9D%E6%97%A7%E7%AC%91/">
+                        <h2 class="post-title">
+                            桃花依旧笑
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-28</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="GitHub">
+                    <span class="tag-text">GitHub</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-05-22">2016-05-22</time>
+                  <a href="/2016/05/22/Hexo-Upyun-%E5%AE%9E%E7%8E%B0%E6%95%B4%E7%AB%99%E5%85%A8%E7%BD%91-CDN/" title="Hexo+Upyun 实现整站全网 CDN">Hexo+Upyun 实现整站全网 CDN</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/05/22/Hexo-Upyun-%E5%AE%9E%E7%8E%B0%E6%95%B4%E7%AB%99%E5%85%A8%E7%BD%91-CDN/">
+                        <h2 class="post-title">
+                            Hexo+Upyun 实现整站全网 CDN
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-05-22</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-03-08">2016-03-08</time>
+                  <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/" title="Hexo 添加 Rss 订阅">Hexo 添加 Rss 订阅</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/03/08/Hexo%E6%B7%BB%E5%8A%A0Rss%E8%AE%A2%E9%98%85/">
+                        <h2 class="post-title">
+                            Hexo 添加 Rss 订阅
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-03-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2015-12-31">2015-12-31</time>
+                  <a href="/2015/12/31/Github-%E6%90%AD%E5%BB%BA-Hexo-%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/" title="GitHub 搭建 Hexo 静态博客">GitHub 搭建 Hexo 静态博客</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2015/12/31/Github-%E6%90%AD%E5%BB%BA-Hexo-%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">
+                        <h2 class="post-title">
+                            GitHub 搭建 Hexo 静态博客
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2015-12-31</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Docker">
+                    <span class="tag-text">Docker</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-06-26">2019-06-26</time>
+                  <a href="/2019/06/26/podman-history-of-container/" title="Podman 初试 - 容器发展史">Podman 初试 - 容器发展史</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/06/26/podman-history-of-container/">
+                        <h2 class="post-title">
+                            Podman 初试 - 容器发展史
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-06-26</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-05-13">2019-05-13</time>
+                  <a href="/2019/05/13/dockerfile-extended-syntax/" title="Dockerfile 目前可扩展的语法">Dockerfile 目前可扩展的语法</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/05/13/dockerfile-extended-syntax/">
+                        <h2 class="post-title">
+                            Dockerfile 目前可扩展的语法
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-05-13</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-09-17">2018-09-17</time>
+                  <a href="/2018/09/17/google-container-registry-sync/" title="Google container registry 同步">Google container registry 同步</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/09/17/google-container-registry-sync/">
+                        <h2 class="post-title">
+                            Google container registry 同步
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-09-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-30">2018-03-30</time>
+                  <a href="/2018/03/30/set-up-drone-ci/" title="Drone CI 搭建">Drone CI 搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/30/set-up-drone-ci/">
+                        <h2 class="post-title">
+                            Drone CI 搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-20">2018-03-20</time>
+                  <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/" title="使用 RBAC 控制 kubectl 权限">使用 RBAC 控制 kubectl 权限</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/">
+                        <h2 class="post-title">
+                            使用 RBAC 控制 kubectl 权限
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-01-07">2018-01-07</time>
+                  <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/" title="Kubernetes TLS bootstrapping 那点事">Kubernetes TLS bootstrapping 那点事</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/">
+                        <h2 class="post-title">
+                            Kubernetes TLS bootstrapping 那点事
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-01-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-28">2017-11-28</time>
+                  <a href="/2017/11/28/ci-cd-gitlab-ci/" title="CI/CD 之 GitLab CI">CI/CD 之 GitLab CI</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/28/ci-cd-gitlab-ci/">
+                        <h2 class="post-title">
+                            CI/CD 之 GitLab CI
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-14">2017-11-14</time>
+                  <a href="/2017/11/14/ohmydocker/" title="ohmydocker 镜像加速">ohmydocker 镜像加速</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/14/ohmydocker/">
+                        <h2 class="post-title">
+                            ohmydocker 镜像加速
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-12">2017-11-12</time>
+                  <a href="/2017/11/12/ci-cd-dockerfile/" title="CI/CD 之 Dockerfile">CI/CD 之 Dockerfile</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/12/ci-cd-dockerfile/">
+                        <h2 class="post-title">
+                            CI/CD 之 Dockerfile
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-03">2017-11-03</time>
+                  <a href="/2017/11/03/deep-learning-on-kubernetes/" title="Kubernetes 深度学习笔记">Kubernetes 深度学习笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/03/deep-learning-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 深度学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-10">2017-10-10</time>
+                  <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/" title="Kubernetes 1.8 kube-proxy 开启 ipvs">Kubernetes 1.8 kube-proxy 开启 ipvs</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 kube-proxy 开启 ipvs
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-09">2017-10-09</time>
+                  <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/" title="Kubernetes 1.8 集群搭建">Kubernetes 1.8 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-21">2017-09-21</time>
+                  <a href="/2017/09/21/set-up-ha-consul-cluster/" title="Consul 集群搭建">Consul 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/21/set-up-ha-consul-cluster/">
+                        <h2 class="post-title">
+                            Consul 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-20">2017-09-20</time>
+                  <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/" title="阿里云部署 Kubernetes">阿里云部署 Kubernetes</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
+                        <h2 class="post-title">
+                            阿里云部署 Kubernetes
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-31">2017-07-31</time>
+                  <a href="/2017/07/31/calico-yml-bug/" title="Calico 部署踩坑记录">Calico 部署踩坑记录</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/31/calico-yml-bug/">
+                        <h2 class="post-title">
+                            Calico 部署踩坑记录
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-31</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-21">2017-07-21</time>
+                  <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/" title="手动档搭建 Kubernetes HA 集群">手动档搭建 Kubernetes HA 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">
+                        <h2 class="post-title">
+                            手动档搭建 Kubernetes HA 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-17">2017-07-17</time>
+                  <a href="/2017/07/17/kubernetes-rbac-chinese-translation/" title="Kubernetes RBAC">Kubernetes RBAC</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/17/kubernetes-rbac-chinese-translation/">
+                        <h2 class="post-title">
+                            Kubernetes RBAC
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-12">2017-07-12</time>
+                  <a href="/2017/07/12/how-to-build-kubernetes-rpm/" title="How to build Kubernetes RPM">How to build Kubernetes RPM</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/12/how-to-build-kubernetes-rpm/">
+                        <h2 class="post-title">
+                            How to build Kubernetes RPM
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-06-03">2017-06-03</time>
+                  <a href="/2017/06/03/use-ceph-storage-on-kubernetes/" title="Kubernetes 使用 Ceph 存储">Kubernetes 使用 Ceph 存储</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/06/03/use-ceph-storage-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 使用 Ceph 存储
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-06-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-05-12">2017-05-12</time>
+                  <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/" title="Docker 分配宿主机网段 IP">Docker 分配宿主机网段 IP</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/">
+                        <h2 class="post-title">
+                            Docker 分配宿主机网段 IP
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-05-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-21">2017-03-21</time>
+                  <a href="/2017/03/21/private-maintenance-docker-mirror-registry/" title="个人维护的 Docker 加速仓库">个人维护的 Docker 加速仓库</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/21/private-maintenance-docker-mirror-registry/">
+                        <h2 class="post-title">
+                            个人维护的 Docker 加速仓库
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-10">2017-03-10</time>
+                  <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/" title="kargo 集群扩展及细粒度配置">kargo 集群扩展及细粒度配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
+                        <h2 class="post-title">
+                            kargo 集群扩展及细粒度配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-04">2017-03-04</time>
+                  <a href="/2017/03/04/how-to-use-nginx-ingress/" title="Kubernetes Nginx Ingress 教程">Kubernetes Nginx Ingress 教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/04/how-to-use-nginx-ingress/">
+                        <h2 class="post-title">
+                            Kubernetes Nginx Ingress 教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-04</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-03">2017-03-03</time>
+                  <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/" title="快速部署 kubernetes 高可用集群">快速部署 kubernetes 高可用集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/">
+                        <h2 class="post-title">
+                            快速部署 kubernetes 高可用集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-27">2017-02-27</time>
+                  <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/" title="如何下载 Kubernetes 镜像和 rpm">如何下载 Kubernetes 镜像和 rpm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/">
+                        <h2 class="post-title">
+                            如何下载 Kubernetes 镜像和 rpm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-09">2017-02-09</time>
+                  <a href="/2017/02/09/gcr.io-registy-proxy/" title="gcr.io 仓库代理">gcr.io 仓库代理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/09/gcr.io-registy-proxy/">
+                        <h2 class="post-title">
+                            gcr.io 仓库代理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-01-08">2017-01-08</time>
+                  <a href="/2017/01/08/set-up-docker-registry-by-nexus/" title="使用 Nexus 搭建 Docker 仓库">使用 Nexus 搭建 Docker 仓库</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/01/08/set-up-docker-registry-by-nexus/">
+                        <h2 class="post-title">
+                            使用 Nexus 搭建 Docker 仓库
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-01-08</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-06">2016-12-06</time>
+                  <a href="/2016/12/06/try-traefik-on-kubernetes/" title="Traefik-kubernetes 初试">Traefik-kubernetes 初试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/06/try-traefik-on-kubernetes/">
+                        <h2 class="post-title">
+                            Traefik-kubernetes 初试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-06</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-01">2016-12-01</time>
+                  <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/" title="Kubernetes 网络搭建-Calico">Kubernetes 网络搭建-Calico</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-Calico
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-30">2016-11-30</time>
+                  <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/" title="Kubernetes 网络搭建-flannel">Kubernetes 网络搭建-flannel</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-flannel
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-21">2016-11-21</time>
+                  <a href="/2016/11/21/kubeadm-other-problems/" title="kubeadm 续坑篇">kubeadm 续坑篇</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/21/kubeadm-other-problems/">
+                        <h2 class="post-title">
+                            kubeadm 续坑篇
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-29">2016-10-29</time>
+                  <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/" title="kubeadm 搭建 kubernetes 集群">kubeadm 搭建 kubernetes 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/">
+                        <h2 class="post-title">
+                            kubeadm 搭建 kubernetes 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-29</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-14">2016-10-14</time>
+                  <a href="/2016/10/14/arukas-docker-fq/" title="樱花 Docker 免费高速翻墙教程">樱花 Docker 免费高速翻墙教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/14/arukas-docker-fq/">
+                        <h2 class="post-title">
+                            樱花 Docker 免费高速翻墙教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-09">2016-10-09</time>
+                  <a href="/2016/10/09/kubernetes-1.4-create-cluster/" title="kubernetes 1.4 集群搭建">kubernetes 1.4 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/09/kubernetes-1.4-create-cluster/">
+                        <h2 class="post-title">
+                            kubernetes 1.4 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-24">2016-09-24</time>
+                  <a href="/2016/09/24/Docker-mirror-Registry/" title="Docker mirror Registry">Docker mirror Registry</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/24/Docker-mirror-Registry/">
+                        <h2 class="post-title">
+                            Docker mirror Registry
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-24</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-15">2016-09-15</time>
+                  <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Harbor 企业级 Docker Registry 第二弹">Harbor 企业级 Docker Registry 第二弹</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry 第二弹
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-15</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-11">2016-09-11</time>
+                  <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/" title="kubernetes 双向 TLS 配置">kubernetes 双向 TLS 配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            kubernetes 双向 TLS 配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-07">2016-09-07</time>
+                  <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="Kubernetes 集群搭建">Kubernetes 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            Kubernetes 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-03">2016-09-03</time>
+                  <a href="/2016/09/03/Dokcer-%E4%BD%BF%E7%94%A8-Flannel-%E8%B7%A8%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF/" title="Dokcer 使用 Flannel 跨主机通讯">Dokcer 使用 Flannel 跨主机通讯</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/03/Dokcer-%E4%BD%BF%E7%94%A8-Flannel-%E8%B7%A8%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF/">
+                        <h2 class="post-title">
+                            Dokcer 使用 Flannel 跨主机通讯
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-01">2016-09-01</time>
+                  <a href="/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="Etcd 集群搭建">Etcd 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            Etcd 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-07-03">2016-07-03</time>
+                  <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/" title="Harbor 企业级 Docker Registry HTTPS配置">Harbor 企业级 Docker Registry HTTPS配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry HTTPS配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-07-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-27">2016-06-27</time>
+                  <a href="/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/" title="Harbor 企业级 Docker Registry 初试">Harbor 企业级 Docker Registry 初试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/27/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E5%88%9D%E8%AF%95/">
+                        <h2 class="post-title">
+                            Harbor 企业级 Docker Registry 初试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-06-20">2016-06-20</time>
+                  <a href="/2016/06/20/Docker-Contianer-%E6%8C%82%E6%8E%89%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6/" title="Docker Contianer 挂掉强制修改文件">Docker Contianer 挂掉强制修改文件</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/06/20/Docker-Contianer-%E6%8C%82%E6%8E%89%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6/">
+                        <h2 class="post-title">
+                            Docker Contianer 挂掉强制修改文件
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-06-20</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Kubernetes">
+                    <span class="tag-text">Kubernetes</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-06-18">2019-06-18</time>
+                  <a href="/2019/06/18/calico-3.6-forward-network-traffic/" title="Calico 3.6 转发外部流量到集群 Pod">Calico 3.6 转发外部流量到集群 Pod</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/06/18/calico-3.6-forward-network-traffic/">
+                        <h2 class="post-title">
+                            Calico 3.6 转发外部流量到集群 Pod
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-06-18</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-03-16">2019-03-16</time>
+                  <a href="/2019/03/16/set-up-kubernetes-1.13.4-cluster/" title="Kubernetes 1.13.4 搭建">Kubernetes 1.13.4 搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/03/16/set-up-kubernetes-1.13.4-cluster/">
+                        <h2 class="post-title">
+                            Kubernetes 1.13.4 搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-03-16</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-01-16">2019-01-16</time>
+                  <a href="/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/" title="Kubernetes sample-cli-plugin 源码分析">Kubernetes sample-cli-plugin 源码分析</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/">
+                        <h2 class="post-title">
+                            Kubernetes sample-cli-plugin 源码分析
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-01-16</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-30">2018-11-30</time>
+                  <a href="/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/" title="Kubernetes 1.12 新的插件机制">Kubernetes 1.12 新的插件机制</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/">
+                        <h2 class="post-title">
+                            Kubernetes 1.12 新的插件机制
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-25">2018-11-25</time>
+                  <a href="/2018/11/25/kubeadm-remote-debug/" title="远程 Debug kubeadm">远程 Debug kubeadm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/25/kubeadm-remote-debug/">
+                        <h2 class="post-title">
+                            远程 Debug kubeadm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-09-17">2018-09-17</time>
+                  <a href="/2018/09/17/google-container-registry-sync/" title="Google container registry 同步">Google container registry 同步</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/09/17/google-container-registry-sync/">
+                        <h2 class="post-title">
+                            Google container registry 同步
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-09-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-08-28">2018-08-28</time>
+                  <a href="/2018/08/28/kubernetes-tls-bootstrapping-with-bootstrap-token/" title="使用 Bootstrap Token 完成 TLS Bootstrapping">使用 Bootstrap Token 完成 TLS Bootstrapping</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/08/28/kubernetes-tls-bootstrapping-with-bootstrap-token/">
+                        <h2 class="post-title">
+                            使用 Bootstrap Token 完成 TLS Bootstrapping
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-08-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-08-26">2018-08-26</time>
+                  <a href="/2018/08/26/kubernetes-certificate-configuration/" title="Kubernetes 证书配置">Kubernetes 证书配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/08/26/kubernetes-certificate-configuration/">
+                        <h2 class="post-title">
+                            Kubernetes 证书配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-08-26</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-08-09">2018-08-09</time>
+                  <a href="/2018/08/09/create-a-plugin-for-kubectl/" title="编写 kubectl 插件">编写 kubectl 插件</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/08/09/create-a-plugin-for-kubectl/">
+                        <h2 class="post-title">
+                            编写 kubectl 插件
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-08-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-05-24">2018-05-24</time>
+                  <a href="/2018/05/24/kubernetes-traefik-service-exposure/" title="Traefik 另类的服务暴露方式">Traefik 另类的服务暴露方式</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/05/24/kubernetes-traefik-service-exposure/">
+                        <h2 class="post-title">
+                            Traefik 另类的服务暴露方式
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-05-24</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-04-19">2018-04-19</time>
+                  <a href="/2018/04/19/set-up-kubernetes-1.10.1-cluster-by-hyperkube/" title="Kubernetes 1.10.1 集群搭建">Kubernetes 1.10.1 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/04/19/set-up-kubernetes-1.10.1-cluster-by-hyperkube/">
+                        <h2 class="post-title">
+                            Kubernetes 1.10.1 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-04-19</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-20">2018-03-20</time>
+                  <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/" title="使用 RBAC 控制 kubectl 权限">使用 RBAC 控制 kubectl 权限</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/">
+                        <h2 class="post-title">
+                            使用 RBAC 控制 kubectl 权限
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-01-07">2018-01-07</time>
+                  <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/" title="Kubernetes TLS bootstrapping 那点事">Kubernetes TLS bootstrapping 那点事</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/01/07/kubernetes-tls-bootstrapping-note/">
+                        <h2 class="post-title">
+                            Kubernetes TLS bootstrapping 那点事
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-01-07</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-14">2017-11-14</time>
+                  <a href="/2017/11/14/ohmydocker/" title="ohmydocker 镜像加速">ohmydocker 镜像加速</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/14/ohmydocker/">
+                        <h2 class="post-title">
+                            ohmydocker 镜像加速
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-14</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-12">2017-11-12</time>
+                  <a href="/2017/11/12/ci-cd-dockerfile/" title="CI/CD 之 Dockerfile">CI/CD 之 Dockerfile</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/12/ci-cd-dockerfile/">
+                        <h2 class="post-title">
+                            CI/CD 之 Dockerfile
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-03">2017-11-03</time>
+                  <a href="/2017/11/03/deep-learning-on-kubernetes/" title="Kubernetes 深度学习笔记">Kubernetes 深度学习笔记</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/03/deep-learning-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 深度学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-10">2017-10-10</time>
+                  <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/" title="Kubernetes 1.8 kube-proxy 开启 ipvs">Kubernetes 1.8 kube-proxy 开启 ipvs</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 kube-proxy 开启 ipvs
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-10-09">2017-10-09</time>
+                  <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/" title="Kubernetes 1.8 集群搭建">Kubernetes 1.8 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
+                        <h2 class="post-title">
+                            Kubernetes 1.8 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-21">2017-09-21</time>
+                  <a href="/2017/09/21/set-up-ha-consul-cluster/" title="Consul 集群搭建">Consul 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/21/set-up-ha-consul-cluster/">
+                        <h2 class="post-title">
+                            Consul 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-20">2017-09-20</time>
+                  <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/" title="阿里云部署 Kubernetes">阿里云部署 Kubernetes</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
+                        <h2 class="post-title">
+                            阿里云部署 Kubernetes
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-20</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-31">2017-07-31</time>
+                  <a href="/2017/07/31/calico-yml-bug/" title="Calico 部署踩坑记录">Calico 部署踩坑记录</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/31/calico-yml-bug/">
+                        <h2 class="post-title">
+                            Calico 部署踩坑记录
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-31</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-21">2017-07-21</time>
+                  <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/" title="手动档搭建 Kubernetes HA 集群">手动档搭建 Kubernetes HA 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">
+                        <h2 class="post-title">
+                            手动档搭建 Kubernetes HA 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-17">2017-07-17</time>
+                  <a href="/2017/07/17/kubernetes-rbac-chinese-translation/" title="Kubernetes RBAC">Kubernetes RBAC</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/17/kubernetes-rbac-chinese-translation/">
+                        <h2 class="post-title">
+                            Kubernetes RBAC
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-17</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-07-12">2017-07-12</time>
+                  <a href="/2017/07/12/how-to-build-kubernetes-rpm/" title="How to build Kubernetes RPM">How to build Kubernetes RPM</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/07/12/how-to-build-kubernetes-rpm/">
+                        <h2 class="post-title">
+                            How to build Kubernetes RPM
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-07-12</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-06-03">2017-06-03</time>
+                  <a href="/2017/06/03/use-ceph-storage-on-kubernetes/" title="Kubernetes 使用 Ceph 存储">Kubernetes 使用 Ceph 存储</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/06/03/use-ceph-storage-on-kubernetes/">
+                        <h2 class="post-title">
+                            Kubernetes 使用 Ceph 存储
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-06-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-21">2017-03-21</time>
+                  <a href="/2017/03/21/private-maintenance-docker-mirror-registry/" title="个人维护的 Docker 加速仓库">个人维护的 Docker 加速仓库</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/21/private-maintenance-docker-mirror-registry/">
+                        <h2 class="post-title">
+                            个人维护的 Docker 加速仓库
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-10">2017-03-10</time>
+                  <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/" title="kargo 集群扩展及细粒度配置">kargo 集群扩展及细粒度配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
+                        <h2 class="post-title">
+                            kargo 集群扩展及细粒度配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-10</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-04">2017-03-04</time>
+                  <a href="/2017/03/04/how-to-use-nginx-ingress/" title="Kubernetes Nginx Ingress 教程">Kubernetes Nginx Ingress 教程</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/04/how-to-use-nginx-ingress/">
+                        <h2 class="post-title">
+                            Kubernetes Nginx Ingress 教程
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-04</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-03-03">2017-03-03</time>
+                  <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/" title="快速部署 kubernetes 高可用集群">快速部署 kubernetes 高可用集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/03/03/set-up-kubernetes-ha-cluster-by-kargo/">
+                        <h2 class="post-title">
+                            快速部署 kubernetes 高可用集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-03-03</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-27">2017-02-27</time>
+                  <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/" title="如何下载 Kubernetes 镜像和 rpm">如何下载 Kubernetes 镜像和 rpm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/">
+                        <h2 class="post-title">
+                            如何下载 Kubernetes 镜像和 rpm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-02-09">2017-02-09</time>
+                  <a href="/2017/02/09/gcr.io-registy-proxy/" title="gcr.io 仓库代理">gcr.io 仓库代理</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/02/09/gcr.io-registy-proxy/">
+                        <h2 class="post-title">
+                            gcr.io 仓库代理
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-02-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-06">2016-12-06</time>
+                  <a href="/2016/12/06/try-traefik-on-kubernetes/" title="Traefik-kubernetes 初试">Traefik-kubernetes 初试</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/06/try-traefik-on-kubernetes/">
+                        <h2 class="post-title">
+                            Traefik-kubernetes 初试
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-06</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-12-01">2016-12-01</time>
+                  <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/" title="Kubernetes 网络搭建-Calico">Kubernetes 网络搭建-Calico</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/12/01/set-up-kubernetes-cluster-by-calico/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-Calico
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-12-01</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-30">2016-11-30</time>
+                  <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/" title="Kubernetes 网络搭建-flannel">Kubernetes 网络搭建-flannel</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/">
+                        <h2 class="post-title">
+                            Kubernetes 网络搭建-flannel
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-11-21">2016-11-21</time>
+                  <a href="/2016/11/21/kubeadm-other-problems/" title="kubeadm 续坑篇">kubeadm 续坑篇</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/11/21/kubeadm-other-problems/">
+                        <h2 class="post-title">
+                            kubeadm 续坑篇
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-11-21</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-29">2016-10-29</time>
+                  <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/" title="kubeadm 搭建 kubernetes 集群">kubeadm 搭建 kubernetes 集群</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/">
+                        <h2 class="post-title">
+                            kubeadm 搭建 kubernetes 集群
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-29</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-10-09">2016-10-09</time>
+                  <a href="/2016/10/09/kubernetes-1.4-create-cluster/" title="kubernetes 1.4 集群搭建">kubernetes 1.4 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/10/09/kubernetes-1.4-create-cluster/">
+                        <h2 class="post-title">
+                            kubernetes 1.4 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-10-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-11">2016-09-11</time>
+                  <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/" title="kubernetes 双向 TLS 配置">kubernetes 双向 TLS 配置</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/">
+                        <h2 class="post-title">
+                            kubernetes 双向 TLS 配置
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2016-09-07">2016-09-07</time>
+                  <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="Kubernetes 集群搭建">Kubernetes 集群搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+                        <h2 class="post-title">
+                            Kubernetes 集群搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2016-09-07</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="CI/CD">
+                    <span class="tag-text">CI/CD</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-05-11">2018-05-11</time>
+                  <a href="/2018/05/11/add-commit-message-style-check-to-your-gitlab/" title="为你的 GitLab 增加提交信息检测">为你的 GitLab 增加提交信息检测</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/05/11/add-commit-message-style-check-to-your-gitlab/">
+                        <h2 class="post-title">
+                            为你的 GitLab 增加提交信息检测
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-05-11</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-03-30">2018-03-30</time>
+                  <a href="/2018/03/30/set-up-drone-ci/" title="Drone CI 搭建">Drone CI 搭建</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/03/30/set-up-drone-ci/">
+                        <h2 class="post-title">
+                            Drone CI 搭建
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-03-30</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-11-28">2017-11-28</time>
+                  <a href="/2017/11/28/ci-cd-gitlab-ci/" title="CI/CD 之 GitLab CI">CI/CD 之 GitLab CI</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/11/28/ci-cd-gitlab-ci/">
+                        <h2 class="post-title">
+                            CI/CD 之 GitLab CI
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-11-28</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2017-09-05">2017-09-05</time>
+                  <a href="/2017/09/05/git-flow-note/" title="CI/CD Git Flow">CI/CD Git Flow</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2017/09/05/git-flow-note/">
+                        <h2 class="post-title">
+                            CI/CD Git Flow
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2017-09-05</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Golang">
+                    <span class="tag-text">Golang</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-11-05">2019-11-05</time>
+                  <a href="/2019/11/05/writing-plugin-for-coredns/" title="如何编写一个 CoreDNS 插件">如何编写一个 CoreDNS 插件</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/11/05/writing-plugin-for-coredns/">
+                        <h2 class="post-title">
+                            如何编写一个 CoreDNS 插件
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-11-05</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-10-16">2019-10-16</time>
+                  <a href="/2019/10/16/golang-etcd-client-example/" title="Golang Etcd client example">Golang Etcd client example</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/10/16/golang-etcd-client-example/">
+                        <h2 class="post-title">
+                            Golang Etcd client example
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-10-16</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-27">2018-11-27</time>
+                  <a href="/2018/11/27/simple-tool-written-in-golang/" title="Go 编写的一些常用小工具">Go 编写的一些常用小工具</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/27/simple-tool-written-in-golang/">
+                        <h2 class="post-title">
+                            Go 编写的一些常用小工具
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-27</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-25">2018-11-25</time>
+                  <a href="/2018/11/25/kubeadm-remote-debug/" title="远程 Debug kubeadm">远程 Debug kubeadm</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/25/kubeadm-remote-debug/">
+                        <h2 class="post-title">
+                            远程 Debug kubeadm
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-25</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-11-09">2018-11-09</time>
+                  <a href="/2018/11/09/go-interactive-shell/" title="Go ssh 交互式执行命令">Go ssh 交互式执行命令</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/11/09/go-interactive-shell/">
+                        <h2 class="post-title">
+                            Go ssh 交互式执行命令
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-11-09</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2018-10-23">2018-10-23</time>
+                  <a href="/2018/10/23/golang-code-plugin/" title="Go 代码的扩展套路">Go 代码的扩展套路</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2018/10/23/golang-code-plugin/">
+                        <h2 class="post-title">
+                            Go 代码的扩展套路
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2018-10-23</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Mac">
+                    <span class="tag-text">Mac</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-03-23">2019-03-23</time>
+                  <a href="/2019/03/23/oh-my-rime/" title="Mac 下调校 Rime">Mac 下调校 Rime</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/03/23/oh-my-rime/">
+                        <h2 class="post-title">
+                            Mac 下调校 Rime
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-03-23</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Podman">
+                    <span class="tag-text">Podman</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="2019-06-26">2019-06-26</time>
+                  <a href="/2019/06/26/podman-history-of-container/" title="Podman 初试 - 容器发展史">Podman 初试 - 容器发展史</a>
+                  </li> -->
+                 <div class="post-preview">
+                    <a href="/2019/06/26/podman-history-of-container/">
+                        <h2 class="post-title">
+                            Podman 初试 - 容器发展史
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">2019-06-26</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+
+        </div>
+    </div>
+</div>
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

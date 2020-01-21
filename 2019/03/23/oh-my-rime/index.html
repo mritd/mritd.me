@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Mac 下调校 Rime">
+    <meta name="keywords"  content="rime,鼠须管">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Mac 下调校 Rime - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2019/03/23/oh-my-rime/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Mac" title="Mac">Mac</a>
+                        
+                    </div>
+                    <h1>Mac 下调校 Rime</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on March 23, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>由于对国内输入法隐私问题的担忧，决定放弃搜狗等输入法；为了更加 Geek 一些，最终决定了折腾 Rime(鼠须管) 输入法，以下为一些折腾的过程</p>
+</blockquote>
+
+<p><strong>国际惯例先放点图压压惊</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/t3otb.jpg" alt="example1" />
+<img src="https://cdn.oss.link/markdown/ep8sl.jpg" alt="example2" />
+<img src="https://cdn.oss.link/markdown/wth6n.jpg" alt="example3" />
+<img src="https://cdn.oss.link/markdown/5b85o.jpg" alt="example4" /></p>
+
+<h2 id="一安装">一、安装</h2>
+
+<p>安装 Rime 没啥好说的，直接从<a href="https://rime.im">官网</a>下载最新版本的安装包既可；安装完成后配置文件位于 <code class="highlighter-rouge">~/Library/Rime</code> 位置；在进行后续折腾之前我建议还是先 <code class="highlighter-rouge">cp -r ~/Library/Rime ~/Library/Rime.bak</code> 备份一下配置文件，以防制后续折腾挂了还可以还原；安装完成以后按 <code class="highlighter-rouge">⌘ + 反引号(~)</code> 切换到 <code class="highlighter-rouge">朙月拼音-简化字</code> 既可开启简体中文输入</p>
+
+<h2 id="二乱码解决">二、乱码解决</h2>
+
+<p>安装完成后在打字时可能出现乱码情况(俗称豆腐块)，这是由于 Rime 默认 UTF-8 字符集比较大，预选词内会出现生僻字，而 mac 字体内又不包含这些字体，从而导致乱码；解决方案很简单，下载 <a href="https://github.com/mritd/rime/tree/master/fonts">花园明朝</a> A、B 两款字体安装既可，安装后重启一下就不会出现乱码了</p>
+
+<p><img src="https://cdn.oss.link/markdown/yfbis.png" alt="fonts" /></p>
+
+<h2 id="三配置文件">三、配置文件</h2>
+
+<p>官方并不建议直接修改原始的配置文件，因为输入法更新时会重新覆盖默认配置，可能导致某些自定义配置丢失；推荐作法是创建一系列的 patch 配置，通过类似打补丁替换这种方式来实现无感的增加自定义配置；</p>
+
+<p>由于使用的是 <code class="highlighter-rouge">朙月拼音-简化字</code> 输入方案，所以需要创建 <code class="highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 等配置文件，后面就是查文档 + 各种 Google 一顿魔改了；目前我将我自己用的配置放在了 <a href="https://github.com/mritd/rime">Github</a> 上，有需要的可以直接 clone 下来，用里面的配置文件直接覆盖 <code class="highlighter-rouge">~/Library/Rime</code> 下的文件，然后重新部署既可，关于具体配置细节在下面写</p>
+
+<h2 id="四自定义配色">四、自定义配色</h2>
+
+<p>皮肤配色配置方案位于 <code class="highlighter-rouge">squirrel.custom.yaml</code> 配置文件中，我的配置目前是参考搜狗输入法皮肤自己调试的；官方也提供了一些皮肤外观配置，详见 <a href="https://gist.github.com/lotem/2290714">Gist</a>；想要切换皮肤配色只需要修改 <code class="highlighter-rouge">style/color_scheme</code> 为相应的皮肤配色名称既可</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">patch</span><span class="pi">:</span>
+  <span class="na">show_notifications_when</span><span class="pi">:</span> <span class="s">appropriate</span>          <span class="c1"># 状态通知，适当，也可设为全开（always）全关（never）</span>
+
+  <span class="s">style/color_scheme</span><span class="pi">:</span> <span class="s">mritd_dark</span>                <span class="c1"># 方案命名，不能有空格</span>
+  <span class="na">preset_color_schemes</span><span class="pi">:</span>
+    <span class="na">mritd_dark</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">漠然／mritd dark</span>
+      <span class="na">author</span><span class="pi">:</span> <span class="s">mritd &lt;mritd1234@gmail.com&gt;</span>
+      <span class="na">horizontal</span><span class="pi">:</span> <span class="no">true</span>                          <span class="c1"># 水平排列</span>
+      <span class="na">inline_preedit</span><span class="pi">:</span> <span class="no">true</span>                      <span class="c1"># 单行显示，false双行显示</span>
+      <span class="na">candidate_format</span><span class="pi">:</span> <span class="s2">"</span><span class="s">%c</span><span class="se">\u2005</span><span class="s">%@"</span>            <span class="c1"># 用 1/6 em 空格 U+2005 来控制编号 %c 和候选词 %@ 前后的空间。</span>
+      <span class="na">corner_radius</span><span class="pi">:</span> <span class="m">5</span>                          <span class="c1"># 候选条圆角</span>
+      <span class="na">hilited_corner_radius</span><span class="pi">:</span> <span class="m">3</span>                  <span class="c1"># 高亮圆角</span>
+      <span class="na">border_height</span><span class="pi">:</span> <span class="m">6</span>                          <span class="c1"># 窗口边界高度，大于圆角半径才生效</span>
+      <span class="na">border_width</span><span class="pi">:</span> <span class="m">6</span>                           <span class="c1"># 窗口边界宽度，大于圆角半径才生效</span>
+      <span class="na">border_color_width</span><span class="pi">:</span> <span class="m">0</span>
+      <span class="c1">#font_face: "PingFangSC"                   # 候选词字体</span>
+      <span class="na">font_point</span><span class="pi">:</span> <span class="m">16</span>                            <span class="c1"># 候选字词大小</span>
+      <span class="na">label_font_point</span><span class="pi">:</span> <span class="m">14</span>                      <span class="c1"># 候选编号大小</span>
+
+      <span class="na">text_color</span><span class="pi">:</span> <span class="s">0xdedddd</span>                      <span class="c1"># 拼音行文字颜色，24位色值，16进制，BGR顺序</span>
+      <span class="na">back_color</span><span class="pi">:</span> <span class="s">0x4b4b4b</span>                      <span class="c1"># 候选条背景色</span>
+      <span class="na">label_color</span><span class="pi">:</span> <span class="s">0x888785</span>                     <span class="c1"># 预选栏编号颜色</span>
+      <span class="na">border_color</span><span class="pi">:</span> <span class="s">0x4b4b4b</span>                    <span class="c1"># 边框色</span>
+      <span class="na">candidate_text_color</span><span class="pi">:</span> <span class="s">0xffffff</span>            <span class="c1"># 预选项文字颜色</span>
+      <span class="na">hilited_text_color</span><span class="pi">:</span> <span class="s">0xdedddd</span>              <span class="c1"># 高亮拼音 (需要开启内嵌编码)</span>
+      <span class="na">hilited_back_color</span><span class="pi">:</span> <span class="s">0x252320</span>              <span class="c1"># 高亮拼音 (需要开启内嵌编码)</span>
+      <span class="na">hilited_candidate_text_color</span><span class="pi">:</span> <span class="s">0xFFE696</span>    <span class="c1"># 第一候选项文字颜色</span>
+      <span class="na">hilited_candidate_back_color</span><span class="pi">:</span> <span class="s">0x4b4b4b</span>    <span class="c1"># 第一候选项背景背景色</span>
+      <span class="na">hilited_candidate_label_color</span><span class="pi">:</span> <span class="s">0xffffff</span>   <span class="c1"># 第一候选项编号颜色</span>
+      <span class="na">comment_text_color</span><span class="pi">:</span> <span class="s">0xdedddd</span>              <span class="c1"># 拼音等提示文字颜色</span>
+</code></pre></div></div>
+
+<h2 id="五增加自定义快捷字符">五、增加自定义快捷字符</h2>
+
+<p>快捷字符例如在中文输入法状态下可以直接输入 <code class="highlighter-rouge">/dn</code> 来调出特殊符号输入；这些配置位于 <code class="highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 的 <code class="highlighter-rouge">punctuator</code> 配置中，我目前自行定义了一些，有需要的可以依葫芦画瓢直接修改</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">punctuator</span><span class="pi">:</span>
+    <span class="na">import_preset</span><span class="pi">:</span> <span class="s">symbols</span>
+    <span class="na">symbols</span><span class="pi">:</span>
+      <span class="s2">"</span><span class="s">/fs"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">½</span><span class="pi">,</span><span class="nv">‰</span><span class="pi">,</span><span class="nv">¼</span><span class="pi">,</span><span class="nv">⅓</span><span class="pi">,</span><span class="nv">⅔</span><span class="pi">,</span><span class="nv">¾</span><span class="pi">,</span><span class="nv">⅒</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/dq"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">🌍</span><span class="pi">,</span><span class="nv">🌎</span><span class="pi">,</span><span class="nv">🌏</span><span class="pi">,</span><span class="nv">🌐</span><span class="pi">,</span><span class="nv">🌑</span><span class="pi">,</span><span class="nv">🌒</span><span class="pi">,</span><span class="nv">🌓</span><span class="pi">,</span><span class="nv">🌔</span><span class="pi">,</span><span class="nv">🌕</span><span class="pi">,</span><span class="nv">🌖</span><span class="pi">,</span><span class="nv">🌗</span><span class="pi">,</span><span class="nv">🌘</span><span class="pi">,</span><span class="nv">🌙</span><span class="pi">,</span><span class="nv">🌚</span><span class="pi">,</span><span class="nv">🌛</span><span class="pi">,</span><span class="nv">🌜</span><span class="pi">,</span><span class="nv">🌝</span><span class="pi">,</span><span class="nv">🌞</span><span class="pi">,</span><span class="nv">⭐</span><span class="pi">,</span><span class="nv">🌟</span><span class="pi">,</span><span class="nv">🌠</span><span class="pi">,</span><span class="nv">⛅</span><span class="pi">,</span><span class="nv">⚡</span><span class="pi">,</span><span class="nv">❄</span><span class="pi">,</span><span class="nv">🔥</span><span class="pi">,</span><span class="nv">💧</span><span class="pi">,</span><span class="nv">🌊</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/jt"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">⬆</span><span class="pi">,</span><span class="nv">↗</span><span class="pi">,</span><span class="nv">➡</span><span class="pi">,</span><span class="nv">↘</span><span class="pi">,</span><span class="nv">⬇</span><span class="pi">,</span><span class="nv">↙</span><span class="pi">,</span><span class="nv">⬅</span><span class="pi">,</span><span class="nv">↖</span><span class="pi">,</span><span class="nv">↕</span><span class="pi">,</span><span class="nv">↔</span><span class="pi">,</span><span class="nv">↩</span><span class="pi">,</span><span class="nv">↪</span><span class="pi">,</span><span class="nv">⤴</span><span class="pi">,</span><span class="nv">⤵</span><span class="pi">,</span><span class="nv">🔃</span><span class="pi">,</span><span class="nv">🔄</span><span class="pi">,</span><span class="nv">🔙</span><span class="pi">,</span><span class="nv">🔚</span><span class="pi">,</span><span class="nv">🔛</span><span class="pi">,</span><span class="nv">🔜</span><span class="pi">,</span><span class="nv">🔝</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/sg"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">🍇</span><span class="pi">,</span><span class="nv">🍈</span><span class="pi">,</span><span class="nv">🍉</span><span class="pi">,</span><span class="nv">🍊</span><span class="pi">,</span><span class="nv">🍋</span><span class="pi">,</span><span class="nv">🍌</span><span class="pi">,</span><span class="nv">🍍</span><span class="pi">,</span><span class="nv">🍎</span><span class="pi">,</span><span class="nv">🍏</span><span class="pi">,</span><span class="nv">🍐</span><span class="pi">,</span><span class="nv">🍑</span><span class="pi">,</span><span class="nv">🍒</span><span class="pi">,</span><span class="nv">🍓</span><span class="pi">,</span><span class="nv">🍅</span><span class="pi">,</span><span class="nv">🍆</span><span class="pi">,</span><span class="nv">🌽</span><span class="pi">,</span><span class="nv">🍄</span><span class="pi">,</span><span class="nv">🌰</span><span class="pi">,</span><span class="nv">🍞</span><span class="pi">,</span><span class="nv">🍖</span><span class="pi">,</span><span class="nv">🍗</span><span class="pi">,</span><span class="nv">🍔</span><span class="pi">,</span><span class="nv">🍟</span><span class="pi">,</span><span class="nv">🍕</span><span class="pi">,</span><span class="nv">🍳</span><span class="pi">,</span><span class="nv">🍲</span><span class="pi">,</span><span class="nv">🍱</span><span class="pi">,</span><span class="nv">🍘</span><span class="pi">,</span><span class="nv">🍙</span><span class="pi">,</span><span class="nv">🍚</span><span class="pi">,</span><span class="nv">🍛</span><span class="pi">,</span><span class="nv">🍜</span><span class="pi">,</span><span class="nv">🍝</span><span class="pi">,</span><span class="nv">🍠</span><span class="pi">,</span><span class="nv">🍢</span><span class="pi">,</span><span class="nv">🍣</span><span class="pi">,</span><span class="nv">🍤</span><span class="pi">,</span><span class="nv">🍥</span><span class="pi">,</span><span class="nv">🍡</span><span class="pi">,</span><span class="nv">🍦</span><span class="pi">,</span><span class="nv">🍧</span><span class="pi">,</span><span class="nv">🍨</span><span class="pi">,</span><span class="nv">🍩</span><span class="pi">,</span><span class="nv">🍪</span><span class="pi">,</span><span class="nv">🎂</span><span class="pi">,</span><span class="nv">🍰</span><span class="pi">,</span><span class="nv">🍫</span><span class="pi">,</span><span class="nv">🍬</span><span class="pi">,</span><span class="nv">🍭</span><span class="pi">,</span><span class="nv">🍮</span><span class="pi">,</span><span class="nv">🍯</span><span class="pi">,</span><span class="nv">🍼</span><span class="pi">,</span><span class="nv">🍵</span><span class="pi">,</span><span class="nv">🍶</span><span class="pi">,</span><span class="nv">🍷</span><span class="pi">,</span><span class="nv">🍸</span><span class="pi">,</span><span class="nv">🍹</span><span class="pi">,</span><span class="nv">🍺</span><span class="pi">,</span><span class="nv">🍻</span><span class="pi">,</span><span class="nv">🍴</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/dw"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">🙈</span><span class="pi">,</span><span class="nv">🙉</span><span class="pi">,</span><span class="nv">🙊</span><span class="pi">,</span><span class="nv">🐵</span><span class="pi">,</span><span class="nv">🐒</span><span class="pi">,</span><span class="nv">🐶</span><span class="pi">,</span><span class="nv">🐕</span><span class="pi">,</span><span class="nv">🐩</span><span class="pi">,</span><span class="nv">🐺</span><span class="pi">,</span><span class="nv">🐱</span><span class="pi">,</span><span class="nv">😺</span><span class="pi">,</span><span class="nv">😸</span><span class="pi">,</span><span class="nv">😹</span><span class="pi">,</span><span class="nv">😻</span><span class="pi">,</span><span class="nv">😼</span><span class="pi">,</span><span class="nv">😽</span><span class="pi">,</span><span class="nv">🙀</span><span class="pi">,</span><span class="nv">😿</span><span class="pi">,</span><span class="nv">😾</span><span class="pi">,</span><span class="nv">🐈</span><span class="pi">,</span><span class="nv">🐯</span><span class="pi">,</span><span class="nv">🐅</span><span class="pi">,</span><span class="nv">🐆</span><span class="pi">,</span><span class="nv">🐴</span><span class="pi">,</span><span class="nv">🐎</span><span class="pi">,</span><span class="nv">🐮</span><span class="pi">,</span><span class="nv">🐂</span><span class="pi">,</span><span class="nv">🐃</span><span class="pi">,</span><span class="nv">🐄</span><span class="pi">,</span><span class="nv">🐷</span><span class="pi">,</span><span class="nv">🐖</span><span class="pi">,</span><span class="nv">🐗</span><span class="pi">,</span><span class="nv">🐽</span><span class="pi">,</span><span class="nv">🐏</span><span class="pi">,</span><span class="nv">🐑</span><span class="pi">,</span><span class="nv">🐐</span><span class="pi">,</span><span class="nv">🐪</span><span class="pi">,</span><span class="nv">🐫</span><span class="pi">,</span><span class="nv">🐘</span><span class="pi">,</span><span class="nv">🐭</span><span class="pi">,</span><span class="nv">🐁</span><span class="pi">,</span><span class="nv">🐀</span><span class="pi">,</span><span class="nv">🐹</span><span class="pi">,</span><span class="nv">🐰</span><span class="pi">,</span><span class="nv">🐇</span><span class="pi">,</span><span class="nv">🐻</span><span class="pi">,</span><span class="nv">🐨</span><span class="pi">,</span><span class="nv">🐼</span><span class="pi">,</span><span class="nv">🐾</span><span class="pi">,</span><span class="nv">🐔</span><span class="pi">,</span><span class="nv">🐓</span><span class="pi">,</span><span class="nv">🐣</span><span class="pi">,</span><span class="nv">🐤</span><span class="pi">,</span><span class="nv">🐥</span><span class="pi">,</span><span class="nv">🐦</span><span class="pi">,</span><span class="nv">🐧</span><span class="pi">,</span><span class="nv">🐸</span><span class="pi">,</span><span class="nv">🐊</span><span class="pi">,</span><span class="nv">🐢</span><span class="pi">,</span><span class="nv">🐍</span><span class="pi">,</span><span class="nv">🐲</span><span class="pi">,</span><span class="nv">🐉</span><span class="pi">,</span><span class="nv">🐳</span><span class="pi">,</span><span class="nv">🐋</span><span class="pi">,</span><span class="nv">🐬</span><span class="pi">,</span><span class="nv">🐟</span><span class="pi">,</span><span class="nv">🐠</span><span class="pi">,</span><span class="nv">🐡</span><span class="pi">,</span><span class="nv">🐙</span><span class="pi">,</span><span class="nv">🐚</span><span class="pi">,</span><span class="nv">🐌</span><span class="pi">,</span><span class="nv">🐛</span><span class="pi">,</span><span class="nv">🐜</span><span class="pi">,</span><span class="nv">🐝</span><span class="pi">,</span><span class="nv">🐞</span><span class="pi">,</span><span class="nv">🦋</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/bq"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">😀</span><span class="pi">,</span><span class="nv">😁</span><span class="pi">,</span><span class="nv">😂</span><span class="pi">,</span><span class="nv">😃</span><span class="pi">,</span><span class="nv">😄</span><span class="pi">,</span><span class="nv">😅</span><span class="pi">,</span><span class="nv">😆</span><span class="pi">,</span><span class="nv">😉</span><span class="pi">,</span><span class="nv">😊</span><span class="pi">,</span><span class="nv">😋</span><span class="pi">,</span><span class="nv">😎</span><span class="pi">,</span><span class="nv">😍</span><span class="pi">,</span><span class="nv">😘</span><span class="pi">,</span><span class="nv">😗</span><span class="pi">,</span><span class="nv">😙</span><span class="pi">,</span><span class="nv">😚</span><span class="pi">,</span><span class="nv">😇</span><span class="pi">,</span><span class="nv">😐</span><span class="pi">,</span><span class="nv">😑</span><span class="pi">,</span><span class="nv">😶</span><span class="pi">,</span><span class="nv">😏</span><span class="pi">,</span><span class="nv">😣</span><span class="pi">,</span><span class="nv">😥</span><span class="pi">,</span><span class="nv">😮</span><span class="pi">,</span><span class="nv">😯</span><span class="pi">,</span><span class="nv">😪</span><span class="pi">,</span><span class="nv">😫</span><span class="pi">,</span><span class="nv">😴</span><span class="pi">,</span><span class="nv">😌</span><span class="pi">,</span><span class="nv">😛</span><span class="pi">,</span><span class="nv">😜</span><span class="pi">,</span><span class="nv">😝</span><span class="pi">,</span><span class="nv">😒</span><span class="pi">,</span><span class="nv">😓</span><span class="pi">,</span><span class="nv">😔</span><span class="pi">,</span><span class="nv">😕</span><span class="pi">,</span><span class="nv">😲</span><span class="pi">,</span><span class="nv">😷</span><span class="pi">,</span><span class="nv">😖</span><span class="pi">,</span><span class="nv">😞</span><span class="pi">,</span><span class="nv">😟</span><span class="pi">,</span><span class="nv">😤</span><span class="pi">,</span><span class="nv">😢</span><span class="pi">,</span><span class="nv">😭</span><span class="pi">,</span><span class="nv">😦</span><span class="pi">,</span><span class="nv">😧</span><span class="pi">,</span><span class="nv">😨</span><span class="pi">,</span><span class="nv">😬</span><span class="pi">,</span><span class="nv">😰</span><span class="pi">,</span><span class="nv">😱</span><span class="pi">,</span><span class="nv">😳</span><span class="pi">,</span><span class="nv">😵</span><span class="pi">,</span><span class="nv">😡</span><span class="pi">,</span><span class="nv">😠</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/ss"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">💪</span><span class="pi">,</span><span class="nv">👈</span><span class="pi">,</span><span class="nv">👉</span><span class="pi">,</span><span class="nv">👆</span><span class="pi">,</span><span class="nv">👇</span><span class="pi">,</span><span class="nv">✋</span><span class="pi">,</span><span class="nv">👌</span><span class="pi">,</span><span class="nv">👍</span><span class="pi">,</span><span class="nv">👎</span><span class="pi">,</span><span class="nv">✊</span><span class="pi">,</span><span class="nv">👊</span><span class="pi">,</span><span class="nv">👋</span><span class="pi">,</span><span class="nv">👏</span><span class="pi">,</span><span class="nv">👐</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/dn"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">⌘</span><span class="pi">,</span> <span class="nv">⌥</span><span class="pi">,</span> <span class="nv">⇧</span><span class="pi">,</span> <span class="nv">⌃</span><span class="pi">,</span> <span class="nv">⎋</span><span class="pi">,</span> <span class="nv">⇪</span><span class="pi">,</span> <span class="nv"></span><span class="pi">,</span> <span class="nv">⌫</span><span class="pi">,</span> <span class="nv">⌦</span><span class="pi">,</span> <span class="nv">↩︎</span><span class="pi">,</span> <span class="nv">⏎</span><span class="pi">,</span> <span class="nv">↑</span><span class="pi">,</span> <span class="nv">↓</span><span class="pi">,</span> <span class="nv">←</span><span class="pi">,</span> <span class="nv">→</span><span class="pi">,</span> <span class="nv">↖</span><span class="pi">,</span> <span class="nv">↘</span><span class="pi">,</span> <span class="nv">⇟</span><span class="pi">,</span> <span class="nv">⇞</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/fh"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">©</span><span class="pi">,</span><span class="nv">®</span><span class="pi">,</span><span class="nv">℗</span><span class="pi">,</span><span class="nv">ⓘ</span><span class="pi">,</span><span class="nv">℠</span><span class="pi">,</span><span class="nv">™</span><span class="pi">,</span><span class="nv">℡</span><span class="pi">,</span><span class="nv">␡</span><span class="pi">,</span><span class="nv">♂</span><span class="pi">,</span><span class="nv">♀</span><span class="pi">,</span><span class="nv">☉</span><span class="pi">,</span><span class="nv">☊</span><span class="pi">,</span><span class="nv">☋</span><span class="pi">,</span><span class="nv">☌</span><span class="pi">,</span><span class="nv">☍</span><span class="pi">,</span><span class="nv">☑︎</span><span class="pi">,</span><span class="nv">☒</span><span class="pi">,</span><span class="nv">☜</span><span class="pi">,</span><span class="nv">☝</span><span class="pi">,</span><span class="nv">☞</span><span class="pi">,</span><span class="nv">☟</span><span class="pi">,</span><span class="nv">✎</span><span class="pi">,</span><span class="nv">✄</span><span class="pi">,</span><span class="nv">♻</span><span class="pi">,</span><span class="nv">⚐</span><span class="pi">,</span><span class="nv">⚑</span><span class="pi">,</span><span class="nv">⚠</span><span class="pi">]</span>
+      <span class="s2">"</span><span class="s">/xh"</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">＊</span><span class="pi">,</span><span class="nv">×</span><span class="pi">,</span><span class="nv">✱</span><span class="pi">,</span><span class="nv">★</span><span class="pi">,</span><span class="nv">☆</span><span class="pi">,</span><span class="nv">✩</span><span class="pi">,</span><span class="nv">✧</span><span class="pi">,</span><span class="nv">❋</span><span class="pi">,</span><span class="nv">❊</span><span class="pi">,</span><span class="nv">❉</span><span class="pi">,</span><span class="nv">❈</span><span class="pi">,</span><span class="nv">❅</span><span class="pi">,</span><span class="nv">✿</span><span class="pi">,</span><span class="nv">✲</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h2 id="六设置输入方案">六、设置输入方案</h2>
+
+<p>在第一次按 <code class="highlighter-rouge">⌘ + 反引号(~)</code> 设置输入法时实际上我们可以看到很多的输入方案，而事实上很多方案我们根本用不上；想要删除和修改方案可以调整 <code class="highlighter-rouge">default.custom.yaml</code> 中的 <code class="highlighter-rouge">schema_list</code> 字段</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">patch</span><span class="pi">:</span>
+  <span class="na">menu</span><span class="pi">:</span>
+    <span class="na">page_size</span><span class="pi">:</span> <span class="m">8</span>
+  <span class="na">schema_list</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">schema</span><span class="pi">:</span> <span class="s">luna_pinyin_simp</span>      <span class="c1"># 朙月拼音 简化字</span>
+  <span class="pi">-</span> <span class="na">schema</span><span class="pi">:</span> <span class="s">luna_pinyin</span>           <span class="c1"># 朙月拼音</span>
+  <span class="pi">-</span> <span class="na">schema</span><span class="pi">:</span> <span class="s">luna_pinyin_fluency</span>   <span class="c1"># 语句流</span>
+<span class="c1">#  - schema: double_pinyin         # 自然碼雙拼</span>
+<span class="c1">#  - schema: double_pinyin_flypy   # 小鹤雙拼</span>
+<span class="c1">#  - schema: double_pinyin_pyjj    # 拼音加加双拼</span>
+<span class="c1">#  - schema: wubi_pinyin           # 五笔拼音混合輸入</span>
+</code></pre></div></div>
+
+<p><strong>实际上我只能用上第一个…毕竟写了好几年代码还得看键盘的人也只能这样了…</strong></p>
+
+<h2 id="七调整特殊键行为">七、调整特殊键行为</h2>
+
+<p>在刚安装完以后发现在中文输入法状态下输入英文，按 <code class="highlighter-rouge">shift</code> 键后字符上屏，然后还得回车一下，这就很让我难受…最后找到了这篇 <a href="https://gist.github.com/lotem/2981316">Gist</a>，目前将大写锁定、<code class="highlighter-rouge">shift</code> 键调整为了跟搜狗一致的配置，有需要调整的可以自行编辑 <code class="highlighter-rouge">default.custom.yaml</code> 中的 <code class="highlighter-rouge">ascii_composer/switch_key</code> 部分</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># capslock 键切换英文并输出大写</span>
+<span class="s">ascii_composer/good_old_caps_lock</span><span class="pi">:</span> <span class="no">true</span>
+<span class="c1"># 输入法中英文状态快捷键</span>
+<span class="s">ascii_composer/switch_key</span><span class="pi">:</span>
+  <span class="na">Caps_Lock</span><span class="pi">:</span> <span class="s">commit_code</span>
+  <span class="na">Control_L</span><span class="pi">:</span> <span class="s">noop</span>
+  <span class="na">Control_R</span><span class="pi">:</span> <span class="s">noop</span>
+  <span class="c1"># 按下左 shift 英文字符直接上屏，不需要再次回车，输入法保持英文状态</span>
+  <span class="na">Shift_L</span><span class="pi">:</span> <span class="s">commit_code</span>
+  <span class="na">Shift_R</span><span class="pi">:</span> <span class="s">noop</span>
+</code></pre></div></div>
+
+<h2 id="八自定义词库">八、自定义词库</h2>
+
+<p>Rime 默认的词库稍为有点弱，我们可以下载一些搜狗词库来进行扩展；不过搜狗词库格式默认是无法解析的，好在有人开发了工具可以方便的将搜狗细胞词库转化为 Rime 的格式(工具<a href="https://github.com/studyzy/imewlconverter/releases">点击这里</a>下载)；目前该工具只支持 Windows(也有些别人写的 py 脚本啥的，但是我没用)，所以词库转换这种操作还得需要一个 Windows 虚拟机；</p>
+
+<p>转换过程很简单，先从<a href="https://pinyin.sogou.com/dict/">搜狗词库</a>下载一系列的 <code class="highlighter-rouge">scel</code> 文件，然后批量选中，接着调整一下输入和输出格式点击转换，最后保存成一个 <code class="highlighter-rouge">txt</code> 文本</p>
+
+<p><img src="https://cdn.oss.link/markdown/jtv97.png" alt="input-setting" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/p7qha.png" alt="convert" /></p>
+
+<p>光有这个文本还不够，我们要将它塞到词库的 <code class="highlighter-rouge">yaml</code> 配置里，所以新建一个词库配置文件 <code class="highlighter-rouge">luna_pinyin.sougou.dict.yaml</code>，然后写上头部说明(<strong>注意最后三个点后面加一个换行</strong>)</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Rime dictionary</span>
+<span class="c1"># encoding: utf-8</span>
+<span class="c1"># 搜狗词库 目前包含如下:</span>
+<span class="c1"># IT计算机 实用IT词汇 亲戚称呼 化学品名 数字时间 数学词汇 淘宝词库 编程语言 软件专业 颜色名称 程序猿词库 开发专用词库 搜狗标准词库</span>
+<span class="c1"># 摄影专业名词 计算机专业词库 计算机词汇大全 保险词汇 最详细的全国地名大全 饮食大全 常见花卉名称 房地产词汇大全 中国传统节日大全 财经金融词汇大全</span>
+
+<span class="nn">---</span>
+<span class="na">name</span><span class="pi">:</span> <span class="s">luna_pinyin.sougou</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1.0"</span>
+<span class="na">sort</span><span class="pi">:</span> <span class="s">by_weight</span>
+<span class="na">use_preset_vocabulary</span><span class="pi">:</span> <span class="no">true</span>
+<span class="nn">...</span>
+
+</code></pre></div></div>
+
+<p>接着只需要把生成好的词库 <code class="highlighter-rouge">txt</code> 文件内容粘贴到三个点下面既可；但是词库太多的话你会发现这个文本有好几十 M，一般编辑器打开都会卡死，解决这种情况只需要用命令行 <code class="highlighter-rouge">cat</code> 一下就行</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat </span>sougou.txt <span class="o">&gt;&gt;</span> luna_pinyin.sougou.dict.yaml
+</code></pre></div></div>
+
+<p>最后修改 <code class="highlighter-rouge">luna_pinyin.extended.dict.yaml</code> 中的 <code class="highlighter-rouge">import_tables</code> 字段，加入刚刚新建的词库既可</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">name</span><span class="pi">:</span> <span class="s">luna_pinyin.extended</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2016.06.26"</span>
+<span class="na">sort</span><span class="pi">:</span> <span class="s">by_weight</span>  <span class="c1">#字典初始排序，可選original或by_weight</span>
+<span class="na">use_preset_vocabulary</span><span class="pi">:</span> <span class="no">true</span>
+<span class="c1">#此處爲明月拼音擴充詞庫（基本）默認鏈接載入的詞庫，有朙月拼音官方詞庫、明月拼音擴充詞庫（漢語大詞典）、明月拼音擴充詞庫（詩詞）、明月拼音擴充詞庫（含西文的詞彙）。如果不需要加載某个詞庫請將其用「#」註釋掉。</span>
+<span class="c1">#雙拼不支持 luna_pinyin.cn_en 詞庫，請用戶手動禁用。</span>
+
+<span class="na">import_tables</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">luna_pinyin</span>
+  <span class="c1"># 加入搜狗词库</span>
+  <span class="pi">-</span> <span class="s">luna_pinyin.sougou</span>
+  <span class="pi">-</span> <span class="s">luna_pinyin.poetry</span>
+  <span class="pi">-</span> <span class="s">luna_pinyin.cn_en</span>
+  <span class="pi">-</span> <span class="s">luna_pinyin.kaomoji</span>
+</code></pre></div></div>
+
+<h2 id="九定制特殊单词">九、定制特殊单词</h2>
+
+<p>由于长期撸码，24 小时离不开命令行，偶尔在中文输入法下输入了一些命令导致汉字直接出现在 terminal 上就很尴尬…这时候我们可以在 <code class="highlighter-rouge">luna_pinyin.cn_en.dict.yaml</code> 加入一些我们自己的专属词库，比如这样</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">name</span><span class="pi">:</span> <span class="s">luna_pinyin.cn_en</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2017.9.13"</span>
+<span class="na">sort</span><span class="pi">:</span> <span class="s">by_weight</span>
+<span class="na">use_preset_vocabulary</span><span class="pi">:</span> <span class="no">true</span>
+<span class="nn">...</span>
+
+<span class="s">git</span><span class="err">	</span><span class="s">git</span>
+<span class="s">ls</span><span class="err">	</span><span class="s">ls</span>
+<span class="s">cd</span><span class="err">	</span><span class="s">cd</span>
+<span class="s">pwd</span><span class="err">	</span><span class="s">pwd</span>
+<span class="s">git ps</span><span class="err">	</span><span class="s">gitps</span>
+<span class="s">kubernetes</span><span class="err">	</span><span class="s">kubernetes</span>
+<span class="s">kubernetes</span><span class="err">	</span><span class="s">kuber</span>
+<span class="s">kubectl</span><span class="err">	</span><span class="s">kubectl</span>
+<span class="s">kubectl</span><span class="err">	</span><span class="s">kubec</span>
+<span class="s">docker</span><span class="err">	</span><span class="s">docker</span>
+<span class="s">docker</span><span class="err">	</span><span class="s">dock</span>
+<span class="s">ipvs</span><span class="err">	</span><span class="s">ipvs</span>
+<span class="s">ps</span><span class="err">	</span><span class="s">ps</span>
+<span class="s">bash</span><span class="err">	</span><span class="s">bash</span>
+<span class="s">source</span><span class="err">	</span><span class="s">source</span>
+<span class="s">source</span><span class="err">	</span><span class="s">sou</span>
+<span class="s">rm</span><span class="err">	</span><span class="s">rm</span>
+</code></pre></div></div>
+
+<p>配置后如果我在中文输入法下输入 git 则会自动匹配 git 这个单词，避免错误的键入中文字符；<strong>需要注意的是第一列代表上屏的字符，第二列代表输入的单词，即 “当输入第二列时候选词为第一列”；两列之间要用 tag 制表符隔开，记住不是空格</strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/03/19/how-to-set-multiple-apt-mirrors-for-ubuntu/" data-toggle="tooltip" data-placement="top" title="Ubuntu 设置多个源">
+                        Previous<br>
+                        <span>Ubuntu 设置多个源</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/05/13/dockerfile-extended-syntax/" data-toggle="tooltip" data-placement="top" title="Dockerfile 目前可扩展的语法">
+                        Next<br>
+                        <span>Dockerfile 目前可扩展的语法</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2019/03/23/oh-my-rime";
+    var disqus_url = "https://mritd.me/2019/03/23/oh-my-rime/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

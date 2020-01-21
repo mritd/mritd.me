@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="记录 kubeadm 一些其他的坑">
+    <meta name="keywords"  content="kubeadm,Kubernetes,Docker">
+    <meta name="theme-color" content="#000000">
+    
+    <title>kubeadm 续坑篇 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/11/21/kubeadm-other-problems/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>kubeadm 续坑篇</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on November 21, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>断断续续鼓捣 kubeadm 搭建集群已经很长时间了，目前 kubeadm 已经进入了 beat 阶段，各项功能相对稳定，但是继上篇 <a href="https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/">kubeadm 搭建 kubernetes 集群</a> 之后还是踩了许多坑，在此记录一下</p>
+</blockquote>
+
+<h3 id="一etcd-单点问题">一、etcd 单点问题</h3>
+
+<p>默认 kubeadm 创建的集群会在内部启动一个单点的 etcd，当然大部分情况下 etcd 还是很稳定的，<strong>但是一但 etcd 由于某种原因挂掉，这个问题会非常严重，会导致整个集群不可用</strong>。具体原因是 etcd 存储着 kubernetes 各种元数据信息；包括 <code class="highlighter-rouge">kubectl get pod</code> 等等基础命令实际上全部是调用 RESTful API 从 etcd 中获取的信息；<strong>所以一但 etcd 挂掉以后，基本等同于 <code class="highlighter-rouge">kubectl</code> 命令不可用，此时将变为 ‘瞎子’，集群各节点也会因无法从 etcd 获取数据而出现无法调度，最终挂掉</strong>。</p>
+
+<p><strong>解决办法是在使用 kubeadm 创建集群时使用 <code class="highlighter-rouge">--external-etcd-endpoints</code> 参数指定外部 etcd 集群，此时 kubeadm 将不会在内部创建 etcd，转而使用外部我们指定的 etcd 集群，如果外部 etcd 集群配置了 SSL 加密，那么还需要配合 <code class="highlighter-rouge">--external-etcd-cafile</code>、<code class="highlighter-rouge">--external-etcd-certfile</code>、<code class="highlighter-rouge">--external-etcd-keyfile</code> 三个参数指定 etcd 的 CA证书、CA签发的使用证书和私钥文件，命令如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 非 SSL</span>
+kubeadm init <span class="nt">--external-etcd-endpoints</span> http://192.168.1.100:2379
+<span class="c"># etcd SSL</span>
+kubeadm init <span class="nt">--external-etcd-endpoints</span> https://192.168.1.100:2379 <span class="nt">--external-etcd-cafile</span> /path/to/ca <span class="nt">--external-etcd-certfile</span> /path/to/cert <span class="nt">--external-etcd-keyfile</span> /path/to/privatekey
+</code></pre></div></div>
+
+<h3 id="二etcd-不可与-master-同在">二、etcd 不可与 master 同在</h3>
+
+<p>‘愿上帝与你同在’……这个坑是由于 kubeadm 的 check 机制的 bug 造成的，目前还没有修复；表现为 <strong>当 etcd 与 master 在同一节点时，kubeadm init 会失败，同时报错信息提示 ‘已经存在了 <code class="highlighter-rouge">/var/lib/etcd</code> 目录，或者 2379 端口被占用’</strong>；因为默认 kubeadm 会创建 etcd，而默认的 etcd 会占用这个目录和 2379 端口，<strong>即使你加了 <code class="highlighter-rouge">--external-etcd-endpoints</code> 参数，kubeadm 仍然会检测这两项条件是否满足，不满足则禁止 init 操作</strong></p>
+
+<p><strong>解决办法就是要么外部的 etcd 更换数据目录(<code class="highlighter-rouge">/var/lib/etcd</code>)和端口，要么干脆不要和 master 放在同一主机即可</strong></p>
+
+<h3 id="三巨大的日志">三、巨大的日志</h3>
+
+<p>熟悉的小伙伴应该清楚，基本上每个 kubernetes 组件都会有个通用的参数 <code class="highlighter-rouge">--v</code>；这个参数用于控制 kubernetes 各个组件的日志级别，在早期(alpha)的 kubeadm 版本中，如果不进行调整，默认创建集群所有组件日志级别全部为 <code class="highlighter-rouge">--v=4</code> 即最高级别输出，这会导致在业务量大的时候磁盘空间以 <strong>‘我去尼玛’</strong> 的速度增长，尤其是 <code class="highlighter-rouge">kube-proxy</code> 组件的容器，会疯狂吃掉你的磁盘空间，然后剩下懵逼的你不知为何。在后续的版本中(beta)发现日志级别已经降到了 <code class="highlighter-rouge">--v=2</code>，不过对于完全不怎么看日志的我来说还是无卵用……</p>
+
+<p><strong>解决办法有两种方案:</strong></p>
+
+<p><strong>如果已经 <code class="highlighter-rouge">--v=4</code> 跑起来了(检查方法就是随便 describe 一个 kube-proxy 的容器，看下 command 字段就能看到)，并且无法停止重建集群，那么最简单的办法就是使用 <code class="highlighter-rouge">kubectl edit ds xxx</code> 方式编译一下相关 ds 文件等，然后手动杀掉相关 pod，让 kubernetes 自动重建即可，如果命令行用着不爽也可以通过 dashboard 更改</strong></p>
+
+<p><strong>如果还没开始搭建，或者可以停掉重建，那么只需在 <code class="highlighter-rouge">kubeadm init</code> 之前 <code class="highlighter-rouge">export KUBE_COMPONENT_LOGLEVEL='--v=0'</code> 即可</strong></p>
+
+<h3 id="四新节点加入-dns-要你命">四、新节点加入 dns 要你命</h3>
+
+<p>当 kubeadm 创建好集群以后，如果有需要增加新节点，那么在 <code class="highlighter-rouge">kubeadm join</code> 之后务必检查 <code class="highlighter-rouge">kube-dns</code> 组件，dns 在某些(weave 启动不完整或不正常)情况下，会由于新节点加入而挂掉，此时整个集群 dns 失效，<strong>所以最好 join 完观察一会 dns 状态，如果发现不正常马上杀掉  dns pod，让 kubernetes 自动重建；如果情况允许最好全部 join 完成后直接干掉 dns 让 kubernetes 重建一下</strong></p>
+
+<h3 id="五单点的-dns-浪起来让你怕">五、单点的 dns 浪起来让你怕</h3>
+
+<p>kubeadm 创建的 dns 默认也是单点的，而 dns 至关重要，只要一挂瞬间整个集群全部 <code class="highlighter-rouge">game over</code>；<strong>不过暂时还是没有发现能在 init 时候创建多个 dns 的方法；不过在集群创建后可以通过 <code class="highlighter-rouge">kubectl edit deploy kube-dns</code> 的方式修改其副本数量，让其创建多个副本即可</strong></p>
+
+<h3 id="六永远的-v144">六、永远的 v1.4.4</h3>
+
+<p>在一开始 kubeadm 创建集群时，采用的基础组件基本都是写死的，不过现在增加了 <code class="highlighter-rouge">--use-kubernetes-version</code> 选项，在 init 时使用该选项可以指定使用的基础组件(kube-proxy、apiserver 等)的版本，如 <code class="highlighter-rouge">kubeadm init --use-kubernetes-version v1.4.6</code> 即可使用 1.4.6 的镜像，目前最新版本的 rpm kubelet 版本为 1.4.4，从目前测试来看 1.4.4 的 kubelet 与 1.4.6 的其他版本组件一起运行尚未出现问题，不过最好在准备超版本运行之前，把 kubelet 的二进制文件也换成相应版本的</p>
+
+<h3 id="七reset-让你一无所有">七、reset 让你一无所有</h3>
+
+<p>kubeadm 在 <code class="highlighter-rouge">alpha</code> 时官方文档页面提供了重建集群脚本，如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl stop kubelet<span class="p">;</span>
+docker <span class="nb">rm</span> <span class="nt">-f</span> <span class="nt">-v</span> <span class="si">$(</span>docker ps <span class="nt">-q</span><span class="si">)</span><span class="p">;</span>
+find /var/lib/kubelet | xargs <span class="nt">-n</span> 1 findmnt <span class="nt">-n</span> <span class="nt">-t</span> tmpfs <span class="nt">-o</span> TARGET <span class="nt">-T</span> | <span class="nb">uniq</span> | xargs <span class="nt">-r</span> umount <span class="nt">-v</span><span class="p">;</span>
+<span class="nb">rm</span> <span class="nt">-r</span> <span class="nt">-f</span> /etc/kubernetes /var/lib/kubelet /var/lib/etcd<span class="p">;</span>
+</code></pre></div></div>
+
+<p>从脚本上看很容易知道<strong>第二条命令很危险</strong>，他会干掉所有正在运行的容器，如果你的 node 上恰好有 <code class="highlighter-rouge">docker-compose</code> 启动的重要服务，这么这一下后果可想而知；<strong>kubeadm 到了 <code class="highlighter-rouge">alpha2</code> 之后，提供了 <code class="highlighter-rouge">kubeadm reset</code> 命令来重建集群，我已开始以为这是个很好的事情，既然重写了肯定很好用；但是上帝总是跟你讲 ‘Hello World’，经过测试(实际上是躺枪了)我发现 reset 其实就是把这四条 shell 命令封装一起变成一个 <code class="highlighter-rouge">kubeadm reset</code> 而已，所以说此命令慎用，不行就用上面的脚本手动档删除，否则一条 <code class="highlighter-rouge">reset</code> 倾家荡产</strong></p>
+
+<p><strong>未完待续，欢迎补充，如果有坑继续添加……</strong></p>
+
+<blockquote>
+  <p>本文参考 <a href="http://kubernetes.io/docs/admin/kubeadm/">kubeadm reference</a></p>
+</blockquote>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/11/08/update-centos-kernel/" data-toggle="tooltip" data-placement="top" title="CentOS 升级 kernel">
+                        Previous<br>
+                        <span>CentOS 升级 kernel</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/11/30/set-up-kubernetes-cluster-by-flannel/" data-toggle="tooltip" data-placement="top" title="Kubernetes 网络搭建-flannel">
+                        Next<br>
+                        <span>Kubernetes 网络搭建-flannel</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/11/21/kubeadm-other-problems";
+    var disqus_url = "https://mritd.me/2016/11/21/kubeadm-other-problems/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Docker mirror Registry">
+    <meta name="keywords"  content="Linux,Docker,mirror,registry">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Docker mirror Registry - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/09/24/Docker-mirror-Registry/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                    </div>
+                    <h1>Docker mirror Registry</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on September 24, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一扯淡">一、扯淡</h2>
+
+<p>撸 Dokcer 这么长时间以来，由于国内众所周知的网络原因，Docker pull 镜像会非常慢，慢到你怀疑这个世界，甚至怀疑你来到这个世界的正确性与合理性，为了为了让自己不怀疑世界，记录一下如何撸一个 docker mirror registry</p>
+
+<h2 id="二动手撸一个">二、动手撸一个</h2>
+
+<h3 id="21基本环境">2.1、基本环境</h3>
+
+<p>以下操作基本环境如下</p>
+
+<ul>
+  <li>Docker 1.12.1</li>
+  <li>registry 2.5.1</li>
+  <li>nginx 1.10.1</li>
+</ul>
+
+<!--more-->
+
+<h3 id="22导出-registry-配置">2.2、导出 registry 配置</h3>
+
+<p>Docker 官方提供了一个 registry，Github 地址 <a href="https://github.com/docker/distribution">点这里</a>，而大部分能找到的资料都是如何撸一个 private registry，就是启动一下这个官方 registry container 即可，然后就可以 docker push 什么的；而 mirror registry 其实也很简单，就是增加一个配置即可</p>
+
+<p><strong>首先把官方 registry 中的配置文件导出</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-it</span> <span class="nt">--rm</span> <span class="nt">--entrypoint</span> <span class="nb">cat </span>registry:2.5.1 <span class="se">\</span>
+/etc/docker/registry/config.yml <span class="o">&gt;</span> config.yml
+</code></pre></div></div>
+
+<p><strong>registry 的配置文件内容如下</strong></p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="m">0.1</span>
+<span class="na">log</span><span class="pi">:</span>
+  <span class="na">fields</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">registry</span>
+<span class="na">storage</span><span class="pi">:</span>
+  <span class="na">cache</span><span class="pi">:</span>
+    <span class="na">blobdescriptor</span><span class="pi">:</span> <span class="s">inmemory</span>
+  <span class="na">filesystem</span><span class="pi">:</span>
+    <span class="na">rootdirectory</span><span class="pi">:</span> <span class="s">/var/lib/registry</span>
+<span class="na">http</span><span class="pi">:</span>
+  <span class="na">addr</span><span class="pi">:</span> <span class="s">:5000</span>
+  <span class="na">headers</span><span class="pi">:</span>
+    <span class="na">X-Content-Type-Options</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">nosniff</span><span class="pi">]</span>
+<span class="na">health</span><span class="pi">:</span>
+  <span class="na">storagedriver</span><span class="pi">:</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+    <span class="na">threshold</span><span class="pi">:</span> <span class="m">3</span>
+</code></pre></div></div>
+
+<h3 id="23修改-registry-配置">2.3、修改 registry 配置</h3>
+
+<p><strong>上一步已经将配置导出了，接下来如果想使用 mirror 功能只需在下面增加 proxy 选项即可</strong></p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="m">0.1</span>
+<span class="na">log</span><span class="pi">:</span>
+  <span class="na">fields</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">registry</span>
+<span class="na">storage</span><span class="pi">:</span>
+  <span class="na">cache</span><span class="pi">:</span>
+    <span class="na">blobdescriptor</span><span class="pi">:</span> <span class="s">inmemory</span>
+  <span class="na">filesystem</span><span class="pi">:</span>
+    <span class="na">rootdirectory</span><span class="pi">:</span> <span class="s">/var/lib/registry</span>
+<span class="na">http</span><span class="pi">:</span>
+  <span class="na">addr</span><span class="pi">:</span> <span class="s">:5000</span>
+  <span class="na">headers</span><span class="pi">:</span>
+    <span class="na">X-Content-Type-Options</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">nosniff</span><span class="pi">]</span>
+<span class="na">health</span><span class="pi">:</span>
+  <span class="na">storagedriver</span><span class="pi">:</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+    <span class="na">threshold</span><span class="pi">:</span> <span class="m">3</span>
+<span class="na">proxy</span><span class="pi">:</span>
+  <span class="na">remoteurl</span><span class="pi">:</span> <span class="s">https://registry-1.docker.io</span>
+  <span class="na">username</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">username</span><span class="pi">]</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">password</span><span class="pi">]</span>
+
+</code></pre></div></div>
+
+<p><strong>username 与 password 是可选项，当填写 username 与 password 以后就可以从 hub pull 私有镜像</strong></p>
+
+<h3 id="24启动-mirror-registry">2.4、启动 mirror registry</h3>
+
+<p><strong>最后只需要在启动 registry 时候将配置塞回去即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-dt</span> <span class="nt">--name</span> v2-mirror <span class="se">\</span>
+<span class="nt">-v</span> /data/registry:/var/lib/registry <span class="se">\</span>
+<span class="nt">-v</span> /etc/registry/config.yml:/etc/docker/registry/config.yml <span class="se">\</span>
+<span class="nt">-p</span> 5000:5000 registry:2.5.1
+</code></pre></div></div>
+
+<p><strong>以上命令将启动一个 mirror registry，并且数据持久化到 <code class="highlighter-rouge">/data/registry</code></strong></p>
+
+<h3 id="25nginx-配置-ssl">2.5、nginx 配置 ssl</h3>
+
+<p>当然此时直接在 docker 启动参数总增加 <code class="highlighter-rouge">--registry-mirror=http://IP:5000</code>，然后重启 docker 再进行 pull 即可生效，但是 5000 端口外加 http 总有点那么不装逼，所以最好增加一个 nginx 做反向代理，同时可以使用 ssl 加密，以下是一个 nginx 配置仅供参考，ssl 证书可采用 <a href="https://www.startssl.com">StartSSL</a> 免费一年的 DV 证书</p>
+
+<p><strong>nginx.conf</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># worker 运行用户组</span>
+user  nginx nginx<span class="p">;</span>
+
+<span class="c"># worker 进程自动</span>
+worker_processes  auto<span class="p">;</span>
+
+<span class="c"># 单个 worker 进程能打开的最大文件描述符数量</span>
+worker_rlimit_nofile  51200<span class="p">;</span>
+
+<span class="c"># 指定每个用户能够发往 worker 的信号数量(rtsig)</span>
+<span class="c"># worker_rlimit_sigpending</span>
+
+<span class="c"># CPU 亲源性，用于将具体的 worker 绑定到 CPU 核心</span>
+<span class="c"># worker_cpu_affinity 0001 0010 0100 1000</span>
+
+<span class="c"># 指定 worker 优先级</span>
+<span class="c"># worker_priority</span>
+
+<span class="c"># 是否以守护进程方式启动 nginx</span>
+<span class="c"># daemon off|on</span>
+
+<span class="c"># 是否以 master/worker 方式运行</span>
+<span class="c"># master_process</span>
+
+<span class="c"># 错误日志文件及级别</span>
+error_log  /var/log/nginx/error.log  info<span class="p">;</span>
+
+pid        /var/run/nginx/nginx.pid<span class="p">;</span>
+
+
+events <span class="o">{</span>
+    <span class="c"># 每个 worker 进程所能响应的最大并发连接数</span>
+    worker_connections  51200<span class="p">;</span>
+
+    <span class="c"># 指明使用的事件模型 一般自动选择</span>
+    <span class="c"># use [epoll|rgsig|select|poll]</span>
+    use epoll<span class="p">;</span>
+
+    <span class="c"># 定义内部各请求调用 worker 时使用的 负载均衡锁</span>
+    <span class="c"># on: 能够让多个 worker 轮流的序列化的响应新请求，会有一定性能损失</span>
+    <span class="c"># off:</span>
+    <span class="c"># accept_mutex [on|off]</span>
+
+    <span class="c"># 定义锁文件位置</span>
+    <span class="c"># lock_file /PATH/TO/LOCK_FILE</span>
+
+    multi_accept on<span class="p">;</span>
+
+
+<span class="o">}</span>
+
+
+http <span class="o">{</span>
+    include       mime.types<span class="p">;</span>
+    default_type  application/octet-stream<span class="p">;</span>
+
+    log_format    main  <span class="s1">'$server_name $remote_addr - $remote_user [$time_local] "$request" - $request_body '</span>
+                        <span class="s1">'$status $body_bytes_sent "$http_referer" '</span>
+                        <span class="s1">'"$http_user_agent" "$http_x_forwarded_for" '</span>
+                        <span class="s1">'$ssl_protocol $ssl_cipher $request_time '</span><span class="p">;</span>
+
+    server_names_hash_bucket_size 128<span class="p">;</span>
+    client_header_buffer_size 32k<span class="p">;</span>
+    large_client_header_buffers 4 32k<span class="p">;</span>
+    client_max_body_size 1024m<span class="p">;</span>
+    sendfile on<span class="p">;</span>
+    tcp_nopush on<span class="p">;</span>
+    keepalive_timeout 120<span class="p">;</span>
+    server_tokens off<span class="p">;</span>
+    tcp_nodelay on<span class="p">;</span>
+
+
+    <span class="nb">gzip  </span>on<span class="p">;</span>
+    gzip_buffers 16 8k<span class="p">;</span>
+    gzip_comp_level 6<span class="p">;</span>
+    gzip_http_version 1.1<span class="p">;</span>
+    gzip_min_length 256<span class="p">;</span>
+    gzip_proxied any<span class="p">;</span>
+    gzip_vary on<span class="p">;</span>
+    gzip_types
+        text/xml application/xml application/atom+xml application/rss+xml application/xhtml+xml image/svg+xml
+        text/javascript application/javascript application/x-javascript
+        text/x-json application/json application/x-web-app-manifest+json
+        text/css text/plain text/x-component
+        font/opentype application/x-font-ttf application/vnd.ms-fontobject
+        image/x-icon<span class="p">;</span>
+    gzip_disable <span class="s2">"MSIE [1-6]</span><span class="se">\.</span><span class="s2">(?!.*SV1)"</span><span class="p">;</span>
+
+    open_file_cache <span class="nv">max</span><span class="o">=</span>1000 <span class="nv">inactive</span><span class="o">=</span>20s<span class="p">;</span>
+    open_file_cache_valid 30s<span class="p">;</span>
+    open_file_cache_min_uses 2<span class="p">;</span>
+    open_file_cache_errors on<span class="p">;</span>
+
+    include /etc/nginx/conf.d/<span class="k">*</span>.conf<span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>mirror.conf</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server <span class="o">{</span>
+  listen 80<span class="p">;</span>
+  server_name your-domain<span class="p">;</span>
+  rewrite ^<span class="o">(</span>.<span class="k">*</span><span class="o">)</span> https://<span class="nv">$server_name$1</span> permanent<span class="p">;</span>
+<span class="o">}</span>
+
+server <span class="o">{</span>
+  listen 443<span class="p">;</span>
+  server_name your-domain<span class="p">;</span>
+  access_log /var/log/nginx/your-domain.log main<span class="p">;</span>
+
+  ssl on<span class="p">;</span>
+  ssl_certificate      /etc/nginx/ssl/your-domain.crt<span class="p">;</span>
+  ssl_certificate_key  /etc/nginx/ssl/your-domain.key<span class="p">;</span>
+
+  location / <span class="o">{</span>
+
+    log_not_found on<span class="p">;</span>
+
+    proxy_pass http://mirror:5000<span class="p">;</span>
+    proxy_read_timeout 300<span class="p">;</span>
+    proxy_connect_timeout 300<span class="p">;</span>
+    proxy_redirect off<span class="p">;</span>
+
+    proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+    proxy_set_header Host              <span class="nv">$http_host</span><span class="p">;</span>
+    proxy_set_header X-Real-IP         <span class="nv">$remote_addr</span><span class="p">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/09/17/Minio-AWS-S3-%E5%AD%98%E5%82%A8%E5%BC%80%E6%BA%90%E5%AE%9E%E7%8E%B0/" data-toggle="tooltip" data-placement="top" title="Minio - AWS S3 存储开源实现">
+                        Previous<br>
+                        <span>Minio - AWS S3 存储开源实现</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/10/09/jekyll-create-a-static-blog/" data-toggle="tooltip" data-placement="top" title="Jekyll 搭建静态博客">
+                        Next<br>
+                        <span>Jekyll 搭建静态博客</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/09/24/Docker-mirror-Registry";
+    var disqus_url = "https://mritd.me/2016/09/24/Docker-mirror-Registry/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

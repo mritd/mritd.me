@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Redundent Array of Inexpensive Disks">
+    <meta name="keywords"  content="RAID,Linux">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Redundent Array of Inexpensive Disks - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/06/13/Redundent-Array-of-Inexpensive-Disks/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Redundent Array of Inexpensive Disks</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on June 13, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一简介">一、简介</h2>
+
+<blockquote>
+  <p>Redundent Array of Inexpensive/Indepedent Disks 简称 RAID 廉价(独立)冗余磁盘技术，早起由美国加州大学伯克利分校发明，用于使用廉价磁盘替代 SCSI 硬盘而设计，后经过发展成为 Linux 服务器构建高可用磁盘阵列技术；RAID 能够将多块硬盘组合成磁盘阵列，使其具备高速读写、数据冗余备份功能，对于 Host OS 来说，RAID 相当于一块高性能并有高可靠数据存储的硬盘。</p>
+</blockquote>
+
+<h2 id="二raid-分级">二、RAID 分级</h2>
+
+<h3 id="1raid-级别">1、RAID 级别</h3>
+
+<p>常用的 RAID 级别分别为 <strong>RAID0、RAID1、RAID5、RAID10、RAID50、JBOD。</strong></p>
+
+<!--more-->
+
+<h3 id="2raid0">2、RAID0</h3>
+
+<p>RAID0 至少需要两块硬盘，其主要工作逻辑是将一个文件分片存放到多块硬盘，<strong>无冗余备份</strong>，理论上此时相对于单个磁盘的读写性能将提升 2倍或者更高(取决于硬盘块数)，磁盘利用率为100%；当然由于没有冗余备份，此时<strong>将会放大数据损坏概率(每块磁盘损坏概率假设10%，多块相乘)</strong>；通常将需要高速读写，并且数据损坏无实际影响的数据存放与此，如 swap 交换分区、tmp缓存分区等。</p>
+
+<h3 id="3raid1">3、RAID1</h3>
+
+<p>RAID1 通常称之为镜像盘，同样 RAID1 至少需要两块磁盘，其工作逻辑是将一个文件分片，但会同时存储到两块硬盘上，相当于一个文件存2份，对于高可靠性数据则需要使用 RAID1，RAID1会降低磁盘存储性能 n 倍，具体取决于磁盘数量，磁盘利用率为 1/n；但每块磁盘上都有完整的磁盘数据，此时相当于完全冗余，会提升读取性能。</p>
+
+<h3 id="4raid4">4、RAID4</h3>
+
+<p>为了既能够冗余备份，又能提升性能，则需要 RAID4，RAID4至少需要3块硬盘，其工作逻辑为 <strong>对于一个文件，首先将其分片存储进前两块硬盘，然后对于两个数据片做亦或运算生成校验码存储到第三块硬盘，第三块硬盘只存校验码，不存储真正的文件数据；</strong>此时前两块硬盘相当于 RAID0 的性能，当其中一块损坏后，可通过第三块硬盘与第一块硬盘做反向运算得出第二块硬盘内的数据，达到数据冗余的效果；<strong>但当前两块硬盘某一硬盘损坏后，剩下的两块硬盘将产生巨大压力，同时半损巨大的性能降低，</strong>因为每次读取存储文件都需要两块硬盘参与并完成数据计算。RAID1 下一旦磁盘出现损坏必须第一时间更换，否则剩下的两块磁盘一旦在此损坏数据将完全丢失，此种存储方式磁盘利用率为 (n-1)/n，下图为 RAID4 示意图 :</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_raid4.png" alt="hexo_raid4" /></p>
+
+<h3 id="5raid5">5、RAID5</h3>
+
+<p>RAID5 与 RAID4 基本一致，区别在于 <strong>RAID4 将所有数据的校验码存放于最后一块磁盘上，当有磁盘损坏时，虽然能通过计算恢复数据，但此时如果校验盘再出现问题那么将导致全部数据丢失，RAID5 在此基础上将校验码分别存储于每个磁盘之上，从而降低了数据损毁风险。</strong></p>
+
+<h3 id="6raid6">6、RAID6</h3>
+
+<p>RAID6 同 RAID5 基本一致，不过 RAID6至少需要4块硬盘，并且允许同时有两块硬盘损坏；</p>
+
+<h3 id="7raid10">7、RAID10</h3>
+
+<p>RAID10 基于 RAID1 和 RAID0，RAID10 需要至少4块磁盘，空间利用率为50%，首先使用2块磁盘一组做 RAID1 镜像盘，保证数据完全备份，然后使用2块磁盘作为一个磁盘组，用这些磁盘组组件 RAID0 提高读写性能，此阵列允许同一组 RAID1 内有一块硬盘损坏，但不能同时损坏，同时损坏则会造成数据丢失，其示意图如下 :</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_raid10.png" alt="hexo_raid10" /></p>
+
+<h3 id="8jbod">8、JBOD</h3>
+
+<p>JBOD 并非为了高可用数据冗余而设计，其主要作用是提高空间利用率，工作逻辑只是简单地将多块硬盘连接为一块使用，也不会为文件做自动的分片处理，常常用于类似 Hadoop 集群等应用，因为 Hadoop HDFS 等有其本身的容错机制。</p>
+
+<h2 id="三raid-实现方式">三、RAID 实现方式</h2>
+
+<h3 id="1硬件实现">1、硬件实现</h3>
+
+<p>硬件一般有两种实现方案，一种是板载集成，其性能一般较差，另一种是采用 PCI-E 插槽等接口的外置设备，通常称为 HBA 卡；此种阵列卡要求 Linux 内核能够驱动，其 RAID 级别在 BIOS 中便可完成设置。</p>
+
+<h3 id="2软件实现">2、软件实现</h3>
+
+<p>在硬件成本无法负担的情况下，Linux 内核提供一种组织机制(md模块)，可以在内核级别将多块硬盘组合成一块硬盘来使用，此时组件的 RAID 基于软件实现，此种操作需要浪费大量 CPU 性能。</p>
+
+<h3 id="3mdadm-命令">3、mdadm 命令</h3>
+
+<p>mdadm 命令用于与内核的 md 模块通讯，设置软件模式的 RAID；mdadm 类似 vim 是一个模式化的工具，其配置文件在 <code class="highlighter-rouge">/etc/mdadm.conf</code>，具体模式如下(用的很少) :</p>
+
+<ul>
+  <li><code class="highlighter-rouge">-A</code> : Assemble 装配模式</li>
+  <li><code class="highlighter-rouge">-C</code> : Create 创建模式
+    <ul>
+      <li><code class="highlighter-rouge">-n #</code> : 用于创建RAID设备的个数</li>
+      <li><code class="highlighter-rouge">-x #</code> : 热备磁盘的个数</li>
+      <li><code class="highlighter-rouge">-l</code> : 指定RAID级别</li>
+      <li><code class="highlighter-rouge">-a</code> : =yes（自动为创建的RAID设备创建设备文件） md mdp part p 如何创建设备文件</li>
+      <li><code class="highlighter-rouge">-c</code> :指定块的大小，默认为512KB</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">-F</code> : FOLLOW 监控</li>
+  <li><code class="highlighter-rouge">-S</code> : 停止RAID</li>
+  <li><code class="highlighter-rouge">-D</code>、<code class="highlighter-rouge">--detail</code> : 显示阵列详细信息</li>
+  <li>Manage 管理模式专用项
+    <ul>
+      <li><code class="highlighter-rouge">-f</code> : 模拟损害</li>
+      <li><code class="highlighter-rouge">-r</code> : 模拟移除设备</li>
+      <li><code class="highlighter-rouge">-a</code> : 模拟添加新设备</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">/proc/mdstat</code> : 内核 md 模块配置</li>
+  <li>创建一个大小为12G的RAID0：2<em>6G，3</em>4G 4<em>3G 6</em>2G : <code class="highlighter-rouge">mdadm -C /dev/md0 -a yes -l 0 -n 2 /dev/sdb{1,2}</code></li>
+</ul>
+
+<audio autoplay="autoplay">
+<source src="https://cdn.oss.link/markdown/Cake-By-The Ocean.mp3" type="audio/mpeg" />
+Your browser does not support the audio element.
+</audio>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/06/08/Can-t-connect-to-MySQL-server-on-xxxx-61/" data-toggle="tooltip" data-placement="top" title="Can't connect to MySQL server on 'xxxx' (61)">
+                        Previous<br>
+                        <span>Can't connect to MySQL server on 'xxxx' (61)</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/06/14/Linux-%E7%AC%94%E8%AE%B0/" data-toggle="tooltip" data-placement="top" title="Linux 笔记">
+                        Next<br>
+                        <span>Linux 笔记</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/06/13/Redundent-Array-of-Inexpensive-Disks";
+    var disqus_url = "https://mritd.me/2016/06/13/Redundent-Array-of-Inexpensive-Disks/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

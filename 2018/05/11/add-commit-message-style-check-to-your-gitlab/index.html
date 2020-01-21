@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="为 GitLab 添加提交信息检测">
+    <meta name="keywords"  content="gitlab,提交格式,检测">
+    <meta name="theme-color" content="#000000">
+    
+    <title>为你的 GitLab 增加提交信息检测 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2018/05/11/add-commit-message-style-check-to-your-gitlab/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#CI/CD" title="CI/CD">CI/CD</a>
+                        
+                    </div>
+                    <h1>为你的 GitLab 增加提交信息检测</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on May 11, 2018</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>最近准备对项目生成 Change Log，然而发现提交格式不统一根本没法处理；so 后来大家约定式遵循 GitFlow，并使用 Angular 社区规范的提交格式，同时扩展了一些前缀如 hotfix 等；但是时间长了发现还是有些提交为了 “方便” 不遵循 Angular 社区规范的提交格式，这时候我唯一能做的就是想办法在服务端增加一个提交检测；以下记录了 GitLab 增加自定义 Commit 提交格式检测的方案</p>
+</blockquote>
+
+<h2 id="一相关文章资料">一、相关文章资料</h2>
+
+<p>最开始用 Google 搜索到的方案是使用 GitLab 的 Push Rules 功能，具体文档见 <a href="https://docs.gitlab.com/ee/push_rules/push_rules.html">这里</a>，看完了我才发现这是企业版独有的，作为比较有逼格(qiong)的我们是不可能接受这种 “没技术含量” 的方式的；后来找了好多资料，发现还得借助 Git Hook 功能，文档见 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html">Custom Git Hooks</a>；简单地说 Git Hook 就是在 git 操作的不同阶段执行的预定义脚本，<strong>GitLab 目前仅支持 <code class="highlighter-rouge">pre-receive</code> 这个钩子，当然他可以链式调用</strong>；所以一切操作就得从这里入手</p>
+
+<h2 id="二pre-receive-实现">二、pre-receive 实现</h2>
+
+<p>查阅了相关资料得出，在进行 push 时，GitLab 会调用这个钩子文件，这个钩子文件必须放在 <code class="highlighter-rouge">/var/opt/gitlab/git-data/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code> 目录中，当然具体路径也可能是 <code class="highlighter-rouge">/home/git/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code>；<code class="highlighter-rouge">custom_hooks</code> 目录需要自己创建，具体可以参阅文档的 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html#setup">Setup</a>；</p>
+
+<p><strong>在进行 push 操作时，GitLab 会调用这个钩子文件，并且从 stdin 输入三个参数，分别为 之前的版本 commit ID、push 的版本 commit ID 和 push 的分支；根据 commit ID 我们就可以很轻松的获取到提交信息，从而实现进一步检测动作；根据 GitLab 的文档说明，当这个 hook 执行后以非 0 状态退出则认为执行失败，从而拒绝 push；同时会将 stderr 信息返回给 client 端；</strong>说了这么多，下面就可以直接上代码了，为了方便我就直接用 go 造了一个 <a href="https://github.com/mritd/pre-receive">pre-receive</a>，官方文档说明了不限制语言</p>
+
+<div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"io/ioutil"</span>
+    <span class="s">"os"</span>
+    <span class="s">"os/exec"</span>
+    <span class="s">"regexp"</span>
+    <span class="s">"strings"</span>
+<span class="p">)</span>
+
+<span class="k">type</span> <span class="n">CommitType</span> <span class="kt">string</span>
+
+<span class="k">const</span> <span class="p">(</span>
+    <span class="n">FEAT</span>     <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"feat"</span>
+    <span class="n">FIX</span>      <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"fix"</span>
+    <span class="n">DOCS</span>     <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"docs"</span>
+    <span class="n">STYLE</span>    <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"style"</span>
+    <span class="n">REFACTOR</span> <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"refactor"</span>
+    <span class="n">TEST</span>     <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"test"</span>
+    <span class="n">CHORE</span>    <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"chore"</span>
+    <span class="n">PERF</span>     <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"perf"</span>
+    <span class="n">HOTFIX</span>   <span class="n">CommitType</span> <span class="o">=</span> <span class="s">"hotfix"</span>
+<span class="p">)</span>
+<span class="k">const</span> <span class="n">CommitMessagePattern</span> <span class="o">=</span> <span class="s">`^(?:fixup!\s*)?(\w*)(\(([\w\$\.\*/-].*)\))?\: (.*)|^Merge\ branch(.*)`</span>
+
+<span class="k">const</span> <span class="n">checkFailedMeassge</span> <span class="o">=</span> <span class="s">`##############################################################################
+##                                                                          ##
+## Commit message style check failed!                                       ##
+##                                                                          ##
+## Commit message style must satisfy this regular:                          ##
+##   ^(?:fixup!\s*)?(\w*)(\(([\w\$\.\*/-].*)\))?\: (. *)|^Merge\ branch(.*) ##
+##                                                                          ##
+## Example:                                                                 ##
+##   feat(test): test commit style check.                                   ##
+##                                                                          ##
+##############################################################################`</span>
+
+<span class="c">// 是否开启严格模式，严格模式下将校验所有的提交信息格式(多 commit 下)</span>
+<span class="k">const</span> <span class="n">strictMode</span> <span class="o">=</span> <span class="no">false</span>
+
+<span class="k">var</span> <span class="n">commitMsgReg</span> <span class="o">=</span> <span class="n">regexp</span><span class="o">.</span><span class="n">MustCompile</span><span class="p">(</span><span class="n">CommitMessagePattern</span><span class="p">)</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="n">input</span><span class="p">,</span> <span class="n">_</span> <span class="o">:=</span> <span class="n">ioutil</span><span class="o">.</span><span class="n">ReadAll</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="p">)</span>
+    <span class="n">param</span> <span class="o">:=</span> <span class="n">strings</span><span class="o">.</span><span class="n">Fields</span><span class="p">(</span><span class="kt">string</span><span class="p">(</span><span class="n">input</span><span class="p">))</span>
+
+    <span class="c">// allow branch/tag delete</span>
+    <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">"0000000000000000000000000000000000000000"</span> <span class="p">{</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">0</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">commitMsg</span> <span class="o">:=</span> <span class="n">getCommitMsg</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="m">0</span><span class="p">],</span> <span class="n">param</span><span class="p">[</span><span class="m">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">tmpStr</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">commitMsg</span> <span class="p">{</span>
+        <span class="n">commitTypes</span> <span class="o">:=</span> <span class="n">commitMsgReg</span><span class="o">.</span><span class="n">FindAllStringSubmatch</span><span class="p">(</span><span class="n">tmpStr</span><span class="p">,</span> <span class="o">-</span><span class="m">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">commitTypes</span><span class="p">)</span> <span class="o">!=</span> <span class="m">1</span> <span class="p">{</span>
+            <span class="n">checkFailed</span><span class="p">()</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">switch</span> <span class="n">commitTypes</span><span class="p">[</span><span class="m">0</span><span class="p">][</span><span class="m">1</span><span class="p">]</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">FEAT</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">FIX</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">DOCS</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">STYLE</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">REFACTOR</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">TEST</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">CHORE</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">PERF</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">case</span> <span class="kt">string</span><span class="p">(</span><span class="n">HOTFIX</span><span class="p">)</span><span class="o">:</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">if</span> <span class="o">!</span><span class="n">strings</span><span class="o">.</span><span class="n">HasPrefix</span><span class="p">(</span><span class="n">tmpStr</span><span class="p">,</span> <span class="s">"Merge branch"</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">checkFailed</span><span class="p">()</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="o">!</span><span class="n">strictMode</span> <span class="p">{</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">0</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">getCommitMsg</span><span class="p">(</span><span class="n">odlCommitID</span><span class="p">,</span> <span class="n">commitID</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="kt">string</span> <span class="p">{</span>
+    <span class="n">getCommitMsgCmd</span> <span class="o">:=</span> <span class="n">exec</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="s">"git"</span><span class="p">,</span> <span class="s">"log"</span><span class="p">,</span> <span class="n">odlCommitID</span><span class="o">+</span><span class="s">".."</span><span class="o">+</span><span class="n">commitID</span><span class="p">,</span> <span class="s">"--pretty=format:%s"</span><span class="p">)</span>
+    <span class="n">getCommitMsgCmd</span><span class="o">.</span><span class="n">Stdin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdin</span>
+    <span class="n">getCommitMsgCmd</span><span class="o">.</span><span class="n">Stderr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stderr</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">getCommitMsgCmd</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">fmt</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">commitMsg</span> <span class="o">:=</span> <span class="n">strings</span><span class="o">.</span><span class="n">Split</span><span class="p">(</span><span class="kt">string</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">commitMsg</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">checkFailed</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">fmt</span><span class="o">.</span><span class="n">Fprintln</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stderr</span><span class="p">,</span> <span class="n">checkFailedMeassge</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h2 id="三安装-pre-receive">三、安装 pre-receive</h2>
+
+<p>把以上代码编译后生成的 <code class="highlighter-rouge">pre-receive</code> 文件复制到对应项目的钩子目录即可；<strong>要注意的是文件名必须为 <code class="highlighter-rouge">pre-receive</code>，同时 <code class="highlighter-rouge">custom_hooks</code> 目录需要自建；<code class="highlighter-rouge">custom_hooks</code> 目录以及 <code class="highlighter-rouge">pre-receive</code> 文件用户组必须为 <code class="highlighter-rouge">git:git</code>；在删除分支时 commit ID 为 <code class="highlighter-rouge">0000000000000000000000000000000000000000</code>，此时不需要检测提交信息，否则可能导致无法删除分支/tag</strong>；最后效果如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/hs9c2.png" alt="commit msg check" /></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2018/04/19/set-up-kubernetes-1.10.1-cluster-by-hyperkube/" data-toggle="tooltip" data-placement="top" title="Kubernetes 1.10.1 集群搭建">
+                        Previous<br>
+                        <span>Kubernetes 1.10.1 集群搭建</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2018/05/24/kubernetes-traefik-service-exposure/" data-toggle="tooltip" data-placement="top" title="Traefik 另类的服务暴露方式">
+                        Next<br>
+                        <span>Traefik 另类的服务暴露方式</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2018/05/11/add-commit-message-style-check-to-your-gitlab";
+    var disqus_url = "https://mritd.me/2018/05/11/add-commit-message-style-check-to-your-gitlab/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

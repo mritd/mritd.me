@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Teleport 跳板机部署">
+    <meta name="keywords"  content="Teleport,跳板机">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Teleport 跳板机部署 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/11/09/set-up-teleport/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Teleport 跳板机部署</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on November 9, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>由于业务需求，以前账号管理混乱，所以很多人有生产服务器的 root 权限；所以目前需要一个能 ssh 登录线上服务器的工具，同时具有简单的审计功能；找了好久找到了这个小工具，以下记录一下搭建教程</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>目前准备了 3 台虚拟机，两台位于内网 NAT 之后，一台位于公网可以直接链接；使用时客户端通过工具连接到公网跳板机上，然后实现自动跳转到内网任意主机；并且具有相应的操作回放审计，通过宿主机账户限制用户权限</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>ip</th>
+      <th>节点</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>92.223.67.84</td>
+      <td>公网 Master</td>
+    </tr>
+    <tr>
+      <td>172.16.0.80</td>
+      <td>内网 Master</td>
+    </tr>
+    <tr>
+      <td>172.16.0.81</td>
+      <td>内网 Node</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="二teleport-工作模式">二、Teleport 工作模式</h3>
+
+<p>Teleport 工作时从宏观上看是以集群为单位，也就是说<strong>公网算作一个集群，内网算作另一个集群，内网集群通过 ssh 隧道保持跟公网的链接状态，同时内网机群允许公网集群用户连接</strong>，大体工作模式如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hsnj8.png" alt="Teleport 工作模式" /></p>
+
+<h3 id="三搭建公网-master">三、搭建公网 Master</h3>
+
+<h4 id="31配置-systemd">3.1、配置 Systemd</h4>
+
+<p>首先下载相关可执行文件并复制到 Path 目录下，然后创建一下配置目录等</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/gravitational/teleport/releases/download/v2.3.5/teleport-v2.3.5-linux-amd64-bin.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> teleport-v2.3.5-linux-amd64-bin.tar.gz
+<span class="nb">mv </span>teleport/tctl teleport/teleport teleport/tsh /usr/local/bin
+<span class="nb">mkdir</span> <span class="nt">-p</span> /etc/teleport /data/teleport
+</code></pre></div></div>
+
+<p>然后为了让服务后台运行创建一个 systemd service 配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;</span> /etc/systemd/system/teleport.service <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+[Unit]
+Description=Teleport SSH Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/local/bin/teleport start -c /etc/teleport/teleport.yaml
+
+[Install]
+WantedBy=multi-user.target
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<h4 id="32配置-teleport">3.2、配置 Teleport</h4>
+
+<p>Systemd 配置完成后，就需要写一个 Teleport 的配置文件来让 Teleport 启动，具体选项含义可以参考 <a href="https://gravitational.com/teleport/docs/2.3/admin-guide/">官方文档</a>；以下为我的配置样例</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># By default, this file should be stored in /etc/teleport.yaml</span>
+
+<span class="c1"># This section of the configuration file applies to all teleport</span>
+<span class="c1"># services.</span>
+<span class="na">teleport</span><span class="pi">:</span>
+    <span class="c1"># nodename allows to assign an alternative name this node can be reached by.</span>
+    <span class="c1"># by default it's equal to hostname</span>
+    <span class="na">nodename</span><span class="pi">:</span> <span class="s">mritd.master</span>
+
+    <span class="c1"># Data directory where Teleport keeps its data, like keys/users for</span>
+    <span class="c1"># authentication (if using the default BoltDB back-end)</span>
+    <span class="na">data_dir</span><span class="pi">:</span> <span class="s">/data/teleport</span>
+
+    <span class="c1"># one-time invitation token used to join a cluster. it is not used on</span>
+    <span class="c1"># subsequent starts</span>
+    <span class="na">auth_token</span><span class="pi">:</span> <span class="s">jYektagNTmhjv9Dh</span>
+
+    <span class="c1"># when running in multi-homed or NATed environments Teleport nodes need</span>
+    <span class="c1"># to know which IP it will be reachable at by other nodes</span>
+    <span class="na">advertise_ip</span><span class="pi">:</span> <span class="s">92.223.67.84</span>
+
+    <span class="c1"># list of auth servers in a cluster. you will have more than one auth server</span>
+    <span class="c1"># if you configure teleport auth to run in HA configuration</span>
+    <span class="na">auth_servers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">0.0.0.0:3025</span>
+        <span class="pi">-</span> <span class="s">0.0.0.0:3025</span>
+
+    <span class="c1"># Teleport throttles all connections to avoid abuse. These settings allow</span>
+    <span class="c1"># you to adjust the default limits</span>
+    <span class="na">connection_limits</span><span class="pi">:</span>
+        <span class="na">max_connections</span><span class="pi">:</span> <span class="m">1000</span>
+        <span class="na">max_users</span><span class="pi">:</span> <span class="m">250</span>
+
+    <span class="c1"># Logging configuration. Possible output values are 'stdout', 'stderr' and</span>
+    <span class="c1"># 'syslog'. Possible severity values are INFO, WARN and ERROR (default).</span>
+    <span class="na">log</span><span class="pi">:</span>
+        <span class="na">output</span><span class="pi">:</span> <span class="s">stdout</span>
+        <span class="na">severity</span><span class="pi">:</span> <span class="s">INFO</span>
+
+    <span class="c1"># Type of storage used for keys. You need to configure this to use etcd</span>
+    <span class="c1"># backend if you want to run Teleport in HA configuration.</span>
+    <span class="na">storage</span><span class="pi">:</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">bolt</span>
+
+    <span class="c1"># Cipher algorithms that the server supports. This section only needs to be</span>
+    <span class="c1"># set if you want to override the defaults.</span>
+    <span class="na">ciphers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">aes128-ctr</span>
+      <span class="pi">-</span> <span class="s">aes192-ctr</span>
+      <span class="pi">-</span> <span class="s">aes256-ctr</span>
+      <span class="pi">-</span> <span class="s">aes128-gcm@openssh.com</span>
+      <span class="pi">-</span> <span class="s">arcfour256</span>
+      <span class="pi">-</span> <span class="s">arcfour128</span>
+
+    <span class="c1"># Key exchange algorithms that the server supports. This section only needs</span>
+    <span class="c1"># to be set if you want to override the defaults.</span>
+    <span class="na">kex_algos</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">curve25519-sha256@libssh.org</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp256</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp384</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp521</span>
+      <span class="pi">-</span> <span class="s">diffie-hellman-group14-sha1</span>
+      <span class="pi">-</span> <span class="s">diffie-hellman-group1-sha1</span>
+
+    <span class="c1"># Message authentication code (MAC) algorithms that the server supports.</span>
+    <span class="c1"># This section only needs to be set if you want to override the defaults.</span>
+    <span class="na">mac_algos</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">hmac-sha2-256-etm@openssh.com</span>
+      <span class="pi">-</span> <span class="s">hmac-sha2-256</span>
+      <span class="pi">-</span> <span class="s">hmac-sha1</span>
+      <span class="pi">-</span> <span class="s">hmac-sha1-96</span>
+
+<span class="c1"># This section configures the 'auth service':</span>
+<span class="na">auth_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'auth' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="na">authentication</span><span class="pi">:</span>
+        <span class="c1"># default authentication type. possible values are 'local', 'oidc' and 'saml'</span>
+        <span class="c1"># only local authentication (Teleport's own user DB) is supported in the open</span>
+        <span class="c1"># source version</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">local</span>
+        <span class="c1"># second_factor can be off, otp, or u2f</span>
+        <span class="na">second_factor</span><span class="pi">:</span> <span class="s">otp</span>
+        <span class="c1"># this section is used if second_factor is set to 'u2f'</span>
+        <span class="c1">#u2f:</span>
+        <span class="c1">#    # app_id must point to the URL of the Teleport Web UI (proxy) accessible</span>
+        <span class="c1">#    # by the end users</span>
+        <span class="c1">#    app_id: https://localhost:3080</span>
+        <span class="c1">#    # facets must list all proxy servers if there are more than one deployed</span>
+        <span class="c1">#    facets:</span>
+        <span class="c1">#    - https://localhost:3080</span>
+
+    <span class="c1"># IP and the port to bind to. Other Teleport nodes will be connecting to</span>
+    <span class="c1"># this port (AKA "Auth API" or "Cluster API") to validate client</span>
+    <span class="c1"># certificates</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">0.0.0.0:3025</span>
+
+    <span class="c1"># Pre-defined tokens for adding new nodes to a cluster. Each token specifies</span>
+    <span class="c1"># the role a new node will be allowed to assume. The more secure way to</span>
+    <span class="c1"># add nodes is to use `ttl node add --ttl` command to generate auto-expiring</span>
+    <span class="c1"># tokens.</span>
+    <span class="c1">#</span>
+    <span class="c1"># We recommend to use tools like `pwgen` to generate sufficiently random</span>
+    <span class="c1"># tokens of 32+ byte length.</span>
+    <span class="na">tokens</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">proxy,node:jYektagNTmhjv9Dh"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">auth:jYektagNTmhjv9Dh"</span>
+
+    <span class="c1"># Optional "cluster name" is needed when configuring trust between multiple</span>
+    <span class="c1"># auth servers. A cluster name is used as part of a signature in certificates</span>
+    <span class="c1"># generated by this CA.</span>
+    <span class="c1">#</span>
+    <span class="c1"># By default an automatically generated GUID is used.</span>
+    <span class="c1">#</span>
+    <span class="c1"># IMPORTANT: if you change cluster_name, it will invalidate all generated</span>
+    <span class="c1"># certificates and keys (may need to wipe out /var/lib/teleport directory)</span>
+    <span class="na">cluster_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">mritd"</span>
+
+<span class="c1"># This section configures the 'node service':</span>
+<span class="na">ssh_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'ssh' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="c1"># IP and the port for SSH service to bind to.</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">0.0.0.0:3022</span>
+    <span class="c1"># See explanation of labels in "Labeling Nodes" section below</span>
+    <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">role</span><span class="pi">:</span> <span class="s">master</span>
+
+    <span class="c1"># List of the commands to periodically execute. Their output will be used as node labels.</span>
+    <span class="c1"># See "Labeling Nodes" section below for more information.</span>
+    <span class="na">commands</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">arch</span>             <span class="c1"># this command will add a label like 'arch=x86_64' to a node</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">uname</span><span class="pi">,</span> <span class="nv">-p</span><span class="pi">]</span>
+      <span class="na">period</span><span class="pi">:</span> <span class="s">1h0m0s</span>
+
+    <span class="c1"># enables reading ~/.tsh/environment before creating a session. by default</span>
+    <span class="c1"># set to false, can be set true here or as a command line flag.</span>
+    <span class="na">permit_user_env</span><span class="pi">:</span> <span class="no">false</span>
+
+<span class="c1"># This section configures the 'proxy servie'</span>
+<span class="na">proxy_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'proxy' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="c1"># SSH forwarding/proxy address. Command line (CLI) clients always begin their</span>
+    <span class="c1"># SSH sessions by connecting to this port</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">0.0.0.0:3023</span>
+
+    <span class="c1"># Reverse tunnel listening address. An auth server (CA) can establish an</span>
+    <span class="c1"># outbound (from behind the firewall) connection to this address.</span>
+    <span class="c1"># This will allow users of the outside CA to connect to behind-the-firewall</span>
+    <span class="c1"># nodes.</span>
+    <span class="na">tunnel_listen_addr</span><span class="pi">:</span> <span class="s">0.0.0.0:3024</span>
+
+    <span class="c1"># The HTTPS listen address to serve the Web UI and also to authenticate the</span>
+    <span class="c1"># command line (CLI) users via password+HOTP</span>
+    <span class="na">web_listen_addr</span><span class="pi">:</span> <span class="s">0.0.0.0:3080</span>
+
+    <span class="c1"># TLS certificate for the HTTPS connection. Configuring these properly is</span>
+    <span class="c1"># critical for Teleport security.</span>
+    <span class="c1">#https_key_file: /var/lib/teleport/webproxy_key.pem</span>
+    <span class="c1">#https_cert_file: /var/lib/teleport/webproxy_cert.pem</span>
+</code></pre></div></div>
+
+<p>然后启动 Teleport 即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>teleport
+systemctl start teleport
+</code></pre></div></div>
+
+<p>如果启动出现如下错误</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>error: Could not load host key: /etc/ssh/ssh_host_ecdsa_key
+error: Could not load host key: /etc/ssh/ssh_host_ed25519_key
+</code></pre></div></div>
+
+<p>请执行 ssh-keygen 命令自行生成相关秘钥</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh-keygen <span class="nt">-t</span> ecdsa <span class="nt">-f</span> /etc/ssh/ssh_host_ecdsa_key
+ssh-keygen <span class="nt">-t</span> ed25519 <span class="nt">-f</span> /etc/ssh/ssh_host_ed25519_key
+</code></pre></div></div>
+
+<h4 id="33添加用户">3.3、添加用户</h4>
+
+<p>公网这台 Teleport 将会作为主要的接入机器，所以在此节点内添加的用户将有权限登录所有集群，包括内网的另一个集群；所以为了方便以后操作先添加一个用户</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 添加一个用户名为 mritd 的用户，该用户在所有集群具有 root 用户权限</span>
+tctl <span class="nt">--config</span> /etc/teleport/teleport.yaml <span class="nb">users </span>add mritd root
+</code></pre></div></div>
+
+<p>添加成功后会返回一个 OTP 认证初始化地址，浏览器访问后可以使用 Google 扫描 OTP 二维码从而在登录时增加一层 OTP 认证</p>
+
+<p><img src="https://cdn.oss.link/markdown/chuyf.png" alt="OTP CMD" /></p>
+
+<p>访问该地址后初始化密码及 OTP</p>
+
+<p><img src="https://cdn.oss.link/markdown/czwmd.png" alt="init OTP" /></p>
+
+<h3 id="四搭建内网-master">四、搭建内网 Master</h3>
+
+<p>内网搭建 Master 和公网类似，只不过为了安全将所有 <code class="highlighter-rouge">0.0.0.0</code> 的地址全部换成内网 IP 即可，以下为内网的配置信息</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># By default, this file should be stored in /etc/teleport.yaml</span>
+
+<span class="c1"># This section of the configuration file applies to all teleport</span>
+<span class="c1"># services.</span>
+<span class="na">teleport</span><span class="pi">:</span>
+    <span class="c1"># nodename allows to assign an alternative name this node can be reached by.</span>
+    <span class="c1"># by default it's equal to hostname</span>
+    <span class="na">nodename</span><span class="pi">:</span> <span class="s">mritd.test1</span>
+
+    <span class="c1"># Data directory where Teleport keeps its data, like keys/users for</span>
+    <span class="c1"># authentication (if using the default BoltDB back-end)</span>
+    <span class="na">data_dir</span><span class="pi">:</span> <span class="s">/data/teleport</span>
+
+    <span class="c1"># one-time invitation token used to join a cluster. it is not used on</span>
+    <span class="c1"># subsequent starts</span>
+    <span class="na">auth_token</span><span class="pi">:</span> <span class="s">jYektagNTmhjv9Dh</span>
+
+    <span class="c1"># when running in multi-homed or NATed environments Teleport nodes need</span>
+    <span class="c1"># to know which IP it will be reachable at by other nodes</span>
+    <span class="na">advertise_ip</span><span class="pi">:</span> <span class="s">172.16.0.80</span>
+
+    <span class="c1"># list of auth servers in a cluster. you will have more than one auth server</span>
+    <span class="c1"># if you configure teleport auth to run in HA configuration</span>
+    <span class="na">auth_servers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">172.16.0.80:3025</span>
+
+    <span class="c1"># Teleport throttles all connections to avoid abuse. These settings allow</span>
+    <span class="c1"># you to adjust the default limits</span>
+    <span class="na">connection_limits</span><span class="pi">:</span>
+        <span class="na">max_connections</span><span class="pi">:</span> <span class="m">1000</span>
+        <span class="na">max_users</span><span class="pi">:</span> <span class="m">250</span>
+
+    <span class="c1"># Logging configuration. Possible output values are 'stdout', 'stderr' and</span>
+    <span class="c1"># 'syslog'. Possible severity values are INFO, WARN and ERROR (default).</span>
+    <span class="na">log</span><span class="pi">:</span>
+        <span class="na">output</span><span class="pi">:</span> <span class="s">stdout</span>
+        <span class="na">severity</span><span class="pi">:</span> <span class="s">INFO</span>
+
+    <span class="c1"># Type of storage used for keys. You need to configure this to use etcd</span>
+    <span class="c1"># backend if you want to run Teleport in HA configuration.</span>
+    <span class="na">storage</span><span class="pi">:</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">bolt</span>
+
+    <span class="c1"># Cipher algorithms that the server supports. This section only needs to be</span>
+    <span class="c1"># set if you want to override the defaults. </span>
+    <span class="na">ciphers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">aes128-ctr</span>
+      <span class="pi">-</span> <span class="s">aes192-ctr</span>
+      <span class="pi">-</span> <span class="s">aes256-ctr</span>
+      <span class="pi">-</span> <span class="s">aes128-gcm@openssh.com</span>
+      <span class="pi">-</span> <span class="s">arcfour256</span>
+      <span class="pi">-</span> <span class="s">arcfour128</span>
+
+    <span class="c1"># Key exchange algorithms that the server supports. This section only needs</span>
+    <span class="c1"># to be set if you want to override the defaults.</span>
+    <span class="na">kex_algos</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">curve25519-sha256@libssh.org</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp256</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp384</span>
+      <span class="pi">-</span> <span class="s">ecdh-sha2-nistp521</span>
+      <span class="pi">-</span> <span class="s">diffie-hellman-group14-sha1</span>
+      <span class="pi">-</span> <span class="s">diffie-hellman-group1-sha1</span>
+
+    <span class="c1"># Message authentication code (MAC) algorithms that the server supports.</span>
+    <span class="c1"># This section only needs to be set if you want to override the defaults.</span>
+    <span class="na">mac_algos</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">hmac-sha2-256-etm@openssh.com</span>
+      <span class="pi">-</span> <span class="s">hmac-sha2-256</span>
+      <span class="pi">-</span> <span class="s">hmac-sha1</span>
+      <span class="pi">-</span> <span class="s">hmac-sha1-96</span>
+
+<span class="c1"># This section configures the 'auth service':</span>
+<span class="na">auth_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'auth' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="na">authentication</span><span class="pi">:</span>
+        <span class="c1"># default authentication type. possible values are 'local', 'oidc' and 'saml'</span>
+        <span class="c1"># only local authentication (Teleport's own user DB) is supported in the open</span>
+        <span class="c1"># source version</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">local</span>
+        <span class="c1"># second_factor can be off, otp, or u2f</span>
+        <span class="na">second_factor</span><span class="pi">:</span> <span class="s">otp</span>
+        <span class="c1"># this section is used if second_factor is set to 'u2f'</span>
+        <span class="c1">#u2f:</span>
+        <span class="c1">#    # app_id must point to the URL of the Teleport Web UI (proxy) accessible</span>
+        <span class="c1">#    # by the end users</span>
+        <span class="c1">#    app_id: https://localhost:3080</span>
+        <span class="c1">#    # facets must list all proxy servers if there are more than one deployed</span>
+        <span class="c1">#    facets:</span>
+        <span class="c1">#    - https://localhost:3080</span>
+
+    <span class="c1"># IP and the port to bind to. Other Teleport nodes will be connecting to</span>
+    <span class="c1"># this port (AKA "Auth API" or "Cluster API") to validate client</span>
+    <span class="c1"># certificates</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">172.16.0.80:3025</span>
+
+    <span class="c1"># Pre-defined tokens for adding new nodes to a cluster. Each token specifies</span>
+    <span class="c1"># the role a new node will be allowed to assume. The more secure way to</span>
+    <span class="c1"># add nodes is to use `ttl node add --ttl` command to generate auto-expiring</span>
+    <span class="c1"># tokens.</span>
+    <span class="c1">#</span>
+    <span class="c1"># We recommend to use tools like `pwgen` to generate sufficiently random</span>
+    <span class="c1"># tokens of 32+ byte length.</span>
+    <span class="na">tokens</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">proxy,node:jYektagNTmhjv9Dh"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">auth:jYektagNTmhjv9Dh"</span>
+
+    <span class="c1"># Optional "cluster name" is needed when configuring trust between multiple</span>
+    <span class="c1"># auth servers. A cluster name is used as part of a signature in certificates</span>
+    <span class="c1"># generated by this CA.</span>
+    <span class="c1">#</span>
+    <span class="c1"># By default an automatically generated GUID is used.</span>
+    <span class="c1">#</span>
+    <span class="c1"># IMPORTANT: if you change cluster_name, it will invalidate all generated</span>
+    <span class="c1"># certificates and keys (may need to wipe out /var/lib/teleport directory)</span>
+    <span class="na">cluster_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">nat"</span>
+
+<span class="c1"># This section configures the 'node service':</span>
+<span class="na">ssh_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'ssh' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="c1"># IP and the port for SSH service to bind to.</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">172.16.0.80:3022</span>
+    <span class="c1"># See explanation of labels in "Labeling Nodes" section below</span>
+    <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">role</span><span class="pi">:</span> <span class="s">master</span>
+
+    <span class="c1"># List of the commands to periodically execute. Their output will be used as node labels.</span>
+    <span class="c1"># See "Labeling Nodes" section below for more information.</span>
+    <span class="na">commands</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">arch</span>             <span class="c1"># this command will add a label like 'arch=x86_64' to a node</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">uname</span><span class="pi">,</span> <span class="nv">-p</span><span class="pi">]</span>
+      <span class="na">period</span><span class="pi">:</span> <span class="s">1h0m0s</span>
+
+    <span class="c1"># enables reading ~/.tsh/environment before creating a session. by default</span>
+    <span class="c1"># set to false, can be set true here or as a command line flag.</span>
+    <span class="na">permit_user_env</span><span class="pi">:</span> <span class="no">false</span>
+
+<span class="c1"># This section configures the 'proxy servie'</span>
+<span class="na">proxy_service</span><span class="pi">:</span>
+    <span class="c1"># Turns 'proxy' role on. Default is 'yes'</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+
+    <span class="c1"># SSH forwarding/proxy address. Command line (CLI) clients always begin their</span>
+    <span class="c1"># SSH sessions by connecting to this port</span>
+    <span class="na">listen_addr</span><span class="pi">:</span> <span class="s">172.16.0.80:3023</span>
+
+    <span class="c1"># Reverse tunnel listening address. An auth server (CA) can establish an</span>
+    <span class="c1"># outbound (from behind the firewall) connection to this address.</span>
+    <span class="c1"># This will allow users of the outside CA to connect to behind-the-firewall</span>
+    <span class="c1"># nodes.</span>
+    <span class="na">tunnel_listen_addr</span><span class="pi">:</span> <span class="s">172.16.0.80:3024</span>
+
+    <span class="c1"># The HTTPS listen address to serve the Web UI and also to authenticate the</span>
+    <span class="c1"># command line (CLI) users via password+HOTP</span>
+    <span class="na">web_listen_addr</span><span class="pi">:</span> <span class="s">172.16.0.80:3080</span>
+
+    <span class="c1"># TLS certificate for the HTTPS connection. Configuring these properly is</span>
+    <span class="c1"># critical for Teleport security.</span>
+    <span class="c1">#https_key_file: /var/lib/teleport/webproxy_key.pem</span>
+    <span class="c1">#https_cert_file: /var/lib/teleport/webproxy_cert.pem</span>
+</code></pre></div></div>
+
+<p>配置完成后直接启动即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>teleport
+systemctl start teleport
+</code></pre></div></div>
+
+<h3 id="五将内网集群链接至公网">五、将内网集群链接至公网</h3>
+
+<p>上文已经讲过，Teleport 通过公网链接内网主机的方式是让内网集群向公网打通一条 ssh 隧道，然后再进行通讯；具体配置如下</p>
+
+<h4 id="51公网-master-开启授信集群">5.1、公网 Master 开启授信集群</h4>
+
+<p>在公网 Master 增加 Token 配置，以允许持有该 Token 的其他内网集群连接到此，修改 <code class="highlighter-rouge">/etc/teleport/teleport.yaml</code> 增加一个 token 即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tokens:
+    - <span class="s2">"proxy,node:jYektagNTmhjv9Dh"</span>
+    - <span class="s2">"auth:jYektagNTmhjv9Dh"</span>
+    - <span class="s2">"trusted_cluster:xiomwWcrKinFw4Vs"</span>
+</code></pre></div></div>
+
+<p>然后重启 Teleport</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl restart teleport
+</code></pre></div></div>
+
+<h4 id="52内网-master-链接公网-master">5.2、内网 Master 链接公网 Master</h4>
+
+<p>当公网集群开启了允许其他集群链接后，内网集群只需要创建配置进行连接即可，创建配置(cluster.yaml)如下</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># cluster.yaml</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">trusted_cluster</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s">v2</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="c1"># the trusted cluster name MUST match the 'cluster_name' setting of the</span>
+  <span class="c1"># cluster</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">local_cluster</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="c1"># this field allows to create tunnels that are disabled, but can be enabled later.</span>
+  <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="c1"># the token expected by the "main" cluster:</span>
+  <span class="na">token</span><span class="pi">:</span> <span class="s">xiomwWcrKinFw4Vs</span>
+  <span class="c1"># the address in 'host:port' form of the reverse tunnel listening port on the</span>
+  <span class="c1"># "master" proxy server:</span>
+  <span class="na">tunnel_addr</span><span class="pi">:</span> <span class="s">92.223.67.84:3024</span>
+  <span class="c1"># the address in 'host:port' form of the web listening port on the</span>
+  <span class="c1"># "master" proxy server:</span>
+  <span class="na">web_proxy_addr</span><span class="pi">:</span> <span class="s">92.223.67.84:3080</span>
+</code></pre></div></div>
+
+<p>执行以下命令使内网集群通过 ssh 隧道连接到公网集群</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tctl <span class="nt">--config</span> /etc/teleport/teleport.yaml create /etc/teleport/cluster.yaml
+</code></pre></div></div>
+
+<p><strong>注意，如果在启动公网和内网集群时没有指定受信的证书( <code class="highlighter-rouge">https_cert_file</code>、<code class="highlighter-rouge">https_key_file</code> )，那么默认 Teleport 将会生成一个自签名证书，此时在 create 受信集群时将会产生如下错误:</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>the trusted cluster uses misconfigured HTTP/TLS certificate
+</code></pre></div></div>
+
+<p>此时需要在 <strong>待添加集群(内网)</strong> 启动时增加 <code class="highlighter-rouge">--insecure</code> 参数，即 Systemd 配置修改如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>Teleport SSH Service
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">Type</span><span class="o">=</span>simple
+<span class="nv">Restart</span><span class="o">=</span>always
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/teleport start <span class="nt">--insecure</span> <span class="nt">-c</span> /etc/teleport/teleport.yaml
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p>然后再进行 create 就不会报错</p>
+
+<h3 id="六添加其他节点">六、添加其他节点</h3>
+
+<p>两台节点打通后，此时如果有其他机器则可以将其加入到对应集群中，以下以另一台内网机器为例</p>
+
+<p>由于在主节点 <code class="highlighter-rouge">auth_service</code> 中已经预先指定了一个 static Token 用于其他节点加入( <code class="highlighter-rouge">proxy,node:jYektagNTmhjv9Dh</code> )，所以其他节点只需要使用这个 Token 加入即可，在另一台内网主机上修改 Systemd 配置如下，然后启动即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>Teleport SSH Service
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">Type</span><span class="o">=</span>simple
+<span class="nv">Restart</span><span class="o">=</span>always
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/teleport start <span class="nt">--roles</span><span class="o">=</span>node,proxy <span class="se">\</span>
+                                        <span class="nt">--token</span><span class="o">=</span>jYektagNTmhjv9Dh <span class="se">\</span>
+                                        <span class="nt">--auth-server</span><span class="o">=</span>172.16.0.80
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p>此时在内网的 Master 上可以查看到 Node 已经加入</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>test1.node ➜ tctl <span class="nt">--config</span> /etc/teleport/teleport.yaml nodes <span class="nb">ls
+</span>Hostname    UUID                                 Address          Labels
+<span class="nt">-----------</span> <span class="nt">------------------------------------</span> <span class="nt">----------------</span> <span class="nt">-----------------------</span>
+test2.node  abc786fe-9a60-4480-80f7-8edc20710e58 172.16.0.81:3022
+mritd.test1 be9080fb-bdba-4823-9fb6-294e0b0dcce3 172.16.0.80:3022 <span class="nb">arch</span><span class="o">=</span>x86_64,role<span class="o">=</span>master
+</code></pre></div></div>
+
+<h3 id="七连接测试">七、连接测试</h3>
+
+<h4 id="71web-测试">7.1、Web 测试</h4>
+
+<p>Teleport 支持 Web 页面访问，直接访问 <code class="highlighter-rouge">https://公网IP:3080</code>，然后登陆即可，登陆后如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/9yf6k.png" alt="Web login" /></p>
+
+<p>通过 Cluster 选项可以切换不同集群，点击后面的用户名可以选择不同用户登录到不同主机(用户授权在添加用户时控制)，登陆成功后如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/m7hz5.png" alt="Login Success" /></p>
+
+<p>通过 Teleport 进行的所有操作可以通过审计菜单进行操作回放</p>
+
+<p><img src="https://cdn.oss.link/markdown/c8a74.png" alt="Audit" /></p>
+
+<h4 id="72命令行测试">7.2、命令行测试</h4>
+
+<p>类 Uninx 系统下我们还是习惯使用终端登录，终端登录需要借助 Teleport 的命令行工具 <code class="highlighter-rouge">tsh</code>，<code class="highlighter-rouge">tsh</code> 在下载的 release 压缩版中已经有了，具体使用文档请自行 help 和参考官方文档，以下为简单的使用示例</p>
+
+<ul>
+  <li>登录跳板机: 短时间内只需要登录一次即可，登录时需要输入密码及 OTP 口令</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">TELEPORT_PROXY</span><span class="o">=</span>92.223.67.84
+<span class="nb">export </span><span class="nv">TELEPORT_USER</span><span class="o">=</span>mritd
+tsh login <span class="nt">--insecure</span>
+</code></pre></div></div>
+
+<ul>
+  <li>登录主机: 完成上一步 login 后就可以免密码登录任意主机</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># cluster 名字是上面设置的，在 web 界面也能看到</span>
+tsh ssh <span class="nt">--cluster</span> nat root@test2.node
+</code></pre></div></div>
+
+<ul>
+  <li>复制文件: <strong>复制文件时不显示进度，并非卡死</strong></li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tsh scp <span class="nt">--cluster</span> nat teleport-v2.3.5-linux-amd64-bin.tar.gz root@test2.node:/
+
+-&gt; teleport-v2.3.5-linux-amd64-bin.tar.gz <span class="o">(</span>16797035<span class="o">)</span>
+</code></pre></div></div>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/03/deep-learning-on-kubernetes/" data-toggle="tooltip" data-placement="top" title="Kubernetes 深度学习笔记">
+                        Previous<br>
+                        <span>Kubernetes 深度学习笔记</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/11/12/ci-cd-dockerfile/" data-toggle="tooltip" data-placement="top" title="CI/CD 之 Dockerfile">
+                        Next<br>
+                        <span>CI/CD 之 Dockerfile</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/11/09/set-up-teleport";
+    var disqus_url = "https://mritd.me/2017/11/09/set-up-teleport/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

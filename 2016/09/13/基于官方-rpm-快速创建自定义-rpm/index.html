@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="基于官方 rpm 快速创建自定义 rpm">
+    <meta name="keywords"  content="Linux,rpm,spec,fpm,etcd">
+    <meta name="theme-color" content="#000000">
+    
+    <title>基于官方 rpm 快速创建自定义 rpm - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/09/13/%E5%9F%BA%E4%BA%8E%E5%AE%98%E6%96%B9-rpm-%E5%BF%AB%E9%80%9F%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89-rpm/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>基于官方 rpm 快速创建自定义 rpm</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on September 13, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h2 id="一扯淡">一、扯淡</h2>
+
+<p>由于工作中常常需要使用 yum 安装一些软件，而当需求特定版本(一般是比较新的版本)时，往往 CentOS 官方提供的都不是最新的，这时候一般解决方案是先 rpm 安装，然后再用高版本的 二进制文件进行替换，当机器多的时候这种方法很蛋疼，所以决定研究了一下 rpm 制作方法，以下为一些实践。</p>
+
+<h2 id="二spec-简介">二、spec 简介</h2>
+
+<blockquote>
+  <p>关于 spec 文件的具体作用和详细的介绍网上已经有很多文章，具体可参考 <a href="https://www.ibm.com/developerworks/cn/linux/l-rpm/">RPM 打包技术与典型 SPEC 文件分析</a>，本文主要主要以概述的形式来大致介绍以下 spec 文件</p>
+</blockquote>
+
+<!--more-->
+
+<h3 id="21spec-文件作用">2.1、spec 文件作用</h3>
+
+<p>在从0开始创建 rpm 时，使用 rpm build 工具基于一个预定义好的 spec 文件来创建 rpm；<strong>也就是说 spec 文件里定义了 rpm 如何创建以及创建过程，比如 rpm 内包含的资源文件、配置信息、安装卸载前后执行脚本、rpm 说明信息等；</strong>如果能完全了解了 sepc 文件，那么理论上就可以自己从 0 开始创建一个 rpm 包，然而对于书写 spec 就像写代码一样，有些时候自己写的也能跑起来…但是考虑的地方对比官方的总有些不足，所以如果可以最好的做法是基于官方 spec 修改，<strong>CentOS 官方的 rpm spec 可在 <a href="https://git.centos.org/project/rpms">CentOS 官方仓库</a> 中获取</strong></p>
+
+<h3 id="22spec-文件结构">2.2、spec 文件结构</h3>
+
+<p>参考 <a href="https://www.ibm.com/developerworks/cn/linux/l-rpm/">RPM 打包技术与典型 SPEC 文件分析</a> 这篇文章可知，spec 文件其实就是个模板文件，里面包含各种宏定义，其大之分为六大段:</p>
+
+<h4 id="221-文件头">2.2.1、 文件头</h4>
+
+<p>文件头部分主要是对即将编译出的 rpm 包做一些声明，包括但不限于 rpm 名称、编译平台、适用平台、版权信息、资源文件位置、说明信息 等等</p>
+
+<h4 id="222-prep段">2.2.2、 %prep段</h4>
+
+<p>prep 顾名思义意为预处理段，预处理段主要是一些预处理脚本，比如 安装前执行哪些动作(创建用户什么的)、安装后执行那些动作，还有卸载前卸载后等</p>
+
+<h4 id="223-build段">2.2.3、 %build段</h4>
+
+<p>对于需要编译的软件，比如 nginx，可在此段写好编译命令，然后在打包 rpm 的时候就可以直接编译成二进制文件被打入 rpm 包</p>
+
+<h4 id="224-install段">2.2.4、 %install段</h4>
+
+<p>一般编译阶段就会执行 install 命令，但这个时候 install 的并非系统目录，而是指定一个临时目录，把他当成系统的根目录进行安装，此时编译好的二进制安装文件全部在这个临时目录下；<strong>install 段的作用就是定义临时目录这些文件将来在安装 rpm 包的时候究竟释放到系统的那些位置，包括权限是什么等等</strong></p>
+
+<h4 id="225-files段">2.2.5、 %files段</h4>
+
+<p>在 install 段定义好临时目录下的文件的释放位置后，为防止无意外发生，还需要在 files 段中重新定义一些到底释放了那些文件，文件类型是什么；比如某某文件时配置文件，某某文件是可执行文件等，<strong>files 段相当于一个文件清单，且必须和 install 段定义的文件相匹配，也就是说你 install 了10个文件，那么 files 段必须声明这 10 个文件，当然可以使用通配符，但不能有缺失，否则 rpm 编译不过</strong></p>
+
+<h4 id="226-changelog段">2.2.6、 %changelog段</h4>
+
+<p>顾名思义，这段主要记录 spec 文件的修改历史和修改原因</p>
+
+<h2 id="三创建自定义-rpm">三、创建自定义 rpm</h2>
+
+<h3 id="31基于官方-spec-的不可行分析">3.1、基于官方 spec 的不可行分析</h3>
+
+<p>对于创建一个自定义的 rpm 一半有两种可选方案，一种是从 0 开始，自己参考官方的 spec 文件自己写一个 spec，然后自己编译；但是根据个人实践经验来看，这招很坑爹；主要有以下几个原因导致不可行:</p>
+
+<ul>
+  <li>文件缺失: 官方 spec 文件放在 git 仓库中，其中有些本地的资源文件全部加入到 git 的忽略文件中，那些奇奇怪怪名字的文件你也不知道是啥玩意，所以没法准备环境</li>
+  <li>理解困难: 一般官方的 spec 都会非常吊…吊到你根本看不懂，小说上百行多的上千行，里面各种复杂的环境配置和宏替换，对于非运维专业的童鞋来说，甚至你想改个编译版本都极其困难</li>
+  <li>网络环境: 官方的 spec 一般都是从源码开始重新编译，而源码常常是直接从 github 拉取，众所周知的原因 github 存放在亚马逊 S3 上的文件在国内下载是以 b/s 的速度计算的，一个G的源码能 wget 1年</li>
+  <li>性能不足: 官方 sepc 不管什么玩意都是从源码编译的，比如 kubernetes，这东西官方有提供编译后的可执行二进制文件，而且跨平台；根本无须自己重新编译；<strong>我测试过在一台国外的 16G 8核心的 vps 上编译一次 kubernetes 需要半小时时间</strong></li>
+  <li>spec 无缓存: 使用 spec 文件编译 rpm 不像 docker build image，rpm 编译是没有缓存的，<strong>也就是说你写了 100 行的 spec 文件，你的第 100 行写错了，那么你修改以后前面 99 行还是得重来一遍</strong>，试想一下编译 kubernetes 的 rpm 时用自己写的 spec 是件多么恐怖的事情…轻轻松松一上午时间没了…对…没了，然后还啥也没干…</li>
+</ul>
+
+<h3 id="32基于已有-rpm-的实践">3.2、基于已有 rpm 的实践</h3>
+
+<p>综上所述，最好的做法就是基于已有的 rpm 进行制作，比如说官方提供了 kubernetes 1.2 版本的 rpm，我们需要 1.3.6 的，那么就可以下载官 1.2 的 rpm 然后替换一些 1.3.6 的可执行文件再打包成新的 rpm 即可，这个过程涉及到几个问题:</p>
+
+<ul>
+  <li>如何下载官方的 rpm : 借助 yumdownloader 工具可直接通过 yum 下载</li>
+  <li>如何解包 rpm : 使用 <code class="highlighter-rouge">rpm2cpio package.rpm | cpio -idmv</code> 可接包</li>
+  <li>rpm prep 段怎么处理: 可以使用 <code class="highlighter-rouge">rpm -qp --scripts package.rpm</code> 从 rpm 包中提取</li>
+  <li>没有 spec 如何封包: 使用 fpm 工具即可</li>
+</ul>
+
+<h3 id="33撸一个-etcd-的-rpm">3.3、撸一个 etcd 的 rpm</h3>
+
+<p>以下以创建一个 etcd 的 rpm 为例，创建基于官方提供的 rpm 并替换掉可执行文件的方式；<strong>其实对于官方的 rpm 我们实际只关心两样东西: 第一个就是里面的文件，第二个就是 prep 段的脚本，</strong>以下是实际的制作过程</p>
+
+<h4 id="331下载官方-rpm">3.3.1、下载官方 rpm</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 先安装 yum 工具</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> yum-utils
+<span class="c"># 使用 yumdownloader 下载</span>
+yumdownloader etcd
+</code></pre></div></div>
+
+<h4 id="332提取-prep-段">3.3.2、提取 prep 段</h4>
+
+<p><strong>一般官方的 rpm 主要包含 4 个部分的 prep 脚本，分别为: 安装前处理(preinstall)、安装后处理(postinstall)、卸载前处理(preuninstall)、卸载后处理(postuninstall)；</strong>我们可以将其提取后放到 4 个文件中，在使用 fpm 重新封包时指定一下即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先看一下官方 rpm 的预处理脚本</span>
+rpm <span class="nt">-qp</span> <span class="nt">--scripts</span> etcd-2.3.7-2.el7.x86_64.rpm
+</code></pre></div></div>
+
+<p>显示的脚本信息如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_makerpm_prep.png" alt="hexo_makerpm_prep" /></p>
+
+<p><strong>将这四段脚本分别保存为四个文件即可，比如保存为 preinstall.sh、postinstall.sh…</strong></p>
+
+<h4 id="333解包-rpm">3.3.3、解包 rpm</h4>
+
+<p>首先创建一个临时目录，用于存放解包后的 rpm 文件，这个目录相当于 rpm 安装后的系统根目录，然后将 rpm 解包即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建临时目录</span>
+<span class="nb">mkdir </span>rpmfiles
+<span class="c"># 解包</span>
+<span class="nb">cp </span>etcd-2.3.7-2.el7.x86_64.rpm rpmfiles <span class="o">&amp;&amp;</span> <span class="nb">cd </span>rpmfiles
+rpm2cpio etcd-2.3.7-2.el7.x86_64.rpm | cpio <span class="nt">-idmv</span>
+</code></pre></div></div>
+
+<h4 id="335替换可执行文件">3.3.5、替换可执行文件</h4>
+
+<p>首先自己想办法下载一个高版本的可执行文件，然后在解包后的临时目录(rpmfiles)中找到旧的文件，删掉替换以下就行，不做演示了</p>
+
+<h4 id="336使用-fpm-打包">3.3.6、使用 fpm 打包</h4>
+
+<p>fpm 工具是 ruby 写的，又是由于众所周知的原因他么的国内 gem 不能用… 所以需要先搞好一个 ruby 环境，并安装上 fpm，ruby 安装参考 <a href="https://ruby-china.org/wiki/install_ruby_guide">如何快速正确的安装 Ruby, Rails 运行环境</a>，以下是一段安装 rvm，借助 rvm 安装 ruby 和 fpm 的脚本</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 直接从我原来的脚本里 copy 的</span>
+<span class="nb">echo</span> <span class="nt">-e</span> <span class="s2">"</span><span class="se">\0</span><span class="s2">33[32minstall rvm...</span><span class="se">\0</span><span class="s2">33[0m"</span>
+<span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/local/rvm/bin:/usr/local/rvm/rubies/ruby-2.3.0/bin
+gpg <span class="nt">--keyserver</span> hkp://keys.gnupg.net <span class="nt">--recv-keys</span> 409B6B1796C275462A1703113804BB82D39DC0E3 <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+curl <span class="nt">-sSL</span> https://get.rvm.io | bash <span class="nt">-s</span> stable <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+<span class="nb">echo</span> <span class="s2">"ruby_url=https://cache.ruby-china.org/pub/ruby"</span> <span class="o">&gt;&gt;</span> /usr/local/rvm/user/db
+rvm requirements <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+
+<span class="nb">echo</span> <span class="nt">-e</span>  <span class="s2">"</span><span class="se">\0</span><span class="s2">33[32minstall ruby...</span><span class="se">\0</span><span class="s2">33[0m"</span>
+rvm <span class="nb">install </span>2.3.0 <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+rvm use 2.3.0 <span class="nt">--default</span> <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+
+<span class="nb">echo</span> <span class="nt">-e</span>  <span class="s2">"</span><span class="se">\0</span><span class="s2">33[32minstall bundler...</span><span class="se">\0</span><span class="s2">33[0m"</span>
+gem <span class="nb">install </span>bundler <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+
+<span class="nb">echo</span> <span class="nt">-e</span>  <span class="s2">"</span><span class="se">\0</span><span class="s2">33[32minstall fpm...</span><span class="se">\0</span><span class="s2">33[0m"</span>
+gem <span class="nb">install </span>fpm <span class="o">&gt;</span> /dev/null 2&gt;&amp;1
+</code></pre></div></div>
+
+<p><strong>最后一步开始封包，封包之前确认好两件事: rpm 解包后已经替换好了相关文件、prep 段脚本已经提取好了并保存至文件中；然后就一条命令封包</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># $version 指定新的版本，后面的 etc、usr 等目录就是官方 rpm 解包的文件夹</span>
+fpm <span class="nt">-s</span> <span class="nb">dir</span> <span class="nt">-t</span> rpm <span class="nt">-n</span> <span class="s2">"etcd"</span> <span class="nt">-v</span> <span class="nv">$version</span> <span class="nt">--pre-install</span> preinstall.sh <span class="nt">--post-install</span> postinstall.sh <span class="nt">--pre-uninstall</span> preuninstall.sh <span class="nt">--post-uninstall</span> postuninstall.sh etc usr var
+</code></pre></div></div>
+
+<h2 id="四其他相关">四、其他相关</h2>
+
+<p>关于 fpm 的命令参数以及使用可以参考 github 上的 wiki，地址 <a href="https://github.com/jordansissel/fpm">点这里</a></p>
+
+<p>以上制作过程可以自己写一个编译脚本，方便以后使用，可以参考我的 <a href="https://github.com/mritd/shell_scripts/blob/master/build_rpm_tool.sh">k8s、etcd、flannel rpm 制作脚本</a>；<strong>在自己写脚本时候有些坑，比如 prep 段如果官方包的 prep 脚本中包含 $ 等特殊字符，那么在自己写的编译脚本中需要将他转义处理，否则会造成引用当前编译脚本的变量，最终在 rpm 中体现不正确的情况；自己编译好 rpm 后最好同样提取下 prep 脚本并跟官方的对比一下；同时如果自己编译时是用的 root 用户那么还要注意一下权限问题，比如 k8s 的 rpm 安装后创建 kube 用户，其可执行文件都以 kube 用户执行，这时候你 root 封包的一些文件 kube 用户可能没法读取，解决办法是在 prep 段中自己加入更改权限的 shell 脚本</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/09/11/kubernetes-%E5%8F%8C%E5%90%91-TLS-%E9%85%8D%E7%BD%AE/" data-toggle="tooltip" data-placement="top" title="kubernetes 双向 TLS 配置">
+                        Previous<br>
+                        <span>kubernetes 双向 TLS 配置</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/" data-toggle="tooltip" data-placement="top" title="Harbor 企业级 Docker Registry 第二弹">
+                        Next<br>
+                        <span>Harbor 企业级 Docker Registry 第二弹</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/09/13/基于官方-rpm-快速创建自定义-rpm";
+    var disqus_url = "https://mritd.me/2016/09/13/%E5%9F%BA%E4%BA%8E%E5%AE%98%E6%96%B9-rpm-%E5%BF%AB%E9%80%9F%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89-rpm/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

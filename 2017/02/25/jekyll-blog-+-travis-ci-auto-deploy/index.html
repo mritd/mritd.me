@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Jekyll + Travis CI 自动化部署博客">
+    <meta name="keywords"  content="Jekyll,Travis-CI">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Jekyll + Travis CI 自动化部署博客 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Jekyll + Travis CI 自动化部署博客</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on February 25, 2017</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>由于 Github 访问过慢，所以博客一直放在自己的服务器上托管；博客采用了 Jekyll 生成静态展点，最近鼓捣了一下完成了 Travis CI 自动化部署，顺便在此记录下</p>
+</blockquote>
+
+<h3 id="一原部署方式">一、原部署方式</h3>
+
+<h4 id="11原部署流程">1.1、原部署流程</h4>
+
+<p>由于博客访问量不大，同时 jekyll 启动后会开启 http 服务器，还能自动监听文件变化实现刷新；所以以前的方式就是打了一个 docker 镜像，然后镜像每隔 15 分钟拉取 Github 仓库，实现定时更新，基本流程如下</p>
+
+<ul>
+  <li>本地写博客 Markdown 文件 commit 到 Github</li>
+  <li>服务器上将 jekyll 打成 docker 镜像启动</li>
+  <li>服务器镜像内使用 crond 每隔 15 分钟拉取最新代码</li>
+  <li>jekyll 获得最新代码后自动刷新</li>
+</ul>
+
+<p>整体 “架构” 如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/44qmr.jpg" alt="老架构" /></p>
+
+<h4 id="12存在问题">1.2、存在问题</h4>
+
+<p>按照以前的方式其实存在一个很大问题就是部署不及时，每次写完文章实际上都是自己 ssh 到服务器手动 pull 一下，感觉很繁琐；另一个大问题(这也不能算 bug) jekyll 的 rss 插件默认生成的 rss 引用地址为 <code class="highlighter-rouge">jekyll server -H x.x.x.x</code> 的监听地址，而容器化启动 jekyll 监听地址必然是 <code class="highlighter-rouge">0.0.0.0</code>；后果就是 feed.xml 无法访问，如下所示(这里监听的是 localhost)</p>
+
+<p><img src="https://cdn.oss.link/markdown/fq9im.jpg" alt="feed error" /></p>
+
+<h4 id="13新部署思路">1.3、新部署思路</h4>
+
+<p>从问题角度上来说，每次手动 pull 虽然有点烦，但是并不是大问题；而 rss 订阅由于网友反馈，再加个人强迫症感觉确实是个大毛病；随着试验发现，<strong>在进行 <code class="highlighter-rouge">jekyll build</code> 时生成的 feed.xml 中的引用地址会正确读取 _config.yml 中的网址</strong>；而 <code class="highlighter-rouge">jekyll server</code> 命令实际上也是先 build，然后生成静态文件到 <code class="highlighter-rouge">_site</code> 目录，最后搞个 http 服务器发布出去</p>
+
+<p>基于以上试验可以得到一个简单的解决方案：不使用 <code class="highlighter-rouge">jekyll server</code> 启动，先 build 生成正确的 feed.xml 等静态文件，然后自己搞个 nginx 把它发布出去</p>
+
+<h3 id="二travis-ci-自动化部署">二、Travis CI 自动化部署</h3>
+
+<h4 id="21任务拆分">2.1、任务拆分</h4>
+
+<p>从上面的结论上基本要实现自动化部署需要以下步骤：</p>
+
+<ul>
+  <li>Github commit 后要能自动 build</li>
+  <li>生成的 _site 目录文件能实时更新到容器</li>
+</ul>
+
+<h4 id="22travis-ci-配置">2.2、Travis CI 配置</h4>
+
+<h5 id="221基本配置">2.2.1、基本配置</h5>
+
+<p>对于自动 build，好在 Travis CI 对于开源项目完全免费，并且能自动感知到 Github 的 commit；所以自动 build 生成 静态文件这个过程就由 Travis CI 完成，以下为配置过程</p>
+
+<p>首先注册好 Travis CI 账号，然后点击最左侧 <code class="highlighter-rouge">+</code> 按钮添加项目</p>
+
+<p><img src="https://cdn.oss.link/markdown/7axvx.jpg" alt="add repo" /></p>
+
+<p>在想要使用 Travis CI 的项目上开启 build</p>
+
+<p><img src="https://cdn.oss.link/markdown/ouod9.jpg" alt="open" /></p>
+
+<p>点击设置按钮设置一下项目</p>
+
+<p><img src="https://cdn.oss.link/markdown/p1cad.jpg" alt="set options" /></p>
+
+<h5 id="222travisyml-配置">2.2.2、.travis.yml 配置</h5>
+
+<p>当项目内存在 <code class="highlighter-rouge">.travis.yml</code> 文件时，Travis CI 会按照其定义完成自动 build 过程，所以开启了上述配置以后还要在项目下创建 <code class="highlighter-rouge">.travis.yml</code> 配置文件，配置文件定义如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>language: ruby
+rvm:
+  - 2.3.3
+before_install:
+  - openssl aes-256-cbc <span class="nt">-K</span> <span class="nv">$encrypted_ecabfac08d8e_key</span> <span class="nt">-iv</span> <span class="nv">$encrypted_ecabfac08d8e_iv</span>
+    <span class="nt">-in</span> id_rsa.enc <span class="nt">-out</span> ~/.ssh/id_rsa <span class="nt">-d</span>
+  - <span class="nb">chmod </span>600 ~/.ssh/id_rsa
+  - <span class="nb">echo</span> <span class="nt">-e</span> <span class="s2">"Host mritd.me</span><span class="se">\n\t</span><span class="s2">StrictHostKeyChecking no</span><span class="se">\n</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> ~/.ssh/config
+script:
+  - bundle <span class="nb">install</span>
+  - bundle <span class="nb">exec </span>jekyll build
+after_success:
+  - git clone https://github.com/mritd/mritd.me.git
+  - <span class="nb">cd </span>mritd.me <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> <span class="k">*</span> <span class="o">&amp;&amp;</span> <span class="nb">cp</span> <span class="nt">-r</span> ../_site/<span class="k">*</span> <span class="nb">.</span>
+  - git config user.name <span class="s2">"mritd"</span>
+  - git config user.email <span class="s2">"mritd1234@gmail.com"</span>
+  - git add <span class="nt">--all</span> <span class="nb">.</span>
+  - git commit <span class="nt">-m</span> <span class="s2">"Travis CI Auto Builder"</span>
+  - git push <span class="nt">--force</span> https://<span class="nv">$DEPLOY_TOKEN</span>@github.com/mritd/mritd.me.git master
+  - ssh root@mritd.me <span class="s2">"docker restart mritd_jekyll_1"</span>
+branches:
+  only:
+  - master
+<span class="nb">env</span>:
+  global:
+  - <span class="nv">NOKOGIRI_USE_SYSTEM_LIBRARIES</span><span class="o">=</span><span class="nb">true</span>
+</code></pre></div></div>
+
+<p>其中 <code class="highlighter-rouge">language</code>声明使用的语言，<code class="highlighter-rouge">rvm</code> 是 ruby 的管理工具，并定义了 ruby 版本；<code class="highlighter-rouge">before_install</code> 定义了执行前的预处理动作，上面增加了一个密钥用于远程登录服务器；<code class="highlighter-rouge">script</code> 段真正定义了编译过程的命令，<code class="highlighter-rouge">after_success</code> 定义了如何 build 后如何处理发布物，<code class="highlighter-rouge">branches</code> 指定有哪些分支变动后触发 CI build，env 是一些环境变量，上面添加了一个变量(根据 jekyll 官方文档)用于加速 jekyll 编译(有些配置不理解往下看)</p>
+
+<p><strong>具体 <code class="highlighter-rouge">.travis.yml</code> 配置请参考 <a href="https://docs.travis-ci.com/">官方文档</a></strong></p>
+
+<h4 id="23静态文件的自动更新">2.3、静态文件的自动更新</h4>
+
+<p>Travis CI 在完成 build 后会在 <code class="highlighter-rouge">_site</code> 目录生成博客的静态文件，而如如何将这些静态文件发送到服务器完成更新是个待解决的问题</p>
+
+<h5 id="231解决思路">2.3.1、解决思路</h5>
+
+<p>将 Travis CI 生成的静态文件推送到 Github，博客仍然 docker 化部署，采用 <code class="highlighter-rouge">nginx</code> + <code class="highlighter-rouge">静态文件</code> 方式；每次容器启动后都要从 Github pull 最新的静态文件，流程如下</p>
+
+<ul>
+  <li>本地提交博客 Markdown 文件 到 Github</li>
+  <li>Github 触发 Travis CI 执行自动编译</li>
+  <li>Travis CI 编译后 push 静态文件到 Github</li>
+  <li>Travis CI 通知服务器重启博客容器</li>
+  <li>容器重启拉取最新静态文件完成更新</li>
+</ul>
+
+<p>流程图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/8tro9.jpg" alt="new auto deploy" /></p>
+
+<h5 id="232实现方法">2.3.2、实现方法</h5>
+
+<p>其实主要问题是从上面第三步开始：</p>
+
+<p>Travis CI push 静态文件到 Github 通过 Github 的 token 
+实现授权，代码如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>after_success:
+  - git clone https://github.com/mritd/mritd.me.git
+  - <span class="nb">cd </span>mritd.me <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> <span class="k">*</span> <span class="o">&amp;&amp;</span> <span class="nb">cp</span> <span class="nt">-r</span> ../_site/<span class="k">*</span> <span class="nb">.</span>
+  - git config user.name <span class="s2">"mritd"</span>
+  - git config user.email <span class="s2">"mritd1234@gmail.com"</span>
+  - git add <span class="nt">--all</span> <span class="nb">.</span>
+  - git commit <span class="nt">-m</span> <span class="s2">"Travis CI Auto Builder"</span>
+  - git push <span class="nt">--force</span> https://<span class="nv">$DEPLOY_TOKEN</span>@github.com/mritd/mritd.me.git master
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">$DEPLOY_TOKEN</code> 是从 Github 授权得到的，然后给于相应权限即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/pco7k.jpg" alt="Github token" /></p>
+
+<p><strong>关于代码中 <code class="highlighter-rouge">$DEPLOY_TOKEN</code> 这种重要的密码类变量，Travis CI 在每个项目下提供了设置环境变量功能，如下图</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/7zmj2.jpg" alt="setting" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/0b91x.jpg" alt="add env" /></p>
+
+<p><strong>设置后可在 <code class="highlighter-rouge">.travis.yml</code> 中直接引用，不过注意一定要关闭 <code class="highlighter-rouge">Display value in build log</code> 功能，否则 CI log 中会显示 <code class="highlighter-rouge">export XXXX=XXXX</code> 这种 log 从而暴露重要密码(公有项目的 log 别人可以查看的)；如果开启了那么尽快找到相应 build 并删除 log 日志，如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/kal69.jpg" alt="delete log" /></p>
+
+<p>在成功 push 了静态文件以后，就要实现服务器的自动更新，自动更新很简单，只需要写个脚本让容器启动后自动 pull 即可，这里不再阐述；下面说一下怎么通知服务器重启容器，这里的思路很简单，<strong>让 CI ssh 上去执行一些 docker 命令即可</strong>；但是有个很大问题是 <strong>SSH 密码怎么整？</strong></p>
+
+<p><strong>Travis CI 提供了存放加密文件的方式，文档见 <a href="https://docs.travis-ci.com/user/encrypting-files/">这里</a></strong></p>
+
+<p>简单的说就是将你的 ssh 私钥加密以后扔进去即可，按照稳当的步骤很简单：</p>
+
+<ul>
+  <li>先安装 ruby 环境，然后用 gem 装 travis (gem install travis)</li>
+  <li>然后登陆 travis (travis login)</li>
+  <li>登陆后加密文件 (travis encrypt-file xxxx)，注意要在 <code class="highlighter-rouge">.travis.yml</code> 同级目录下执行，待加密文件可在任意位置</li>
+  <li>travis 会在 <code class="highlighter-rouge">.travis.yml</code> 写入 <code class="highlighter-rouge">before_install</code> 段解密还原回该文件，如果是 ssh 密钥的话参考上面的配置再改一下权限即可</li>
+</ul>
+
+<p>最后一个小问题是可能会有主机信任问题，因为 CI 服务器第一次连接我的服务器会出现 ssh 主机验证，官方给出的做法是添加 addons 配置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>addons:
+  ssh_known_hosts: mritd.me
+</code></pre></div></div>
+
+<h3 id="三一些想法">三、一些想法</h3>
+
+<p>这只是一个小博客，所以服务中断以下无所谓；如果大型部署肯定不会直接重启容器，至少应该是 k8s 滚动升级等措施；与服务器通讯也不应该采用 ssh 方式，虽然 Travis CI 做了加密，但是总感觉不那么稳妥，最好应该写个程序开放一个 REST 接口，并做好授权，必要的话需要开启一次性认证令牌那种方式，其他的后续接着优化 ( :</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/02/09/gcr.io-registy-proxy/" data-toggle="tooltip" data-placement="top" title="gcr.io 仓库代理">
+                        Previous<br>
+                        <span>gcr.io 仓库代理</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/" data-toggle="tooltip" data-placement="top" title="如何下载 Kubernetes 镜像和 rpm">
+                        Next<br>
+                        <span>如何下载 Kubernetes 镜像和 rpm</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy";
+    var disqus_url = "https://mritd.me/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

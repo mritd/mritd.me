@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Kubernetes TLS bootstrapping 那点事">
+    <meta name="keywords"  content="tls-bootstrapping,kubernetes">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Kubernetes TLS bootstrapping 那点事 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>Kubernetes TLS bootstrapping 那点事</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on January 7, 2018</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>前段时间撸了一会 Kubernetes 官方文档，在查看 TLS bootstrapping 这块是发现已经跟 1.4 的时候完全不一样了；目前所有搭建文档也都保留着 1.4 时代的配置，在看完文档后发现目前配置有很多问题，同时也埋下了 <strong>隐藏炸弹</strong>，这个问题可能会在一年后爆发…..后果就是集群 node 全部掉线；所以仔细的撸了一下这个文档，从元旦到写此文章的时间都在测试这个 TLS bootstrapping，以下记录一下这次的成果</p>
+</blockquote>
+
+<p>阅读本文章前，请先阅读一下本文参考的相关文档:</p>
+
+<ul>
+  <li><a href="https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/">TLS bootstrapping</a></li>
+  <li><a href="https://github.com/jcbsmpsn/community/blob/a843295a4f7594d41e66a8342e174f48d06b4f9f/contributors/design-proposals/kubelet-server-certificate-bootstrap-rotation.md">Kubelet Server Certificate Bootstrap &amp; Rotation</a></li>
+  <li><a href="https://kubernetes.io/docs/admin/authorization/rbac/">Using RBAC Authorization</a></li>
+</ul>
+
+<h3 id="一tls-bootstrapping-简介">一、TLS bootstrapping 简介</h3>
+
+<p>Kubernetes 在 1.4 版本(我记着是)推出了 TLS bootstrapping 功能；这个功能主要解决了以下问题:</p>
+
+<p>当集群开启了 TLS 认证后，每个节点的 kubelet 组件都要使用由 apiserver 使用的 CA 签发的有效证书才能与 apiserver 通讯；此时如果节点多起来，为每个节点单独签署证书将是一件非常繁琐的事情；TLS bootstrapping 功能就是让 kubelet 先使用一个预定的低权限用户连接到 apiserver，然后向 apiserver 申请证书，kubelet 的证书由 apiserver 动态签署；在配合 RBAC 授权模型下的工作流程大致如下所示(不完整，下面细说)</p>
+
+<p><img src="https://cdn.oss.link/markdown/ixtwd.png" alt="tls_bootstrapping" /></p>
+
+<h3 id="二tls-bootstrapping-相关术语">二、TLS bootstrapping 相关术语</h3>
+
+<h4 id="21kubelet-server">2.1、kubelet server</h4>
+
+<p>在官方 TLS bootstrapping 文档中多次提到过 <code class="highlighter-rouge">kubelet server</code> 这个东西；在经过翻阅大量文档以及 TLS bootstrapping 设计文档后得出，<strong><code class="highlighter-rouge">kubelet server</code> 指的应该是 kubelet 的 10250 端口；</strong></p>
+
+<p><strong>kubelet 组件在工作时，采用主动的查询机制，即定期请求 apiserver 获取自己所应当处理的任务，如哪些 pod 分配到了自己身上，从而去处理这些任务；同时 kubelet 自己还会暴露出两个本身 api 的端口，用于将自己本身的私有 api 暴露出去，这两个端口分别是 10250 与 10255；对于 10250 端口，kubelet 会在其上采用 TLS 加密以提供适当的鉴权功能；对于 10255 端口，kubelet 会以只读形式暴露组件本身的私有 api，并且不做鉴权处理</strong></p>
+
+<p><strong>总结一下，就是说 kubelet 上实际上有两个地方用到证书，一个是用于与 API server 通讯所用到的证书，另一个是 kubelet 的 10250 私有 api 端口需要用到的证书</strong></p>
+
+<h4 id="22csr-请求类型">2.2、CSR 请求类型</h4>
+
+<p>kubelet 发起的 CSR 请求都是由 controller manager 来做实际签署的，对于 controller manager 来说，TLS bootstrapping 下 kubelet 发起的 CSR 请求大致分为以下三种</p>
+
+<ul>
+  <li>nodeclient: kubelet 以 <code class="highlighter-rouge">O=system:nodes</code> 和 <code class="highlighter-rouge">CN=system:node:(node name)</code> 形式发起的 CSR 请求</li>
+  <li>selfnodeclient: kubelet client renew 自己的证书发起的 CSR 请求(与上一个证书就有相同的 O 和 CN)</li>
+  <li>selfnodeserver: kubelet server renew 自己的证书发起的 CSR 请求</li>
+</ul>
+
+<p><strong>大白话加自己测试得出的结果: nodeclient 类型的 CSR 仅在第一次启动时会产生，selfnodeclient 类型的 CSR 请求实际上就是 kubelet renew 自己作为 client 跟 apiserver 通讯时使用的证书产生的，selfnodeserver 类型的 CSR 请求则是 kubelet 首次申请或后续 renew 自己的 10250 api 端口证书时产生的</strong></p>
+
+<h3 id="三tls-bootstrapping-具体引导过程">三、TLS bootstrapping 具体引导过程</h3>
+
+<h4 id="31kubernetes-tls-与-rbac-认证">3.1、Kubernetes TLS 与 RBAC 认证</h4>
+
+<p>在说具体的引导过程之前先谈一下 TLS 和 RBAC，因为这两个事不整明白下面的都不用谈；</p>
+
+<ul>
+  <li>TLS 作用</li>
+</ul>
+
+<p>众所周知 TLS 的作用就是对通讯加密，防止中间人窃听；同时如果证书不信任的话根本就无法与 apiserver 建立连接，更不用提有没有权限向 apiserver 请求指定内容</p>
+
+<ul>
+  <li>RBAC 作用</li>
+</ul>
+
+<p>当 TLS 解决了通讯问题后，那么权限问题就应由 RBAC 解决(可以使用其他权限模型，如 ABAC)；RBAC 中规定了一个用户或者用户组(subject)具有请求哪些 api 的权限；<strong>在配合 TLS 加密的时候，实际上 apiserver 读取客户端证书的 CN 字段作为用户名，读取 O 字段作为用户组</strong></p>
+
+<p>从以上两点上可以总结出两点: 第一，想要与 apiserver 通讯就必须采用由 apiserver CA 签发的证书，这样才能形成信任关系，建立 TLS 连接；第二，可以通过证书的 CN、O 字段来提供 RBAC 所需的用户与用户组</p>
+
+<h4 id="32kubelet-首次启动流程">3.2、kubelet 首次启动流程</h4>
+
+<p>看完上面的介绍，不知道有没有人想过，既然 TLS bootstrapping 功能是让 kubelet 组件去 apiserver 申请证书，然后用于连接 apiserver；<strong>那么第一次启动时没有证书如何连接 apiserver ?</strong></p>
+
+<p>这个问题实际上可以去查看一下 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 和 <code class="highlighter-rouge">token.csv</code> 得到答案: <strong>在 apiserver 配置中指定了一个 <code class="highlighter-rouge">token.csv</code> 文件，该文件中是一个预设的用户配置；同时该用户的 Token 和 apiserver 的 CA 证书被写入了 kubelet 所使用的 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 配置文件中；这样在首次请求时，kubelet 使用 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的 apiserver CA 证书来与 apiserver 建立 TLS 通讯，使用 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 来向 apiserver 声明自己的 RBAC 授权身份</strong>，如下图所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/ji5ug.png" alt="first_request" /></p>
+
+<p>在有些用户首次启动时，可能与遇到 kubelet 报 401 无权访问 apiserver 的错误；<strong>这是因为在默认情况下，kubelet 通过 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的预设用户 Token 声明了自己的身份，然后创建 CSR 请求；但是不要忘记这个用户在我们不处理的情况下他没任何权限的，包括创建 CSR 请求；所以需要如下命令创建一个 ClusterRoleBinding，将预设用户 <code class="highlighter-rouge">kubelet-bootstrap</code> 与内置的 ClusterRole <code class="highlighter-rouge">system:node-bootstrapper</code> 绑定到一起，使其能够发起 CSR 请求</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create clusterrolebinding kubelet-bootstrap <span class="se">\</span>
+  <span class="nt">--clusterrole</span><span class="o">=</span>system:node-bootstrapper <span class="se">\</span>
+  <span class="nt">--user</span><span class="o">=</span>kubelet-bootstrap
+</code></pre></div></div>
+
+<h4 id="33手动签发证书">3.3、手动签发证书</h4>
+
+<p>在 kubelet 首次启动后，如果用户 Token 没问题，并且 RBAC 也做了相应的设置，那么此时在集群内应该能看到 kubelet 发起的 CSR 请求</p>
+
+<p><img src="https://cdn.oss.link/markdown/n9bbw.png" alt="bootstrap_csr" /></p>
+
+<p>出现 CSR 请求后，可以使用 kubectl 手动签发(允许) kubelet 的证书</p>
+
+<p><img src="https://cdn.oss.link/markdown/5ssf8.png" alt="bootstrap_approve_crt" /></p>
+
+<p><strong>当成功签发证书后，目标节点的 kubelet 会将证书写入到 <code class="highlighter-rouge">--cert-dir=</code> 选项指定的目录中；注意此时如果不做其他设置应当生成四个文件</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/a25ip.png" alt="bootstrap_crt" /></p>
+
+<p><strong>而 kubelet 与 apiserver 通讯所使用的证书为 <code class="highlighter-rouge">kubelet-client.crt</code>，剩下的 <code class="highlighter-rouge">kubelet.crt</code> 将会被用于 <code class="highlighter-rouge">kubelet server</code>(10250) 做鉴权使用；注意，此时 <code class="highlighter-rouge">kubelet.crt</code> 这个证书是个独立于 apiserver CA 的自签 CA，并且删除后 kubelet 组件会重新生成它</strong></p>
+
+<h3 id="四tls-bootstrapping-证书自动续期">四、TLS bootstrapping 证书自动续期</h3>
+
+<blockquote>
+  <p>单独把这部分拿出来写，是因为个人觉得上面已经有点乱了；这部分实际上更复杂，只好单独写一下了，因为这部分涉及的东西比较多，所以也不想草率的几笔带过</p>
+</blockquote>
+
+<h4 id="41rbac-授权">4.1、RBAC 授权</h4>
+
+<p>首先…首先好几次了…嗯，就是说 kubelet 所发起的 CSR 请求是由 controller manager 签署的；如果想要是实现自动续期，就需要让 controller manager 能够在 kubelet 发起证书请求的时候自动帮助其签署证书；那么 controller manager 不可能对所有的 CSR 证书申请都自动签署，这时候就需要配置 RBAC 规则，<strong>保证 controller manager 只对 kubelet 发起的特定 CSR 请求自动批准即可</strong>；在 TLS bootstrapping 官方文档中，针对上面 2.2 章节提出的 3 种 CSR 请求分别给出了 3 种对应的 ClusterRole，如下所示</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># A ClusterRole which instructs the CSR approver to approve a user requesting</span>
+<span class="c1"># node client credentials.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-client-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/nodeclient"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+<span class="nn">---</span>
+<span class="c1"># A ClusterRole which instructs the CSR approver to approve a node renewing its</span>
+<span class="c1"># own client credentials.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-client-renewal-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeclient"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+<span class="nn">---</span>
+<span class="c1"># A ClusterRole which instructs the CSR approver to approve a node requesting a</span>
+<span class="c1"># serving cert matching its client cert.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-server-renewal-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeserver"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>RBAC 中 ClusterRole 只是描述或者说定义一种集群范围内的能力，这三个 ClusterRole 在 1.7 之前需要自己手动创建，在 1.8 后 apiserver 会自动创建前两个(1.8 以后名称有改变，自己查看文档)；以上三个 ClusterRole 含义如下</p>
+
+<ul>
+  <li>approve-node-client-csr: 具有自动批准 nodeclient 类型 CSR 请求的能力</li>
+  <li>approve-node-client-renewal-csr: 具有自动批准 selfnodeclient 类型 CSR 请求的能力</li>
+  <li>approve-node-server-renewal-csr: 具有自动批准 selfnodeserver 类型 CSR 请求的能力</li>
+</ul>
+
+<p><strong>所以，如果想要 kubelet 能够自动续期，那么就应当将适当的 ClusterRole 绑定到 kubelet 自动续期时所所采用的用户或者用户组身上</strong></p>
+
+<h4 id="42自动续期下的引导过程">4.2、自动续期下的引导过程</h4>
+
+<p>在自动续期下引导过程与单纯的手动批准 CSR 有点差异，具体的引导流程地址如下</p>
+
+<ul>
+  <li>kubelet 读取 bootstrap.kubeconfig，使用其 CA 与 Token 向 apiserver 发起第一次 CSR 请求(nodeclient)</li>
+  <li>apiserver 根据 RBAC 规则自动批准首次 CSR 请求(approve-node-client-csr)，并下发证书(kubelet-client.crt)</li>
+  <li>kubelet <strong>使用刚刚签发的证书(O=system:nodes, CN=system:node:NODE_NAME)</strong>与 apiserver 通讯，并发起申请 10250 server 所使用证书的 CSR 请求</li>
+  <li>apiserver 根据 RBAC 规则自动批准 kubelet 为其 10250 端口申请的证书(kubelet-server-current.crt)</li>
+  <li>证书即将到期时，kubelet 自动向 apiserver 发起用于与 apiserver 通讯所用证书的 renew CSR 请求和 renew 本身 10250 端口所用证书的 CSR 请求</li>
+  <li>apiserver 根据 RBAC 规则自动批准两个证书</li>
+  <li>kubelet 拿到新证书后关闭所有连接，reload 新证书，以后便一直如此</li>
+</ul>
+
+<p><strong>从以上流程我们可以看出，我们如果要创建 RBAC 规则，则至少能满足四种情况:</strong></p>
+
+<ul>
+  <li>自动批准 kubelet 首次用于与 apiserver 通讯证书的 CSR 请求(nodeclient)</li>
+  <li>自动批准 kubelet 首次用于 10250 端口鉴权的 CSR 请求(实际上这个请求走的也是 selfnodeserver 类型 CSR)</li>
+  <li>自动批准 kubelet 后续 renew 用于与 apiserver 通讯证书的 CSR 请求(selfnodeclient)</li>
+  <li>自动批准 kubelet 后续 renew 用于 10250 端口鉴权的 CSR 请求(selfnodeserver)</li>
+</ul>
+
+<p>基于以上四种情况，我们需要创建 3 个 ClusterRoleBinding，创建如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 自动批准 kubelet 的首次 CSR 请求(用于与 apiserver 通讯的证书)</span>
+kubectl create clusterrolebinding node-client-auto-approve-csr <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-client-csr <span class="nt">--group</span><span class="o">=</span>system:bootstrappers
+
+<span class="c"># 自动批准 kubelet 后续 renew 用于与 apiserver 通讯证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-client-renewal-csr <span class="nt">--group</span><span class="o">=</span>system:nodes
+
+<span class="c"># 自动批准 kubelet 发起的用于 10250 端口鉴权证书的 CSR 请求(包括后续 renew)</span>
+kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-server-renewal-csr <span class="nt">--group</span><span class="o">=</span>system:nodes
+</code></pre></div></div>
+
+<h4 id="43开启自动续期">4.3、开启自动续期</h4>
+
+<p>在 1.7 后，kubelet 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 选项，则 kubelet 在证书即将到期时会自动发起一个 renew 自己证书的 CSR 请求；同时 controller manager 需要在启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，再配合上面创建好的 ClusterRoleBinding，kubelet client 和 kubelet server 证才书会被自动签署；</p>
+
+<p><strong>注意，1.7 版本设置自动续期参数后，新的 renew 请求不会立即开始，而是在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间时发起；而且经测试 1.7 版本即使自动签发了证书，kubelet 在不重启的情况下不会重新应用新证书；在 1.8 后 kubelet 组件在增加一个 <code class="highlighter-rouge">--rotate-certificates</code> 参数后，kubelet 才会自动重载新证书</strong></p>
+
+<h4 id="43证书过期问题">4.3、证书过期问题</h4>
+
+<p>需要重复强调一个问题是: <strong>TLS bootstrapping 时的证书实际是由 kube-controller-manager 组件来签署的，也就是说证书有效期是 kube-controller-manager 组件控制的</strong>；所以在 1.7 版本以后(我查文档发现的从1.7开始有) kube-controller-manager 组件提供了一个 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数来设置签署的证书有效时间；默认为 <code class="highlighter-rouge">8760h0m0s</code>，将其改为 <code class="highlighter-rouge">87600h0m0s</code> 即 10 年后再进行 TLS bootstrapping 签署证书即可。</p>
+
+<h3 id="五tls-bootstrapping-总结以及详细操作">五、TLS bootstrapping 总结以及详细操作</h3>
+
+<h4 id="51主要流程细节">5.1、主要流程细节</h4>
+
+<p>kubelet 首次启动通过加载 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 和 apiserver CA 证书发起首次 CSR 请求，这个 Token 被预先内置在 apiserver 节点的 token.csv 中，其身份为 <code class="highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="highlighter-rouge">system:bootstrappers</code> 用户组；想要首次 CSR 请求能成功(成功指的是不会被 apiserver 401 拒绝)，则需要先将 <code class="highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="highlighter-rouge">system:node-bootstrapper</code> 内置 ClusterRole 绑定；</p>
+
+<p>对于首次 CSR 请求可以手动批准，也可以将 <code class="highlighter-rouge">system:bootstrappers</code> 用户组与 <code class="highlighter-rouge">approve-node-client-csr</code> ClusterRole 绑定实现自动批准(1.8 之前这个 ClusterRole 需要手动创建，1.8 后 apiserver 自动创建，并更名为 <code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code>)</p>
+
+<p>默认签署的的证书只有 1 年有效期，如果想要调整证书有效期可以通过设置 kube-controller-manager 的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数实现，该参数默认值为 <code class="highlighter-rouge">8760h0m0s</code></p>
+
+<p>对于证书自动续签，需要通过协调两个方面实现；第一，想要 kubelet 在证书到期后自动发起续期请求，则需要在 kubelet 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 来实现；第二，想要让 controller manager 自动批准续签的 CSR 请求需要在 controller manager 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，并绑定对应的 RBAC 规则；<strong>同时需要注意的是 1.7 版本的 kubelet 自动续签后需要手动重启 kubelet 以使其重新加载新证书，而 1.8 后只需要在 kublet 启动时附带 <code class="highlighter-rouge">--rotate-certificates</code> 选项就会自动重新加载新证书</strong></p>
+
+<h4 id="52证书及配置文件作用">5.2、证书及配置文件作用</h4>
+
+<ul>
+  <li>token.csv</li>
+</ul>
+
+<p>该文件为一个用户的描述文件，基本格式为 <code class="highlighter-rouge">Token,用户名,UID,用户组</code>；这个文件在 apiserver 启动时被 apiserver 加载，然后就相当于在集群内创建了一个这个用户；接下来就可以用 RBAC 给他授权；持有这个用户 Token 的组件访问 apiserver 的时候，apiserver 根据 RBAC 定义的该用户应当具有的权限来处理相应请求</p>
+
+<ul>
+  <li>bootstarp.kubeconfig</li>
+</ul>
+
+<p>该文件中内置了 token.csv 中用户的 Token，以及 apiserver CA 证书；kubelet 首次启动会加载此文件，使用 apiserver CA 证书建立与 apiserver 的 TLS 通讯，使用其中的用户 Token 作为身份标识像 apiserver 发起 CSR 请求</p>
+
+<ul>
+  <li>kubelet-client.crt</li>
+</ul>
+
+<p>该文件在 kubelet 完成 TLS bootstrapping 后生成，此证书是由 controller manager 签署的，此后 kubelet 将会加载该证书，用于与 apiserver 建立 TLS 通讯，同时使用该证书的 CN 字段作为用户名，O 字段作为用户组向 apiserver 发起其他请求</p>
+
+<ul>
+  <li>kubelet.crt</li>
+</ul>
+
+<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>没有配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该文件为一个独立于 apiserver CA 的自签 CA 证书，有效期为 1 年；被用作 kubelet 10250 api 端口</p>
+
+<ul>
+  <li>kubelet-server.crt</li>
+</ul>
+
+<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该证书由 apiserver CA 签署，默认有效期同样是 1 年，被用作 kubelet 10250 api 端口鉴权</p>
+
+<ul>
+  <li>kubelet-client-current.pem</li>
+</ul>
+
+<p>这是一个软连接文件，当 kubelet 配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true</code> 选项后，会在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="highlighter-rouge">kubelet-client-时间戳.pem</code>；<code class="highlighter-rouge">kubelet-client-current.pem</code> 文件则始终软连接到最新的真实证书文件，除首次启动外，kubelet 一直会使用这个证书同  apiserver 通讯</p>
+
+<ul>
+  <li>kubelet-server-current.pem</li>
+</ul>
+
+<p>同样是一个软连接文件，当 kubelet 配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 选项后，会在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="highlighter-rouge">kubelet-server-时间戳.pem</code>；<code class="highlighter-rouge">kubelet-server-current.pem</code> 文件则始终软连接到最新的真实证书文件，该文件将会一直被用于 kubelet 10250 api 端口鉴权</p>
+
+<h4 id="5317-tls-bootstrapping-配置">5.3、1.7 TLS bootstrapping 配置</h4>
+
+<p>apiserver 预先放置 token.csv，内容样例如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>6df3c701f979cee17732c30958745947,kubelet-bootstrap,10001,<span class="s2">"system:bootstrappers"</span>
+</code></pre></div></div>
+
+<p>允许 kubelet-bootstrap 用户创建首次启动的 CSR 请求</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create clusterrolebinding kubelet-bootstrap <span class="se">\</span>
+  <span class="nt">--clusterrole</span><span class="o">=</span>system:node-bootstrapper <span class="se">\</span>
+  <span class="nt">--user</span><span class="o">=</span>kubelet-bootstrap
+</code></pre></div></div>
+
+<p>配置 kubelet 自动续期，<strong>RotateKubeletClientCertificate 用于自动续期 kubelet 连接 apiserver 所用的证书(kubelet-client-xxxx.pem)，RotateKubeletServerCertificate 用于自动续期 kubelet 10250 api 端口所使用的证书(kubelet-server-xxxx.pem)</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--cgroup-driver=cgroupfs </span><span class="se">\</span><span class="s2">
+              --cluster-dns=10.254.0.2 </span><span class="se">\</span><span class="s2">
+              --resolv-conf=/etc/resolv.conf </span><span class="se">\</span><span class="s2">
+              --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig </span><span class="se">\</span><span class="s2">
+              --feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true </span><span class="se">\</span><span class="s2">
+              --kubeconfig=/etc/kubernetes/kubelet.kubeconfig </span><span class="se">\</span><span class="s2">
+              --fail-swap-on=false </span><span class="se">\</span><span class="s2">
+              --cert-dir=/etc/kubernetes/ssl </span><span class="se">\</span><span class="s2">
+              --cluster-domain=cluster.local. </span><span class="se">\</span><span class="s2">
+              --hairpin-mode=promiscuous-bridge </span><span class="se">\</span><span class="s2">
+              --serialize-image-pulls=false </span><span class="se">\</span><span class="s2">
+              --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"</span>
+</code></pre></div></div>
+
+<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"--address=0.0.0.0 </span><span class="se">\</span><span class="s2">
+                              --service-cluster-ip-range=10.254.0.0/16 </span><span class="se">\</span><span class="s2">
+                              --feature-gates=RotateKubeletServerCertificate=true </span><span class="se">\</span><span class="s2">
+                              --cluster-name=kubernetes </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-cert-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --service-account-private-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --root-ca-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --leader-elect=true </span><span class="se">\</span><span class="s2">
+                              --node-monitor-grace-period=40s </span><span class="se">\</span><span class="s2">
+                              --node-monitor-period=5s </span><span class="se">\</span><span class="s2">
+                              --pod-eviction-timeout=5m0s"</span>
+</code></pre></div></div>
+
+<p>创建自动批准相关 CSR 请求的 ClusterRole</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># A ClusterRole which instructs the CSR approver to approve a user requesting</span>
+<span class="c1"># node client credentials.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-client-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/nodeclient"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+<span class="nn">---</span>
+<span class="c1"># A ClusterRole which instructs the CSR approver to approve a node renewing its</span>
+<span class="c1"># own client credentials.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-client-renewal-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeclient"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+<span class="nn">---</span>
+<span class="c1"># A ClusterRole which instructs the CSR approver to approve a node requesting a</span>
+<span class="c1"># serving cert matching its client cert.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">approve-node-server-renewal-csr</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeserver"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>将 ClusterRole 绑定到适当的用户组，以完成自动批准相关 CSR 请求</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 自动批准 system:bootstrappers 组用户 TLS bootstrapping 首次申请证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-approve-csr <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-client-csr <span class="nt">--group</span><span class="o">=</span>system:bootstrappers
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 自身与 apiserver 通讯证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-client-renewal-csr <span class="nt">--group</span><span class="o">=</span>system:nodes
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 10250 api 端口证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>approve-node-server-renewal-csr <span class="nt">--group</span><span class="o">=</span>system:nodes
+</code></pre></div></div>
+
+<p><strong>一切就绪后启动 kubelet 组件即可，不过需要注意的是 1.7 版本 kubelet 不会自动重载 renew 的证书，需要自己手动重启</strong></p>
+
+<h4 id="5418-tls-bootstrapping-配置">5.4、1.8 TLS bootstrapping 配置</h4>
+
+<p>apiserver 预先放置 token.csv，内容样例如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>6df3c701f979cee17732c30958745947,kubelet-bootstrap,10001,<span class="s2">"system:bootstrappers"</span>
+</code></pre></div></div>
+
+<p>允许 kubelet-bootstrap 用户创建首次启动的 CSR 请求</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create clusterrolebinding kubelet-bootstrap <span class="se">\</span>
+  <span class="nt">--clusterrole</span><span class="o">=</span>system:node-bootstrapper <span class="se">\</span>
+  <span class="nt">--user</span><span class="o">=</span>kubelet-bootstrap
+</code></pre></div></div>
+
+<p>配置 kubelet 自动续期，<strong>RotateKubeletClientCertificate 用于自动续期 kubelet 连接 apiserver 所用的证书(kubelet-client-xxxx.pem)，RotateKubeletServerCertificate 用于自动续期 kubelet 10250 api 端口所使用的证书(kubelet-server-xxxx.pem)，<code class="highlighter-rouge">--rotate-certificates</code> 选项使得 kubelet 能够自动重载新证书</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--cgroup-driver=cgroupfs </span><span class="se">\</span><span class="s2">
+              --cluster-dns=10.254.0.2 </span><span class="se">\</span><span class="s2">
+              --resolv-conf=/etc/resolv.conf </span><span class="se">\</span><span class="s2">
+              --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig </span><span class="se">\</span><span class="s2">
+              --feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true </span><span class="se">\</span><span class="s2">
+              --rotate-certificates </span><span class="se">\</span><span class="s2">
+              --kubeconfig=/etc/kubernetes/kubelet.kubeconfig </span><span class="se">\</span><span class="s2">
+              --fail-swap-on=false </span><span class="se">\</span><span class="s2">
+              --cert-dir=/etc/kubernetes/ssl </span><span class="se">\</span><span class="s2">
+              --cluster-domain=cluster.local. </span><span class="se">\</span><span class="s2">
+              --hairpin-mode=promiscuous-bridge </span><span class="se">\</span><span class="s2">
+              --serialize-image-pulls=false </span><span class="se">\</span><span class="s2">
+              --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"</span>
+</code></pre></div></div>
+
+<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"--address=0.0.0.0 </span><span class="se">\</span><span class="s2">
+                              --service-cluster-ip-range=10.254.0.0/16 </span><span class="se">\</span><span class="s2">
+                              --cluster-name=kubernetes </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-cert-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --service-account-private-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --feature-gates=RotateKubeletServerCertificate=true </span><span class="se">\</span><span class="s2">
+                              --root-ca-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --leader-elect=true </span><span class="se">\</span><span class="s2">
+                              --experimental-cluster-signing-duration 10m0s </span><span class="se">\</span><span class="s2">
+                              --node-monitor-grace-period=40s </span><span class="se">\</span><span class="s2">
+                              --node-monitor-period=5s </span><span class="se">\</span><span class="s2">
+                              --pod-eviction-timeout=5m0s"</span>
+</code></pre></div></div>
+
+<p>创建自动批准相关 CSR 请求的 ClusterRole，相对于 1.7 版本，1.8 的 apiserver 自动创建了前两条 ClusterRole，所以只需要创建一条就行了</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># A ClusterRole which instructs the CSR approver to approve a node requesting a</span>
+<span class="c1"># serving cert matching its client cert.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:certificates.k8s.io:certificatesigningrequests:selfnodeserver</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeserver"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>将 ClusterRole 绑定到适当的用户组，以完成自动批准相关 CSR 请求</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 自动批准 system:bootstrappers 组用户 TLS bootstrapping 首次申请证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-approve-csr <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:nodeclient <span class="nt">--group</span><span class="o">=</span>system:bootstrappers
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 自身与 apiserver 通讯证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:selfnodeclient <span class="nt">--group</span><span class="o">=</span>system:nodes
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 10250 api 端口证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:selfnodeserver <span class="nt">--group</span><span class="o">=</span>system:nodes
+</code></pre></div></div>
+
+<p><strong>一切就绪后启动 kubelet 组件即可，1.8 版本 kubelet 会自动重载证书，以下为 1.8 版本在运行一段时间后的相关证书截图</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/570wk.png" alt="tls_bootstrapping_crts" /></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/28/ci-cd-gitlab-ci/" data-toggle="tooltip" data-placement="top" title="CI/CD 之 GitLab CI">
+                        Previous<br>
+                        <span>CI/CD 之 GitLab CI</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2018/03/20/use-rbac-to-control-kubectl-permissions/" data-toggle="tooltip" data-placement="top" title="使用 RBAC 控制 kubectl 权限">
+                        Next<br>
+                        <span>使用 RBAC 控制 kubectl 权限</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2018/01/07/kubernetes-tls-bootstrapping-note";
+    var disqus_url = "https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

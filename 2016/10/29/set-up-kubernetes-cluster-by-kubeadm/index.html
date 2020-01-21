@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="kubeadm 搭建 kubernetes 集群">
+    <meta name="keywords"  content="kubeadm,Kubernetes">
+    <meta name="theme-color" content="#000000">
+    
+    <title>kubeadm 搭建 kubernetes 集群 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>kubeadm 搭建 kubernetes 集群</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on October 29, 2016</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>距离上一篇 <a href="https://mritd.me/2016/10/09/kubernetes-1.4-create-cluster/">kubernetes 1.4 集群搭建</a> 发布间隔不算太久，自己也不断地在生产和测试环境鼓捣，有不少 “逗比” 的经历，准备写一下具体的 kubeadm 搭建集群的一些坑和踩坑的经验，如果没有使用过 kubeadm 的同学，最好先看下上面的文章，然后鼓捣一遍，也许并不会成功，但大部分坑再来看此文会有收获</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>首先环境还是三台虚拟机，虚拟机地址如下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>IP 地址</th>
+      <th>节点</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>192.168.1.167</td>
+      <td>master</td>
+    </tr>
+    <tr>
+      <td>192.168.1.189</td>
+      <td>node1</td>
+    </tr>
+    <tr>
+      <td>192.168.1.176</td>
+      <td>node2</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>然后每台机器安装好 docker，至于 rpm 安装包版本下面介绍</p>
+
+<h3 id="二说点正经事">二、说点正经事</h3>
+
+<h4 id="21安装包从哪来">2.1、安装包从哪来</h4>
+
+<p>官方的文档页面更新并不及时，同时他的 yum 源更新也很慢，再者…那他妈可是 Google 的服务器，能特么连上吗？以前总是在国外服务器使用 <code class="highlighter-rouge">yumdownloader</code> 下载，然后 <code class="highlighter-rouge">scp</code> 到本地，虽然能解决问题，但是蛋碎一地…最后找到了源头，如下</p>
+
+<p><strong>Kubernetes 编译的各种发行版安装包来源于 Github 上的另一个叫 release 的项目，地址 <a href="https://github.com/kubernetes/release">点这里</a>，把这个项目 <code class="highlighter-rouge">clone</code> 下来，由于本人是 Centos 用户，所以进入 rpm 目录，在安装好 docker 的机器上执行那个 <code class="highlighter-rouge">docker-build.sh</code> 脚本即可编译 rpm 包，最后会生成到当前目录的 <code class="highlighter-rouge">output</code> 目录下,截图如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/3zs7u.jpg" alt="release" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/8b3a4.jpg" alt="rpm目录" /></p>
+
+<h4 id="22镜像从哪来">2.2、镜像从哪来</h4>
+
+<p>对的，没错，gcr.io 就是 Google 的域名，服务器更不用提，所以在进行 <code class="highlighter-rouge">kubeadm init</code> 操作时如果不先把这些镜像 load 进去绝对会卡死不动，以下列出了所需镜像，但是版本号根据 rpm 版本不同可能略有不同，具体怎么看下面介绍</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>镜像名称</th>
+      <th>版本号</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>gcr.io/google_containers/kube-discovery-amd64</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kubedns-amd64</td>
+      <td>1.7</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-proxy-amd64</td>
+      <td>v1.4.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-scheduler-amd64</td>
+      <td>v1.4.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-controller-manager-amd64</td>
+      <td>v1.4.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-apiserver-amd64</td>
+      <td>v1.4.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/etcd-amd64</td>
+      <td>2.2.5</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-dnsmasq-amd64</td>
+      <td>1.3</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/exechealthz-amd64</td>
+      <td>1.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/pause-amd64</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>这些镜像有两种办法可以获取，第一种是利用一台国外的服务器，在上面 pull 下来，然后再 save 成 tar 文件，最后 scp 到本地 load 进去；相对于第一种方式比较坑的是取决于服务器速度，每次搞起来也很蛋疼，第二种方式就是利用 docker hub 做中转，简单的说就是利用 docker hub 的自动构建功能，在 Github 中创建一个 Dockerfile，里面只需要 <code class="highlighter-rouge">FROM xxxx</code> 这些 gcr.io 的镜像即可，最后 pull 到本地，然后再 tag 一下</strong></p>
+
+<p><strong>首先创建一个 github 项目，可以直接 fork 我的即可</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/2eo34.jpg" alt="docker-libray" /></p>
+
+<p>其中每个 Dockerfile 只需要 <code class="highlighter-rouge">FROM</code> 一下即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/cxva2.jpg" alt="Dockerfile" /></p>
+
+<p><strong>最后在 Docker Hub 上创建自动构建项目</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/p5khs.jpg" alt="createproject" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/gc8vl.jpg" alt="from github" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/9ufnd.jpg" alt="selectproject" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/ud42y.jpg" alt="details" /></p>
+
+<p><strong>最后要手动触发一下，然后 Docker Hub 才会开始给你编译</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/phgsg.jpg" alt="Tigger" /></p>
+
+<p><strong>等待完成即可直接 pull 了</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/itnw3.jpg" alt="success" /></p>
+
+<h4 id="23镜像版本怎么整">2.3、镜像版本怎么整</h4>
+
+<p>上面已经解决了镜像获取问题，但是一大心病就是 “我特么怎么知道是哪个版本的”，为了发扬 “刨根问底” 的精神，<strong>先进行一遍 <code class="highlighter-rouge">kubeadm init</code>，这时候绝对卡死，此时进入 <code class="highlighter-rouge">/etc/kubernetes/manifests</code> 可以看到许多 json 文件，这些文件中定义了需要哪些基础镜像</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/3ovg8.jpg" alt="all json" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/uitnd.jpg" alt="image version" /></p>
+
+<p>从上图中基本可以看到 <code class="highlighter-rouge">kubeadm init</code> 的时候会拉取哪些基础镜像了，<strong>但是还有一些镜像，仍然无法找到，比如<code class="highlighter-rouge">kubedns</code>、<code class="highlighter-rouge">pause</code> 等，至于其他的镜像版本，可以从源码中找到，源码位置是 <code class="highlighter-rouge">kubernetes/cmd/kubeadm/app/images/images.go</code> 这个文件中，如下所示:</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/ocgu4.jpg" alt="image version" /></p>
+
+<p>剩余的一些镜像，比如 <code class="highlighter-rouge">kube-proxy-amd64</code>、<code class="highlighter-rouge">kube-discovery-amd64</code> 两个镜像，其中 <code class="highlighter-rouge">kube-discovery-amd64</code> 现在一直是 1.0 版本，源码如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/mp3qo.jpg" alt="discovery version" /></p>
+
+<p><code class="highlighter-rouge">kube-proxy-amd64</code> 则是一直跟随基础组件的主版本，也就是说如果从 <code class="highlighter-rouge">manifests</code> 中看到 controller 等版本是 <code class="highlighter-rouge">v.1.4.4</code>，那么 <code class="highlighter-rouge">kube-proxy-amd64</code> 也是这个版本，源码如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/tienu.jpg" alt="proxy version" /></p>
+
+<p>最后根据这些版本去 github 上准备相应的 Dockerfile，在利用 Docker Hub 的自动构建 build 一下，再 pull 下来 tag 成对应的镜像名称即可</p>
+
+<h3 id="三搭建集群">三、搭建集群</h3>
+
+<h4 id="31主机名处理">3.1、主机名处理</h4>
+
+<p><strong>经过亲测，节点主机名最好为 <code class="highlighter-rouge">xxx.xxx</code> 这种域名格式，否则在某些情况下，POD 中跑的程序使用域名解析时可能出现问题，所以先要处理一下主机名</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 写入 hostname(node 节点后缀改成 .node)</span>
+<span class="nb">echo</span> <span class="s2">"192-168-1-167.master"</span> <span class="o">&gt;</span> /etc/hostname 
+<span class="c"># 加入 hosts</span>
+<span class="nb">echo</span> <span class="s2">"127.0.0.1   192-168-1-167.master"</span> <span class="o">&gt;&gt;</span> /etc/hosts
+<span class="c"># 不重启情况下使内核生效</span>
+sysctl kernel.hostname<span class="o">=</span>192-168-1-167.master
+<span class="c"># 验证是否修改成功</span>
+➜  ~ <span class="nb">hostname
+</span>192-168-1-167.master
+</code></pre></div></div>
+
+<h4 id="32load-镜像">3.2、load 镜像</h4>
+
+<p>由于本人已经在 Docker Hub 上处理好了相关镜像，所以直接 pull 下来 tag 一下即可，</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">images</span><span class="o">=(</span>kube-proxy-amd64:v1.4.4 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-scheduler-amd64:v1.4.4 kube-controller-manager-amd64:v1.4.4 kube-apiserver-amd64:v1.4.4 etcd-amd64:2.2.5 kube-dnsmasq-amd64:1.3 exechealthz-amd64:1.1 pause-amd64:3.0 kubernetes-dashboard-amd64:v1.4.1<span class="o">)</span>
+<span class="k">for </span>imageName <span class="k">in</span> <span class="k">${</span><span class="nv">images</span><span class="p">[@]</span><span class="k">}</span> <span class="p">;</span> <span class="k">do
+  </span>docker pull mritd/<span class="nv">$imageName</span>
+  docker tag mritd/<span class="nv">$imageName</span> gcr.io/google_containers/<span class="nv">$imageName</span>
+  docker rmi mritd/<span class="nv">$imageName</span>
+<span class="k">done</span>
+</code></pre></div></div>
+
+<h4 id="33安装-rpm">3.3、安装 rpm</h4>
+
+<p>rpm 获取办法上文已经提到，可以自己编译，这里我已经编译好并维护了一个 yum 源，直接yum install 即可(懒)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 添加 yum 源</span>
+<span class="nb">tee</span> /etc/yum.repos.d/mritd.repo <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
+[mritdrepo]
+name=Mritd Repository
+baseurl=https://rpm.mritd.me/centos/7/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://cdn.oss.link/keys/rpm.public.key
+</span><span class="no">EOF
+</span><span class="c"># 刷新cache</span>
+yum makecache
+<span class="c"># 安装</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> kubelet kubectl kubernetes-cni kubeadm
+</code></pre></div></div>
+
+<h4 id="34初始化-master">3.4、初始化 master</h4>
+
+<p><strong>等会有个坑，kubeadm 等相关 rpm 安装后会生成 <code class="highlighter-rouge">/etc/kubernetes</code> 目录，而 kubeadm init 时候又会检测这些目录是否存在，如果存在则停止初始化，所以要先清理一下，以下清理脚本来源于 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档 Tear down 部分</a>，该脚本同样适用于初始化失败进行重置</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl stop kubelet<span class="p">;</span>
+<span class="c"># 注意: 下面这条命令会干掉所有正在运行的 docker 容器，</span>
+<span class="c"># 如果要进行重置操作，最好先确定当前运行的所有容器都能干掉(干掉不影响业务)，</span>
+<span class="c"># 否则的话最好手动删除 kubeadm 创建的相关容器(gcr.io 相关的)</span>
+docker <span class="nb">rm</span> <span class="nt">-f</span> <span class="nt">-v</span> <span class="si">$(</span>docker ps <span class="nt">-q</span><span class="si">)</span><span class="p">;</span>
+find /var/lib/kubelet | xargs <span class="nt">-n</span> 1 findmnt <span class="nt">-n</span> <span class="nt">-t</span> tmpfs <span class="nt">-o</span> TARGET <span class="nt">-T</span> | <span class="nb">uniq</span> | xargs <span class="nt">-r</span> umount <span class="nt">-v</span><span class="p">;</span>
+<span class="nb">rm</span> <span class="nt">-r</span> <span class="nt">-f</span> /etc/kubernetes /var/lib/kubelet /var/lib/etcd<span class="p">;</span>
+</code></pre></div></div>
+
+<p><strong>还有个坑，初始化以前记得一定要启动 kubelet，虽然你 <code class="highlighter-rouge">systemctl status kubelet</code> 看着他是启动失败，但是也得启动，否则绝壁卡死</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>kubelet
+systemctl start kubelet
+</code></pre></div></div>
+
+<p><strong>等会等会，还有坑，新版本直接 init 会提示 <code class="highlighter-rouge">ebtables not found in system path</code> 错误，所以还得先安装一下这个包在初始化</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 ebtables</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> ebtables
+</code></pre></div></div>
+
+<p><strong>最后见证奇迹的时刻</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 初始化并指定 apiserver 监听地址</span>
+kubeadm init <span class="nt">--api-advertise-addresses</span> 192.168.1.167
+</code></pre></div></div>
+
+<p><strong>完美截图如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/rs2mw.jpg" alt="init master" /></p>
+
+<p><strong>这里再爆料一个坑，底下的 <code class="highlighter-rouge">kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167</code> 这条命令一定保存好，因为后期没法重现的，你们老大再让你添加机器的时候如果没这个你会哭的</strong></p>
+
+<h4 id="35加入-node">3.5、加入 node</h4>
+
+<p>上面所有坑大约说的差不多了，直接上命令了</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 处理主机名</span>
+<span class="nb">echo</span> <span class="s2">"192-168-1-189.node"</span> <span class="o">&gt;</span> /etc/hostname 
+<span class="nb">echo</span> <span class="s2">"127.0.0.1   192-168-1-189.node"</span> <span class="o">&gt;&gt;</span> /etc/hosts
+sysctl kernel.hostname<span class="o">=</span>192-168-1-189.node
+<span class="c"># 拉取镜像</span>
+<span class="nv">images</span><span class="o">=(</span>kube-proxy-amd64:v1.4.4 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-scheduler-amd64:v1.4.4 kube-controller-manager-amd64:v1.4.4 kube-apiserver-amd64:v1.4.4 etcd-amd64:2.2.5 kube-dnsmasq-amd64:1.3 exechealthz-amd64:1.1 pause-amd64:3.0 kubernetes-dashboard-amd64:v1.4.1<span class="o">)</span>
+<span class="k">for </span>imageName <span class="k">in</span> <span class="k">${</span><span class="nv">images</span><span class="p">[@]</span><span class="k">}</span> <span class="p">;</span> <span class="k">do
+  </span>docker pull mritd/<span class="nv">$imageName</span>
+  docker tag mritd/<span class="nv">$imageName</span> gcr.io/google_containers/<span class="nv">$imageName</span>
+  docker rmi mritd/<span class="nv">$imageName</span>
+<span class="k">done</span>
+<span class="c"># 装 rpm</span>
+<span class="nb">tee</span> /etc/yum.repos.d/mritd.repo <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
+[mritdrepo]
+name=Mritd Repository
+baseurl=https://rpm.mritd.me/centos/7/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://cdn.oss.link/keys/rpm.public.key
+</span><span class="no">EOF
+</span>yum makecache
+yum <span class="nb">install</span> <span class="nt">-y</span> kubelet kubectl kubernetes-cni kubeadm ebtables
+<span class="c"># 清理目录(没初始化过只需要删目录)</span>
+<span class="nb">rm</span> <span class="nt">-r</span> <span class="nt">-f</span> /etc/kubernetes /var/lib/kubelet /var/lib/etcd<span class="p">;</span>
+<span class="c"># 启动 kubelet</span>
+systemctl <span class="nb">enable </span>kubelet
+systemctl start kubelet
+<span class="c"># 初始化加入集群</span>
+kubeadm <span class="nb">join</span> <span class="nt">--token</span><span class="o">=</span>b17964.5d8a3c14e99cf6aa 192.168.1.167
+</code></pre></div></div>
+
+<p><strong>同样完美截图</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/9c8eu.jpg" alt="join master" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/ri4q9.jpg" alt="get node" /></p>
+
+<h4 id="36部署-weave-网络">3.6、部署 weave 网络</h4>
+
+<p>再没部署 weave 时，dns 是启动不了的，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/fqjsg.jpg" alt="dns not work" /></p>
+
+<p><strong>官方给出的命令是这样的</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create <span class="nt">-f</span> https://git.io/weave-kube
+</code></pre></div></div>
+
+<p>本着 “刨根问底挖祖坟” 的精神，先把这个 yaml 搞下来</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://git.io/weave-kube <span class="nt">-O</span> weave-kube.yaml
+</code></pre></div></div>
+
+<p>然后同样的套路，打开看一下镜像，利用 Docker Hub 做中转，搞下来再 load 进去，然后 <code class="highlighter-rouge">create -f</code> 就行了</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull mritd/weave-kube:1.7.2
+docker tag mritd/weave-kube:1.7.2 weaveworks/weave-kube:1.7.2
+docker rmi mritd/weave-kube:1.7.2
+kubectl create <span class="nt">-f</span> weave-kube.yaml
+</code></pre></div></div>
+
+<p><strong>完美截图</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/0ja5f.jpg" alt="create weave" /></p>
+
+<h4 id="37部署-dashboard">3.7、部署 dashboard</h4>
+
+<p><strong>dashboard 的命令也跟 weave 的一样，不过有个大坑，默认的 yaml 文件中对于 image 拉取策略的定义是 无论何时都会去拉取镜像，导致即使你 load 进去也无卵用，所以还得先把 yaml 搞下来然后改一下镜像拉取策略，最后再 <code class="highlighter-rouge">create -f</code> 即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml <span class="nt">-O</span> kubernetes-dashboard.yaml
+</code></pre></div></div>
+
+<p><strong>编辑 yaml 改一下 <code class="highlighter-rouge">imagePullPolicy</code>，把 <code class="highlighter-rouge">Always</code> 改成 <code class="highlighter-rouge">IfNotPresent</code>(本地没有再去拉取) 或者 <code class="highlighter-rouge">Never</code>(从不去拉取) 即可</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/lqvh1.jpg" alt="IfNotPresent" /></p>
+
+<p>最后再利用 Dokcer Hub 中转，然后创建(实际上 dashboard 已经有了 v1.4.1，我这里已经改了)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create <span class="nt">-f</span> kubernetes-dashboard.yaml
+</code></pre></div></div>
+
+<p><strong>截图如下</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/xsn9u.jpg" alt="create dashboard" /></p>
+
+<p><strong>通过 describe 命令我们可以查看其暴露出的 <code class="highlighter-rouge">NodePoint</code>,然后便可访问</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/5a94q.jpg" alt="describe dashboard" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/xwjvs.jpg" alt="show dashboard" /></p>
+
+<h3 id="四其他的一些坑">四、其他的一些坑</h3>
+
+<p>还有一些其他的坑等着大家去摸索，其中有一个是 DNS 解析错误，表现形式为 <strong>POD 内的程序通过域名访问解析不了，cat 一下容器的 <code class="highlighter-rouge">/etc/resolv.conf</code>发现指向的 dns 服务器与 <code class="highlighter-rouge">kubectl get svc --namespace=kube-system</code> 中的 kube-dsn 地址不符</strong>；解决办法就是 <strong>编辑节点的 <code class="highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 文件，更改 <code class="highlighter-rouge">KUBELET_DNS_ARGS</code> 地址为 <code class="highlighter-rouge">get svc</code> 中的 kube-dns 地址，然后重启 kubelet 服务，重新杀掉 POD 让 kubernetes 重建即可</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hhozt.jpg" alt="modify kube-dns" /></p>
+
+<p><strong>其他坑欢迎大家补充</strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/10/25/waved-goodbye/" data-toggle="tooltip" data-placement="top" title="人生就是会不断挥手说再见的啊">
+                        Previous<br>
+                        <span>人生就是会不断挥手说再见的啊</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/11/02/wanyue/" data-toggle="tooltip" data-placement="top" title="晚月">
+                        Next<br>
+                        <span>晚月</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2016/10/29/set-up-kubernetes-cluster-by-kubeadm";
+    var disqus_url = "https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

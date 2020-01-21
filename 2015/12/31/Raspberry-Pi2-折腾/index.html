@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Raspberry Pi2 折腾">
+    <meta name="keywords"  content="Linux,Raspberry Pi2">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Raspberry Pi2 折腾 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2015/12/31/Raspberry-Pi2-%E6%8A%98%E8%85%BE/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Raspberry Pi2 折腾</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on December 31, 2015</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <h3 id="开启root用户">开启Root用户</h3>
+
+<blockquote>
+  <p>初次使用pi用户登录后，默认密码为 raspberry，然后应该搞开Root用户，和Debian系列一样(我特么只用过基于Debian的，如Ubuntu，还没玩过纯血统Debian)，默认树莓派Root用户是未启用的，密码每次开机都变，执行以下命令开启Root用户，并更改密码:</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>passwd root
+<span class="c"># 然后输两次密码，可以su过去了，不过这时你会发现</span>
+<span class="c"># 仍然无法远程以root登录，修改如下配置中的 PermitRootLogin 参数即可</span>
+vi /etc/ssh/sshd_config
+<span class="c"># 该参数码值如下</span>
+
+<span class="c"># 允许root用户以任何认证方式登录</span>
+PermitRootLogin <span class="nb">yes</span>  
+
+<span class="c"># 只允许root用public key认证方式登录</span>
+PermitRootLogin without-password      
+
+<span class="c"># 不允许root远程登录</span>
+PermitRootLogin no  
+</code></pre></div></div>
+
+<hr />
+<blockquote>
+  <p>以下相关设置大部分在root权限下进行</p>
+</blockquote>
+
+<hr />
+
+<h3 id="解决vi方向删除失灵">解决vi方向/删除失灵</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 直接编辑vim配置文件，注意先调整到要改的位置，再编辑</span>
+<span class="c"># 因为一旦进入Insert模式 方向键是不好使的</span>
+vi /etc/vim/vimrc.tiny
+
+<span class="c"># 修改后如下</span>
+<span class="nb">set </span>nocompatible
+<span class="nb">set </span><span class="nv">backspace</span><span class="o">=</span>2
+</code></pre></div></div>
+
+<h3 id="less语法高亮">less语法高亮</h3>
+
+<blockquote>
+  <ol>
+    <li>执行命令 <code class="highlighter-rouge">apt-get install source-highlight</code></li>
+    <li>加入环境变量(更详细参考 <a href="http://leonyoung.sinaapp.com/blog/2013/10/syntax-highlight-in-less/">这里</a>)</li>
+  </ol>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">LESSOPEN</span><span class="o">=</span><span class="s1">'| /usr/share/source-highlight/src-hilite-lesspipe.sh %s'</span>
+<span class="nb">export </span><span class="nv">LESS</span><span class="o">=</span><span class="s1">' -R -N '</span>
+</code></pre></div></div>
+<h3 id="设置自动连接-wifi">设置自动连接 WiFi</h3>
+
+<ul>
+  <li>编辑 /etc/network/interfaces 文件</li>
+</ul>
+
+<blockquote>
+  <p>一般只有一个无线网卡的话默认为 wlan0，修改 <code class="highlighter-rouge">iface wlan0 inet manual</code> 为 <code class="highlighter-rouge">iface wlan0 inet dhcp</code>，因为考虑到网络环境，频繁切换网络不适合设置静态IP，所以使用 DHCP 分配，样例配置文件如下:</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Please note that this file is written to be used with dhcpcd.</span>
+<span class="c"># For static IP, consult /etc/dhcpcd.conf and 'man dhcpcd.conf'.</span>
+
+auto lo
+iface lo inet loopback
+
+<span class="c"># 自动连接有线网卡</span>
+auto eth0
+allow-hotplug eth0
+iface eth0 inet manual
+
+<span class="c"># 自动连接 无线网卡</span>
+auto wlan0
+<span class="c"># 允许热插拔</span>
+allow-hotplug wlan0
+<span class="c"># IP采用 DHCP 分配</span>
+iface wlan0 inet dhcp
+<span class="c"># SSID 等相关设置(wifi密码啥的)</span>
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+auto wlan1
+allow-hotplug wlan1
+iface wlan1 inet dhcp
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+</code></pre></div></div>
+
+<ul>
+  <li>编辑 /etc/wpa_supplicant/wpa_supplicant.conf 文件</li>
+</ul>
+
+<blockquote>
+  <p>该文件主要存储无线网络连接的相关设置，包括SSID、密码、加密方式等，配置样例如下</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">ctrl_interface</span><span class="o">=</span><span class="nv">DIR</span><span class="o">=</span>/var/run/wpa_supplicant <span class="nv">GROUP</span><span class="o">=</span>netdev
+<span class="nv">update_config</span><span class="o">=</span>1
+
+<span class="nv">network</span><span class="o">={</span>
+  <span class="c"># Wifi SSID</span>
+  <span class="nv">ssid</span><span class="o">=</span><span class="s2">"mritd"</span>
+  <span class="c"># Wifi Password</span>
+  <span class="nv">psk</span><span class="o">=</span><span class="s2">"12345678"</span>
+  <span class="c"># 网络优先级， network块可以有多个，也就是可以设置多个无线链接及密码，</span>
+  <span class="c"># 当有多个Wifi都存在时，根据这个值选择优先链接，越大优先级越高，不可为负数</span>
+  <span class="nv">priority</span><span class="o">=</span>5
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>其中 network 部分最好使用工具生成，命令如下 <code class="highlighter-rouge">wpa_passphrase SSID PASSWD</code></strong></p>
+
+<ul>
+  <li>启用网卡链接</li>
+</ul>
+
+<blockquote>
+  <p>执行 <code class="highlighter-rouge">ifup wlan0</code> 启动 wlan0 并连接，执行 <code class="highlighter-rouge">ifdown wlan0</code> 关闭并断开链接，如下图:
+<img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_ifup_wlan0.png" alt="ifup_wlan0" /></p>
+
+  <p>链接成功后可执行 <code class="highlighter-rouge">ifconfig</code> 或 <code class="highlighter-rouge">iwconfig</code>查看网络连接状况，如下图:
+<img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_iwconfig_wlan0.png" alt="iwconfig" /></p>
+
+  <p><img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_ifconfig_wlan0.png" alt="ifconfig" /></p>
+</blockquote>
+
+<h3 id="关闭-wifi-休眠">关闭 WiFi 休眠</h3>
+
+<p>默认情况下树莓派的 wifi 时会自动休眠的，使用如下命令关闭网卡休眠</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 检测网卡休眠状态 1 代表会自动休眠 0 反之</span>
+<span class="nb">cat</span> /sys/module/8192cu/parameters/rtw_power_mgnt
+<span class="c"># 如果为1 编辑 8192cu.conf 文件关闭休眠(此文件没有可新建)</span>
+vim /etc/modprobe.d/8192cu.conf
+<span class="c"># 内容如下</span>
+
+<span class="c"># Disable power saving</span>
+options 8192cu <span class="nv">rtw_power_mgnt</span><span class="o">=</span>0
+</code></pre></div></div>
+
+<p>修改配置后重启即可</p>
+
+<h3 id="设置命令提示符风格">设置命令提示符风格</h3>
+
+<ul>
+  <li>命令提示相关设置</li>
+</ul>
+
+<blockquote>
+  <p>Linxu命令提示符由 PS1变量控制，所以更改命令提示符样式也就是更改PS1变量，以下为相关码值:</p>
+</blockquote>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>\d ：#代表日期，格式为weekday month date，例如："Mon Aug 1"   
+\H ：#完整的主机名称。   
+\h ：#仅取主机的第一个名字，如上例，则为fc4，.linux则被省略   
+\t ：#显示时间为24小时格式，如：HH：MM：SS   
+\T ：#显示时间为12小时格式   
+\A ：#显示时间为24小时格式：HH：MM   
+\u ：#当前用户的账号名称   
+\v ：#BASH的版本信息   
+\w ：#完整的工作目录名称。家目录会以 ~代替   
+\W ：#利用basename取得工作目录名称，所以只会列出最后一个目录   
+\# ：#下达的第几个命令   
+\$ ：#提示字符，如果是root时，提示符为：# ，普通用户则为：$
+</code></pre></div></div>
+
+<blockquote>
+  <p>颜色及效果控制码值</p>
+</blockquote>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 前景    背景     颜色
+------------------------
+  30      40      黑色   
+  31      41      红色   
+　32      42      绿色   
+　33      43      黄色   
+　34      44      蓝色   
+　35      45      紫红色   
+　36      46      青蓝色   
+　37      47      白色  
+　
+ 代码          意义   
+-------------------------   
+  0            OFF   
+  1            高亮显示   
+  4            underline   
+  5            闪烁   
+  7            反白显示   
+  8            不可见  
+</code></pre></div></div>
+
+<blockquote>
+  <p>设置PS1变量时，<code class="highlighter-rouge">\[\e[F;Bm]</code> 代表颜色开始，F为前景色，B为背景色，<code class="highlighter-rouge">\e[m]</code> 为颜色结束符，不写的话会造成整个命令行都是最后一种颜色，以下为我的PS1样式</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PS1</span><span class="o">=</span><span class="s1">'\[\e[1;32m\][\u@\h\[\e[m\] \[\e[1;34m\]\W\[\e[m\]\[\e[1;32m\]]$\[\e[m\] '</span>
+</code></pre></div></div>
+
+<h3 id="设置开机自动同步时间">设置开机自动同步时间</h3>
+
+<blockquote>
+  <p>众所周知树莓派不加扩展板的情况下 没有硬件RTC时钟，也就意味着每次开机都要设置时钟，这特么可万万不能够啊，以下为设置开机自动同步时间的方法：</p>
+</blockquote>
+
+<ul>
+  <li>安装ntp</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get <span class="nb">install </span>ntpdate
+</code></pre></div></div>
+
+<ul>
+  <li>设置时区</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 执行如下命令</span>
+dpkg-reconfigure tzdata
+<span class="c"># 选择 Asia(亚洲) 然后选择 ShanHai(上海)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>手动校对时间</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 一般上面设置完市区就应该已经自动同步时间了</span>
+<span class="c"># 执行以下命令可能会报socket占用，可忽略</span>
+<span class="c"># 210.72.145.44 国家授时中心服务器IP</span>
+ntpdate 210.72.145.44
+</code></pre></div></div>
+
+<ul>
+  <li>设置开机自动校对时间</li>
+</ul>
+
+<blockquote>
+  <p>编辑 <code class="highlighter-rouge">/ect/rc.local</code> 文件 执行 <code class="highlighter-rouge">vim /etc/rc.local</code>，加入 <code class="highlighter-rouge">htpdate -t -s 210.72.145.44</code> 这条命令，注意要放在 <code class="highlighter-rouge">exit 0</code> 前面，样例配置如下:</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh -e</span>
+
+<span class="c"># 此处省略1000行注释.....</span>
+
+<span class="c"># Sync Time</span>
+htpdate <span class="nt">-t</span> <span class="nt">-s</span> 210.72.145.44
+
+<span class="c"># Print the IP address</span>
+<span class="nv">_IP</span><span class="o">=</span><span class="si">$(</span><span class="nb">hostname</span> <span class="nt">-I</span><span class="si">)</span> <span class="o">||</span> <span class="nb">true
+</span><span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$_IP</span><span class="s2">"</span> <span class="o">]</span><span class="p">;</span> <span class="k">then
+  </span><span class="nb">printf</span> <span class="s2">"My IP address is %s</span><span class="se">\n</span><span class="s2">"</span> <span class="s2">"</span><span class="nv">$_IP</span><span class="s2">"</span>
+<span class="k">fi
+
+</span><span class="nb">exit </span>0
+</code></pre></div></div>
+
+<h3 id="合并剩余分区空间">合并剩余分区空间</h3>
+
+<blockquote>
+  <p>默认树莓派安装系统后并不会占用所有SD卡空间，一般只会使用4G左右，对于大内存卡来说剩下的空间属于未分配状态，即未分区无法使用，我们可以使用 <code class="highlighter-rouge">fdisk</code> 来合并后面的分区加以利用</p>
+</blockquote>
+
+<h4 id="使用-raspi-config2016-08-13-更新">使用 raspi-config(2016-08-13 更新)</h4>
+
+<p>推荐直接使用树莓派提供的工具，执行 <code class="highlighter-rouge">raspi-config</code>，然后选择第一项，提示选择 OK ，最终 Finish 即可。</p>
+
+<h4 id="使用-分区工具">使用 分区工具</h4>
+
+<ul>
+  <li>查看分区及起始参数</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 进入fdisk</span>
+fdisk /dev/mmcblk0
+<span class="c"># 按 P 显示分区信息，并记录 Type 为Linux的分区起始柱面(122880)，打印如下:</span>
+Device         Boot  Start     End Sectors Size Id Type
+/dev/mmcblk0p1        8192  122879  114688  56M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
+/dev/mmcblk0p2      122880 8447999 8325120   4G 83 Linux
+</code></pre></div></div>
+
+<ul>
+  <li>删除 主分区(Linux分区)</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 按D 并选择删除分区2，再按P 查看分区信息，打印如下:</span>
+Command <span class="o">(</span>m <span class="k">for </span><span class="nb">help</span><span class="o">)</span>: d
+Partition number <span class="o">(</span>1,2, default 2<span class="o">)</span>: 2
+
+Partition 2 has been deleted.
+
+Command <span class="o">(</span>m <span class="k">for </span><span class="nb">help</span><span class="o">)</span>: p
+Disk /dev/mmcblk0: 28.8 GiB, 30908350464 bytes, 60367872 sectors
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+Disklabel <span class="nb">type</span>: dos
+Disk identifier: 0xba2edfb9
+
+Device         Boot Start    End Sectors Size Id Type
+/dev/mmcblk0p1       8192 122879  114688  56M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>增加新分区</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 按N 执行新建分区，再按P 选择增加主分区，并输入起始柱面(122880)，打印如下:</span>
+Command <span class="o">(</span>m <span class="k">for </span><span class="nb">help</span><span class="o">)</span>: n
+Partition <span class="nb">type
+   </span>p   primary <span class="o">(</span>1 primary, 0 extended, 3 free<span class="o">)</span>
+   e   extended <span class="o">(</span>container <span class="k">for </span>logical partitions<span class="o">)</span>
+Select <span class="o">(</span>default p<span class="o">)</span>: p
+Partition number <span class="o">(</span>2-4, default 2<span class="o">)</span>: 2
+First sector <span class="o">(</span>2048-60367871, default 2048<span class="o">)</span>: 122880
+Last sector, +sectors or +size<span class="o">{</span>K,M,G,T,P<span class="o">}</span> <span class="o">(</span>122880-60367871, default 60367871<span class="o">)</span>:
+
+Created a new partition 2 of <span class="nb">type</span> <span class="s1">'Linux'</span> and of size 28.7 GiB.
+</code></pre></div></div>
+
+<ul>
+  <li>执行增加分区操作</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先按P 查看一下，确认分区增加无误，然后按W 执行分区操作，打印如下:</span>
+Command <span class="o">(</span>m <span class="k">for </span><span class="nb">help</span><span class="o">)</span>: p
+Disk /dev/mmcblk0: 28.8 GiB, 30908350464 bytes, 60367872 sectors
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+Disklabel <span class="nb">type</span>: dos
+Disk identifier: 0xba2edfb9
+
+Device         Boot  Start      End  Sectors  Size Id Type
+/dev/mmcblk0p1        8192   122879   114688   56M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
+/dev/mmcblk0p2      122880 60367871 60244992 28.7G 83 Linux
+
+
+Command <span class="o">(</span>m <span class="k">for </span><span class="nb">help</span><span class="o">)</span>: w
+The partition table has been altered.
+<span class="c"># 此处说明 设备忙碌，新的分区表将在下次重启生效</span>
+Calling ioctl<span class="o">()</span> to re-read partition table.
+Re-reading the partition table failed.: Device or resource busy
+
+The kernel still uses the old table. The new table will be used at the next reboot or after you run partprobe<span class="o">(</span>8<span class="o">)</span> or kpartx<span class="o">(</span>8<span class="o">)</span><span class="nb">.</span>
+</code></pre></div></div>
+
+<ul>
+  <li>重启并执行分区修复</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 由于上面已经提示了重启生效，所以执行重启命令</span>
+reboot
+<span class="c"># 重启后需要进行一次分区修复，否则df查看磁盘占用是不变的，执行如下命令修复分区</span>
+resize2fs /dev/mmcblk0p2
+<span class="c"># 执行成功后使用df查看分区占用情况，打印如下:</span>
+<span class="o">[</span>root@raspberrypi ~]# <span class="nb">df
+</span>Filesystem     1K-blocks    Used Available Use% Mounted on
+/dev/root       29586708 3255252  25069844  12% /
+devtmpfs          469756       0    469756   0% /dev
+tmpfs             474060       0    474060   0% /dev/shm
+tmpfs             474060    6412    467648   2% /run
+tmpfs               5120       4      5116   1% /run/lock
+tmpfs             474060       0    474060   0% /sys/fs/cgroup
+/dev/mmcblk0p1     57288   20232     37056  36% /boot
+tmpfs              94812       0     94812   0% /run/user/1000
+</code></pre></div></div>
+
+<h3 id="安装lrzsz快捷上传下载">安装lrzsz(快捷上传下载)</h3>
+
+<blockquote>
+  <p>操作简单，但大有用处，执行一条命令 <code class="highlighter-rouge">apt-get install lrzsz</code> 就安装成功了；作用就是在使用xShell通过ssh连接到树莓派后，上传文件只需要敲 <code class="highlighter-rouge">rz</code> 命令就会弹出文件选择对话框，选择文件后就直接上传到当前shell显示的目录下了，也可以直接将文件拖向命令行，也会直接将文件上传到当前目录；下载的话直接敲 <code class="highlighter-rouge">sz FILENAME</code> 就会马上弹出下载选择框，选择到哪就会下载到那个目录，奏是这么吊！</p>
+</blockquote>
+
+<h3 id="切换国内源">切换国内源</h3>
+
+<p>默认树莓派连接的源是官方源，其服务器在美国，然后你懂得……编辑 <code class="highlighter-rouge">/etc/apt/sources.list</code> 注释掉其他源，从 <a href="http://www.raspbian.org/RaspbianMirrors">树莓派源列表</a> 中选择一个填入，然后 <code class="highlighter-rouge">apt-get update</code> 即可，以下为 <code class="highlighter-rouge">/etc/apt/sources.lis</code> 文件参考(清华大学源)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#deb http://mirrordirector.raspbian.org/raspbian/ jessie main contrib non-free rpi</span>
+<span class="c"># Uncomment line below then 'apt-get update' to enable 'apt-get source'</span>
+<span class="c">#deb-src http://archive.raspbian.org/raspbian/ jessie main contrib non-free rpi</span>
+deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ jessie main non-free contrib
+deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ jessie main non-free contrib
+</code></pre></div></div>
+
+<h3 id="编译并安装nginx">编译并安装Nginx</h3>
+
+<blockquote>
+  <p>由于做J2EE开发，想搞个Nginx，so 鼓捣吧……</p>
+</blockquote>
+
+<ul>
+  <li>下载相关组件源码</li>
+</ul>
+
+<blockquote>
+  <p>Nginx 编译安装需要 如下支持
+gcc pcre pcre-devel zlib zlib-devel openssl openssl-devel
+默认gcc树莓派已经自带了，剩下的 pcre、zlib、openssl 需要自己下载，下载地址: <a href="http://www.pcre.org/">pcre</a>、<a href="http://www.zlib.net/">zlib</a>、<a href="https://www.openssl.org/source/">openssl</a>、<a href="http://nginx.org/en/download.html">Nginx</a></p>
+</blockquote>
+
+<ul>
+  <li>解压相关组件</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载下来想办法搞到树莓派上，然后解压</span>
+<span class="nb">tar</span> <span class="nt">-zxvf</span> openssl-1.0.2d.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> pcre-8.37.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> zlib-1.2.8.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> nginx-1.8.0.tar.gz
+</code></pre></div></div>
+
+<ul>
+  <li>执行编译安装</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先进入到 nginx目录</span>
+<span class="nb">cd </span>nginx-1.8.0
+<span class="c"># 执行编译，编译参数如下:</span>
+./configure
+<span class="nt">--sbin-path</span><span class="o">=</span>/usr/local/nginx/nginx
+<span class="nt">--conf-path</span><span class="o">=</span>/usr/local/nginx/nginx.conf
+<span class="nt">--pid-path</span><span class="o">=</span>/usr/local/nginx/nginx.pid
+<span class="nt">--with-http_ssl_module</span>
+<span class="nt">--with-pcre</span><span class="o">=</span>../pcre-8.37
+<span class="nt">--with-zlib</span><span class="o">=</span>../zlib-1.2.8
+<span class="nt">--with-openssl</span><span class="o">=</span>../openssl-1.0.2d
+<span class="c"># 最后安装(时间有点长......)</span>
+make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
+</code></pre></div></div>
+
+<h3 id="安装花生壳内网穿透">安装花生壳(内网穿透)</h3>
+
+<blockquote>
+  <p>作为一名 Java Web狗，Nginx、Tomcat已经搞起了，只能内网访问怎么可以；所以必须搞一个 花生壳做内网映射，使之通过域名可直接从外网访问到内网下的树莓派中部署的项目。</p>
+</blockquote>
+
+<ul>
+  <li>下载花生壳并解压</li>
+</ul>
+
+<blockquote>
+  <p>花生壳树莓派版下载地址: <a href="http://hsk.oray.com/download/#type=http|shumeipai">点击下载</a>
+下载后上传到树莓派，执行 <code class="highlighter-rouge">tar -zxvf phddns_raspberry.tgz</code> 解压文件</p>
+</blockquote>
+
+<ul>
+  <li>安装并运行花生壳</li>
+</ul>
+
+<blockquote>
+  <p>解压后会生成 <code class="highlighter-rouge">phddns2</code> 目录，<code class="highlighter-rouge">cd</code> 进去，执行 <code class="highlighter-rouge">./oraynewph start</code> 命令进行安装，安装完成后屏幕上会显示几行信息，其中一个是 <strong>SN码</strong>，记录下这个 <strong>SN码</strong>，一般是一串复杂的类似于md5的字符串
+然后进入 <a href="http://b.oray.com">b.oray.com</a> ，选择使用 <strong>SN码</strong> 登录，默认密码是admin，<strong><em>注意：此时树莓派必须成功连接外网，否则无法登陆</em></strong>，登录如下图所示:</p>
+</blockquote>
+
+<blockquote>
+  <p><img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_oray_login.png" alt="登录" /></p>
+</blockquote>
+
+<blockquote>
+  <p>登陆后首先选择 <strong><em>动态域名解析</em></strong> ，然后 <strong><em>注册一个壳域名</em></strong> ，再回到首页选择 <strong><em>内网映射</em></strong> ，配置一个域名内网映射即可，映射配置如下图:</p>
+</blockquote>
+
+<blockquote>
+  <p><img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_oray_netmapper.png" alt="内网映射配置" /></p>
+</blockquote>
+
+<blockquote>
+  <p>其他关于更详细的花生壳使用教程请谷歌，安装教程参考 <a href="http://service.oray.com/question/2680.html">这里</a>，最后附上一张装好逼的截图:</p>
+</blockquote>
+
+<blockquote>
+  <p><img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_oray_netmapperopen.png" alt="动态域名访问树莓派Nginx" /></p>
+</blockquote>
+
+<h3 id="编译安装nexus">编译安装Nexus</h3>
+
+<blockquote>
+  <p>由于现在项目都使用Maven，所以也想搞一个私服Nexus，无奈Nexus官方二进制包中并不提供 arm平台支持，主要是wrapper 没有arm平台的可执行文件和动态链接库，故需要自己编译wrapper，所以有了 “编译安装Nexus” 这一说法。</p>
+</blockquote>
+
+<ul>
+  <li>下载 Nexus</li>
+</ul>
+
+<blockquote>
+  <p>登录 <a href="http://www.sonatype.org/nexus/go/">Nexus官网</a> 选择 TGZ 格式下载，上传到 树莓派并解压，然后 mv 到你想要放置的目录。配置一个环境变量，样例如下 : <code class="highlighter-rouge">export NEXUS_HOME='/usr/local/java/nexus/nexus-2.11.4-01'</code>，并将 <code class="highlighter-rouge">$NEXUS_HOME/bin</code> 加入到 <code class="highlighter-rouge">PATH</code> 中。</p>
+</blockquote>
+
+<ul>
+  <li>下载wrapper</li>
+</ul>
+
+<blockquote>
+  <p>为何需要下载 <code class="highlighter-rouge">wrapper</code> : <code class="highlighter-rouge">nexus</code> 本身确实自带了 <code class="highlighter-rouge">wrapper</code>，但 <code class="highlighter-rouge">wrapper</code> 这玩意是跟平台结合的，目前 <code class="highlighter-rouge">Nexus</code> 不支持 <code class="highlighter-rouge">arm</code> 平台，所以需要我们手动编译一个替换 <code class="highlighter-rouge">Nexu</code> 中的 <code class="highlighter-rouge">wrapper</code>。
+<em>**</em></p>
+  <ol>
+    <li>目前下载的最新版 Nexus-2.11.4-01 依赖的是 wrapper3.2.3，下载地址 <a href="http://wrapper.tanukisoftware.com/download/3.5.9/wrapper_3.5.9_src.tar.gz?mode=html">点这里</a> <strong><em>(注意我们下载的事3.5.9版本)</em></strong>。</li>
+    <li>下载完 src 源码包后上传到树莓派并解压，在开始编译前，需要正确的配置<code class="highlighter-rouge">JAVA_HOME</code> 和 <code class="highlighter-rouge">PATH</code>，这里有个小问题，树莓派2自带了JDK8，但 <code class="highlighter-rouge">JAVA_HOME</code> 啥的没配置，所以会有问题；但直接卸载的话 <code class="highlighter-rouge">apt-get</code> 会自动给你安装 <code class="highlighter-rouge">open-jdk7</code>，可执行 <code class="highlighter-rouge">apt-cache rdepends oracle-java8-jdk</code> 查看依赖 <code class="highlighter-rouge">jdk</code> 的相关软件包，并执行 <code class="highlighter-rouge">apt-get purge xxxxx</code> 卸载他们，基本这些软件包都是教学用的，可以删掉；然后自己下载 <code class="highlighter-rouge">arm</code> 平台的 <code class="highlighter-rouge">jdk7</code> (感觉8太新了怕不稳定) 安装、配置环境。</li>
+  </ol>
+</blockquote>
+
+<ul>
+  <li>编译 wrapper</li>
+</ul>
+
+<blockquote>
+  <ol>
+    <li>配置完 <code class="highlighter-rouge">JAVA_HOME</code>、<code class="highlighter-rouge">PATH</code> 变量以后还需要下载一个 <code class="highlighter-rouge">Ant</code>，因为 <code class="highlighter-rouge">wrapper</code> 是基于 <code class="highlighter-rouge">Ant</code> 构建的，基本步骤也是。 <a href="http://ant.apache.org/bindownload.cgi">下载Ant</a> 然后解压到指定目录，配置一下 <code class="highlighter-rouge">ANT_HOME</code>，方法自查。</li>
+    <li>在正式编译前需要 <code class="highlighter-rouge">cp src/c/Makefile-linux-x86-32.make</code> to <code class="highlighter-rouge">src/c/Makefile-linux-arm-32.make</code> (老外的原文，说来了就是 <code class="highlighter-rouge">copy</code> 一份到当前目录并重命名一下)。</li>
+    <li>进入到 <code class="highlighter-rouge">wrapper</code> 解压后的目录执行 <code class="highlighter-rouge">./build32.sh</code> 进行编译，如果 <code class="highlighter-rouge">JAVA_HOME</code>、<code class="highlighter-rouge">PATH</code>、<code class="highlighter-rouge">Ant</code>、<code class="highlighter-rouge">.make 文件</code> 没问题的话编译一般不会出错。</li>
+    <li>编译完成后在 <code class="highlighter-rouge">nexus-2.11.4-01/bin/jsw</code> 下新建一个 <code class="highlighter-rouge">linux-armv7l-32</code> 文件夹，复制编译好的 <code class="highlighter-rouge">wrapper_3.5.9_src/bin/wrapper</code> 文件到 刚刚新建的 <code class="highlighter-rouge">linux-armv7l-32</code> 目录下，由于<strong><em>使用了高版本</em></strong> <code class="highlighter-rouge">wrapper</code>，<code class="highlighter-rouge">wrapper.jar</code> 复制过去后需要先删掉原来的 <code class="highlighter-rouge">wrapper-3.2.3.jar</code> 并将 <code class="highlighter-rouge">wrapper.jar</code> 重命名为 <code class="highlighter-rouge">wrapper-3.2.3.jar</code>。</li>
+  </ol>
+</blockquote>
+
+<ul>
+  <li>配置并启动 Nexus</li>
+</ul>
+
+<blockquote>
+  <ul>
+    <li>新建用户 <code class="highlighter-rouge">nexus</code> : <code class="highlighter-rouge">adduser nexus</code> (别用 <code class="highlighter-rouge">useradd</code> 我一直以为这两个命令一样，但你在树莓派2下可以试试)</li>
+    <li>改密码 : <code class="highlighter-rouge">passwd nexus</code></li>
+    <li>改两个配置文件 : <code class="highlighter-rouge">nexus-2.11.4-01/bin/nexus</code>、<code class="highlighter-rouge">nexus-2.11.4-01/bin/jsw/conf/wrapper.conf</code>，两个配置要改的地方贴出来如下 (更详细的参见 <a href="http://mritd.me/archives/2024">Nexus 2.11 CentOS搭建教程</a>) :</li>
+  </ul>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###############################</span>
+<span class="c">## nexus-2.11.4-01/bin/nexus ##</span>
+<span class="c">###############################</span>
+<span class="c">#</span>
+<span class="c"># Set the JVM executable</span>
+<span class="c"># (modify this to absolute path if you need a Java that is not on the OS path)</span>
+<span class="c"># 配置 jdk中 java 可执行文件的位置(其实我感觉jre就可以，没测试，有兴趣的测试一下)</span>
+wrapper.java.command<span class="o">=</span>/usr/local/java/jdk1.7.0_79/bin/java
+</code></pre></div></div>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">##############################################</span>
+<span class="c">## nexus-2.11.4-01/bin/jsw/conf/wrapper.con ##</span>
+<span class="c">##############################################</span>
+<span class="c">#</span>
+<span class="c"># Set this to the root of the Nexus installation</span>
+<span class="c"># 设置 nexus 主目录，就是解压后的那个 nexus目录绝对路径</span>
+<span class="nv">NEXUS_HOME</span><span class="o">=</span><span class="s2">"/usr/local/java/nexus-2.11.4-01"</span>
+</code></pre></div></div>
+
+<blockquote>
+  <ul>
+    <li>先切换到 <code class="highlighter-rouge">nexus</code> 用户，因为官方不推荐以 <code class="highlighter-rouge">root</code> 用户运行，执行 : <code class="highlighter-rouge">su - nexus</code>，然后启动 <code class="highlighter-rouge">nexus</code>，执行 <code class="highlighter-rouge">nexus start</code> 启动，时间比较长，大约2分钟，使用 <code class="highlighter-rouge">tail -f nexus-2.11.4-01/logs/wrapper.log</code> 查看进度，启动成功后访问 <code class="highlighter-rouge">IP:8081/nexus</code> 即可，默认用户 <code class="highlighter-rouge">admin</code>，密码 <code class="highlighter-rouge">admin123</code>；到此结束。</li>
+  </ul>
+</blockquote>
+
+<h3 id="编译安装mysql">编译安装MySQL</h3>
+
+<ul>
+  <li>安装Screen</li>
+</ul>
+
+<blockquote>
+  <p>执行 <code class="highlighter-rouge">apt-get install screen</code> 安装screen，用于后台运行编译任务，防止断网等原因造成的编译失败。</p>
+</blockquote>
+
+<ul>
+  <li>下载MySQL5.6源码</li>
+</ul>
+
+<blockquote>
+  <p>可去官网下载，百度云分享 <a href="http://pan.baidu.com/s/1dDwPxRV">点击这里</a> 密码: g2ab
+下载完成后上传到树莓派并解压</p>
+</blockquote>
+
+<ul>
+  <li>系统设置初始化</li>
+</ul>
+
+<blockquote>
+  <p>编译前需要做以下操作:</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 新建mysql用户</span>
+adduser mysql
+<span class="c"># 创建MySQL安装目录</span>
+<span class="nb">cd</span> /usr/local
+<span class="nb">mkdir </span>mysql
+<span class="nb">cd</span> /usr/local/mysql
+<span class="nb">mkdir </span>data
+</code></pre></div></div>
+
+<ul>
+  <li>安装依赖包</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先升级软件源(如果改过非官方源必须改回来)</span>
+apt-get update
+<span class="c"># 升级已安装软件包</span>
+apt-get upgrade
+<span class="c"># 安装mysql编译时依赖</span>
+apt-get isntall cmake make bison bzr libncurses5-dev g++ libtinfo5 ncurses-bin libncurses5 libtinfo-dev
+</code></pre></div></div>
+<ul>
+  <li>开始编译MySQL</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 进入源码目录</span>
+<span class="nb">cd </span>mysql-5.6.27/
+<span class="c"># 开启screen session 防止断网等造成的免疫中断</span>
+screen <span class="nt">-S</span> mysqlinstall
+<span class="c"># 执行 cmake 预编译(最少一小时)</span>
+cmake <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>/usr/local/mysql <span class="nt">-DMYSQL_UNIX_ADDR</span><span class="o">=</span>/usr/local/mysql/data/mysql.sock <span class="nt">-DDEFAULT_CHARSET</span><span class="o">=</span>utf8 <span class="nt">-DDEFAULT_COLLATION</span><span class="o">=</span>utf8_general_ci <span class="nt">-DEXTRA_CHARSETS</span><span class="o">=</span>all <span class="nt">-DWITH_MYISAM_STORAGE_ENGINE</span><span class="o">=</span>1 <span class="nt">-DWITH_INNOBASE_STORAGE_ENGINE</span><span class="o">=</span>1 <span class="nt">-DWITH_MEMORY_STORAGE_ENGINE</span><span class="o">=</span>1 <span class="nt">-DWITH_READLINE</span><span class="o">=</span>1 <span class="nt">-DENABLED_LOCAL_INFILE</span><span class="o">=</span>1 <span class="nt">-DMYSQL_DATADIR</span><span class="o">=</span>/usr/local/mysql/data <span class="nt">-DMYSQL_USER</span><span class="o">=</span>mysql <span class="nt">-DWITH_DEBUG</span><span class="o">=</span>0
+</code></pre></div></div>
+
+<blockquote>
+  <p>关于cmake预编译参数设置参考 <a href="http://ohgenlong16300.blog.51cto.com/499130/1264096">这里</a></p>
+</blockquote>
+
+<ul>
+  <li>执行安装</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
+</code></pre></div></div>
+
+<ul>
+  <li>后续操作</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 更改所有者</span>
+<span class="nb">cd</span> /usr/local/
+<span class="nb">chown</span> <span class="nt">-R</span> mysql.mysql mysql
+<span class="c"># 创建配置文件</span>
+<span class="nb">cd</span> /usr/local/mysql/support-files  
+<span class="nb">cp </span>my-default.cnf  /etc/my.cnf
+<span class="c"># 初始化数据库</span>
+<span class="nb">cd</span> /usr/local/mysql
+./scripts/mysql_install_db <span class="nt">--user</span><span class="o">=</span>mysql
+<span class="c"># 安全启动(后台)</span>
+/usr/local/mysql/bin/mysqld_safe <span class="nt">--user</span><span class="o">=</span>mysql <span class="nt">--port</span><span class="o">=</span>3306 <span class="nt">--sock</span><span class="o">=</span>/usr/local/mysql/data/mysql.sock &amp;
+<span class="c"># 开机自启动</span>
+<span class="nb">cp</span> /usr/local/mysql/support-files/mysql.server /etc/init.d/mysql
+chkconfig <span class="nt">--add</span> mysql
+</code></pre></div></div>
+
+<blockquote>
+  <p>mysql5.6的默认参数设置问题，更改my.cnf，调整以下参数
+<code class="highlighter-rouge">performance_schema_max_table_instances=600</code>
+<code class="highlighter-rouge">table_definition_cache=400</code>
+<code class="highlighter-rouge">table_open_cache=256</code>
+这时mysql启动后内存就只占用40–60M内存了</p>
+</blockquote>
+
+<h3 id="安装-xrdp远程桌面">安装 xrdp远程桌面</h3>
+
+<blockquote>
+  <p>其实树莓派感觉没必要买显示器，因为直接可以安装远程桌面，执行 <code class="highlighter-rouge">apt-get install xrdp</code> 安装，在 <code class="highlighter-rouge">Windows</code> 下可直接使用远程桌面连接，按 <code class="highlighter-rouge">Win+R</code> 键输入 <code class="highlighter-rouge">mstsc</code>，再输入树莓派地址和用户名密码   就可以，截图如下:
+<img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_xrdp.png" alt="远程桌面" />
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+</blockquote>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2015/12/31/Maven-%E6%95%99%E7%A8%8B/" data-toggle="tooltip" data-placement="top" title="Maven 教程">
+                        Previous<br>
+                        <span>Maven 教程</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/01/02/Git-%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" data-toggle="tooltip" data-placement="top" title="Git 中文乱码解决方案">
+                        Next<br>
+                        <span>Git 中文乱码解决方案</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2015/12/31/Raspberry-Pi2-折腾";
+    var disqus_url = "https://mritd.me/2015/12/31/Raspberry-Pi2-%E6%8A%98%E8%85%BE/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

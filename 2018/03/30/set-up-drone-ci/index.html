@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Drone CI 搭建">
+    <meta name="keywords"  content="drone,ci,cd,docker">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Drone CI 搭建 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2018/03/30/set-up-drone-ci/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        
+                        <a class="tag" href="/tags/#CI/CD" title="CI/CD">CI/CD</a>
+                        
+                    </div>
+                    <h1>Drone CI 搭建</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on March 30, 2018</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>最近感觉 GitLab CI 稍有繁琐，所以尝试了一下 Drone CI，这里记录一下搭建过程；虽然 Drone CI 看似简单，但是坑还是有不少的</p>
+</blockquote>
+
+<h2 id="一环境准备">一、环境准备</h2>
+
+<p>基本环境如下:</p>
+
+<ul>
+  <li>Docker: 17.09.0-ce</li>
+  <li>GitLab: 10.4.3-ce.0</li>
+  <li>Drone: 0.8.5</li>
+</ul>
+
+<p>其中 GitLab 采用 TLS 链接，为了方便使用 git 协议 clone 代码，所以 docker compose 部署时采用了 macvlan 网络获取独立 IP</p>
+
+<h2 id="二gitlab-配置">二、GitLab 配置</h2>
+
+<h3 id="21gitlab-搭建">2.1、GitLab 搭建</h3>
+
+<p>为了测试 CI build 需要一个 GitLab 服务器以及测试项目，GitLab 这里直接采用 docker compose 启动，同时为了方便 git clone，网络使用了 macvlan 方式，macvlan 网络接口、IP 等参数请自行修改</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># config refs ==&gt; https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template</span>
+version: <span class="s1">'3'</span>
+services:
+  gitlab:
+    image: <span class="s1">'gitlab/gitlab-ce:10.4.3-ce.0'</span>
+    container_name: gitlab
+    restart: always
+    <span class="nb">hostname</span>: <span class="s1">'gitlab.mritd.me'</span>
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url <span class="s1">'https://gitlab.mritd.me'</span>
+        nginx[<span class="s1">'redirect_http_to_https'</span><span class="o">]</span> <span class="o">=</span> <span class="nb">true
+        </span>nginx[<span class="s1">'ssl_certificate'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"/etc/gitlab/ssl/mritd.me.cer"</span>
+        nginx[<span class="s1">'ssl_certificate_key'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"/etc/gitlab/ssl/mritd.me.key"</span>
+        nginx[<span class="s1">'real_ip_header'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'X-Real-IP'</span>
+        nginx[<span class="s1">'real_ip_recursive'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'on'</span>
+        <span class="c">#gitlab_rails['ldap_enabled'] = true</span>
+        <span class="c">#gitlab_rails['ldap_servers'] = YAML.load &lt;&lt;-EOS # remember to close this block with 'EOS' below</span>
+        <span class="c">#main: # 'main' is the GitLab 'provider ID' of this LDAP server</span>
+        <span class="c">#  ## label</span>
+        <span class="c">#  #</span>
+        <span class="c">#  # A human-friendly name for your LDAP server. It is OK to change the label later,</span>
+        <span class="c">#  # for instance if you find out it is too large to fit on the web page.</span>
+        <span class="c">#  #</span>
+        <span class="c">#  # Example: 'Paris' or 'Acme, Ltd.'</span>
+        <span class="c">#  label: 'LDAP'</span>
+        <span class="c">#  host: 'mail.mritd.me'</span>
+        <span class="c">#  port: 389 # or 636</span>
+        <span class="c">#  uid: 'uid'</span>
+        <span class="c">#  method: 'plain' # "tls" or "ssl" or "plain"</span>
+        <span class="c">#  bind_dn: 'uid=zimbra,cn=admins,cn=zimbra'</span>
+        <span class="c">#  password: 'PASSWORD'</span>
+        <span class="c">#  # This setting specifies if LDAP server is Active Directory LDAP server.</span>
+        <span class="c">#  # For non AD servers it skips the AD specific queries.</span>
+        <span class="c">#  # If your LDAP server is not AD, set this to false.</span>
+        <span class="c">#  active_directory: true</span>
+        <span class="c">#  # If allow_username_or_email_login is enabled, GitLab will ignore everything</span>
+        <span class="c">#  # after the first '@' in the LDAP username submitted by the user on login.</span>
+        <span class="c">#  #</span>
+        <span class="c">#  # Example:</span>
+        <span class="c">#  # - the user enters 'jane.doe@example.com' and 'p@ssw0rd' as LDAP credentials;</span>
+        <span class="c">#  # - GitLab queries the LDAP server with 'jane.doe' and 'p@ssw0rd'.</span>
+        <span class="c">#  #</span>
+        <span class="c">#  # If you are using "uid: 'userPrincipalName'" on ActiveDirectory you need to</span>
+        <span class="c">#  # disable this setting, because the userPrincipalName contains an '@'.</span>
+        <span class="c">#  allow_username_or_email_login: true</span>
+        <span class="c">#  # Base where we can search for users</span>
+        <span class="c">#  #</span>
+        <span class="c">#  #   Ex. ou=People,dc=gitlab,dc=example</span>
+        <span class="c">#  #</span>
+        <span class="c">#  base: ''</span>
+        <span class="c">#  # Filter LDAP users</span>
+        <span class="c">#  #</span>
+        <span class="c">#  #   Format: RFC 4515 http://tools.ietf.org/search/rfc4515</span>
+        <span class="c">#  #   Ex. (employeeType=developer)</span>
+        <span class="c">#  #</span>
+        <span class="c">#  #   Note: GitLab does not support omniauth-ldap's custom filter syntax.</span>
+        <span class="c">#  #</span>
+        <span class="c">#  user_filter: ''</span>
+        <span class="c">#EOS</span>
+        gitlab_rails[<span class="s1">'log_directory'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"/var/log/gitlab/gitlab-rails"</span>
+        unicorn[<span class="s1">'log_directory'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"/var/log/gitlab/unicorn"</span>
+        registry[<span class="s1">'log_directory'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"/var/log/gitlab/registry"</span>
+        <span class="c"># Below are some of the default settings</span>
+        logging[<span class="s1">'logrotate_frequency'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"daily"</span> <span class="c"># rotate logs daily</span>
+        logging[<span class="s1">'logrotate_size'</span><span class="o">]</span> <span class="o">=</span> nil <span class="c"># do not rotate by size by default</span>
+        logging[<span class="s1">'logrotate_rotate'</span><span class="o">]</span> <span class="o">=</span> 30 <span class="c"># keep 30 rotated logs</span>
+        logging[<span class="s1">'logrotate_compress'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"compress"</span> <span class="c"># see 'man logrotate'</span>
+        logging[<span class="s1">'logrotate_method'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"copytruncate"</span> <span class="c"># see 'man logrotate'</span>
+        logging[<span class="s1">'logrotate_postrotate'</span><span class="o">]</span> <span class="o">=</span> nil <span class="c"># no postrotate command by default</span>
+        logging[<span class="s1">'logrotate_dateformat'</span><span class="o">]</span> <span class="o">=</span> nil <span class="c"># use date extensions for rotated files rather than numbers e.g. a value of "-%Y-%m-%d" would give rotated files like p</span>
+        <span class="c"># You can add overrides per service</span>
+        nginx[<span class="s1">'logrotate_frequency'</span><span class="o">]</span> <span class="o">=</span> nil
+        nginx[<span class="s1">'logrotate_size'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"200M"</span>
+        <span class="c"># You can also disable the built-in logrotate service if you want</span>
+        logrotate[<span class="s1">'enable'</span><span class="o">]</span> <span class="o">=</span> <span class="nb">false
+        </span>gitlab_rails[<span class="s1">'smtp_enable'</span><span class="o">]</span> <span class="o">=</span> <span class="nb">true
+        </span>gitlab_rails[<span class="s1">'smtp_address'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"mail.mritd.me"</span>
+        gitlab_rails[<span class="s1">'smtp_port'</span><span class="o">]</span> <span class="o">=</span> 25
+        gitlab_rails[<span class="s1">'smtp_user_name'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"no-reply@mritd.me"</span>
+        gitlab_rails[<span class="s1">'smtp_password'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"PASSWORD"</span>
+        gitlab_rails[<span class="s1">'smtp_domain'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"mritd.me"</span>
+        gitlab_rails[<span class="s1">'smtp_authentication'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"login"</span>
+        gitlab_rails[<span class="s1">'smtp_enable_starttls_auto'</span><span class="o">]</span> <span class="o">=</span> <span class="nb">true
+        </span>gitlab_rails[<span class="s1">'smtp_openssl_verify_mode'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'peer'</span>
+        <span class="c"># If your SMTP server does not like the default 'From: gitlab@localhost' you</span>
+        <span class="c"># can change the 'From' with this setting.</span>
+        gitlab_rails[<span class="s1">'gitlab_email_from'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'gitlab@mritd.me'</span>
+        gitlab_rails[<span class="s1">'gitlab_email_reply_to'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'no-reply@mritd.me'</span>
+        gitlab_rails[<span class="s1">'initial_root_password'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'PASSWORD'</span>
+        gitlab_rails[<span class="s1">'initial_shared_runners_registration_token'</span><span class="o">]</span> <span class="o">=</span> <span class="s2">"iuLaUhGZYyFgTxAyZ6HbdFUZ"</span>
+    networks:
+      macvlan:
+        ipv4_address: 172.16.0.70
+    ports:
+      - <span class="s1">'80:80'</span>
+      - <span class="s1">'443:443'</span>
+      - <span class="s1">'22:22'</span>
+    volumes:
+      - config:/etc/gitlab
+      - logs:/var/log/gitlab
+      - data:/var/opt/gitlab
+
+networks:
+  macvlan:
+    driver: macvlan
+    driver_opts:
+      parent: ens18
+    ipam:
+      config:
+      - subnet: 172.16.0.0/19
+
+volumes:
+  config:
+  logs:
+  data:
+</code></pre></div></div>
+
+<h3 id="22创建-drone-app">2.2、创建 Drone App</h3>
+
+<p>Drone CI 工作时需要接入 GitLab 以完成项目同步等功能，所以在搭建好 GitLab 后需要为其创建 Application，创建方式如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/lzm4j.png" alt="create drone app" /></p>
+
+<p>创建 Application 时请自行更换回调地址域名，创建好后如下所示(后续 Drone CI 需要使用这两个 key)</p>
+
+<p><img src="https://cdn.oss.link/markdown/sl4yl.png" alt="drone app create success" /></p>
+
+<h2 id="三drone-服务端配置">三、Drone 服务端配置</h2>
+
+<h3 id="31drone-ci-搭建">3.1、Drone CI 搭建</h3>
+
+<p>Drone CI 服务器与 GitLab 等传统 CI 相似，都是 CS 模式，为了方便测试这里将 Agent 与 Server 端都放在一个 docker compose 中启动；docker compose 配置如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: <span class="s1">'3'</span>
+
+services:
+  drone-server:
+    image: drone/drone:0.8-alpine
+    container_name: drone-server
+
+    ports:
+      - 8000:8000
+      - 9000:9000
+    volumes:
+      - data:/var/lib/drone/
+    restart: always
+    environment:
+      - <span class="nv">DRONE_OPEN</span><span class="o">=</span><span class="nb">true</span>
+      - <span class="nv">DRONE_ADMIN</span><span class="o">=</span>drone,mritd
+      - <span class="nv">DRONE_HOST</span><span class="o">=</span>https://drone.mritd.me
+      - <span class="nv">DRONE_GITLAB</span><span class="o">=</span><span class="nb">true</span>
+      - <span class="nv">DRONE_GITLAB_PRIVATE_MODE</span><span class="o">=</span><span class="nb">true</span>
+      - <span class="nv">DRONE_GITLAB_URL</span><span class="o">=</span>https://gitlab.mritd.me
+      - <span class="nv">DRONE_GITLAB_CLIENT</span><span class="o">=</span>76155ab75bafd73d4ebfe0a02d9d6284a032f7d8667d558e3f929a64805d1fa1
+      - <span class="nv">DRONE_GITLAB_SECRET</span><span class="o">=</span>6957b06f53b80d4dd17051ceb36f9139ae83b9077e345a404f476e317b0c8f3d
+      - <span class="nv">DRONE_SECRET</span><span class="o">=</span>XsJnj4DmzuXBKkcgHeUAJQxq
+
+  drone-agent:
+    image: drone/agent:0.8
+    container_name: drone-agent
+    <span class="nb">command</span>: agent
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - <span class="nv">DRONE_SERVER</span><span class="o">=</span>172.16.0.36:9000
+      - <span class="nv">DRONE_SECRET</span><span class="o">=</span>XsJnj4DmzuXBKkcgHeUAJQxq
+
+volumes:
+  data:
+</code></pre></div></div>
+
+<p>docker compose 中 <code class="highlighter-rouge">DRONE_GITLAB_CLIENT</code> 为 GitLab 创建 Application 时的 <code class="highlighter-rouge">Application Id</code>，<code class="highlighter-rouge">DRONE_GITLAB_SECRET</code> 为 <code class="highlighter-rouge">Secret</code>；其他环境变量解释如下:</p>
+
+<ul>
+  <li>DRONE_OPEN: 是否允许开放注册</li>
+  <li>DRONE_ADMIN: 注册后的管理员用户</li>
+  <li>DRONE_HOST: Server 地址</li>
+  <li>DRONE_GITLAB: 声明 Drone CI 对接为 GitLab</li>
+  <li>DRONE_GITLAB_PRIVATE_MODE: GitLab 私有化部署</li>
+  <li>DRONE_GITLAB_URL: GitLab 地址</li>
+  <li>DRONE_SECRET: Server 端认证秘钥，Agent 连接时需要</li>
+</ul>
+
+<p>实际上 Agent 可以与 Server 分离部署，不过需要注意 Server 端 9000 端口走的是 grpc 协议基于 HTTP2，nginx 等反向代理时需要做好对应处理</p>
+
+<p>搭建成功这里外面套了一层 nginx 用来反向代理 Drone Server 的 8000 端口，Nginx 配置如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>upstream drone<span class="o">{</span>
+    server 172.16.0.36:8000<span class="p">;</span>
+<span class="o">}</span>
+server <span class="o">{</span>
+    listen 80<span class="p">;</span>
+    listen <span class="o">[</span>::]:80<span class="p">;</span>
+    server_name drone.mritd.me<span class="p">;</span>
+
+    <span class="c"># Redirect all HTTP requests to HTTPS with a 301 Moved Permanently response.</span>
+    <span class="k">return </span>301 https://<span class="nv">$host$request_uri</span><span class="p">;</span>
+<span class="o">}</span>
+
+server <span class="o">{</span>
+    listen 443 ssl http2<span class="p">;</span>
+    listen <span class="o">[</span>::]:443 ssl http2<span class="p">;</span>
+    server_name drone.mritd.me<span class="p">;</span>
+
+    <span class="c"># certs sent to the client in SERVER HELLO are concatenated in ssl_certificate</span>
+    ssl_certificate /etc/nginx/ssl/mritd.me.cer<span class="p">;</span>
+    ssl_certificate_key /etc/nginx/ssl/mritd.me.key<span class="p">;</span>
+    ssl_session_timeout 1d<span class="p">;</span>
+    ssl_session_cache shared:SSL:50m<span class="p">;</span>
+    ssl_session_tickets off<span class="p">;</span>
+    
+    <span class="c"># Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits</span>
+    ssl_dhparam /etc/nginx/ssl/dhparam.pem<span class="p">;</span>
+
+    <span class="c"># intermediate configuration. tweak to your needs.</span>
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2<span class="p">;</span>
+    ssl_ciphers <span class="s1">'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:EC
+DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES2
+56-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:D
+HE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES
+256-SHA:DES-CBC3-SHA:!DSS'</span><span class="p">;</span>
+    ssl_prefer_server_ciphers on<span class="p">;</span>
+
+    <span class="c"># HSTS (ngx_http_headers_module is required) (15768000 seconds = 6 months)</span>
+    add_header Strict-Transport-Security max-age<span class="o">=</span>15768000<span class="p">;</span>
+
+    <span class="c"># OCSP Stapling ---</span>
+    <span class="c"># fetch OCSP records from URL in ssl_certificate and cache them</span>
+    ssl_stapling on<span class="p">;</span>
+    ssl_stapling_verify on<span class="p">;</span>
+
+    <span class="c">## verify chain of trust of OCSP response using Root CA and Intermediate certs</span>
+    ssl_trusted_certificate /etc/nginx/ssl/mritd-ca.cer<span class="p">;</span>
+
+    <span class="c">#resolver &lt;IP DNS resolver&gt;;</span>
+
+    location / <span class="o">{</span>
+
+        log_not_found on<span class="p">;</span>
+
+        proxy_set_header X-Forwarded-For <span class="nv">$remote_addr</span><span class="p">;</span>
+        proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+        proxy_set_header Host <span class="nv">$http_host</span><span class="p">;</span>
+
+        proxy_pass http://drone<span class="p">;</span>
+        proxy_redirect off<span class="p">;</span>
+        proxy_http_version 1.1<span class="p">;</span>
+        proxy_buffering off<span class="p">;</span>
+
+        chunked_transfer_encoding off<span class="p">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>然后访问 <code class="highlighter-rouge">https://YOUR_DRONE_SERVER</code> 将会自动跳转到 GitLab Auth2 授权界面，授权登录即可；随后将会返回 Drone CI 界面，界面上会列出相应的项目列表，点击后面的开关按钮来开启对应项目的 Drone CI 服务</p>
+
+<p><img src="https://cdn.oss.link/markdown/6u4fk.png" alt="drone ci project list" /></p>
+
+<h3 id="32创建示例项目">3.2、创建示例项目</h3>
+
+<p>这里的示例项目为 Java 项目，采用 Gradle 构建，项目整体结构如下所示，源码可以从 <a href="">GitHub</a> 下载</p>
+
+<p><img src="https://cdn.oss.link/markdown/ybrjc.png" alt="drone test project" /></p>
+
+<p>将此项目推送到 GitLab 就会触发 Drone CI 自动构建(第一次肯定构建失败，具体看下面配置)</p>
+
+<h3 id="33drone-cli">3.3、Drone CLI</h3>
+
+<p>这里不得不说一下官方文档真的很烂，有些东西只能自己摸索，而且各种错误提示也是烂的不能再烂，经常遇到 <code class="highlighter-rouge">Client Error 404:</code> 这种错误，后面任何提示信息也没有；官方文档中介绍了有些操作只能通过 cli 执行，CLI 下载需要到 GitHub 下载页下载，地址 <a href="https://github.com/drone/drone-cli/releases">点这里</a></p>
+
+<p>cli 工具下载后需要进行配置，目前只支持读取环境变量，使用前需要 <code class="highlighter-rouge">export</code> 以下两个变量</p>
+
+<ul>
+  <li>DRONE_SERVER: Drone CI 地址</li>
+  <li>DRONE_TOKEN: cli 控制 Server 端使用的用户 Token</li>
+</ul>
+
+<p>其中 Token 可以在用户设置页面找到，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/5fkvi.png" alt="drone user token" /></p>
+
+<p>配置好以后就可以使用 cli 操作 CI Server 了</p>
+
+<h3 id="34drone-ci-配置文件">3.4、Drone CI 配置文件</h3>
+
+<p>Drone CI 对一个项目进行 CI 构建取决于两个因素，第一必须保证该项目在 Drone 控制面板中开启了构建(构建按钮开启)，第二保证项目根目录下存在 <code class="highlighter-rouge">.drone.yml</code>；满足这两点后每次提交 Drone 就会根据 <code class="highlighter-rouge">.drone.yml</code> 中配置进行按步骤构建；本示例中 <code class="highlighter-rouge">.drone.yml</code> 配置如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>clone:
+  git:
+    image: plugins/git
+
+pipeline:
+
+  backend:
+    image: reg.mritd.me/base/build:2.1.5
+    commands:
+      - gradle <span class="nt">--no-daemon</span> clean assemble
+    when:
+      branch:
+        event: <span class="o">[</span> push, pull_request <span class="o">]</span>
+        include: <span class="o">[</span> master <span class="o">]</span>
+        exclude: <span class="o">[</span> develop <span class="o">]</span>
+
+<span class="c">#  rebuild-cache:</span>
+<span class="c">#    image: drillster/drone-volume-cache</span>
+<span class="c">#    rebuild: true</span>
+<span class="c">#    mount:</span>
+<span class="c">#      - ./build</span>
+<span class="c">#    volumes:</span>
+<span class="c">#      - /data/drone/$DRONE_COMMIT_SHA:/cache</span>
+
+  docker:
+    image: mritd/docker-kubectl:v1.8.8
+    commands:
+      - bash build_image.sh
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+
+
+<span class="c"># Pipeline Conditions</span>
+branches:
+  include: <span class="o">[</span> master, feature/<span class="k">*</span> <span class="o">]</span>
+  exclude: <span class="o">[</span> develop, <span class="nb">test</span>/<span class="k">*</span> <span class="o">]</span>
+</code></pre></div></div>
+
+<p>Drone CI 配置文件为 docker compose 的超集，<strong>Drone CI 构建思想是使用不同的阶段定义完成对 CI 流程的整体划分，然后每个阶段内定义不同的任务(task)，这些任务所有操作无论是 build、package 等全部由单独的 Docker 镜像完成，同时以 <code class="highlighter-rouge">plugins</code> 开头的 image 被解释为内部插件；其他的插件实际上可以看做为标准的 Docker image</strong></p>
+
+<p>第一段 <code class="highlighter-rouge">clone</code> 配置声明了源码版本控制系统拉取方式，具体参见 <a href="http://docs.drone.io/cloning">cloning</a>部分，定义后 Drone CI 将自动拉取源码</p>
+
+<p>此后的 <code class="highlighter-rouge">pipeline</code> 配置段为定义整个 CI 流程段，该段中可以自定义具体 task，比如后端构建可以取名字为 <code class="highlighter-rouge">backend</code>，前端构建可以叫做 <code class="highlighter-rouge">frontend</code>；中间可以穿插辅助的如打包 docker 镜像等 task；同 GitLab CI 一样，Agent 在使用 Docker 进行构建时必然涉及到拉取私有镜像，Drone CI 想要拉取私有镜像目前仅能通过 cli 命令行进行设置，而且仅针对项目级设置(全局需要企业版…这也行)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>drone registry add <span class="nt">--repository</span> drone/DroneCI-TestProject <span class="nt">--hostname</span> reg.mritd.me <span class="nt">--username</span> gitlab <span class="nt">--password</span> 123456
+</code></pre></div></div>
+
+<p>在构建时需要注意一点，Drone CI 不同的 task 之间共享源码文件，<strong>也就是说如果你在第一个 task 中对源码或者编译后的发布物做了什么更改，在下一个 task 中同样可见，Drone CI 并没有 GitLab CI 在每个 task 中都进行还原的机制</strong></p>
+
+<p>除此之外，某些特殊性的挂载行为默认也是不被允许的，需要在 Drone CI 中对项目做 <code class="highlighter-rouge">Trusted</code> 设置</p>
+
+<p><img src="https://cdn.oss.link/markdown/gd60v.png" alt="Drone Project Trusted Setting" /></p>
+
+<h2 id="四与-gitlab-ci-对比">四、与 GitLab CI 对比</h2>
+
+<p>写到这里基本接近尾声了，可能常看我博客的人现在想喷我，这篇文章确实有点水…因为我真不推荐用这玩意，未来发展倒是不确定；下面对比一下与 GitLab CI 的区别</p>
+
+<p>先说一下 Drone CI 的优点，Drone CI 更加轻量级，而且也支持 HA 等设置，配置文件使用 docker compose 的方式对于玩容器多的人确实很爽，启动速度等感觉也比 GitLab CI 要快；而且我个人用 GitLab CI Docker build 的方式时也是尽量将不同功能交给不同的镜像，通过切换镜像实现不同的功能；这个思想在 Drone CI 中表现的非常明显</p>
+
+<p>至于 Drone CI 的缺点，目前我最大的吐槽就是文档烂，报错烂；很多时候搞得莫名其妙，比如上来安装讲的那个管理员账户配置，我现在也没明白怎么能关闭注册启动然后添加用户(可能是我笨)；还有就是报错问题，感觉就像写代码不打 log 一样，比如 CI Server 在没有 agent 链接时，如果触发了 build 任务，Drone CI 不会报错，只会在任务上显示一个小闹钟，也没有超时…我傻傻的等了 1 小时；其他的比如全局变量、全局加密参数等都需要企业版才能支持，同时一些细节东西也缺失，比如查看当前 Server 连接的 Agent，对 Agent 打标签实现不同 task 分配等等</p>
+
+<p>总结: Drone CI 目前还是个小玩具阶段，与传统 CI 基本没有抗衡之力，文档功能呢也是缺失比较严重，出问题很难排查</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2018/03/28/unix-proxy-setting/" data-toggle="tooltip" data-placement="top" title="Unix 平台下各种加速配置">
+                        Previous<br>
+                        <span>Unix 平台下各种加速配置</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2018/04/19/set-up-kubernetes-1.10.1-cluster-by-hyperkube/" data-toggle="tooltip" data-placement="top" title="Kubernetes 1.10.1 集群搭建">
+                        Next<br>
+                        <span>Kubernetes 1.10.1 集群搭建</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2018/03/30/set-up-drone-ci";
+    var disqus_url = "https://mritd.me/2018/03/30/set-up-drone-ci/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
