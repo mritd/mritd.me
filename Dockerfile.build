@@ -15,6 +15,7 @@ RUN set -ex \
     && gem install jekyll-paginate jekyll-sitemap \
     && jekyll build \
     && mv _site ../gh-pages \
+    && git clean -xf \
     && git checkout gh-pages \
     && rm -rf * && cp -r ../gh-pages/* . \
     && git config --global user.email "mritd@linux.com" \
