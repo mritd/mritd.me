@@ -1,0 +1,219 @@
+I"�H<h2 id="一相关定义">一、相关定义</h2>
+
+<h3 id="1可见性">1、可见性</h3>
+
+<p>在多线程中，如果一个线程对某一 <strong>共享变量</strong> 的修改，<strong>能及时被其他线程所感知</strong>，这个特性或者说过程称之为线程可见性。</p>
+
+<h3 id="2共享变量">2、共享变量</h3>
+
+<p>当多线程同时操作一个变量时，该变量在多线程的 <strong>工作内存(私有内存)</strong> 中都存在一个副本，那么这个变量称之为这几个线程的共享变量。</p>
+
+<!--more-->
+
+<h3 id="3工作内存">3、工作内存</h3>
+
+<p>多线程工作时，每个线程都会复制主内存中的变量副本到自己的私有内存，这个私有内存称之为每个线程的工作内存。</p>
+
+<h2 id="二java-内存模型java-memory-model">二、Java 内存模型(Java Memory Model)</h2>
+
+<blockquote>
+  <p><strong>Java 内存模型(JMM) 描述了 Java 程序中对线程共享变量的访问规则，以及在 JVM 层面对内存读写变量的底层细节，详细可参考 <a href="http://www.infoq.com/cn/articles/java-memory-model-1">InfoQ-深入理解Java内存模型</a></strong></p>
+</blockquote>
+
+<h3 id="1概述">1、概述</h3>
+
+<p>简单地说，Java 内存模型规定，所有实例域、静态域和数组元素存储在堆内存中，堆内存在线程之间共享，局部变量(Local variables)，方法定义参数(java语言规范称之为formal method parameters)和异常处理器参数(exception handler parameters)不会在线程之间共享；运行时将所有变量放入 <strong>主内存中</strong>，同时在多线程访问的情况下，每个线程会开辟自己的 <strong>工作内存(抽象)</strong>；<strong>工作内存中用于存放该线程所用到的每个主内存中的变量副本</strong>，图例如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_thread_memory1.png" alt="Java 内存模型1" /></p>
+
+<h3 id="2线程读写变量规则">2、线程读写变量规则</h3>
+
+<p>JMM 规定，多线程情况下，每个线程对变量的操作 <strong>必须在自己的工作内存</strong> 中完成，<strong>不允许线程直接对主内存进行操作</strong>。</p>
+
+<p>多线程变量传递需要借助主内存中转；<strong>也就是说，当A线程需要改变变量值时，需要先改变当前工作内存中的变量，再将其刷新到主内存，最后通过主内存刷新到线程B的工作内存。</strong>图例如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_thread_memory2.png" alt="Java 内存模型2" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_thread_memory3.png" alt="Java 内存模型3" /></p>
+
+<h2 id="三synchronized-实现可见性">三、synchronized 实现可见性</h2>
+
+<p>Java 中对代码块或方法使用 <code class="highlighter-rouge">symchroized</code> 关键字，可保证其内部的共享变量实现多线程可见性。</p>
+
+<h3 id="1jmm-对-synchroized-相关规定">1、JMM 对 synchroized 相关规定</h3>
+
+<ul>
+  <li>线程解锁前，必须将工作内存中数据刷新到主内存。</li>
+  <li>线程加锁时，必须先清空工作内存，然后将主内存数据刷新到工作内存</li>
+</ul>
+
+<h3 id="2线程执行互斥代码过程">2、线程执行互斥代码过程</h3>
+
+<ul>
+  <li>1、线程在 <code class="highlighter-rouge">synchroized</code> 入口处获得互斥锁</li>
+  <li>2、线程清空自己的工作内存</li>
+  <li>3、线程将主内存数据刷新到工作内存</li>
+  <li>4、线程执行互斥代码</li>
+  <li>5、线程将工作内存数据刷新到主内存</li>
+  <li>6、线程退出 <code class="highlighter-rouge">synchroized</code> 代码块并释放互斥锁</li>
+</ul>
+
+<h3 id="3指令重排序">3、指令重排序</h3>
+
+<blockquote>
+  <p>具体可参考 <a href="http://www.infoq.com/cn/articles/java-memory-model-2">InfoQ 深入理解Java内存模型（二）-重排序</a></p>
+</blockquote>
+
+<p><strong>定义：</strong>指令重排序，简单地说就是编译器和CPU为了提高并行执行速度，进行的代码重排序执行。</p>
+
+<p>在CPU执行层面，每执行一个指令也会类似 Java 语言的 I/O 操作，在某一个命令未执行完成时必须进入等待(阻塞状态)，然后执行下一个命令；而编译器和CPU为了最大限度利用有限时间执行更多的任务，可能会进行指令重排序；指令重排序结果如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 原有代码</span>
+<span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+<span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">20</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>在编译器和CPU优化后，重排序可能会出现如下结果：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 重排序后</span>
+<span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">20</span><span class="o">;</span>
+<span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p><strong>但是指令重排序会遵循一点：as-if-serail 语义，即在单线程的情况下，保证最终执行结果不变，这时才会进行指令重排序；</strong>如上所示，a与b哪个先定义都不会产生结果的变更时才会重排序。</p>
+
+<h3 id="4代码示例">4、代码示例</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">mkw</span><span class="o">.</span><span class="na">demo</span><span class="o">.</span><span class="na">syn</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SynchronizedDemo</span> <span class="o">{</span>
+	<span class="c1">//共享变量</span>
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">ready</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>   
+    <span class="c1">//写操作</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(){</span>
+    	<span class="n">ready</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>	      		 <span class="c1">//1.1				</span>
+    	<span class="n">number</span> <span class="o">=</span> <span class="mi">2</span><span class="o">;</span>                      <span class="c1">//1.2			    </span>
+    <span class="o">}</span>
+    <span class="c1">//读操作</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(){</span>			   	 
+    	<span class="k">if</span><span class="o">(</span><span class="n">ready</span><span class="o">){</span>		         <span class="c1">//2.1</span>
+    		<span class="n">result</span> <span class="o">=</span> <span class="n">number</span><span class="o">*</span><span class="mi">3</span><span class="o">;</span>	 <span class="c1">//2.2</span>
+    	<span class="o">}</span>   	
+    	<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"result的值为："</span> <span class="o">+</span> <span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//内部线程类</span>
+    <span class="kd">private</span> <span class="kd">class</span> <span class="nc">ReadWriteThread</span> <span class="kd">extends</span> <span class="nc">Thread</span> <span class="o">{</span>
+    	<span class="c1">//根据构造方法中传入的flag参数，确定线程执行读操作还是写操作</span>
+    	<span class="kd">private</span> <span class="kt">boolean</span> <span class="n">flag</span><span class="o">;</span>
+    	<span class="kd">public</span> <span class="nf">ReadWriteThread</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">flag</span><span class="o">){</span>
+    		<span class="k">this</span><span class="o">.</span><span class="na">flag</span> <span class="o">=</span> <span class="n">flag</span><span class="o">;</span>
+    	<span class="o">}</span>
+        <span class="nd">@Override</span>                                                                    
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        	<span class="k">if</span><span class="o">(</span><span class="n">flag</span><span class="o">){</span>
+        		<span class="c1">//构造方法中传入true，执行写操作</span>
+        		<span class="n">write</span><span class="o">();</span>
+        	<span class="o">}</span><span class="k">else</span><span class="o">{</span>
+        		<span class="c1">//构造方法中传入false，执行读操作</span>
+        		<span class="n">read</span><span class="o">();</span>
+        	<span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span>  <span class="o">{</span>
+    	<span class="nc">SynchronizedDemo</span> <span class="n">synDemo</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SynchronizedDemo</span><span class="o">();</span>
+    	<span class="c1">//启动线程执行写操作</span>
+    	<span class="n">synDemo</span> <span class="o">.</span><span class="na">new</span> <span class="nc">ReadWriteThread</span><span class="o">(</span><span class="kc">true</span><span class="o">).</span><span class="na">start</span><span class="o">();</span>
+    	<span class="c1">//启动线程执行读操作</span>
+    	<span class="n">synDemo</span><span class="o">.</span><span class="na">new</span> <span class="nf">ReadWriteThread</span><span class="o">(</span><span class="kc">false</span><span class="o">).</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>运行 mian 方法，由于可见性问题，可能出现多种情况，比如 写线程执行到 1.1，读线程获取CPU资源立即执行、写线程指令 1.1、1.2重排序等等情况。</p>
+
+<h2 id="四volatile-实现可见性控制">四、volatile 实现可见性控制</h2>
+
+<h3 id="1实现原理">1、实现原理</h3>
+
+<p>volatile 通过加入内存屏障和禁止指令重排序实现可见性控制，其过程大致分为以下两个过程：</p>
+
+<ul>
+  <li>对 volatile 变量进行写操作时，会在写操作后加入一条 <code class="highlighter-rouge">store</code> 屏蔽指令；<strong>该命令会将工作内存中内容强制刷新到主内存(覆盖)；同时会防止编译器/CPU指令重排序时将前面的变量重排到 volatile 修饰的变量之后(禁止颠倒顺序)。</strong></li>
+  <li>对 volatile 变量进行读操作时，会在读操作前加入一条 <code class="highlighter-rouge">load</code> 屏蔽指令；<strong>该指令会强制使工作内存失效，从而达到必须从主内存刷新到工作内存的效果</strong></li>
+</ul>
+
+<p>总结：使用 valotile 修饰变量后，线程在每次读取该变量时，会强制从主内存刷新最新状态到工作内存；在每次写入该变量时，会强制从工作内存刷新到主内存，以保证线程可见性。</p>
+
+<h3 id="2volatile-不能保证原子性">2、volatile 不能保证原子性</h3>
+
+<p>由上可知 volatile 在保证可见性的原理大致和 synchroized 类似，主要是控制工作内存与主内存的刷新关系；但是相对于 synchroized ，volatile 不能保证原子性操作，测试代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">mkw</span><span class="o">.</span><span class="na">demo</span><span class="o">.</span><span class="na">vol</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.concurrent.locks.Lock</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.locks.ReentrantLock</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">VolatileDemo</span> <span class="o">{</span>
+
+        <span class="c1">// 测试变量</span>
+	<span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+
+	<span class="kd">public</span> <span class="kt">int</span> <span class="nf">getNumber</span><span class="o">(){</span>
+		<span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">number</span><span class="o">;</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">increase</span><span class="o">(){</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="nc">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+
+		<span class="k">this</span><span class="o">.</span><span class="na">number</span><span class="o">++;</span>
+	<span class="o">}</span>
+
+	<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+		<span class="c1">// TODO Auto-generated method stub</span>
+		<span class="kd">final</span> <span class="nc">VolatileDemo</span> <span class="n">volDemo</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VolatileDemo</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">500</span> <span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
+			<span class="k">new</span> <span class="nf">Thread</span><span class="o">(</span><span class="k">new</span> <span class="nc">Runnable</span><span class="o">()</span> <span class="o">{</span>
+
+				<span class="nd">@Override</span>
+				<span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+					<span class="n">volDemo</span><span class="o">.</span><span class="na">increase</span><span class="o">();</span>
+				<span class="o">}</span>
+			<span class="o">}).</span><span class="na">start</span><span class="o">();</span>
+		<span class="o">}</span>
+
+		<span class="c1">//如果还有子线程在运行，主线程就让出CPU资源，</span>
+		<span class="c1">//直到所有的子线程都运行完了，主线程再继续往下执行</span>
+		<span class="k">while</span><span class="o">(</span><span class="nc">Thread</span><span class="o">.</span><span class="na">activeCount</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">){</span>
+			<span class="nc">Thread</span><span class="o">.</span><span class="na">yield</span><span class="o">();</span>
+		<span class="o">}</span>
+
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"number : "</span> <span class="o">+</span> <span class="n">volDemo</span><span class="o">.</span><span class="na">getNumber</span><span class="o">());</span>
+	<span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>当以上代码运行多次后，number 打印的值会出现很多小于500的情况；其原因是 volatile 无法保证 number++ 这行代码的原子性操作；实质上 <code class="highlighter-rouge">number++</code> 执行了3个动作，首先读取 number 值，然后进行+1，最后写会 number；</p>
+
+<p>首先假设 number=2，在多线程并发的情况下，A线程由于 volatile 原因，首先将 number 从主内存强制刷新到工作内存，然后进行 +1 操作，此时A线程工作内存中 number=3，当要回写到工作内存时。线程 B 获取了CPU资源开始执行；不难想象，B线程对 number+1 后，可能被A线程覆盖掉；此时 volatile 无法保证原子性的问题就暴露了出来。</p>
+
+<h3 id="3volatile-适用场景">3、volatile 适用场景</h3>
+
+<ul>
+  <li>对变量的写不依赖于当前值；即直接强制写，同时写的值跟上一次没关系。</li>
+  <li>该变量不包含在其他变量的不变式中；即与其他 volatile 变量没关系。</li>
+</ul>
+
+<h3 id="4volatile-与-synchroized-比较">4、volatile 与 synchroized 比较</h3>
+
+<p>在可见性上，volatile 与 synchroized 基本是相同的；但是在原子性上，volatile不支持；<strong>同时 synchroized 会执行加锁动作，开销较大，而 volatile 更轻量级。</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,323 @@
+I"2J<blockquote>
+  <p>由于工作需要，记录一下使用 StrongSwan 搭建 VPN 的过程，支持 L2TP、IKEv2 PSK/CERT、IPsec 连接，基本上兼容大部分设备</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>基本环境如下</p>
+
+<ul>
+  <li>CentOS 7 X64</li>
+  <li>StrongSwan 5.5</li>
+</ul>
+
+<h3 id="二搭建-vpn">二、搭建 VPN</h3>
+
+<h4 id="21安装依赖">2.1、安装依赖</h4>
+
+<p>以下采用源码编译安装，需要安装编译依赖环境</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nb">install</span> <span class="nt">-y</span> gmp-devel xl2tpd module-init-tools gcc openssl-devel
+</code></pre></div></div>
+
+<h4 id="22编译安装">2.2、编译安装</h4>
+
+<p>首先下载源码</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://download.strongswan.org/strongswan-5.5.0.tar.gz <span class="nt">-O</span> /tmp/strongswan-5.5.0.tar.gz
+</code></pre></div></div>
+
+<p>解压并编译安装</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> /tmp <span class="o">&amp;&amp;</span> <span class="nb">tar</span> <span class="nt">-zxvf</span> strongswan-5.5.0.tar.gz
+<span class="nb">cd</span> /tmp/strongswan-5.5.0 <span class="o">&amp;&amp;</span> 
+./configure <span class="nt">--prefix</span><span class="o">=</span>/usr <span class="nt">--sysconfdir</span><span class="o">=</span>/etc <span class="se">\</span>
+		<span class="nt">--enable-eap-radius</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-mschapv2</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-identity</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-md5</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-mschapv2</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-tls</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-ttls</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-peap</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-tnc</span> <span class="se">\</span>
+		<span class="nt">--enable-eap-dynamic</span> <span class="se">\</span>
+		<span class="nt">--enable-xauth-eap</span> <span class="se">\</span>
+		<span class="nt">--enable-openssl</span> <span class="se">\</span>
+	<span class="o">&amp;&amp;</span> make <span class="nt">-j</span> <span class="se">\</span>
+	<span class="o">&amp;&amp;</span> make <span class="nb">install</span>
+</code></pre></div></div>
+
+<h4 id="23基础配置">2.3、基础配置</h4>
+
+<p>StrongSwan 的配置主要为 <code class="highlighter-rouge">ipsec.conf</code>、<code class="highlighter-rouge">strongswan.conf</code>、<code class="highlighter-rouge">xl2tpd.conf</code>、<code class="highlighter-rouge">options.xl2tpd</code> 这四个配置文件，以下为四个配置文件样例</p>
+
+<h5 id="231ipsecconf">2.3.1、ipsec.conf</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ipsec.conf - strongSwan IPsec configuration file</span>
+
+config setup
+	<span class="nv">uniqueids</span><span class="o">=</span>no
+	<span class="nv">charondebug</span><span class="o">=</span><span class="s2">"cfg 2, dmn 2, ike 2, net 0"</span>
+
+conn %default
+	<span class="nv">dpdaction</span><span class="o">=</span>clear
+	<span class="nv">dpddelay</span><span class="o">=</span>300s
+	<span class="nv">rekey</span><span class="o">=</span>no
+	<span class="nv">left</span><span class="o">=</span>%defaultroute
+	<span class="nv">leftfirewall</span><span class="o">=</span><span class="nb">yes
+	</span><span class="nv">right</span><span class="o">=</span>%any
+	<span class="nv">ikelifetime</span><span class="o">=</span>60m
+	<span class="nv">keylife</span><span class="o">=</span>20m
+	<span class="nv">rekeymargin</span><span class="o">=</span>3m
+	<span class="nv">keyingtries</span><span class="o">=</span>1
+	<span class="nv">auto</span><span class="o">=</span>add
+
+<span class="c">#######################################</span>
+<span class="c"># L2TP Connections</span>
+<span class="c">#######################################</span>
+
+conn L2TP-IKEv1-PSK
+	<span class="nb">type</span><span class="o">=</span>transport
+	<span class="nv">keyexchange</span><span class="o">=</span>ikev1
+	<span class="nv">authby</span><span class="o">=</span>secret
+	<span class="nv">leftprotoport</span><span class="o">=</span>udp/l2tp
+	<span class="nv">left</span><span class="o">=</span>%any
+	<span class="nv">right</span><span class="o">=</span>%any
+	<span class="nv">rekey</span><span class="o">=</span>no
+	<span class="nv">forceencaps</span><span class="o">=</span><span class="nb">yes</span>
+
+<span class="c">#######################################</span>
+<span class="c"># Default non L2TP Connections</span>
+<span class="c">#######################################</span>
+
+conn Non-L2TP
+	<span class="nv">leftsubnet</span><span class="o">=</span>0.0.0.0/0
+	<span class="nv">rightsubnet</span><span class="o">=</span>10.0.0.0/24
+	<span class="nv">rightsourceip</span><span class="o">=</span>10.0.0.0/24
+
+<span class="c">#######################################</span>
+<span class="c"># EAP Connections</span>
+<span class="c">#######################################</span>
+
+<span class="c"># This detects a supported EAP method</span>
+conn IKEv2-EAP
+	<span class="nv">also</span><span class="o">=</span>Non-L2TP
+	<span class="nv">keyexchange</span><span class="o">=</span>ikev2
+	<span class="nv">eap_identity</span><span class="o">=</span>%any
+	<span class="nv">rightauth</span><span class="o">=</span>eap-dynamic
+
+<span class="c">#######################################</span>
+<span class="c"># PSK Connections</span>
+<span class="c">#######################################</span>
+
+conn IKEv2-PSK
+	<span class="nv">also</span><span class="o">=</span>Non-L2TP
+	<span class="nv">keyexchange</span><span class="o">=</span>ikev2
+	<span class="nv">authby</span><span class="o">=</span>secret
+
+<span class="c"># Cisco IPSec</span>
+conn IKEv1-PSK-XAuth
+	<span class="nv">also</span><span class="o">=</span>Non-L2TP
+	<span class="nv">keyexchange</span><span class="o">=</span>ikev1
+	<span class="nv">leftauth</span><span class="o">=</span>psk
+	<span class="nv">rightauth</span><span class="o">=</span>psk
+	<span class="nv">rightauth2</span><span class="o">=</span>xauth
+
+<span class="c">#######################################</span>
+<span class="c"># Certificate Connections</span>
+<span class="c">#######################################</span>
+
+conn windows7
+    <span class="nv">keyexchange</span><span class="o">=</span>ikev2
+    <span class="nv">ike</span><span class="o">=</span>aes256-sha1-modp1024!
+    <span class="nv">rekey</span><span class="o">=</span>no
+    <span class="nv">left</span><span class="o">=</span>%defaultroute
+    <span class="nv">leftauth</span><span class="o">=</span>pubkey
+    <span class="nv">leftsubnet</span><span class="o">=</span>0.0.0.0/0
+    <span class="nv">leftcert</span><span class="o">=</span>server.cert.pem
+    <span class="nv">right</span><span class="o">=</span>%any
+    <span class="nv">rightauth</span><span class="o">=</span>eap-mschapv2
+    <span class="nv">rightsourceip</span><span class="o">=</span>10.0.0.0/24
+    <span class="nv">rightsendcert</span><span class="o">=</span>never
+    <span class="nv">eap_identity</span><span class="o">=</span>%any
+    <span class="nv">auto</span><span class="o">=</span>add
+</code></pre></div></div>
+
+<h5 id="232optionsxl2tpd">2.3.2、options.xl2tpd</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ipcp-accept-local
+ipcp-accept-remote
+ms-dns 8.8.8.8
+ms-dns 8.8.4.4
+noccp
+auth
+crtscts
+idle 1800
+mtu 1280
+mru 1280
+lock
+lcp-echo-failure 10
+lcp-echo-interval 60
+connect-delay 5000
+</code></pre></div></div>
+
+<h5 id="233strongswanconf">2.3.3、strongswan.conf</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># /etc/strongswan.conf - strongSwan configuration file</span>
+<span class="c"># strongswan.conf - strongSwan configuration file</span>
+<span class="c">#</span>
+<span class="c"># Refer to the strongswan.conf(5) manpage for details</span>
+
+charon <span class="o">{</span>
+	load_modular <span class="o">=</span> <span class="nb">yes
+	</span>send_vendor_id <span class="o">=</span> <span class="nb">yes
+	</span>plugins <span class="o">{</span>
+		include strongswan.d/charon/<span class="k">*</span>.conf
+		attr <span class="o">{</span>
+			dns <span class="o">=</span> 8.8.8.8, 8.8.4.4
+		<span class="o">}</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+
+include strongswan.d/<span class="k">*</span>.conf
+</code></pre></div></div>
+
+<h5 id="234xl2tpdconf">2.3.4、xl2tpd.conf</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>global]
+port <span class="o">=</span> 1701
+auth file <span class="o">=</span> /etc/ppp/l2tp-secrets
+debug avp <span class="o">=</span> <span class="nb">yes
+</span>debug network <span class="o">=</span> <span class="nb">yes
+</span>debug state <span class="o">=</span> <span class="nb">yes
+</span>debug tunnel <span class="o">=</span> <span class="nb">yes</span>
+<span class="o">[</span>lns default]
+ip range <span class="o">=</span> 10.1.0.2-10.1.0.254
+<span class="nb">local </span>ip <span class="o">=</span> 10.1.0.1
+require chap <span class="o">=</span> <span class="nb">yes
+</span>refuse pap <span class="o">=</span> <span class="nb">yes
+</span>require authentication <span class="o">=</span> <span class="nb">yes
+</span>name <span class="o">=</span> l2tpd
+<span class="p">;</span>ppp debug <span class="o">=</span> <span class="nb">yes
+</span>pppoptfile <span class="o">=</span> /etc/ppp/options.xl2tpd
+length bit <span class="o">=</span> <span class="nb">yes</span>
+</code></pre></div></div>
+
+<p><strong>创建好四个配置文件后将其复制到指定位置即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Strongswan Configuration</span>
+<span class="nb">cp </span>ipsec.conf /etc/ipsec.conf
+<span class="nb">cp </span>strongswan.conf /etc/strongswan.conf
+
+<span class="c"># XL2TPD Configuration</span>
+<span class="nb">cp </span>xl2tpd.conf /etc/xl2tpd/xl2tpd.conf
+<span class="nb">cp </span>options.xl2tpd /etc/ppp/options.xl2tpd
+</code></pre></div></div>
+
+<h4 id="24创建证书">2.4、创建证书</h4>
+
+<p>对于 Windows、Android 等设备可能不支持某些登录方式，比如 IKEv2 PSK，这是需要创建证书，以支持使用 IKEv2 证书登录</p>
+
+<h5 id="241自签-ca">2.4.1、自签 CA</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># create CA certificate</span>
+ipsec pki <span class="nt">--gen</span> <span class="nt">--outform</span> pem <span class="o">&gt;</span> ca.key.pem
+ipsec pki <span class="nt">--self</span> <span class="nt">--in</span> ca.key.pem <span class="nt">--dn</span> <span class="s2">"C=CN, O=StrongSwan, CN=StrongSwan CA"</span> <span class="nt">--ca</span> <span class="nt">--outform</span> pem <span class="o">&gt;</span> ca.cert.pem
+</code></pre></div></div>
+
+<h5 id="242创建服务器证书">2.4.2、创建服务器证书</h5>
+
+<p><strong>其中 <code class="highlighter-rouge">--san</code> 可以指定多个，但一般为一个是域名，一个是外网 IP，如果经过了路由，那么只需要写本机的对外暴露网卡的 IP 即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># create server certificate</span>
+ipsec pki <span class="nt">--gen</span> <span class="nt">--outform</span> pem <span class="o">&gt;</span> server.key.pem
+ipsec pki <span class="nt">--pub</span> <span class="nt">--in</span> server.key.pem | ipsec pki <span class="nt">--issue</span> <span class="nt">--cacert</span> ca.cert.pem <span class="se">\</span>
+  <span class="nt">--cakey</span> ca.key.pem <span class="nt">--dn</span> <span class="s2">"C=CN, O=StrongSwan, CN=服务器域名"</span> <span class="se">\</span>
+  <span class="nt">--san</span><span class="o">=</span><span class="s2">"服务器域名"</span> <span class="nt">--san</span><span class="o">=</span><span class="s2">"网卡IP"</span> <span class="nt">--flag</span> serverAuth <span class="nt">--flag</span> ikeIntermediate <span class="se">\</span>
+  <span class="nt">--outform</span> pem <span class="o">&gt;</span> server.cert.pem
+</code></pre></div></div>
+
+<h5 id="243创建客户端证书">2.4.3、创建客户端证书</h5>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ipsec pki <span class="nt">--gen</span> <span class="nt">--outform</span> pem <span class="o">&gt;</span> client.key.pem
+ipsec pki <span class="nt">--pub</span> <span class="nt">--in</span> client.key.pem | ipsec pki <span class="nt">--issue</span> <span class="nt">--cacert</span> ca.cert.pem <span class="se">\</span>
+  <span class="nt">--cakey</span> ca.key.pem <span class="nt">--dn</span> <span class="s2">"C=CN, O=StrongSwan, CN=Client"</span> <span class="se">\</span>
+  <span class="nt">--outform</span> pem <span class="o">&gt;</span> client.cert.pem
+</code></pre></div></div>
+
+<h5 id="244生成-p12">2.4.4、生成 p12</h5>
+
+<p>安卓等设备是不支持直接导入客户端证书的，需要转换成 p12 格式，转换过程中需要输入两次密码，该密码为证书使用密码，导入时需要输入</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl pkcs12 <span class="nt">-export</span> <span class="nt">-inkey</span> client.key.pem <span class="nt">-in</span> client.cert.pem <span class="nt">-name</span> <span class="s2">"Client"</span> <span class="se">\</span>
+  <span class="nt">-certfile</span> ca.cert.pem <span class="nt">-caname</span> <span class="s2">"StrongSwan CA"</span> <span class="nt">-out</span> client.cert.p12
+</code></pre></div></div>
+
+<h5 id="245安装证书">2.4.5、安装证书</h5>
+
+<p>创建完成后将证书复制到指定目录即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> <span class="nt">-r</span> ca.cert.pem /etc/ipsec.d/cacerts/
+<span class="nb">cp</span> <span class="nt">-r</span> server.cert.pem /etc/ipsec.d/certs/
+<span class="nb">cp</span> <span class="nt">-r</span> server.key.pem /etc/ipsec.d/private/
+<span class="nb">cp</span> <span class="nt">-r</span> client.cert.pem /etc/ipsec.d/certs/
+<span class="nb">cp</span> <span class="nt">-r</span> client.key.pem /etc/ipsec.d/private/
+</code></pre></div></div>
+
+<h4 id="25创建用户">2.5、创建用户</h4>
+
+<p>关于用户的登陆模式，比如使用 L2TP、IPsec、IKEv2 等请自行 Google，以下提供了一个简单的创建用户的脚本</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nv">vpn_user</span><span class="o">=</span><span class="nv">$1</span>
+<span class="nv">vpn_password</span><span class="o">=</span><span class="nv">$2</span>
+
+<span class="k">if</span> <span class="o">[</span> <span class="nt">-z</span> <span class="k">${</span><span class="nv">vpn_user</span><span class="k">}</span> <span class="o">]</span> <span class="o">||</span> <span class="o">[</span> <span class="nt">-z</span> <span class="k">${</span><span class="nv">vpn_password</span><span class="k">}</span> <span class="o">]</span><span class="p">;</span> <span class="k">then
+	</span><span class="nb">echo</span> <span class="s2">"Usage: </span><span class="nv">$0</span><span class="s2"> user password"</span>
+	<span class="nb">exit </span>1
+<span class="k">fi
+
+</span>vpn_deluser <span class="k">${</span><span class="nv">vpn_user</span><span class="k">}</span>
+
+<span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/ipsec.d/l2tp-secrets <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+"</span><span class="k">${</span><span class="nv">vpn_user</span><span class="k">}</span><span class="sh">" "*" "</span><span class="k">${</span><span class="nv">vpn_password</span><span class="k">}</span><span class="sh">" "*"
+</span><span class="no">EOF
+
+</span><span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/ipsec.d/ipsec.secrets <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+</span><span class="k">${</span><span class="nv">vpn_user</span><span class="k">}</span><span class="sh"> : EAP "</span><span class="k">${</span><span class="nv">vpn_password</span><span class="k">}</span><span class="sh">"
+</span><span class="k">${</span><span class="nv">vpn_user</span><span class="k">}</span><span class="sh"> : XAUTH "</span><span class="k">${</span><span class="nv">vpn_password</span><span class="k">}</span><span class="sh">"
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<p><strong>将其保存为 <code class="highlighter-rouge">vpn_adduser.sh</code>，执行 <code class="highlighter-rouge">./vpn_adduser.sh USERNAME PASSWD</code> 即可添加用户</strong></p>
+
+<h4 id="26设置-psk">2.6、设置 PSK</h4>
+
+<p>同样 PSK 也用于登录，如 IKEv2 PSK 登录，使用同样自行 Google，以下为设置 PSK 的脚本</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nv">psk</span><span class="o">=</span><span class="nv">$1</span>
+
+<span class="k">if</span> <span class="o">[</span> <span class="nt">-z</span> <span class="k">${</span><span class="nv">psk</span><span class="k">}</span> <span class="o">]</span><span class="p">;</span> <span class="k">then
+	</span><span class="nb">echo</span> <span class="s2">"Usage: </span><span class="nv">$0</span><span class="s2"> psk"</span>
+	<span class="nb">exit </span>1
+<span class="k">fi
+
+</span>vpn_unsetpsk
+
+<span class="nb">touch</span> /etc/ipsec.d/ipsec.secrets
+<span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/ipsec.d/ipsec.secrets <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+: PSK "</span><span class="k">${</span><span class="nv">psk</span><span class="k">}</span><span class="sh">"
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<p>最后启动 VPN 连接即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> /usr/sbin/xl2tpd <span class="nt">-c</span> /etc/xl2tpd/xl2tpd.conf
+ ipsec start
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

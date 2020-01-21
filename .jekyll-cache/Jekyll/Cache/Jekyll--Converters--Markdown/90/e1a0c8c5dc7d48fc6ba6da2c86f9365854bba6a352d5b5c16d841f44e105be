@@ -1,0 +1,170 @@
+I"LW<blockquote>
+  <p>最近忙的晕头转向，博客停更了 1 个月，感觉对不起党、对不起人民、对不起 <del>CCAV</del>…不过在忙的时候操作 Kubernetes 集群要频繁的使用 <code class="highlighter-rouge">kubectl</code> 命令，而在多个 NameSpace 下来回切换每次都得加个 <code class="highlighter-rouge">-n</code> 简直让我想打人；索性翻了下 <code class="highlighter-rouge">kubectl</code> 的插件机制，顺便写了一个快速切换 NameSpace 的小插件，以下记录一下插件编写过程</p>
+</blockquote>
+
+<h2 id="一插件介绍">一、插件介绍</h2>
+
+<p><code class="highlighter-rouge">kubectl</code> 命令从 <code class="highlighter-rouge">v1.8.0</code> 版本开始引入了 alpha feature 的插件机制；在此机制下我们可以对 <code class="highlighter-rouge">kubectl</code> 命令进行扩展，从而编写一些自己的插件集成进 <code class="highlighter-rouge">kubectl</code> 命令中；<strong><code class="highlighter-rouge">kubectl</code> 插件机制是与语言无关的，也就是说你可以用任何语言编写插件，可以是 <code class="highlighter-rouge">bash</code>、<code class="highlighter-rouge">python</code> 脚本，也可以是 <code class="highlighter-rouge">go</code>、<code class="highlighter-rouge">java</code> 等编译型语言；所以选择你熟悉的语言即可</strong>，以下是一个用 <code class="highlighter-rouge">go</code> 编写的用于快速切换 NameSpace 的小插件，运行截图如下:</p>
+
+<p><strong>所谓: 开局一张图，功能全靠编 😂</strong>
+<img src="https://cdn.oss.link/markdown/6t89g.gif" alt="swns.gif" /></p>
+
+<p>当前插件代码放在 <a href="https://github.com/mritd/swns">mritd/swns</a> 这个项目下面</p>
+
+<h2 id="二插件加载">二、插件加载</h2>
+
+<p><code class="highlighter-rouge">kubectl</code> 插件机制目前并不提供包管理器一样的功能，比如你想执行 <code class="highlighter-rouge">kuebctl plugin install xxx</code> 这种操作目前还没有实现(个人感觉差个规范)；所以一旦我们编写或者下载一个插件后，我们只有正确放在特定目录才会生效；</p>
+
+<p><strong>目前插件根据文档描述只有两部分内容: <code class="highlighter-rouge">plugin.yaml</code> 和其依赖的二进制/脚本等可执行文件</strong>；根据文档说明，<code class="highlighter-rouge">kubectl</code> 会尝试在如下位置查找并加载插件，所以我们只需要将 <code class="highlighter-rouge">plugin.yaml</code> 和相关二进制放在在对应位置即可:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">${KUBECTL_PLUGINS_PATH}</code>: 如果这个环境变量定义了，那么 <code class="highlighter-rouge">kubectl</code> <strong>只会</strong>从这里查找；<strong>注意: 这个变量可以是多个目录，类似 PATH 变量一样，做好分割即可</strong></li>
+  <li><code class="highlighter-rouge">${XDG_DATA_DIRS}/kubectl/plugins</code>: 关于这个变量具体请看 <a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">XDG System Directory Structure</a>，我了解也不多；<strong>如果这个变量没定义则默认为 <code class="highlighter-rouge">/usr/local/share:/usr/share</code></strong></li>
+  <li><code class="highlighter-rouge">~/.kube/plugins</code>: 这个没啥可说的，我推荐还是将插件放在这个位置比较友好一点</li>
+</ul>
+
+<p>所以最终插件目录结构类似这样:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ tree .kube
+.kube
+├── config
+└── plugins
+    └── swns
+        ├── plugin.yaml
+        └── swns
+</code></pre></div></div>
+
+<h2 id="三pluginyaml">三、Plugin.yaml</h2>
+
+<p><code class="highlighter-rouge">plugin.yaml</code> 这个文件实际上才是插件的核心，在这个文件里声明了插件如何使用、调用的二进制/脚本等重要配置；<strong>一个插件可以没有任何脚本/二进制可执行文件，但至少应当有一个 <code class="highlighter-rouge">plugin.yaml</code> 描述文件</strong>；目前 <code class="highlighter-rouge">plugin.yaml</code> 的结构如下:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">targaryen"</span>                 <span class="c1"># 必填项: 用于 kuebctl 调用的插件名称</span>
+<span class="na">shortDesc</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Dragonized</span><span class="nv"> </span><span class="s">plugin"</span>    <span class="c1"># 必填项: 用于 help 该插件时的简短描述</span>
+<span class="na">longDesc</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>                      <span class="c1"># 非必填: 插件的长描述</span>
+<span class="na">example</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>                       <span class="c1"># 非必填: 插件的使用样例</span>
+<span class="na">command</span><span class="pi">:</span> <span class="s2">"</span><span class="s">./dracarys"</span>             <span class="c1"># 必填项: 插件实际执行的文件位置，可以相对路径 or 绝对路径，或者在 PATH 里也行</span>
+<span class="na">flags</span><span class="pi">:</span>                            <span class="c1"># 非必填: 插件支持的 flag</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">heat"</span>                  <span class="c1"># 必填项: 如果你写了支持的 flag，那么此项必填</span>
+    <span class="na">shorthand</span><span class="pi">:</span> <span class="s2">"</span><span class="s">h"</span>                <span class="c1"># 非必填: 该选项的缩短形式</span>
+    <span class="na">desc</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Fire</span><span class="nv"> </span><span class="s">heat"</span>             <span class="c1"># 必填项: 同样每个 flag 都必须书写描述</span>
+    <span class="na">defValue</span><span class="pi">:</span> <span class="s2">"</span><span class="s">extreme"</span>           <span class="c1"># 非必填: 默认值</span>
+<span class="na">tree</span><span class="pi">:</span>                             <span class="c1"># 允许定义一些子命令</span>
+  <span class="pi">-</span> <span class="s">...</span>                           <span class="c1"># 子命令支持同样的设置属性(我想知道子命令的子命令的子命令支不支持...我还没去试过)</span>
+</code></pre></div></div>
+
+<h2 id="四插件环境变量">四、插件环境变量</h2>
+
+<p>在编写插件时，<strong>有时插件运行时需要获取到一些参数，比如 <code class="highlighter-rouge">kubectl</code> 执行时的全局 flag 等，</strong>为了方便插件开发者，<code class="highlighter-rouge">kuebctl</code> 的插件机制提供一些预置的环境变量方便我们读取；即如果你用 <code class="highlighter-rouge">bash</code> 写插件，那么这些变量你只需要 <code class="highlighter-rouge">${xxxx}</code> 即可拿到，然后做一些你想做的事情；这些变量目前支持如下:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">KUBECTL_PLUGINS_CALLER</code>: <code class="highlighter-rouge">kubectl</code> 二进制文件所在位置；<strong>作为插件编写者，我们无需关系 api server 是否能联通，因为配置是否正确应当由使用者决定；在需要时我们只需要直接调用 <code class="highlighter-rouge">kubectl</code> 即可；</strong>比如在 <code class="highlighter-rouge">bash</code> 脚本中执行 <code class="highlighter-rouge">get pod</code> 等</li>
+  <li><code class="highlighter-rouge">KUBECTL_PLUGINS_CURRENT_NAMESPACE</code>: 当前 <code class="highlighter-rouge">kuebctl</code> 命令所对应的 NameSpace，<strong>插件机制确保了该值一定正确；即这是经过解析了 <code class="highlighter-rouge">--namespace</code> 选项或者 <code class="highlighter-rouge">kubeconfig</code> 配置后的最终结果；作为插件编写者，我们无需关心处理过程</strong>；想详细了解的的可以去看源码，以及 <code class="highlighter-rouge">Cobra</code> 库(Kubernetes 用这个库解析命令行参数和配置)</li>
+  <li><code class="highlighter-rouge">KUBECTL_PLUGINS_DESCRIPTOR_*</code>: 插件自己本身位于 <code class="highlighter-rouge">plugin.yaml</code> 中的描述信息，比如 <code class="highlighter-rouge">KUBECTL_PLUGINS_DESCRIPTOR_NAME</code> 输出 <code class="highlighter-rouge">plugin.yaml</code> 下的 <code class="highlighter-rouge">name</code> 属性；一般可以用作插件输出自己的帮助文档等</li>
+  <li><code class="highlighter-rouge">KUBECTL_PLUGINS_GLOBAL_FLAG_*</code>: 获取 <code class="highlighter-rouge">kubectl</code> 所有全局 flag 值的变量，比如 <code class="highlighter-rouge">KUBECTL_PLUGINS_GLOBAL_FLAG_NAMESPACE</code> 能拿到 <code class="highlighter-rouge">--namespace</code> 选项的值</li>
+  <li><code class="highlighter-rouge">KUBECTL_PLUGINS_LOCAL_FLAG_*</code>: 同上面类似，只不过这个是获取插件自己本身 flag 的值，个人认为在脚本语言中，比如 <code class="highlighter-rouge">bash</code> 等处理选项不怎么好用时，可以考虑直接从变量拿</li>
+</ul>
+
+<p>以上变量我并未都测试，具体以测试为准，<strong>删库跑路等情况本人概不负责</strong></p>
+
+<h2 id="五写一个切换-namespace-的插件">五、写一个切换 NameSpace 的插件</h2>
+
+<p>前面墨迹一大堆只是为了描述清楚 <strong>要写一个插件应该怎么干</strong> 的问题，下面开始 <strong>这么干</strong></p>
+
+<h3 id="51编写配置">5.1、编写配置</h3>
+
+<p>上面已经介绍好了 <code class="highlighter-rouge">plugin.yaml</code> 怎么写，那么根据我自己的需求，我写的这个切换 NameSpace 插件的名字暂且叫做 <code class="highlighter-rouge">swns</code>；我希望 <code class="highlighter-rouge">swns</code> 执行后接受一个 NameSpace 的字符串，然后调用 <code class="highlighter-rouge">kuebctl config</code> 去设置当前默认的 NameSpace，这样在后续命令中我就不用再一直加个 <code class="highlighter-rouge">-n xxx</code> 参数了；同时我希望使用更方便点，当执行 <code class="highlighter-rouge">swns</code> 命令时，如果不提供 NameSpace 的字符串，那我就弹出下拉列表供用户选择；综上需求自己想明白后，就写一个 <code class="highlighter-rouge">plugin.yaml</code>，如下:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">swns"</span>
+<span class="na">shortDesc</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Switch</span><span class="nv"> </span><span class="s">NameSpace"</span>
+<span class="na">longDesc</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Switch</span><span class="nv"> </span><span class="s">Kubernetes</span><span class="nv"> </span><span class="s">current</span><span class="nv"> </span><span class="s">context</span><span class="nv"> </span><span class="s">namespace."</span>
+<span class="na">example</span><span class="pi">:</span> <span class="s2">"</span><span class="s">kubectl</span><span class="nv"> </span><span class="s">plugin</span><span class="nv"> </span><span class="s">swns</span><span class="nv"> </span><span class="s">[NAMESPACE]"</span>
+<span class="na">command</span><span class="pi">:</span> <span class="s2">"</span><span class="s">./swns"</span>
+</code></pre></div></div>
+
+<h3 id="52编写插件">5.2、编写插件</h3>
+
+<p>上面 <code class="highlighter-rouge">plugin.yaml</code> 已经定义好了，那么接下来就简单了，撸代码实现了就好；代码如下:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// 注意: 下面的模板语法大括号中间没有空格，此处空格是为了防止博客渲染出错</span>
+
+<span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"os"</span>
+	<span class="s">"os/exec"</span>
+	<span class="s">"strings"</span>
+
+	<span class="s">"github.com/mritd/promptx"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+	<span class="c">// 先拿到当前的 context</span>
+	<span class="n">cmd</span> <span class="o">:=</span> <span class="n">exec</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="s">"kubectl"</span><span class="p">,</span> <span class="s">"config"</span><span class="p">,</span> <span class="s">"current-context"</span><span class="p">)</span>
+	<span class="n">cmd</span><span class="o">.</span><span class="n">Stdin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdin</span>
+	<span class="n">cmd</span><span class="o">.</span><span class="n">Stderr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stderr</span>
+
+	<span class="n">b</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+	<span class="n">checkAndExit</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="n">currentContext</span> <span class="o">:=</span> <span class="n">strings</span><span class="o">.</span><span class="n">TrimSpace</span><span class="p">(</span><span class="kt">string</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+	<span class="c">// 如果提供了 NameSpace 字符串，我直接改就行了</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">1</span> <span class="p">{</span>
+		<span class="n">cmd</span> <span class="o">=</span> <span class="n">exec</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="s">"kubectl"</span><span class="p">,</span> <span class="s">"config"</span><span class="p">,</span> <span class="s">"set-context"</span><span class="p">,</span> <span class="n">currentContext</span><span class="p">,</span> <span class="s">"--namespace="</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">[</span><span class="m">1</span><span class="p">])</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">Stdout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdout</span>
+		<span class="n">checkAndExit</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">Run</span><span class="p">())</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Kubernetes namespace switch to %s.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">Args</span><span class="p">[</span><span class="m">1</span><span class="p">])</span>
+	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		<span class="c">// 没提供我就得先把所有的 NameSpace 弄出来</span>
+		<span class="n">cmd</span> <span class="o">=</span> <span class="n">exec</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="s">"kubectl"</span><span class="p">,</span> <span class="s">"get"</span><span class="p">,</span> <span class="s">"ns"</span><span class="p">,</span> <span class="s">"-o"</span><span class="p">,</span> <span class="s">"template"</span><span class="p">,</span> <span class="s">"--template"</span><span class="p">,</span> <span class="s">"{ { range .items } }{ { .metadata.name } } { { end } }"</span><span class="p">)</span>
+		<span class="n">b</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+		<span class="n">checkAndExit</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="n">allNameSpace</span> <span class="o">:=</span> <span class="n">strings</span><span class="o">.</span><span class="n">Fields</span><span class="p">(</span><span class="kt">string</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+		<span class="c">// 弄到所有的 NameSpace 后，我在弄一个下拉列表(这是我自己造的一个下拉列表库)</span>
+		<span class="n">cfg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">promptx</span><span class="o">.</span><span class="n">SelectConfig</span><span class="p">{</span>
+			<span class="n">ActiveTpl</span><span class="o">:</span>    <span class="s">"»  { { . | cyan } }"</span><span class="p">,</span>
+			<span class="n">InactiveTpl</span><span class="o">:</span>  <span class="s">"  { { . | white } }"</span><span class="p">,</span>
+			<span class="n">SelectPrompt</span><span class="o">:</span> <span class="s">"NameSpace"</span><span class="p">,</span>
+			<span class="n">SelectedTpl</span><span class="o">:</span>  <span class="s">"{ { </span><span class="se">\"</span><span class="s">» </span><span class="se">\"</span><span class="s"> | green } }{ {</span><span class="se">\"</span><span class="s">NameSpace:</span><span class="se">\"</span><span class="s"> | cyan } } { { . } }"</span><span class="p">,</span>
+			<span class="n">DisPlaySize</span><span class="o">:</span>  <span class="m">9</span><span class="p">,</span>
+			<span class="n">DetailsTpl</span><span class="o">:</span>   <span class="s">` `</span><span class="p">,</span>
+		<span class="p">}</span>
+		<span class="n">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">promptx</span><span class="o">.</span><span class="n">Select</span><span class="p">{</span>
+			<span class="n">Items</span><span class="o">:</span>  <span class="n">allNameSpace</span><span class="p">,</span>
+			<span class="n">Config</span><span class="o">:</span> <span class="n">cfg</span><span class="p">,</span>
+		<span class="p">}</span>
+
+		<span class="c">// 用户选中一个 NameSpace 后我就拿到了想要设置的 NameSpace 字符串</span>
+		<span class="n">selectNameSpace</span> <span class="o">:=</span> <span class="n">allNameSpace</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">Run</span><span class="p">()]</span>
+
+		<span class="c">// 跟上面套路一样，写进去就行了</span>
+		<span class="n">cmd</span> <span class="o">=</span> <span class="n">exec</span><span class="o">.</span><span class="n">Command</span><span class="p">(</span><span class="s">"kubectl"</span><span class="p">,</span> <span class="s">"config"</span><span class="p">,</span> <span class="s">"set-context"</span><span class="p">,</span> <span class="n">currentContext</span><span class="p">,</span> <span class="s">"--namespace="</span><span class="o">+</span><span class="n">selectNameSpace</span><span class="p">)</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">Stdout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">Stdout</span>
+		<span class="n">checkAndExit</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">Run</span><span class="p">())</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Kubernetes namespace switch to %s.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">selectNameSpace</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">checkErr</span><span class="p">(</span><span class="n">err</span> <span class="kt">error</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+		<span class="k">return</span> <span class="no">false</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="no">true</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">checkAndExit</span><span class="p">(</span><span class="n">err</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="o">!</span><span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>最后编译后放到上面所说的插件加载目录即可</p>
+
+<p>到此，<strong>“全局一张图，功能全靠编”</strong> 图上面也有了，编的的也差不多 😂</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

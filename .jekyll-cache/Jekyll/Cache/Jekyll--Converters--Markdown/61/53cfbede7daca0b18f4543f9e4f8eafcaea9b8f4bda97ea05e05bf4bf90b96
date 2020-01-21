@@ -1,0 +1,89 @@
+I"(<blockquote>
+  <p>随着 kubernetes 容器化部署逐渐推进，gcr.io 镜像、kubernetes rpm 下载由于 “伟大的” 墙的原因成为阻碍玩 kubernetes 第一道屏障，以下记录了个人维护的 yum 仓库和 gcr.io 反代仓库使用</p>
+</blockquote>
+
+<h3 id="一yum-源">一、yum 源</h3>
+
+<p>目前个人维护了一个 kubernetes 的 yum 源，目前 yum 源包含 rpm 如下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>rpm 包</th>
+      <th>版本</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>etcd</td>
+      <td>3.1.0-1.x86_64</td>
+    </tr>
+    <tr>
+      <td>flannel</td>
+      <td>0.7.0-1.x86_64</td>
+    </tr>
+    <tr>
+      <td>kubernetes</td>
+      <td>1.5.3-1.x86_64</td>
+    </tr>
+    <tr>
+      <td>kubeadm</td>
+      <td>1.6.0-0.alpha.0.2074.a092d8e0f95f52.x86_64</td>
+    </tr>
+    <tr>
+      <td>kubectl</td>
+      <td>1.5.3-0.x86_64</td>
+    </tr>
+    <tr>
+      <td>kubelet</td>
+      <td>1.5.3-0.x86_64</td>
+    </tr>
+    <tr>
+      <td>kubernetes-cni</td>
+      <td>0.3.0.1-0.07a8a2.x86_64</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>使用方法如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 添加 yum 源</span>
+<span class="nb">tee</span> /etc/yum.repos.d/mritd.repo <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
+[mritd]
+name=Mritd Repository
+baseurl=https://yum.mritd.me/centos/7/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://cdn.oss.link/keys/rpm.public.key
+</span><span class="no">EOF
+</span><span class="c"># 刷新cache</span>
+yum makecache
+<span class="c"># 安装 yum-utils</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> yum-utils socat 
+<span class="c"># 下载 rpm 到本地</span>
+yumdownloader kubelet kubectl kubernetes-cni kubeadm
+<span class="c"># 安装 rpm</span>
+rpm <span class="nt">-ivh</span> kube<span class="k">*</span>.rpm
+</code></pre></div></div>
+
+<p><strong>所有关于 yum 源地址变更等都将在 <a href="https://yum.mritd.me">https://yum.mritd.me</a> 页面公告，如出现不能使用请访问此页面查看相关原因</strong>；<strong>如果实在下载过慢可以将 <code class="highlighter-rouge">yum.mritd.me</code> 替换成 <code class="highlighter-rouge">yumrepo.b0.upaiyun.com</code>，此域名 yum 源在 CDN 上，由于流量有限，请使用 yumdownloader 工具下载到本地分发安装，谢谢</strong></p>
+
+<h3 id="二kubernetes-镜像">二、kubernetes 镜像</h3>
+
+<p>关于 kubernetes 镜像下载，一般有三种方式：</p>
+
+<ul>
+  <li>直接从国外服务器 pull 然后 save 出来传到本地</li>
+  <li>通过第三方仓库做中转，如 Docker hub</li>
+  <li>在本地/国外能访问的服务器通过官方 registry 加代理反代 gcr.io</li>
+</ul>
+
+<p><strong>个人在国外服务器上维护了一个 gcr.io 的反代仓库，使用方式如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull gcr.mritd.me/google_containers/kube-apiserver-amd64:v1.5.3
+</code></pre></div></div>
+
+<p>如果对于 gcr.mritd.me 访问过慢可参考 <a href="https://mritd.me/2017/02/09/gcr.io-registy-proxy/">gcr.io 仓库代理</a> 使用带有梯子的本地私服，如果使用 Docker Hub 等中转可参考 <a href="https://mritd.me/2016/10/29/set-up-kubernetes-cluster-by-kubeadm/#22%E9%95%9C%E5%83%8F%E4%BB%8E%E5%93%AA%E6%9D%A5">kubeadm 搭建 kubernetes 集群</a></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

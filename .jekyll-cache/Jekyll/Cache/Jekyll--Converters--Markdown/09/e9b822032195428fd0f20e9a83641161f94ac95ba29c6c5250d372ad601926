@@ -1,0 +1,214 @@
+I"0<h2 id="一简介">一、简介</h2>
+
+<p>kubernetes 是 Google 内部使用的 Borg 容器调度框架的开源实现，其凝聚了 Google 十几年容器经验的最佳实践，其支持 Dokcer 和 Rkt 容器的编排功能，以下记录一下 Kubernetes 集群搭建过程。</p>
+
+<h2 id="二环境准备">二、环境准备</h2>
+
+<p>kubernetes 搭建集群环境推荐至少3个节点，1个 master 和2个 slave 节点，所以至少三台服务器(虚拟机)；容器间通讯采用 flannel 实现跨主机通讯，具体参考 <a href="http://mritd.me/2016/09/03/Dokcer-%E4%BD%BF%E7%94%A8-Flannel-%E8%B7%A8%E4%B8%BB%E6%9C%BA%E9%80%9A%E8%AE%AF/">Dokcer 使用 Flannel 跨主机通讯</a> 文章，同时 kubernetes 本身的服务发现机制依赖于 etcd，etcd 可使用单机模式，也可以构建高可用集群，集群搭建可参考 <a href="http://mritd.me/2016/09/01/Etcd-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">Etcd 集群搭建</a> 文章；最后总体环境如下:</p>
+
+<!--more-->
+
+<ul>
+  <li>3台虚拟机</li>
+  <li>每台安装好 Docker</li>
+  <li>配置好 Docker 使用 Flannel 跨主机通讯</li>
+</ul>
+
+<p><strong>主机列表如下</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>主机</th>
+      <th>环境配置</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>192.168.1.108</td>
+      <td>k8s master、etcd</td>
+    </tr>
+    <tr>
+      <td>192.168.1.139</td>
+      <td>k8s node1</td>
+    </tr>
+    <tr>
+      <td>192.168.1.215</td>
+      <td>k8s node2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="三搭建示例">三、搭建示例</h2>
+
+<blockquote>
+  <p>以下安装全部基于 rpm 包方式，关于 falnnel、etcd、kubernetes 的 rpm 包可通过 <a href="https://github.com/mritd/shell_scripts/blob/master/build_rpm_tool.sh">build_rpm_tool.sh</a> 脚本工具创建指定版本的 rpm 包，下载脚本使用 <code class="highlighter-rouge">./build_rpm_tool.sh k8s 1.3.6</code> 命令即可创建一个 k8s 的 rpm，<strong>如需多次使用，请将脚本第 181 行 k8s rpm 地址替换为已经自己编译好的 k8s rpm 地址(cdn 流量不多)</strong></p>
+</blockquote>
+
+<h3 id="31安装-etcd">3.1、安装 Etcd</h3>
+
+<p>首先安装 etcd rpm 包</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rpm <span class="nt">-ivh</span> etcd-2.3.7-1.x86_64.rpm
+</code></pre></div></div>
+
+<p>然后修改 etcd 配置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑配置文件</span>
+vim /etc/etcd/etcd.conf
+<span class="c"># 修改后内容如下</span>
+<span class="nv">ETCD_NAME</span><span class="o">=</span>default
+<span class="nv">ETCD_DATA_DIR</span><span class="o">=</span><span class="s2">"/var/lib/etcd/default.etcd"</span>
+<span class="nv">ETCD_LISTEN_CLIENT_URLS</span><span class="o">=</span><span class="s2">"http://192.168.1.108:2379"</span>
+<span class="nv">ETCD_ADVERTISE_CLIENT_URLS</span><span class="o">=</span><span class="s2">"http://192.168.1.108:2379"</span>
+</code></pre></div></div>
+
+<p>最后启动并测试</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动</span>
+systemctl <span class="nb">enable </span>etcd
+systemctl start etcd
+<span class="c"># 连接测试</span>
+etcdctl <span class="nt">--endpoints</span> http://192.168.1.108:2379 member list
+<span class="c"># 返回结果如下</span>
+ce2a822cea30bfca: <span class="nv">name</span><span class="o">=</span>default <span class="nv">peerURLs</span><span class="o">=</span>http://localhost:2380,http://localhost:7001 <span class="nv">clientURLs</span><span class="o">=</span>http://192.168.1.108:2379 <span class="nv">isLeader</span><span class="o">=</span><span class="nb">true</span>
+</code></pre></div></div>
+
+<h3 id="32安装-flannel">3.2、安装 flannel</h3>
+
+<p>安装过程如下，三台虚拟机都要安装</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装</span>
+rpm <span class="nt">-ivh</span> flannel-0.6.1-1.x86_64.rpm
+<span class="c"># 设置 IP 段</span>
+etcdctl <span class="nt">--endpoints</span> http://192.168.1.108:2379 <span class="nb">set</span> /coreos.com/network/config <span class="s1">'{"NetWork":"10.0.0.0/16"}'</span>
+<span class="c"># 修改配置</span>
+vim /etc/sysconfig/flanneld
+<span class="c"># 配置如下 enp0s3 为监听网卡</span>
+<span class="nv">FLANNEL_ETCD</span><span class="o">=</span><span class="s2">"http://192.168.1.108:2379"</span>
+<span class="nv">FLANNEL_ETCD_KEY</span><span class="o">=</span><span class="s2">"/coreos.com/network"</span>
+<span class="nv">FLANNEL_OPTIONS</span><span class="o">=</span><span class="s2">"--iface=enp0s3"</span>
+<span class="c"># 启动</span>
+systemctl <span class="nb">enable </span>flanneld
+systemctl start flanneld
+<span class="c"># 修改 docker 配置</span>
+vim /usr/lib/systemd/system/docker.service
+<span class="c"># 在 ExecStart 后增加 $DOCKER_NETWORK_OPTIONS 参数</span>
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/dockerd <span class="nv">$DOCKER_NETWORK_OPTIONS</span>
+<span class="c"># 重启 docker</span>
+systemctl daemon-reload
+systemctl restart docker
+</code></pre></div></div>
+
+<h3 id="33安装-master">3.3、安装 master</h3>
+
+<p>kubernetes master 安装在 108 上，与etcd 在同一台主机，安装 kubernetes rpm 包命令如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rpm <span class="nt">-ivh</span> kubernetes-1.3.6-1.x86_64.rpm
+</code></pre></div></div>
+
+<p><strong>配置 apiserver</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑配置文件</span>
+vim /etc/kubernetes/apiserver
+<span class="c"># 配置信息如下</span>
+<span class="nv">KUBE_API_ADDRESS</span><span class="o">=</span><span class="s2">"--insecure-bind-address=192.168.1.108"</span>
+<span class="c"># The port on the local server to listen on.</span>
+<span class="nv">KUBE_API_PORT</span><span class="o">=</span><span class="s2">"--insecure-port=8080"</span>
+<span class="c"># Port minions listen on</span>
+<span class="nv">KUBELET_PORT</span><span class="o">=</span><span class="s2">"--kubelet_port=10250"</span>
+<span class="c"># Comma separated list of nodes in the etcd cluster</span>
+<span class="nv">KUBE_ETCD_SERVERS</span><span class="o">=</span><span class="s2">"--etcd_servers=http://192.168.1.108:2379"</span>
+<span class="c"># Address range to use for services</span>
+<span class="nv">KUBE_SERVICE_ADDRESSES</span><span class="o">=</span><span class="s2">"--service-cluster-ip-range=10.254.0.0/16"</span>
+<span class="c"># default admission control policies</span>
+<span class="nv">KUBE_ADMISSION_CONTROL</span><span class="o">=</span><span class="s2">"--admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"</span>
+<span class="c"># Add your own!</span>
+<span class="nv">KUBE_API_ARGS</span><span class="o">=</span><span class="s2">""</span>
+</code></pre></div></div>
+
+<p><strong>启动 master</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl start kube-apiserver
+systemctl start kube-controller-manager
+systemctl start kube-scheduler
+systemctl <span class="nb">enable </span>kube-apiserver
+systemctl <span class="nb">enable </span>kube-controller-manager
+systemctl <span class="nb">enable </span>kube-scheduler
+systemctl status kube-apiserver
+systemctl status kube-controller-manager
+systemctl status kube-scheduler
+</code></pre></div></div>
+
+<h3 id="34安装-slave">3.4、安装 slave</h3>
+
+<p>其余两台虚拟机需要安装成 slave 节点，首先配置好 docker 和flannel，参考 3.1，安装过程如下</p>
+
+<p>首先安装 kubernetes</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rpm <span class="nt">-ivh</span> kubernetes-1.3.6-1.x86_64.rpm
+</code></pre></div></div>
+
+<p>配置 kubelet</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑配置文件</span>
+vim /etc/kubernetes/kubelet
+<span class="c"># 配置如下</span>
+<span class="nv">KUBELET_ADDRESS</span><span class="o">=</span><span class="s2">"--address=192.168.1.139"</span>
+<span class="c"># The port for the info server to serve on</span>
+<span class="nv">KUBELET_PORT</span><span class="o">=</span><span class="s2">"--port=10250"</span>
+<span class="c"># You may leave this blank to use the actual hostname</span>
+<span class="nv">KUBELET_HOSTNAME</span><span class="o">=</span><span class="s2">"--hostname_override=192-168-1-139"</span>
+<span class="c"># location of the api-server</span>
+<span class="nv">KUBELET_API_SERVER</span><span class="o">=</span><span class="s2">"--api_servers=http://192.168.1.108:8080"</span>
+<span class="c"># Add your own!</span>
+<span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--pod-infra-container-image=docker.io/kubernetes/pause:latest"</span>
+</code></pre></div></div>
+
+<p><strong><code class="highlighter-rouge">KUBELET_HOSTNAME</code> 参数用于指定 slave 在 master 中显示的名字，一般为了便于区分会自定义名字，但是自定义的名字必须在 hosts 文件中存在，所以还要修改 hosts 文件</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"127.0.0.1 192-168-1-139"</span> <span class="o">&gt;&gt;</span> /etc/hosts
+</code></pre></div></div>
+
+<p>接着修改主配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑配置文件</span>
+vim /etc/kubernetes/config
+<span class="c"># 配置样例如下</span>
+<span class="nv">KUBE_LOGTOSTDERR</span><span class="o">=</span><span class="s2">"--logtostderr=true"</span>
+<span class="c"># journal message level, 0 is debug</span>
+<span class="nv">KUBE_LOG_LEVEL</span><span class="o">=</span><span class="s2">"--v=0"</span>
+<span class="c"># Should this cluster be allowed to run privileged docker containers</span>
+<span class="nv">KUBE_ALLOW_PRIV</span><span class="o">=</span><span class="s2">"--allow_privileged=false"</span>
+<span class="c"># How the controller-manager, scheduler, and proxy find the apiserver</span>
+<span class="nv">KUBE_MASTER</span><span class="o">=</span><span class="s2">"--master=http://192.168.1.108:8080"</span>
+</code></pre></div></div>
+
+<p><strong>最后启动测试</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动</span>
+systemctl start kubelet
+systemctl start kube-proxy
+systemctl <span class="nb">enable </span>kubelet
+systemctl <span class="nb">enable </span>kube-proxy
+systemctl status kubelet
+systemctl status kube-proxy
+<span class="c"># 回到 108 master 测试</span>
+kubectl <span class="nt">--server</span><span class="o">=</span><span class="s2">"http://192.168.1.108:8080"</span> get node
+<span class="c"># 显示如下</span>
+NAME            STATUS    AGE
+192-168-1-139   Ready     53s
+</code></pre></div></div>
+
+<p>另外一台同理，到此 集群搭建完成</p>
+
+<h2 id="四其他相关">四、其他相关</h2>
+
+<ul>
+  <li>kubernetes、etcd 等监听端口最好指定为内网IP，尽量不要监听 <code class="highlighter-rouge">0.0.0.0</code>，监听公网很容易被黑</li>
+  <li>kubernetes 通讯最好开启 SSL，尤其是使用 “联邦模式” 时(跨级群调度)</li>
+  <li>etcd 最好搭建集群解决单点问题，同时最好准备2台dns服务器，用于服务发现等</li>
+  <li>kubernetes 如果启用了 skydns 则最好在 <code class="highlighter-rouge">KUBELET_ARGS</code> 参数中加入 <code class="highlighter-rouge">--cluster_dns=x.x.x.x</code> 为 skydns，这样在每个 pod 启动后默认 dns 都会指向 skydns
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+</ul>
+:ET

@@ -1,0 +1,151 @@
+I"�(<h2 id="一简介">一、简介</h2>
+
+<p>AspectJ 是一个强大的面向切面编程框架，Spring 等 AOP 全部兼容该框架；它扩展了Java语言。AspectJ 定义了 AOP 语法所以它有一个专门的编译器用来生成遵守Java字节编码规范的Class文件。</p>
+
+<h2 id="二环境准备">二、环境准备</h2>
+
+<ul>
+  <li>IntelliJ IDEA 2016</li>
+  <li>Maven 3.3.9</li>
+  <li>AspectJ 1.8.9</li>
+  <li>aspectjtools 1.8.9</li>
+</ul>
+
+<!--more-->
+
+<h2 id="三hello-world">三、Hello World</h2>
+
+<h3 id="1首先新建一个-java-项目-">1、首先新建一个 Java 项目 :</h3>
+
+<p><img src="https://cdn.oss.link/markdown/hex_aspect_create_project.png" alt="hex_aspect_create_project" /></p>
+
+<h3 id="2将其转化为-maven-项目">2、将其转化为 Maven 项目</h3>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_add_maven.png" alt="hexo_aspect_add_maven" /></p>
+
+<h3 id="3加入相关依赖">3、加入相关依赖</h3>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_maven_dependencies.png" alt="hexo_aspect_maven_dependencies" /></p>
+
+<p><strong>POM 如下 :</strong></p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="nt">&lt;project</span> <span class="na">xmlns=</span><span class="s">"http://maven.apache.org/POM/4.0.0"</span>
+         <span class="na">xmlns:xsi=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span>
+         <span class="na">xsi:schemaLocation=</span><span class="s">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;modelVersion&gt;</span>4.0.0<span class="nt">&lt;/modelVersion&gt;</span>
+
+    <span class="nt">&lt;groupId&gt;</span>me.mritd<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>Test1<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;packaging&gt;</span>jar<span class="nt">&lt;/packaging&gt;</span>
+
+
+    <span class="nt">&lt;dependencies&gt;</span>
+        <span class="c">&lt;!-- https://mvnrepository.com/artifact/org.aspectj/aspectjrt --&gt;</span>
+        <span class="nt">&lt;dependency&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.aspectj<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>aspectjrt<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>1.8.9<span class="nt">&lt;/version&gt;</span>
+        <span class="nt">&lt;/dependency&gt;</span>
+        <span class="c">&lt;!-- https://mvnrepository.com/artifact/org.aspectj/aspectjtools --&gt;</span>
+        <span class="nt">&lt;dependency&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.aspectj<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>aspectjtools<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>1.8.9<span class="nt">&lt;/version&gt;</span>
+        <span class="nt">&lt;/dependency&gt;</span>
+    <span class="nt">&lt;/dependencies&gt;</span>
+    <span class="nt">&lt;build&gt;</span>
+        <span class="nt">&lt;plugins&gt;</span>
+            <span class="c">&lt;!-- Maven 编译插件 --&gt;</span>
+            <span class="nt">&lt;plugin&gt;</span>
+                <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+                <span class="nt">&lt;artifactId&gt;</span>maven-compiler-plugin<span class="nt">&lt;/artifactId&gt;</span>
+                <span class="nt">&lt;version&gt;</span>3.5.1<span class="nt">&lt;/version&gt;</span>
+                <span class="nt">&lt;configuration&gt;</span>
+                    <span class="nt">&lt;source&gt;</span>1.8<span class="nt">&lt;/source&gt;</span>
+                    <span class="nt">&lt;target&gt;</span>1.8<span class="nt">&lt;/target&gt;</span>
+                    <span class="nt">&lt;encoding&gt;</span>UTF-8<span class="nt">&lt;/encoding&gt;</span>
+                <span class="nt">&lt;/configuration&gt;</span>
+            <span class="nt">&lt;/plugin&gt;</span>
+            <span class="c">&lt;!-- AspectJ 编译插件 --&gt;</span>
+            <span class="nt">&lt;plugin&gt;</span>
+                <span class="nt">&lt;groupId&gt;</span>org.codehaus.mojo<span class="nt">&lt;/groupId&gt;</span>
+                <span class="nt">&lt;artifactId&gt;</span>aspectj-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+                <span class="nt">&lt;version&gt;</span>1.8<span class="nt">&lt;/version&gt;</span>
+                <span class="nt">&lt;executions&gt;</span>
+                    <span class="nt">&lt;execution&gt;</span>
+                        <span class="nt">&lt;goals&gt;</span>
+                            <span class="nt">&lt;goal&gt;</span>compile<span class="nt">&lt;/goal&gt;</span>       <span class="c">&lt;!-- use this goal to weave all your main classes --&gt;</span>
+                            <span class="nt">&lt;goal&gt;</span>test-compile<span class="nt">&lt;/goal&gt;</span>  <span class="c">&lt;!-- use this goal to weave all your test classes --&gt;</span>
+                        <span class="nt">&lt;/goals&gt;</span>
+                    <span class="nt">&lt;/execution&gt;</span>
+                <span class="nt">&lt;/executions&gt;</span>
+            <span class="nt">&lt;/plugin&gt;</span>
+        <span class="nt">&lt;/plugins&gt;</span>
+    <span class="nt">&lt;/build&gt;</span>
+<span class="nt">&lt;/project&gt;</span>
+</code></pre></div></div>
+
+<h3 id="4创建一个普通类">4、创建一个普通类</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">test</span><span class="o">;</span>
+
+<span class="cm">/**
+ * Created by mritd on 16/6/19.
+ */</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Test AspectJ..."</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="5创建一个切面">5、创建一个切面</h3>
+
+<p><strong>创建时选择 AspectJ 程序 :</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_newaspect.png" alt="hexo_aspect_newaspect" /></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">testaspect</span><span class="o">;</span>
+
+<span class="cm">/**
+ * Created by mritd on 16/6/19.
+ */</span>
+<span class="kd">public</span> <span class="n">aspect</span> <span class="nc">TestAspect</span> <span class="o">{</span>
+
+    <span class="c1">// 定义 pointcut</span>
+    <span class="n">pointcut</span> <span class="nf">TestAspectPointCutBefore</span><span class="o">()</span> <span class="o">:</span> <span class="n">execution</span><span class="o">(*</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">test</span><span class="o">.</span><span class="na">Test1</span><span class="o">.</span><span class="na">main</span><span class="o">(..));</span>
+    <span class="n">pointcut</span> <span class="nf">TestAspectPointCutAfter</span><span class="o">()</span> <span class="o">:</span> <span class="n">execution</span><span class="o">(*</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">test</span><span class="o">.</span><span class="na">Test1</span><span class="o">.</span><span class="na">main</span><span class="o">(..));</span>
+
+
+    <span class="c1">// 定义执行动作</span>
+    <span class="n">before</span><span class="o">()</span> <span class="o">:</span> <span class="nc">TestAspectPointCutBefore</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"执行前切入..."</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="n">after</span><span class="o">()</span> <span class="o">:</span> <span class="nc">TestAspectPointCutAfter</span><span class="o">(){</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"执行前切入..."</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="6调整编译">6、调整编译</h3>
+
+<p>由于 AspectJ 需要单独的编译器编译，所以需要设置 Ajc 编译器，Maven 中已经加入了相关编译插件，直接 <code class="highlighter-rouge">compile</code> 也可以。</p>
+
+<h4 id="61设置项目依赖">6.1、设置项目依赖</h4>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_add_ajc.png" alt="hexo_aspect_add_ajc" /></p>
+
+<h4 id="62设置编译器">6.2、设置编译器</h4>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_set_ajc.png" alt="hexo_aspect_set_ajc" /></p>
+
+<h3 id="7运行测试">7、运行测试</h3>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_aspect_runtest_helloworld.png" alt="hexo_aspect_runtest_helloworld" />
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

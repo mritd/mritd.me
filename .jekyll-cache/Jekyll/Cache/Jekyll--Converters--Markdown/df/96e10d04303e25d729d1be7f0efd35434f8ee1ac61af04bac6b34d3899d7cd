@@ -1,0 +1,55 @@
+I"�<p><img src="https://cdn.oss.link/markdown/centos6.png" alt="centos6" /></p>
+
+<h3 id="centos-67_x64-网络初始化配置">CentOS 6.7_x64 网络初始化配置</h3>
+
+<blockquote>
+  <p>最近准备折腾折腾Maven，想在本地CentOS下搭个Nexus私服，无奈CentOS LiveCD 版太大，很多功能也没啥用；so 搞了个minimal版本…..结果安装上无法联网，现记录一下初始化的网络配置。</p>
+</blockquote>
+
+<!--more-->
+
+<ul>
+  <li>/etc/sysconfig/network-scripts/ifcfg-eth0</li>
+</ul>
+
+<blockquote>
+  <p>这个文件主要是基本的配置文件，详细信息如下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">DEVICE</span><span class="o">=</span><span class="s2">"eth0"</span>             <span class="c">#启动的网卡</span>
+<span class="nv">MM_Controlled</span><span class="o">=</span><span class="s2">"no"</span>        <span class="c">#没搞太明白，好像修改是实时生效的意思</span>
+<span class="nv">ONBOOT</span><span class="o">=</span><span class="s2">"yes"</span>              <span class="c">#启动自动联网</span>
+<span class="nv">BOOTPROTO</span><span class="o">=</span><span class="s2">"static"</span>        <span class="c">#ip获取方式 三个值 static、dhcp、none</span>
+<span class="nv">IPADDR</span><span class="o">=</span><span class="s2">"192.168.1.60"</span>     <span class="c">#ip地址</span>
+<span class="nv">IPV6INIT</span><span class="o">=</span>no               <span class="c">#ipv6支持</span>
+<span class="nv">IPV6_AUTOCONF</span><span class="o">=</span>no          <span class="c">#ipv6自动配置</span>
+<span class="nv">NETMASK</span><span class="o">=</span>255.255.255.0     <span class="c">#子网掩码</span>
+<span class="nv">GATEWAY</span><span class="o">=</span>192.168.1.1       <span class="c">#网关 一般指向路由</span>
+<span class="nv">BROADCAST</span><span class="o">=</span>192.168.1.255   <span class="c">#没太懂</span>
+</code></pre></div></div>
+
+<ul>
+  <li>/etc/sysconfig/network</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">NETWORKING</span><span class="o">=</span><span class="nb">yes</span>                        <span class="c">#网络是否可用</span>
+<span class="nv">NETWORKING_IPV6</span><span class="o">=</span><span class="nb">yes
+</span><span class="nv">HOSTNAME</span><span class="o">=</span>localhost.localdomain        <span class="c">#主机名，主机名在/etc/hosts里面配置</span>
+</code></pre></div></div>
+
+<ul>
+  <li>/etc/resolv.conf</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nameserver 192.168.10.1              <span class="c">#DNS服务器对应的IP</span>
+search localdomain                   <span class="c">#搜索要找的域名，在/etc/hosts里面设定的有</span>
+</code></pre></div></div>
+
+<ul>
+  <li>最后重启网络</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>service network restart
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

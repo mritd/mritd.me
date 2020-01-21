@@ -1,0 +1,273 @@
+I"ZW<p><img src="https://cdn.oss.link/markdown/hexo_java_equals_hashcode.jpg" alt="hexo_java_equals_hashcode.jpg" /></p>
+
+<h2 id="equals-方法">equals 方法</h2>
+<blockquote>
+  <p>equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。</p>
+</blockquote>
+
+<h3 id="object-中的-equals">Object 中的 equals</h3>
+
+<blockquote>
+  <p>在 java 源码中，Object 的 equals 实现如下</p>
+</blockquote>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">obj</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<!--more-->
+
+<blockquote>
+  <p>由此可见，Object 中 equals 默认比较的是两个对象的 内存地址(==)，即 <strong>默认比较两个对象的引用，引用相同返回true，反之返回false。</strong>这看起来似乎合情合理，但实际开发中，这种比较方式则不适用；比如我们要比较两个 pserson 对象是否相等，<strong>从业务角度来说，只要这两个人 名字、年龄、身份证号相同，我们就可以认为两个对象相等。但由于是两个 pserson对象，所以所以引用肯定不同，这样调用默认的 equals 方法就会返回 false，显然是不合理的。</strong></p>
+</blockquote>
+
+<h3 id="重写-equals">重写 equals</h3>
+<blockquote>
+  <p>从上面的例子可以看出，Object 中的 equals 并不适用与实际业务场景，此时我们应该 对 equals进行重写；但是 重写 equals 必须满足以下规则(特性)：</p>
+</blockquote>
+
+<ul>
+  <li>自反性
+    <blockquote>
+      <p>对于对象 x ，<code class="highlighter-rouge">x.equals(x)</code> 应当始终返回 true。</p>
+    </blockquote>
+  </li>
+  <li>对称性
+    <blockquote>
+      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么 <code class="highlighter-rouge">y.equals(x)</code> 也必须返回 true。</p>
+    </blockquote>
+  </li>
+  <li>传递性
+    <blockquote>
+      <p>对于对象 x、y、z，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，<code class="highlighter-rouge">y.equals(z)</code> 返回 true；那么 <code class="highlighter-rouge">x.equals(z)</code> 也必须返回 true。</p>
+    </blockquote>
+  </li>
+  <li>一致性
+    <blockquote>
+      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么反复调用的结果应当一直为 true。</p>
+    </blockquote>
+  </li>
+  <li>空值不行等性
+    <blockquote>
+      <p>对于任意非空对象 x，<code class="highlighter-rouge">x.equals(null)</code> 应当永远返回 false。</p>
+    </blockquote>
+  </li>
+</ul>
+
+<hr />
+
+<p><strong>然而，对于以上5种特性，在某些特殊情况下需要严格考虑。</strong></p>
+
+<ul>
+  <li>对象属性的冲突</li>
+</ul>
+
+<p>假设我们将对象内的属性看作是对象内容，在实际业务场景，可能一个 汽车 Car 对象 和一个人 pserson 对象具有相同的名字，比如 <code class="highlighter-rouge">特斯拉</code>；此时如果我们重写 equals 时仅仅比较对象内容的话，很可能误判为 <strong>一辆汽车和一个人相等</strong>；是的，这很滑稽。</p>
+
+<h3 id="getclass-的使用">getClass 的使用</h3>
+
+<p>在上面列举的情况来看，我们似乎再重写 equals 时还需要考虑对象的类型；在 java 里，对象类型我们 采用 Class 描述。那么此时 我们在重写的 equals 方法里应当 增加 <code class="highlighter-rouge">car.getClass()==pserson.getClass()</code> 的检测，这样能有效避免上述情况的发生；伪代码如下</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">){</span>
+    <span class="c1">// 进行完全匹配检测(引用)</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">==</span><span class="n">obj</span><span class="o">)</span> <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="c1">// 进行空值检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">obj</span><span class="o">==</span><span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行类型匹配检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行属性相等检测，省略...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="instanceof-的使用">instanceof 的使用</h3>
+
+<p>然而，即使我们考虑了属性相等的情况，我们还是忽略了很多其他的业务场合。比如 一个学生 Student 对象和一个人 pserson 对象；当使用上面的检测方法时，很明显 pserson 对象和 Student 对象的 Class 不一致，直接返回了 false；而实际业务场景是 一个 Student 对象也是一个人 pserson；<strong>Student 对象可能继承于pserson对象。</strong>而此时我们应当使用 instanceof 进行检测，伪代码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">){</span>
+    <span class="c1">// 进行完全匹配检测(引用)</span>
+    <span class="k">if</span><span class="o">(!(</span><span class="k">this</span> <span class="n">instaceof</span> <span class="n">obj</span><span class="o">))</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行空值检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">obj</span><span class="o">==</span><span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行类型匹配检测</span>
+    <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="c1">// 进行属性相等检测，省略...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="getclass-与-instaceof-的取舍">getClass 与 instaceof 的取舍</h3>
+
+<p>或许从上两个例子中我们感觉使用 instaceof 更 “靠谱一些”；但其实我们注意到，<strong>采用 instaceof 检测实际上违反了 <code class="highlighter-rouge">对称性</code> 原则；</strong> 因为 <code class="highlighter-rouge">pserson instaceof Student</code> 返回 false，反之返回 true。</p>
+
+<p>所以对于 <code class="highlighter-rouge">instanceof</code> 有时候并不那么完美；就连 JDK的开发者也遇到了这个问题；在 <code class="highlighter-rouge">Timestamp</code> 类中，由于继承自 <code class="highlighter-rouge">java.util.Date</code>；而不幸的是 Date 类的 equals 采用的是 instanceof，这就导致对称性出了问题。从上可知，我们根据实际业务进行取舍，取舍原则如下：</p>
+
+<ul>
+  <li>如果子类拥有自己的相等性概念，则对称性强制要求采用 getClass 方式检测。</li>
+  <li>如果由超类决定相等性概念，那么就可以采用 instanceof 检测，保证我们可以在子类对象间进行相等性判断。</li>
+</ul>
+
+<h3 id="重写-equals-的建议">重写 equals 的建议</h3>
+
+<ul>
+  <li>首先检测 this 与 otherObject 是否引用同一对象</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">==</span><span class="n">otherObject</span><span class="o">)</span> <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>然后检测 otherObject是否为 null，如果为 null 返回 false，这是必须的</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="n">otherObject</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>其次比较 this 与 otherObject 是否同属于一个类；如果 equals 语义在子类中有所改变，则 使用 getClass 检测</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">()!=</span><span class="n">otherObject</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>最后将 otherObject强制转换为 当前类型，并进行属性值检测；注意：<strong>如果在子类中重写的equals，则需要在重写时首先进行 <code class="highlighter-rouge">super.equals(other)</code> 判断</strong></li>
+</ul>
+
+<h2 id="hashcode-方法">hashcode 方法</h2>
+
+<blockquote>
+  <p>写这篇博客之前，也看过很多博客，大部分大家写的都是这样的一句话：<strong>重写 equals 必须重写 hashcode，两个对象 equals 返回 true 则 hashcode 必须保证相同。</strong>但是，接下来就没有然后了；搞的我刚学 java 时候也挺晕的，就像是 “知其然而不知所以然”。</p>
+</blockquote>
+
+<blockquote>
+  <p>总结一下一般会有这几个问题：</p>
+</blockquote>
+
+<ul>
+  <li>hashcode 方法是干啥的？</li>
+  <li>hashcode(哈希值) 是个什么玩意？</li>
+  <li>hashcode 有什么用？</li>
+  <li>我为啥要重写 hashcode？</li>
+  <li>我不重写它有啥后果？</li>
+</ul>
+
+<h3 id="hashcode-方法是干啥的">hashcode 方法是干啥的？</h3>
+
+<blockquote>
+  <p>官方的解释是这样的：<strong>hashcode 方法用于返回一个对象的 哈希值。</strong>说白了就是 hashcode 方法能返回一个 哈希值，这玩意是个整数。</p>
+</blockquote>
+
+<h3 id="hashcode哈希值-是个什么玩意">hashcode(哈希值) 是个什么玩意？</h3>
+
+<blockquote>
+  <p>由上面可知，这个 哈希值就是一个整数，可能是正数也可能是负数。</p>
+</blockquote>
+
+<h3 id="hashcode-有什么用">hashcode 有什么用？</h3>
+
+<blockquote>
+  <p>hashcode(哈希值) 的作用就是用于在使用 Hash算法实现的集合中确定元素位置。</p>
+</blockquote>
+
+<p>拿我们最常见的 HashMap 来说，我们都知道 HashMap 里通过 key 取 value 时的速度 是 O(1) 级别的；</p>
+
+<p>什么是 O(1)级别？</p>
+
+<p>O(1)级别说白了就是 <strong>在任意数据大小的容器中，取出一个元素所使用的时间与元素个数无关；通俗的说法就是 不论你这个 HashMap 里有100个元素还是有9999999个元素，我通过 key 取出一个元素所使用的时间是一样的。</strong></p>
+
+<p>为何是 O(1) 级别？为何这么吊？</p>
+
+<p>这个问题就要谈一下 HashMap 等 hash 容器的存储方式了；这些容器在存储元素是是这样的：首先获取你要存储元素的 hashcode(一个整数)，然后再定义一个固定整数(标准叫桶数)，最后用 hashcode 对 另一个整数(桶数) 取余；取余的结果即为元素要存储的下标(可能存放到数组里)。当然这里是简单的取余，可能更复杂。</p>
+
+<p>当我们要从一个 HashMap 中取出一个 value 时，实际上他就是通过这套算法，用 key 的 hashcode 计算出元素位置，直接取出来了；所以说 无论你这里面有多少元素，它取的时候始终是用着一个算法、一个流程，不会因为你数据多少而产生影响，这就是 O(1) 级别的存储。</p>
+
+<p><strong>总结：由上面可知，这个 hashcode 的作用就是 通过算法来确立元素存放的位置，以便于放入元素或者获取元素。</strong></p>
+
+<h3 id="我为啥要重写-hashcode--不重写有啥后果">我为啥要重写 hashcode &amp;&amp; 不重写有啥后果</h3>
+
+<blockquote>
+  <p>回顾一下上面：hashcode 是个整数，hashcode 方法的作用就是计算并返回这个整数；这个整数用于存放 Hash 算法实现的容器时 确定元素位置。</p>
+</blockquote>
+
+<p>接下来考虑一个业务场景：有两个对象 pserson1 和 pserson2 ，pserson1 和 pserson2 都只有两个属性，分别是名字(name)和年龄(age)。现在 pserson1 和 pserson2 的名字(name)、年龄(age) 都相同；那么我们是否可以根据业务场景来说 <strong>pserson1 和 pserson2 是同一个人</strong>？</p>
+
+<p>如果说 “是” 的话，我们刚刚所认为的 “从业务角度理解 pserson1 和 pserson2 是一个人” 是不是就相当于 重写了 Pserson 的 equals 方法呢？就像下面这样：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Pserson</span> <span class="o">{</span>
+	<span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+	<span class="kd">private</span> <span class="kt">int</span> <span class="n">age</span><span class="o">;</span>
+
+	<span class="c1">// 重写 equals</span>
+	<span class="nd">@Override</span>
+	<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">obj</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">obj</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">getClass</span><span class="o">()</span> <span class="o">!=</span> <span class="n">obj</span><span class="o">.</span><span class="na">getClass</span><span class="o">())</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+
+		<span class="c1">// 主要在这，我们根据业务逻辑，即 姓名和年龄 确立相等关系</span>
+		<span class="n">pserson</span> <span class="n">other</span> <span class="o">=</span> <span class="o">(</span><span class="n">pserson</span><span class="o">)</span> <span class="n">obj</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">age</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="na">age</span><span class="o">)</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">name</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">other</span><span class="o">.</span><span class="na">name</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+				<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">name</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">other</span><span class="o">.</span><span class="na">name</span><span class="o">))</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>我们注意到，我们根据业务逻辑重写 equals 后，造成的结果就是，两个 属性相同的 Pserson 对象 我们就认为是相同的，即 equals 返回了 true；
+<strong>但我们没有重写 hashcode，Object 中的 hashcode 是 native(本地的)，也就是很可能不同对象返回不同的 hashcode，即使属性相同也没用。</strong></p>
+
+<hr />
+
+<p>到这里我们再总结一下：</p>
+
+<ul>
+  <li><strong>hashcode 方法返回对象的 哈希值；</strong></li>
+  <li><strong>我们通过 哈希值 的运算(与指定数取余等)来确立元素在 hash 算法实现的容器中的位置；</strong></li>
+  <li><strong>Object 中的 hashcode 方法 对于业务逻辑上相等的两个对象(属性相同，不同引用) 返回的 hashcode 是不同的。</strong></li>
+</ul>
+
+<hr />
+
+<p><strong>墨迹了那么多最终问题来了：假设我们只重写了 pserson 的 equals 方法，使之 “属性相同即为相等”，当我们把两个 “相等的(属性相同的)” Pserson 对象 放入 HashSet 中会怎样？</strong></p>
+
+<p>友情提示：HashSet中默认是不许放重复元素的，放重复的是会被过滤掉的，如下代码所示：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
+	<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">Pserson</span> <span class="n">pserson1</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Pserson</span><span class="o">();</span>
+		<span class="n">pserson1</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"张三"</span><span class="o">);</span>
+		<span class="n">pserson1</span><span class="o">.</span><span class="na">setAge</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+
+		<span class="nc">Pserson</span> <span class="n">pserson2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Pserson</span><span class="o">();</span>
+		<span class="n">pserson2</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"张三"</span><span class="o">);</span>
+		<span class="n">pserson2</span><span class="o">.</span><span class="na">setAge</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+
+		<span class="nc">HashSet</span><span class="o">&lt;</span><span class="nc">Pserson</span><span class="o">&gt;</span> <span class="n">hashSet</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashSet</span><span class="o">&lt;</span><span class="nc">Pserson</span><span class="o">&gt;();</span>
+
+		<span class="n">hashSet</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">pserson1</span><span class="o">);</span>
+		<span class="n">hashSet</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">pserson2</span><span class="o">);</span>
+
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">hashSet</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>结论&amp;&amp;后果：当我们仅重写了 equals 保证了 “名字和年龄一样的就是一个人” 这条业务以后；把两个 pserson 对象放入 HashSet 容器里时，由于 HashSet 是通过 hashcode 来区分两个 对象存放位置，而我们又 没有根据业务逻辑重写 hashcode 方法；导致了两个 在业务上相同的对象 放到了 HashSet里，HashSet 会认为他是两个不同的对象，故最后不会去重，hashset.size()打印出来是2。</p>
+</blockquote>
+
+<h2 id="最终结论">最终结论</h2>
+
+<blockquote>
+  <p>对于重写 euqals ，要很据实际业务逻辑来，并满足上述的设计要求；一旦重写了 equals 那就必须重写 hashcode，除非你保证你的对象不会被放到 Hash 实现的容器里；不重写的话就会导致 Hash 容器认为两个属性相同的对象是2个，而不是业务上的1个。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+</blockquote>
+:ET

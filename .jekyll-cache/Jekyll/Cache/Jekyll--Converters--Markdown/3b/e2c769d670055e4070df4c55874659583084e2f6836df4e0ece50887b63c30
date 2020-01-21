@@ -1,0 +1,46 @@
+I"<h2 id="一概念和特征">一、概念和特征</h2>
+
+<ul>
+  <li>直接内存并非 JVMS 定义的标准 Java 运行时内存。</li>
+  <li>JDK1.4 加入了新的 NIO 机制，目的是防止 Java 堆 和 Native 堆之间往复的数据复制带来的性能损耗，此后 NIO 可以使用 Native 的方式直接在 Native 堆分配内存。</li>
+  <li>直接内存区域是全局共享的内存区域。</li>
+</ul>
+
+<!--more-->
+
+<ul>
+  <li>直接内存区域可以进行自动内存管理(GC)，但机制并不完善。</li>
+  <li>本机的 Native 堆(直接内存) 不受 JVM 堆内存大小限制。</li>
+  <li>可能出现 OutOfMemoryError 异常。</li>
+</ul>
+
+<h2 id="二异常演示">二、异常演示</h2>
+
+<p>测试代码：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestNativeHeap</span> <span class="o">{</span>
+
+	<span class="cm">/**
+	 * VM Args: -XX:MaxDirectMemorySize=10M
+	 */</span>
+
+	<span class="c1">// 每次内存分配大小</span>
+	<span class="kd">private</span> <span class="kd">static</span> <span class="kt">int</span> <span class="n">_1M</span> <span class="o">=</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="o">;</span>
+
+	<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IllegalArgumentException</span><span class="o">,</span> <span class="nc">IllegalAccessException</span> <span class="o">{</span>
+		<span class="nc">Field</span> <span class="n">unsafeFiled</span> <span class="o">=</span> <span class="nc">Unsafe</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getFields</span><span class="o">()[</span><span class="mi">0</span><span class="o">];</span>
+		<span class="n">unsafeFiled</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+		<span class="nc">Unsafe</span> <span class="n">unsafe</span> <span class="o">=</span> <span class="o">(</span><span class="nc">Unsafe</span><span class="o">)</span> <span class="n">unsafeFiled</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+		<span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">unsafe</span><span class="o">.</span><span class="na">allocateMemory</span><span class="o">(</span><span class="n">_1M</span><span class="o">);</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>以上代码运行会出现 OutOfMemoryError 异常，原因是不断申请内存将超出 Native 堆限制。</p>
+
+<p><strong>直接内存导致的 OutOfMemoryError 异常，在异常信息中不会有明显的堆栈区错误提示；同时另一大特点就是内存转储文件(dump)出来会非常小，如果项目中出现这种情况，并且直接或者间接地使用了 NIO 技术，那么应该考虑是否为直接内存导致的内存溢出。</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

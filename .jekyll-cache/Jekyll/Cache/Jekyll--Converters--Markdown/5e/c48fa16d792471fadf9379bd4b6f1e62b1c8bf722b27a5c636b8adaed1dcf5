@@ -1,0 +1,88 @@
+I"�<h2 id="jps-命令">jps 命令</h2>
+
+<blockquote>
+  <p>本文参考自 <a href="http://www.hollischuang.com/archives/105">HollisChuang’s Blog</a></p>
+</blockquote>
+
+<h3 id="简介">简介</h3>
+
+<p>jps 命令用于查看当前 java 进程及其 pid 等相关信息，同 <code class="highlighter-rouge">ps -aux | grep java</code> 这种命令不同的是，<strong>jps 并不依赖于应用程序名来搜索进程(比如 <code class="highlighter-rouge">grep java</code> )</strong>； 这使得它可以显示出没有执行体的 java 进程；<strong>该命令 1.5+ 可用</strong>。</p>
+
+<!--more-->
+
+<h3 id="原理">原理</h3>
+
+<p>在 Java 程序运行后，其会在 <code class="highlighter-rouge">java.io.tmpdir</code> 参数指定的位置生成一个 <code class="highlighter-rouge">hsperfdata_{UserName}</code> 的目录，该目录下会生成类似 Linux 程序运行时的二进制 pid 文件，jsp 命令实质上就是列出该目录下的所有文件；其相关信息通过解析该文件获取。在 Linux 系统下，这个目录位于 <code class="highlighter-rouge">/tmp/hsperfdata_{UserName}</code>，示例如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_jps_dir.png" alt="hexo_jps_dir" /></p>
+
+<h3 id="命令详解">命令详解</h3>
+
+<p>首先可以查看 jps 命令的帮助，获取相关信息，执行 <code class="highlighter-rouge">jps --help</code> 如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_jps_help.png" alt="hexo_jps_help.png" /></p>
+
+<h4 id="-q-参数">-q 参数</h4>
+
+<p><code class="highlighter-rouge">-q</code> 参数只显示pid，不显示class名称,jar文件名和传递给main 方法的参数</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="nv">$ </span>jps <span class="nt">-q</span>
+17433
+15645
+<span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="err">$</span>
+</code></pre></div></div>
+
+<h4 id="-m-参数">-m 参数</h4>
+
+<p><code class="highlighter-rouge">-m</code> 输出传递给 <code class="highlighter-rouge">main</code> 方法的参数，在嵌入式jvm上可能是null</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="nv">$ </span>jps <span class="nt">-m</span>
+17478 Jps <span class="nt">-m</span>
+15645 Bootstrap start
+<span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="err">$</span>
+</code></pre></div></div>
+
+<h4 id="-l-参数">-l 参数</h4>
+
+<p><code class="highlighter-rouge">-l</code> 参数输出应用程序main class的完整package名 或者 应用程序的jar文件完整路径名</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="nv">$ </span>jps <span class="nt">-l</span>
+17498 sun.tools.jps.Jps
+15645 org.apache.catalina.startup.Bootstrap
+<span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="err">$</span>
+</code></pre></div></div>
+
+<h4 id="-v-参数">-v 参数</h4>
+
+<p><code class="highlighter-rouge">-v</code> 参数输出传递给JVM的参数</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="nv">$ </span>jps <span class="nt">-v</span>
+15645 Bootstrap <span class="nt">-Djava</span>.util.logging.config.file<span class="o">=</span>/home/mritd/usr/local/apache-tomcat-8.0.32/conf/logging.properties <span class="nt">-Djava</span>.util.logging.manager<span class="o">=</span>org.apache.juli.ClassLoaderLogManager <span class="nt">-Djava</span>.endorsed.dirs<span class="o">=</span>/home/mritd/usr/local/apache-tomcat-8.0.32/endorsed <span class="nt">-Dcatalina</span>.base<span class="o">=</span>/home/mritd/usr/local/apache-tomcat-8.0.32 <span class="nt">-Dcatalina</span>.home<span class="o">=</span>/home/mritd/usr/local/apache-tomcat-8.0.32 <span class="nt">-Djava</span>.io.tmpdir<span class="o">=</span>/home/mritd/usr/local/apache-tomcat-8.0.32/temp
+17518 Jps <span class="nt">-Dapplication</span>.home<span class="o">=</span>/home/mritd/usr/local/jdk1.8.0_73 <span class="nt">-Xms8m</span>
+<span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="err">$</span>
+</code></pre></div></div>
+
+<h4 id="-v-参数-1">-V 参数</h4>
+
+<p><code class="highlighter-rouge">-V</code> 参数输出通过标记的文件传递给JVM的参数( <code class="highlighter-rouge">.hotspotrc</code> 文件，或者是通过参数 <code class="highlighter-rouge">-XX:Flags=&lt;filename&gt;</code> 指定的文件)。</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="nv">$ </span>jps <span class="nt">-V</span>
+17595 Jps
+15645 Bootstrap
+<span class="o">[</span>mritd@iZ257uxyg2vZ ~]<span class="err">$</span>
+</code></pre></div></div>
+
+<h3 id="hostid-详解">hostid 详解</h3>
+
+<p><code class="highlighter-rouge">hostid</code> 即 <strong>服务器标识</strong>，它指定了目标的服务器，它的语法如下：</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>protocol:][[//]hostname][:port][/servername]
+</code></pre></div></div>
+<ul>
+  <li>protocol: 如果 <code class="highlighter-rouge">protocol</code>及 <code class="highlighter-rouge">hostname</code> 都没有指定，那表示的是与当前环境相关的本地协议，如果指定了 <code class="highlighter-rouge">hostname</code> 却没有指定 <code class="highlighter-rouge">protocol</code>，那么 <code class="highlighter-rouge">protocol</code> 的默认就是 <code class="highlighter-rouge">rmi</code>。</li>
+  <li>hostname: 服务器的IP或者名称，没有指定则表示本机。</li>
+  <li>port: 远程 <code class="highlighter-rouge">rmi</code> 的端口，如果没有指定则默认为 <code class="highlighter-rouge">1099</code>。</li>
+  <li>Servername: 注册到 <code class="highlighter-rouge">RMI</code> 注册中心中的 <code class="highlighter-rouge">jstatd</code> 的名称。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+</ul>
+:ET

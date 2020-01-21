@@ -1,0 +1,73 @@
+I"�<h3 id="一仓库简介">一、仓库简介</h3>
+
+<ul>
+  <li>默认情况下，Nexus有如下几个仓库
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-allRepository-1024x286.png" alt="仓库简介" /></li>
+</ul>
+
+<!--more-->
+
+<ul>
+  <li>这些仓库按照其 Type 大致分为4种
+    <ul>
+      <li>hosted类型
+        <blockquote>
+          <p>这种类型的仓库只提供对内服务，也就是说他不面向公网</p>
+          <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Releases  <span class="c">#存放 maven install 的 Releases 版本的jar</span>
+Snapshots <span class="c">#存放 maven install 的 Snapshots 版本的jar</span>
+3rd party <span class="c">#当某些jar我们无法从中央仓库下载时，我们往往从其官网下载，当我们希望此种jar也被Nexus管理时，则需要手动将其上传至此仓库，并定义坐标</span>
+</code></pre></div>          </div>
+        </blockquote>
+      </li>
+      <li>proxy类型
+        <blockquote>
+          <p>这种类型则相对于hosted，只提供面向公网的服务，我们知道当Maven向私服请求的jar私服中木有时，私服会请求中央仓库；
+此时则有这种proxy类型仓库请求并缓存下载下来的jar包</p>
+          <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Central <span class="c">#中央仓库的代理仓库，主要负责请求中央仓库并缓存结果</span>
+Apache Snapshots <span class="c">#从名字可以看出来只负责请求Apache 的Snapshots jar</span>
+Codehaus Snapshots <span class="c"># 同上</span>
+</code></pre></div>          </div>
+        </blockquote>
+      </li>
+      <li>
+        <p>virtual 可忽略，基本用不到，面向Maven1类型……</p>
+      </li>
+      <li>group类型
+        <blockquote>
+          <p>这种类型的仓库可看做是其他仓库的组合产品，默认的这个 Public Repository 可以下载其他几个仓库的jar；
+实际就是将其他仓库组合起来，用一个地址就可下载组合仓库的jar，可通过菜单配置和新建。</p>
+        </blockquote>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="二nexus使用的一些基本设置">二、Nexus使用的一些基本设置</h3>
+
+<ul>
+  <li>更改中央仓库地址为私服地址
+    <blockquote>
+      <p>既然我们配置了私服，那么相应的，我们的项目就应该使用Nexus的地址(Public Repository)来下载jar包</p>
+    </blockquote>
+
+    <ul>
+      <li>
+        <p>基于POM文件的配置，只需在项目的pom文件中使用 Repositories 标签指定即可
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-setRepository1.png" alt="POM文件更改Mavne私服地址" /></p>
+      </li>
+      <li>
+        <p>基于全局性的Maven setting.xml配置方式，这种方式会影响到全局的Maven(配置应该没问题，但布吉岛为啥我的eclipse不好使)
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-settingnexus.png" alt="setting.xml更改私服地址" /></p>
+      </li>
+      <li>
+        <p>使用镜像来指定Maven私服
+<img src="https://cdn.oss.link/markdown/Maven-Nexus-Mirror.png" alt="镜像修改私服地址" /></p>
+        <blockquote>
+          <p>在实际使用中，不管是通过POM文件还是Maven的setting文件来指定Nexus私服，当私服出现问题不可访问时，Maven默认都会再次请求中央服务器，这可能导致jar的版本不一致问题，也就是说当私服挂掉后，开人员若不查看Maven控制台，则不可感知，相当于没有Nexus一样；为了避免这种情况，我们可以在Maven的setting配置文件中设置镜像站点；达到的效果就是Maven的所有请求必须经过镜像站点(Nexus);当Nexus出现问题后，那么Maven将强制不可用。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+        </blockquote>
+      </li>
+    </ul>
+  </li>
+</ul>
+:ET

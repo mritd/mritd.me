@@ -1,0 +1,186 @@
+I"�)<blockquote>
+  <p>Kubernetes 1.8 发布已经好几天，1.8 对于 kube-proxy 组件增加了 ipvs 支持，以下记录一下 kube-proxy ipvs 开启教程</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>目前测试为 5 台虚拟机，CentOS 系统，etcd、kubernetes 全部采用 rpm 安装，使用 systemd 来做管理，网络组件采用 calico，Master 实现了 HA；基本环境如下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>IP</th>
+      <th>组件</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>10.10.1.5</td>
+      <td>Master、Node、etcd</td>
+    </tr>
+    <tr>
+      <td>10.10.1.6</td>
+      <td>Master、Node、etcd</td>
+    </tr>
+    <tr>
+      <td>10.10.1.7</td>
+      <td>Master、Node、etcd</td>
+    </tr>
+    <tr>
+      <td>10.10.1.8</td>
+      <td>Node</td>
+    </tr>
+    <tr>
+      <td>10.10.1.9</td>
+      <td>Node</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="二注意事项">二、注意事项</h3>
+
+<p>之所以把这个单独写一个标题是因为坑有点多，为了避免下面出现问题，先说一下注意事项:</p>
+
+<h4 id="21selinux">2.1、SELinux</h4>
+
+<p>如果对 SELinux 玩的不溜的朋友，我建议先关闭  SELinux，关闭方法如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 /etc/selinux/config 文件；确保 SELINUX=disabled</span>
+docker1.node ➜  ~ <span class="nb">cat</span> /etc/selinux/config
+
+<span class="c"># This file controls the state of SELinux on the system.</span>
+<span class="c"># SELINUX= can take one of these three values:</span>
+<span class="c">#     enforcing - SELinux security policy is enforced.</span>
+<span class="c">#     permissive - SELinux prints warnings instead of enforcing.</span>
+<span class="c">#     disabled - No SELinux policy is loaded.</span>
+<span class="nv">SELINUX</span><span class="o">=</span>disabled
+<span class="c"># SELINUXTYPE= can take one of three two values:</span>
+<span class="c">#     targeted - Targeted processes are protected,</span>
+<span class="c">#     minimum - Modification of targeted policy. Only selected processes are protected.</span>
+<span class="c">#     mls - Multi Level Security protection.</span>
+<span class="nv">SELINUXTYPE</span><span class="o">=</span>targeted
+</code></pre></div></div>
+
+<p><strong>然后重启机器并验证</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ sestatus
+SELinux status:                 disabled
+</code></pre></div></div>
+
+<h4 id="22firewall">2.2、Firewall</h4>
+
+<p>搭建时尽量关闭防火墙，如果你玩的很溜，那么请在测试没问题后再开启防火墙</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl stop firewalld
+systemctl disable firewalld
+</code></pre></div></div>
+
+<h4 id="23内核参数调整">2.3、内核参数调整</h4>
+
+<p>确保内核已经开启如下参数，或者说确保 <code class="highlighter-rouge">/etc/sysctl.conf</code> 有如下配置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ <span class="nb">cat</span> /etc/sysctl.conf
+<span class="c"># sysctl settings are defined through files in</span>
+<span class="c"># /usr/lib/sysctl.d/, /run/sysctl.d/, and /etc/sysctl.d/.</span>
+<span class="c">#</span>
+<span class="c"># Vendors settings live in /usr/lib/sysctl.d/.</span>
+<span class="c"># To override a whole file, create a new file with the same in</span>
+<span class="c"># /etc/sysctl.d/ and put new settings there. To override</span>
+<span class="c"># only specific settings, add a file with a lexically later</span>
+<span class="c"># name in /etc/sysctl.d/ and put new settings there.</span>
+<span class="c">#</span>
+<span class="c"># For more information, see sysctl.conf(5) and sysctl.d(5).</span>
+net.ipv4.ip_forward<span class="o">=</span>1
+net.bridge.bridge-nf-call-iptables<span class="o">=</span>1
+net.bridge.bridge-nf-call-ip6tables<span class="o">=</span>1
+</code></pre></div></div>
+
+<p>然后执行 <code class="highlighter-rouge">sysctl -p</code> 使之生效</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ sysctl <span class="nt">-p</span>
+net.ipv4.ip_forward <span class="o">=</span> 1
+net.bridge.bridge-nf-call-iptables <span class="o">=</span> 1
+net.bridge.bridge-nf-call-ip6tables <span class="o">=</span> 1
+</code></pre></div></div>
+
+<h4 id="24内核模块加载">2.4、内核模块加载</h4>
+
+<p>由于 ipvs 已经加入到内核主干，所以需要内核模块支持，请确保内核已经加载了相应模块；如不确定，执行以下脚本，以确保内核加载相应模块，<strong>否则会出现 <code class="highlighter-rouge">failed to load kernel modules: [ip_vs_rr ip_vs_sh ip_vs_wrr]</code> 错误</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;</span> /etc/sysconfig/modules/ipvs.modules <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+#!/bin/bash
+ipvs_modules="ip_vs ip_vs_lc ip_vs_wlc ip_vs_rr ip_vs_wrr ip_vs_lblc ip_vs_lblcr ip_vs_dh ip_vs_sh ip_vs_fo ip_vs_nq ip_vs_sed ip_vs_ftp nf_conntrack_ipv4"
+for kernel_module in </span><span class="se">\$</span><span class="sh">{ipvs_modules}; do
+    /sbin/modinfo -F filename </span><span class="se">\$</span><span class="sh">{kernel_module} &gt; /dev/null 2&gt;&amp;1
+    if [ </span><span class="nv">$?</span><span class="sh"> -eq 0 ]; then
+        /sbin/modprobe </span><span class="se">\$</span><span class="sh">{kernel_module}
+    fi
+done
+</span><span class="no">EOF
+</span><span class="nb">chmod </span>755 /etc/sysconfig/modules/ipvs.modules <span class="o">&amp;&amp;</span> bash /etc/sysconfig/modules/ipvs.modules <span class="o">&amp;&amp;</span> lsmod | <span class="nb">grep </span>ip_vs
+</code></pre></div></div>
+
+<p>执行后应该如下图所示，<strong>如果 <code class="highlighter-rouge">lsmod | grep ip_vs</code> 并未出现 <code class="highlighter-rouge">ip_vs_rr</code> 等模块；那么请更换内核(一般不会，2.6 以后 ipvs 好像已经就合并进主干了)</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/49wbb.jpg" alt="Load kernel modules" /></p>
+
+<h3 id="三开启-ipvs-支持">三、开启 ipvs 支持</h3>
+
+<h4 id="31修改配置">3.1、修改配置</h4>
+
+<p>修改 <code class="highlighter-rouge">/etc/kubernetes/proxy</code> 配置如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
+<span class="c"># kubernetes proxy config</span>
+
+<span class="c"># default config should be adequate</span>
+
+<span class="c"># Add your own!</span>
+<span class="nv">KUBE_PROXY_ARGS</span><span class="o">=</span><span class="s2">"--bind-address=10.10.1.8 </span><span class="se">\</span><span class="s2">
+                 --hostname-override=docker4.node </span><span class="se">\</span><span class="s2">
+                 --masquerade-all </span><span class="se">\</span><span class="s2">
+                 --feature-gates=SupportIPVSProxyMode=true </span><span class="se">\</span><span class="s2">
+                 --proxy-mode=ipvs </span><span class="se">\</span><span class="s2">
+                 --ipvs-min-sync-period=5s </span><span class="se">\</span><span class="s2">
+                 --ipvs-sync-period=5s </span><span class="se">\</span><span class="s2">
+                 --ipvs-scheduler=rr </span><span class="se">\</span><span class="s2">
+                 --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig </span><span class="se">\</span><span class="s2">
+                 --cluster-cidr=10.254.0.0/16"</span>
+</code></pre></div></div>
+
+<p><strong>启用 ipvs 后与 1.7 版本的配置差异如下：</strong></p>
+
+<ul>
+  <li>增加 <code class="highlighter-rouge">--feature-gates=SupportIPVSProxyMode=true</code> 选项，用于告诉 kube-proxy 开启 ipvs 支持，因为目前 ipvs 并未稳定</li>
+  <li>增加 <code class="highlighter-rouge">ipvs-min-sync-period</code>、<code class="highlighter-rouge">--ipvs-sync-period</code>、<code class="highlighter-rouge">--ipvs-scheduler</code> 三个参数用于调整 ipvs，具体参数值请自行查阅 ipvs 文档</li>
+  <li><strong>增加 <code class="highlighter-rouge">--masquerade-all</code> 选项，以确保反向流量通过</strong></li>
+</ul>
+
+<p><strong>重点说一下 <code class="highlighter-rouge">--masquerade-all</code> 选项: kube-proxy ipvs 是基于 NAT 实现的，当创建一个 service 后，kubernetes 会在每个节点上创建一个网卡，同时帮你将 Service IP(VIP) 绑定上，此时相当于每个 Node 都是一个 ds，而其他任何 Node 上的 Pod，甚至是宿主机服务(比如 kube-apiserver 的 6443)都可能成为 rs；按照正常的 lvs nat 模型，所有 rs 应该将 ds 设置成为默认网关，以便数据包在返回时能被 ds 正确修改；在 kubernetes 将 vip 设置到每个 Node 后，默认路由显然不可行，所以要设置 <code class="highlighter-rouge">--masquerade-all</code> 选项，以便反向数据包能通过</strong></p>
+
+<p>以上描述可能并不精准，具体请看 <a href="https://docs.google.com/document/d/1YEBWR4EWeCEWwxufXzRM0e82l_lYYzIXQiSayGaVQ8M/edit?usp=sharing">Google 文档</a></p>
+
+<h4 id="32测试-ipvs">3.2、测试 ipvs</h4>
+
+<p>修改完成后，重启 kube-proxy 使其生效</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
+systemctl restart kube-proxy
+</code></pre></div></div>
+
+<p>重启后日志中应该能看到如下输出，不应该有其他提示 ipvs 的错误信息出现</p>
+
+<p><img src="https://cdn.oss.link/markdown/o05rq.jpg" alt="kube-proxy ipvs log" /></p>
+
+<p>同时使用 ipvsadm 命令应该能看到相应的 service 的 ipvs 规则(ipvsadm 自己安装一下)</p>
+
+<p><img src="https://cdn.oss.link/markdown/d1ilk.jpg" alt="ipvs role" /></p>
+
+<p>然后进入 Pod 测试</p>
+
+<p><img src="https://cdn.oss.link/markdown/42pjm.jpg" alt="test ipvs1" /></p>
+
+<p><strong>最后说一点: ipvs 尚未稳定，请慎用；而且 <code class="highlighter-rouge">--masquerade-all</code> 选项与 Calico 安全策略控制不兼容，请酌情考虑使用(Calico 在做网络策略限制的时候要求不能开启此选项)</strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,228 @@
+I"J,<blockquote>
+  <p>距离 kubernetes 1.4 发布已经有段时间，1.4 版本新增了很多新特性，其中一个比较实用的功能就是增加了集群的快速创建，基本只需要 2 条命令就能搭建成功；但由于众所周知的原因(fuck GFW)，导致 kuadm 命令无法工作，以下记录了一下解决方案</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>基本环境为 3 台虚拟机，虚拟机信息如下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>IP 地址</th>
+      <th>节点</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>192.168.1.107</td>
+      <td>master</td>
+    </tr>
+    <tr>
+      <td>192.168.1.126</td>
+      <td>node1</td>
+    </tr>
+    <tr>
+      <td>192.168.1.217</td>
+      <td>node2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="11安装-docker">1.1、安装 docker</h4>
+
+<p>docker 这里使用的是 1.12.1 版本，安装直接根据官方教程来，如果网速较慢可切换国内源，如清华大 docker 源，具体请 Google</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">tee</span> /etc/yum.repos.d/docker.repo <span class="o">&lt;&lt;-</span><span class="sh">'</span><span class="no">EOF</span><span class="sh">'
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/centos/7/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+</span><span class="no">EOF
+
+</span>yum <span class="nb">install </span>docker-engine <span class="nt">-y</span>
+
+systemctl <span class="nb">enable </span>docker
+systemctl start docker
+systemctl status docker
+</code></pre></div></div>
+
+<h4 id="12修改主机名">1.2、修改主机名</h4>
+
+<p>由于 3 台虚拟机是从一个基础虚拟机复制而来，为了不影响 <code class="highlighter-rouge">kubectl get nodes</code> 查询，需要更改 3 台虚拟机的主机名，以下为 master 节点示例，其他节点对应修改即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"master"</span> <span class="o">&gt;</span> /etc/hostname
+<span class="c"># 替换一下 hosts 中的 localhost 等</span>
+vim /etc/hosts
+<span class="c"># 修改后内容如下</span>
+127.0.0.1   master
+::1         master
+192.168.1.107 master
+192.168.1.126 node1
+192.168.1.217 node2
+</code></pre></div></div>
+
+<h3 id="二搭建-kubernetes-集群">二、搭建 kubernetes 集群</h3>
+
+<h4 id="21安装基本组件">2.1、安装基本组件</h4>
+
+<p><strong>根据 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档教程</a> 需要先安装 <code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">kubeadm</code>、<code class="highlighter-rouge">kubectl</code>、 <code class="highlighter-rouge">kubernetes-cni</code> 这四个 rpm 包，但是由于 GFW 原因实际上 Google 的 rpm 源无法下载，以下是我通过梯子下载到本地的，rpm 下载方法 可借助 yumdownloader 工具，具体请 Google</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先安装 socat</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> socat
+<span class="c"># 然后下载相关 rpm，我已经放到了 cdn 里</span>
+<span class="nv">rpms</span><span class="o">=(</span>5ce829590fb4d5c860b80e73d4483b8545496a13f68ff3033ba76fa72632a3b6-kubernetes-cni-0.3.0.1-0.07a8a2.x86_64.rpm <span class="se">\</span>
+     bbad6f8b76467d0a5c40fe0f5a1d92500baef49dedff2944e317936b110524eb-kubeadm-1.5.0-0.alpha.0.1534.gcf7301f.x86_64.rpm <span class="se">\</span>
+     c37966352c9d394bf2cc1f755938dfb679aa45ac866d3eb1775d9c9b87d5e177-kubelet-1.4.0-0.x86_64.rpm <span class="se">\</span>
+     fac5b4cd036d76764306bd1df7258394b200be4c11f4e3fdd100bfb25a403ed4-kubectl-1.4.0-0.x86_64.rpm<span class="o">)</span>
+<span class="k">for </span>rpmName <span class="k">in</span> <span class="k">${</span><span class="nv">rpms</span><span class="p">[@]</span><span class="k">}</span><span class="p">;</span> <span class="k">do
+  </span>wget http://upyun.mritd.me/kubernetes/<span class="nv">$rpmName</span>
+<span class="k">done</span>
+<span class="c"># 最后安装即可</span>
+rpm <span class="nt">-ivh</span> <span class="k">*</span>.rpm
+</code></pre></div></div>
+
+<h4 id="22启动相关组件">2.2、启动相关组件</h4>
+
+<p>接下来启动 docker 和 kubelet</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>docker
+systemctl <span class="nb">enable </span>kubelet
+systemctl start docker
+systemctl start kubelet
+</code></pre></div></div>
+
+<p>此时查看 kubelet 其实是启动失败的，因为缺少相关配置，以下一部部署以后便会自动重启成功</p>
+
+<p><strong>在正式使用 kubeadm 创建集群以前还需要关闭 selinux，在下一个版本这个问题已经被解决</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 关闭 selinux</span>
+setenforce 0
+</code></pre></div></div>
+
+<h4 id="23导入相关-image">2.3、导入相关 image</h4>
+
+<p>kubeadm 会 pull 相关的 image，由于 GFW 的原因会造成无法下载最终失败，所以最好的办法是先用梯子 pull 下来，再 load 进去即可，以下为需要 load 进的镜像</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>镜像名称</th>
+      <th>版本号</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>gcr.io/google_containers/kube-proxy-amd64</td>
+      <td>v1.4.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-discovery-amd64</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kubedns-amd64</td>
+      <td>1.7</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-scheduler-amd64</td>
+      <td>v1.4.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-controller-manager-amd64</td>
+      <td>v1.4.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-apiserver-amd64</td>
+      <td>v1.4.0</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/etcd-amd64</td>
+      <td>2.2.5</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/kube-dnsmasq-amd64</td>
+      <td>1.3</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/exechealthz-amd64</td>
+      <td>1.1</td>
+    </tr>
+    <tr>
+      <td>gcr.io/google_containers/pause-amd64</td>
+      <td>3.0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>实际上不用梯子可以借助于 DockerHub 的自动构建功能，实现代理下载，如下所示</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">images</span><span class="o">=(</span>kube-proxy-amd64:v1.4.0 kube-discovery-amd64:1.0 kubedns-amd64:1.7 kube-scheduler-amd64:v1.4.0 kube-controller-manager-amd64:v1.4.0 kube-apiserver-amd64:v1.4.0 etcd-amd64:2.2.5 kube-dnsmasq-amd64:1.3 exechealthz-amd64:1.1 pause-amd64:3.0 kubernetes-dashboard-amd64:v1.4.0<span class="o">)</span>
+<span class="k">for </span>imageName <span class="k">in</span> <span class="k">${</span><span class="nv">images</span><span class="p">[@]</span><span class="k">}</span> <span class="p">;</span> <span class="k">do
+  </span>docker pull mritd/<span class="nv">$imageName</span>
+  docker tag mritd/<span class="nv">$imageName</span> gcr.io/google_containers/<span class="nv">$imageName</span>
+  docker rmi mritd/<span class="nv">$imageName</span>
+<span class="k">done</span>
+</code></pre></div></div>
+
+<h4 id="24创建集群">2.4、创建集群</h4>
+
+<p>首先在 master 上执行 init 操作</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm init <span class="nt">--api-advertise-addresses</span><span class="o">=</span>192.168.1.107
+</code></pre></div></div>
+
+<p>此时显示信息如下表示创建完成</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ kubeadm init <span class="nt">--api-advertise-addresses</span><span class="o">=</span>192.168.1.107
+&lt;master/tokens&gt; generated token: <span class="s2">"42354d.e1fb733ed0c9a932"</span>
+&lt;master/pki&gt; created keys and certificates <span class="k">in</span> <span class="s2">"/etc/kubernetes/pki"</span>
+&lt;util/kubeconfig&gt; created <span class="s2">"/etc/kubernetes/kubelet.conf"</span>
+&lt;util/kubeconfig&gt; created <span class="s2">"/etc/kubernetes/admin.conf"</span>
+&lt;master/apiclient&gt; created API client configuration
+&lt;master/apiclient&gt; created API client, waiting <span class="k">for </span>the control plane to become ready
+&lt;master/apiclient&gt; all control plane components are healthy after 18.921781 seconds
+&lt;master/apiclient&gt; waiting <span class="k">for </span>at least one node to register and become ready
+&lt;master/apiclient&gt; first node is ready after 2.014976 seconds
+&lt;master/discovery&gt; created essential addon: kube-discovery, waiting <span class="k">for </span>it to become ready
+&lt;master/discovery&gt; kube-discovery is ready after 3.505092 seconds
+&lt;master/addons&gt; created essential addon: kube-proxy
+&lt;master/addons&gt; created essential addon: kube-dns
+
+Kubernetes master initialised successfully!
+
+You can now <span class="nb">join </span>any number of machines by running the following on each node:
+
+kubeadm <span class="nb">join</span> <span class="nt">--token</span> 42354d.e1fb733ed0c9a932 192.168.1.107
+</code></pre></div></div>
+
+<p>然后在子节点上使用 join 命令加入集群即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join</span> <span class="nt">--token</span> 42354d.e1fb733ed0c9a932 192.168.1.107
+</code></pre></div></div>
+
+<p>最后稍等片刻在 master 上 get nodes 即可查看，<strong>如果想让 master 也运行 pod，只需在 master 上运行 <code class="highlighter-rouge">kubectl taint nodes --all dedicated-</code> 即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ kubectl get nodes                                   
+NAME      STATUS    AGE
+master    Ready     1m
+node1     Ready     1m
+node2     Ready     1m
+</code></pre></div></div>
+
+<h4 id="25创建-pod-网络">2.5、创建 Pod 网络</h4>
+
+<p>创建好集群后，为了能让容器进行跨主机通讯还要部署 Pod 网络，这里使用官方推荐的 weave 方式，也可以采用 flannel，以下为 weave 示例</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 在 master 上执行</span>
+kubectl apply <span class="nt">-f</span> https://git.io/weave-kube
+</code></pre></div></div>
+
+<p>到此搭建完成</p>
+
+<p><strong>本文参考 <a href="https://segmentfault.com/a/1190000007074726">来自天国的 kubernetes</a>、<a href="http://kubernetes.io/docs/getting-started-guides/kubeadm">Installing Kubernetes on Linux with kubeadm</a></strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,157 @@
+I"�-<blockquote>
+  <p>本篇文章主要简述了 Ceph 的存储对象名词解释及其含义，以及对 Ceph 集群内 CRUSH bucket 调整、PG/PGP 参数调整等设置；同时参考了一些书籍资料简单的概述一下 Ceph 集群硬件要求等</p>
+</blockquote>
+
+<h3 id="一ceph-组件及定义">一、Ceph 组件及定义</h3>
+
+<h4 id="11对象">1.1、对象</h4>
+
+<p>对象是 Ceph 中最小的存储单元，对象是一个数据和一个元数据绑定的整体；元数据中存放了具体数据的相关属性描述信息等；Ceph 为每个对象生成一个集群内唯一的对象标识符，以保证对象在集群内的唯一性；在传统文件系统的存储中，单个文件的大小是有一定限制的，而 Ceph 中对象随着其元数据区增大可以变得非常巨大</p>
+
+<h4 id="12crush">1.2、CRUSH</h4>
+
+<p>在传统的文件存储系统中，数据的元数据占据着极其重要的位置，每次系统中新增数据时，元数据首先被更新，然后才是实际的数据被写入；在较小的存储系统中(GB/TB)，这种将元数据存储在某个固定的存储节点或者磁盘阵列中的做法还可以满足需求；当数据量增大到 PB/ZB 级别时，元数据查找性能将会成为一个很大的瓶颈；同时元数据的统一存放还可能造成单点故障，即当元数据丢失后，实际数据将无法被找回；与传统文件存储系统不同的是，<strong>Ceph 使用可扩展散列下的受控复制(Controlled Replication Under Scalable Hashing,CRUSH)算法来精确地计算数据应该被写入哪里/从哪里读取；CRUSH按需计算元数据，而不是存储元数据，从而解决了传统文件存储系统的瓶颈</strong></p>
+
+<h4 id="13crush-查找">1.3、CRUSH 查找</h4>
+
+<p>在 Ceph 中，元数据的计算和负载是分布式的，并且只有在需要时才会执行；元数据的计算过程称之为 CRUSH 查找，不同于其他分布式文件系统，Ceph 的 CRUSH 查找是由客户端使用自己的资源来完成的，从而去除了中心查找带来的性能以及单点故障问题；CRUSH 查找时，客户端先通过 monitor 获取集群 map 副本，然后从 map 副本中获取集群配置信息；然后通过对象信息、池ID等生成对象；接着通过对象和 PG 数散列后得到 Ceph 池中最终存放该对象的 PG；最终在通过 CRUSH 算法确定该 PG 所需存储的 OSD 位置，<strong>一旦确定了 OSD 位置，那么客户端将直接与 OSD 通讯完成数据读取与写入，这直接去除了中间环节，保证了性能的极大提升</strong></p>
+
+<h4 id="14crush-层级结构">1.4、CRUSH 层级结构</h4>
+
+<p>在 Ceph 中，CRUSH 是完全支持各种基础设施和用户自定义的；CRUSH 设备列表中预先定义了一系列的设备，包括磁盘、节点、机架、行、开关、电源电路、房间、数据中心等等；这些组件称之为故障区(CRUSH bucket)，用户可以通过自己的配置把不同的 OSD 分布在不同区域；<strong>此后 Ceph 存储数据时根据 CRUSH bucket 结构，将会保证每份数据都会在所定义的物理组件之间完全隔离；</strong>比如我们定义了多个机架上的不同 OSD，那么 Ceph 存储时就会智能的将数据副本分散到多个机架之上，防止某个机架上机器全部跪了以后数据全部丢失的情况</p>
+
+<h4 id="15恢复和再平衡">1.5、恢复和再平衡</h4>
+
+<p>当故障区内任何组件出现故障时，Ceph 都会将其标记为 down 和 out 状态；然后默认情况下 Ceph 会等待 300秒之后进行数据恢复和再平衡，这个值可以通过在配置文件中的 <code class="highlighter-rouge">mon osd down out interval</code> 参数来调整</p>
+
+<h4 id="16pg">1.6、PG</h4>
+
+<p>PG 是一组对象集合体，根据 Ceph 的复制级别，每个PG 中的数据会被复制到多个 OSD 上，以保证其高可用状态</p>
+
+<h4 id="17ceph-池">1.7、Ceph 池</h4>
+
+<p>Ceph 池是一个存储对象的逻辑分区，每一个池中都包含若干个 PG，进而实现将一定对象映射到集群内不同 OSD 中，<strong>池可以以复制方式或者纠错码方式创建，但不可同时使用这两种方式</strong></p>
+
+<h3 id="二ceph-组件调整及操作">二、Ceph 组件调整及操作</h3>
+
+<h4 id="21池操作">2.1、池操作</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建池</span>
+rados mkpool test-pool
+<span class="c"># 列出池</span>
+rados lspools
+<span class="c"># 复制池</span>
+rados cppool test-pool cp-pool
+<span class="c"># 删除池</span>
+rados rmpool test-pool test-pool <span class="nt">--yes-i-really-really-mean-it</span>
+</code></pre></div></div>
+
+<h4 id="22对象操作">2.2、对象操作</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 将对象加入到池内</span>
+rados put testfile anaconda-ks.cfg <span class="nt">-p</span> <span class="nb">test</span>
+<span class="c"># 列出池内对象</span>
+rados <span class="nb">ls</span> <span class="nt">-p</span> <span class="nb">test</span>
+<span class="c"># 检查对象信息</span>
+ceph osd map <span class="nb">test </span>testfile
+<span class="c"># 删除对象</span>
+rados <span class="nb">rm </span>testfile <span class="nt">-p</span> <span class="nb">test</span>
+</code></pre></div></div>
+
+<h4 id="23修改-pg-和-pgp">2.3、修改 PG 和 PGP</h4>
+
+<p>计算 PG 数为 Ceph 企业级存储必不可少的的一部分，其中集群内 PG 计算公式如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PG 总数 <span class="o">=</span> <span class="o">(</span>OSD 数 <span class="k">*</span> 100<span class="o">)</span> / 最大副本数
+</code></pre></div></div>
+
+<p>对于单个池来讲，我们还应该为池设定 PG 数，其中池的 PG 数计算公式如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PG 总数 <span class="o">=</span> <span class="o">(</span>OSD 数 <span class="k">*</span> 100<span class="o">)</span> / 最大副本数 / 池数
+</code></pre></div></div>
+
+<p>PGP 是为了实现定位而设计的 PG，PGP 的值应该与 PG 数量保持一致；<strong>当池的 pg_num 增加的时候，池内所有 PG 都会一分为二，但是他们仍然保持着以前 OSD 的映射关系；当增加 pgp_num 的时候，Ceph 集群才会将 PG 进行 OSD 迁移，然后开始再平衡过程</strong></p>
+
+<p>获取现有 PG 和 PGP 值可以通过如下命令</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph osd pool get <span class="nb">test </span>pg_num
+ceph osd pool get <span class="nb">test </span>pgp_num
+</code></pre></div></div>
+
+<p>当计算好 PG 和 PGP 以后可以通过以下命令设置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph osd pool <span class="nb">set test </span>pgp_num 32
+ceph osd pool <span class="nb">set test </span>pgp_num 32
+</code></pre></div></div>
+
+<p>同样在创建 pool 的时候也可以同步指定</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph osd pool create POOLNAME PG PGP
+</code></pre></div></div>
+
+<h4 id="24pool-副本数调整">2.4、pool 副本数调整</h4>
+
+<p>默认情况，当创建一个新的 pool 时，向 pool 内存储的数据只会有 2 个副本，查看 pool 副本数可以通过如下命令</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph osd dump | <span class="nb">grep </span>pool
+</code></pre></div></div>
+
+<p>当我们需要修改默认副本数以使其满足高可靠性需求时，可以通过如下命令完成</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph osd pool <span class="nb">set </span>POOLNAME size NUM
+</code></pre></div></div>
+
+<h4 id="25定制机群布局">2.5、定制机群布局</h4>
+
+<p>上面已经讲述了 CRUSH bucket 的概念，通过以下相关命令，我们可以定制自己的集群布局，以使 Ceph 完成数据的容灾处理</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看现有集群布局</span>
+ceph osd tree
+<span class="c"># 添加机架</span>
+ceph osd crush add-bucket rack01 rack
+ceph osd crush add-bucket rack02 rack
+ceph osd crush add-bucket rack03 rack
+<span class="c"># 移动主机到不同的机架(dockerX 为我的主机名)</span>
+ceph osd crush move docker1 <span class="nv">rack</span><span class="o">=</span>rack01
+ceph osd crush move docker2 <span class="nv">rack</span><span class="o">=</span>rack02
+ceph osd crush move docker3 <span class="nv">rack</span><span class="o">=</span>rack03
+<span class="c"># 移动每个机架到默认的根下</span>
+ceph osd crush move rack01 <span class="nv">root</span><span class="o">=</span>default
+ceph osd crush move rack02 <span class="nv">root</span><span class="o">=</span>default
+ceph osd crush move rack03 <span class="nv">root</span><span class="o">=</span>default
+</code></pre></div></div>
+
+<p>最终集群整体布局如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ ceph osd tree
+ID WEIGHT  TYPE NAME            UP/DOWN REWEIGHT PRIMARY-AFFINITY
+<span class="nt">-1</span> 0.01469 root default
+<span class="nt">-5</span> 0.00490     rack rack01
+<span class="nt">-2</span> 0.00490         host docker1
+ 0 0.00490             osd.0         up  1.00000          1.00000
+<span class="nt">-6</span> 0.00490     rack rack02
+<span class="nt">-3</span> 0.00490         host docker2
+ 1 0.00490             osd.1         up  1.00000          1.00000
+<span class="nt">-7</span> 0.00490     rack rack03
+<span class="nt">-4</span> 0.00490         host docker3
+ 2 0.00490             osd.2         up  1.00000          1.00000
+</code></pre></div></div>
+
+<h3 id="三ceph-硬件配置">三、Ceph 硬件配置</h3>
+
+<p>硬件规划一般是一个企业级存储的必要工作，以下简述了 Ceph 的一般硬件需求</p>
+
+<h4 id="31监控需求">3.1、监控需求</h4>
+
+<p>Ceph monitor 通过维护整个集群的 map 从而完成集群的健康处理；但是 monitor 并不参与实际的数据存储，所以实际上 monitor 节点 CPU 占用、内存占用都比较少；一般单核 CPU 加几个 G 的内存即可满足需求；虽然 monitor 节点不参与实际存储工作，但是 monitor 的网卡至少应该是冗余的，因为一旦网络出现故障则集群健康会难以保证</p>
+
+<h4 id="32osd-需求">3.2、OSD 需求</h4>
+
+<p>OSD 作为 Ceph 集群的主要存储设施，其会占用一定的 CPU 和内存资源；一般推荐做法是每个节点的每块硬盘作为一个 OSD；同时 OSD 还需要写入日志，所以应当为 OSD 集成日志留有充足的空间；在出现故障时，OSD 需求的资源可能会更多，所以 OSD 节点根据实际情况(每个 OSD 会有一个线程)应该分配更多的 CPU 和内存；固态硬盘也会增加 OSD 存取速度和恢复速度</p>
+
+<h4 id="33mds-需求">3.3、MDS 需求</h4>
+
+<p>MDS 服务专门为 CephFS 存储元数据，所以相对于 monitor 和 OSD 节点，这个 MDS 节点的 CPU 需求会大得多，同时内存占用也是海量的，所以 MDS 一般会使用一个强劲的物理机单独搭建</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

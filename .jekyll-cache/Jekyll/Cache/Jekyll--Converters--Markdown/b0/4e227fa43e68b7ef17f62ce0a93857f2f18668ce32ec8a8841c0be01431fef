@@ -1,0 +1,68 @@
+I"Z<blockquote>
+  <p>最近看着很多人下载镜像都很费劲，可能是网络环境越来越坑的原因吧；这里开放一个个人维护的 Docker 加速仓库，帮助扶墙下载 Docker 相关镜像</p>
+</blockquote>
+
+<p><strong>该镜像基于 Docker 官方 Registry，在其基础上套了一个梯子，可以实现反代主流的三大墙外仓库(Docker Hub、Gcr.io、quay.io)；理论速度可以达到 10MB/S 的加速效果，使用方式如下</strong></p>
+
+<h3 id="一确定要反代的仓库">一、确定要反代的仓库</h3>
+
+<p>首先确定你要反代的墙外仓库，目前仓库支持 <code class="highlighter-rouge">https://gcr.io</code>、<code class="highlighter-rouge">https://quay.io</code>、<code class="highlighter-rouge">https://registry-1.docker.io(Docker Hub)</code>；以 <code class="highlighter-rouge">gcr.io</code> 为例，启动本地私服并设置需要反代的仓库地址，如下：</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-dt</span> <span class="nt">--privileged</span> <span class="nt">--restart</span> always <span class="nt">--name</span> registry-mirror <span class="nt">-p</span> 5000:5000 mritd/registry-mirror https://gcr.io
+</code></pre></div></div>
+
+<p><strong>此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 <code class="highlighter-rouge">https://gcr.io</code>；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)；默认镜像已经上传了 Docker Hub，如果无法下载请访问 <a href="https://pan.baidu.com/s/1o7Wye8M">百度云</a></strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/gwfeo.jpg" alt="start up" /></p>
+
+<h3 id="二设置-docker-非安全仓库">二、设置 docker 非安全仓库</h3>
+
+<p>docker 默认情况下对于 http 类型的私服是不信任的，如果有证书可以在外面套个 nginx；如果没有则需要修改 docker 启动参数，增加非安全仓库设置(CentOS)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /usr/lib/systemd/system/docker.service
+
+<span class="c"># ExecStart 增加 --insecure-registry 选项，</span>
+<span class="c"># 地址为刚刚启动的反代仓库地址</span>
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/dockerd <span class="nt">--insecure-registry</span> 192.168.1.110:5000
+</code></pre></div></div>
+
+<p>然后 reload systemd service 配置，重启 docker</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
+systemctl restart docker
+</code></pre></div></div>
+
+<h3 id="三使用反代私服下载镜像">三、使用反代私服下载镜像</h3>
+
+<p>重启后就可以通过该私服下载 gcr.io 相关镜像，以下以下载 <code class="highlighter-rouge">gcr.io/google_containers/kube-apiserver-amd64:v1.5.4</code> 镜像为例</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ docker pull 192.168.1.110:5000/google_containers/kube-apiserver-amd64:v1.5.4
+v1.5.4: Pulling from google_containers/kube-apiserver-amd64
+4b0bc1c4050b: Pull <span class="nb">complete
+</span>3f39da6bdf32: Pull <span class="nb">complete
+</span>Digest: sha256:2c27af79f314a9a030b4f3d1787bcd1b931779bcc3d229c7fc3fa83df0bbd7b1
+Status: Downloaded newer image <span class="k">for </span>192.168.1.110:5000/google_containers/kube-apiserver-amd64:v1.5.4
+</code></pre></div></div>
+
+<p>最后自己将刚刚下载的镜像 tag 回正常名称即可使用</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ docker tag 192.168.1.110:5000/google_containers/kube-apiserver-amd64:v1.5.4 gcr.io/google_containers/kube-apiserver-amd64:v1.5.4
+➜  ~ docker images
+REPOSITORY                                                  TAG                 IMAGE ID            CREATED             SIZE
+mritd/registry-mirror                                       1.0.0               18312490a135        6 hours ago         120.4 MB
+192.168.1.110:5000/google_containers/kube-apiserver-amd64   v1.5.4              b951e253e3cd        13 days ago         125.9 MB
+gcr.io/google_containers/kube-apiserver-amd64               v1.5.4              b951e253e3cd        13 days ago         125.9 MB
+</code></pre></div></div>
+
+<h3 id="四其他说明重要">四、其他说明(重要)</h3>
+
+<p><strong>由于 docker 在 1.13 版本做了一些变动(没去看)，经测试使用 1.13 以上版本通过该仓库下载 <code class="highlighter-rouge">gcr.io</code> 镜像会出现多层镜像只能下载一层的问题；所以要使用本仓库必须使用 docker 1.13 以下版本，如 1.12.6；此篇文章发布时，将会弃用原本维护的专用于反代 <code class="highlighter-rouge">gcr.io</code> 的私服( <code class="highlighter-rouge">mritd/gcr-registry</code> )；本仓库由个人维护，内置梯子走的是我个人的服务器，所以流量有限(500GB/月)，所以请大家珍惜使用，不要大批量部署时拿来开怼；由于不确定因素太多，所以不承诺永久维护。</strong></p>
+
+<hr />
+
+<p><strong>仓库镜像是一个黑盒镜像，担心安全的朋友可以不用，我也不会开放源码(为了防止梯子被滥用)；同时镜像内部也做了处理，防止有心人搞我…希望大家可以利用此仓库将镜像下载下来，然后自己传到百度云等网盘互助分享，随手之劳帮助别人也能减轻服务器压力；同时由于资金有限，如果感觉这个仓库对你有点帮助，欢迎捐助杯咖啡钱</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/zhifubao.png" alt="alipay" /></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

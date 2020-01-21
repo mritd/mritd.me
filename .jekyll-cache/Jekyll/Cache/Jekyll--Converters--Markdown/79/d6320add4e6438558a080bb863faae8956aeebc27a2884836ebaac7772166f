@@ -1,0 +1,230 @@
+I"�1<h2 id="一扯淡">一、扯淡</h2>
+
+<p>撸 Dokcer 这么长时间以来，由于国内众所周知的网络原因，Docker pull 镜像会非常慢，慢到你怀疑这个世界，甚至怀疑你来到这个世界的正确性与合理性，为了为了让自己不怀疑世界，记录一下如何撸一个 docker mirror registry</p>
+
+<h2 id="二动手撸一个">二、动手撸一个</h2>
+
+<h3 id="21基本环境">2.1、基本环境</h3>
+
+<p>以下操作基本环境如下</p>
+
+<ul>
+  <li>Docker 1.12.1</li>
+  <li>registry 2.5.1</li>
+  <li>nginx 1.10.1</li>
+</ul>
+
+<!--more-->
+
+<h3 id="22导出-registry-配置">2.2、导出 registry 配置</h3>
+
+<p>Docker 官方提供了一个 registry，Github 地址 <a href="https://github.com/docker/distribution">点这里</a>，而大部分能找到的资料都是如何撸一个 private registry，就是启动一下这个官方 registry container 即可，然后就可以 docker push 什么的；而 mirror registry 其实也很简单，就是增加一个配置即可</p>
+
+<p><strong>首先把官方 registry 中的配置文件导出</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-it</span> <span class="nt">--rm</span> <span class="nt">--entrypoint</span> <span class="nb">cat </span>registry:2.5.1 <span class="se">\</span>
+/etc/docker/registry/config.yml <span class="o">&gt;</span> config.yml
+</code></pre></div></div>
+
+<p><strong>registry 的配置文件内容如下</strong></p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="m">0.1</span>
+<span class="na">log</span><span class="pi">:</span>
+  <span class="na">fields</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">registry</span>
+<span class="na">storage</span><span class="pi">:</span>
+  <span class="na">cache</span><span class="pi">:</span>
+    <span class="na">blobdescriptor</span><span class="pi">:</span> <span class="s">inmemory</span>
+  <span class="na">filesystem</span><span class="pi">:</span>
+    <span class="na">rootdirectory</span><span class="pi">:</span> <span class="s">/var/lib/registry</span>
+<span class="na">http</span><span class="pi">:</span>
+  <span class="na">addr</span><span class="pi">:</span> <span class="s">:5000</span>
+  <span class="na">headers</span><span class="pi">:</span>
+    <span class="na">X-Content-Type-Options</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">nosniff</span><span class="pi">]</span>
+<span class="na">health</span><span class="pi">:</span>
+  <span class="na">storagedriver</span><span class="pi">:</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+    <span class="na">threshold</span><span class="pi">:</span> <span class="m">3</span>
+</code></pre></div></div>
+
+<h3 id="23修改-registry-配置">2.3、修改 registry 配置</h3>
+
+<p><strong>上一步已经将配置导出了，接下来如果想使用 mirror 功能只需在下面增加 proxy 选项即可</strong></p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="m">0.1</span>
+<span class="na">log</span><span class="pi">:</span>
+  <span class="na">fields</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">registry</span>
+<span class="na">storage</span><span class="pi">:</span>
+  <span class="na">cache</span><span class="pi">:</span>
+    <span class="na">blobdescriptor</span><span class="pi">:</span> <span class="s">inmemory</span>
+  <span class="na">filesystem</span><span class="pi">:</span>
+    <span class="na">rootdirectory</span><span class="pi">:</span> <span class="s">/var/lib/registry</span>
+<span class="na">http</span><span class="pi">:</span>
+  <span class="na">addr</span><span class="pi">:</span> <span class="s">:5000</span>
+  <span class="na">headers</span><span class="pi">:</span>
+    <span class="na">X-Content-Type-Options</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">nosniff</span><span class="pi">]</span>
+<span class="na">health</span><span class="pi">:</span>
+  <span class="na">storagedriver</span><span class="pi">:</span>
+    <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+    <span class="na">threshold</span><span class="pi">:</span> <span class="m">3</span>
+<span class="na">proxy</span><span class="pi">:</span>
+  <span class="na">remoteurl</span><span class="pi">:</span> <span class="s">https://registry-1.docker.io</span>
+  <span class="na">username</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">username</span><span class="pi">]</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">password</span><span class="pi">]</span>
+
+</code></pre></div></div>
+
+<p><strong>username 与 password 是可选项，当填写 username 与 password 以后就可以从 hub pull 私有镜像</strong></p>
+
+<h3 id="24启动-mirror-registry">2.4、启动 mirror registry</h3>
+
+<p><strong>最后只需要在启动 registry 时候将配置塞回去即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-dt</span> <span class="nt">--name</span> v2-mirror <span class="se">\</span>
+<span class="nt">-v</span> /data/registry:/var/lib/registry <span class="se">\</span>
+<span class="nt">-v</span> /etc/registry/config.yml:/etc/docker/registry/config.yml <span class="se">\</span>
+<span class="nt">-p</span> 5000:5000 registry:2.5.1
+</code></pre></div></div>
+
+<p><strong>以上命令将启动一个 mirror registry，并且数据持久化到 <code class="highlighter-rouge">/data/registry</code></strong></p>
+
+<h3 id="25nginx-配置-ssl">2.5、nginx 配置 ssl</h3>
+
+<p>当然此时直接在 docker 启动参数总增加 <code class="highlighter-rouge">--registry-mirror=http://IP:5000</code>，然后重启 docker 再进行 pull 即可生效，但是 5000 端口外加 http 总有点那么不装逼，所以最好增加一个 nginx 做反向代理，同时可以使用 ssl 加密，以下是一个 nginx 配置仅供参考，ssl 证书可采用 <a href="https://www.startssl.com">StartSSL</a> 免费一年的 DV 证书</p>
+
+<p><strong>nginx.conf</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># worker 运行用户组</span>
+user  nginx nginx<span class="p">;</span>
+
+<span class="c"># worker 进程自动</span>
+worker_processes  auto<span class="p">;</span>
+
+<span class="c"># 单个 worker 进程能打开的最大文件描述符数量</span>
+worker_rlimit_nofile  51200<span class="p">;</span>
+
+<span class="c"># 指定每个用户能够发往 worker 的信号数量(rtsig)</span>
+<span class="c"># worker_rlimit_sigpending</span>
+
+<span class="c"># CPU 亲源性，用于将具体的 worker 绑定到 CPU 核心</span>
+<span class="c"># worker_cpu_affinity 0001 0010 0100 1000</span>
+
+<span class="c"># 指定 worker 优先级</span>
+<span class="c"># worker_priority</span>
+
+<span class="c"># 是否以守护进程方式启动 nginx</span>
+<span class="c"># daemon off|on</span>
+
+<span class="c"># 是否以 master/worker 方式运行</span>
+<span class="c"># master_process</span>
+
+<span class="c"># 错误日志文件及级别</span>
+error_log  /var/log/nginx/error.log  info<span class="p">;</span>
+
+pid        /var/run/nginx/nginx.pid<span class="p">;</span>
+
+
+events <span class="o">{</span>
+    <span class="c"># 每个 worker 进程所能响应的最大并发连接数</span>
+    worker_connections  51200<span class="p">;</span>
+
+    <span class="c"># 指明使用的事件模型 一般自动选择</span>
+    <span class="c"># use [epoll|rgsig|select|poll]</span>
+    use epoll<span class="p">;</span>
+
+    <span class="c"># 定义内部各请求调用 worker 时使用的 负载均衡锁</span>
+    <span class="c"># on: 能够让多个 worker 轮流的序列化的响应新请求，会有一定性能损失</span>
+    <span class="c"># off:</span>
+    <span class="c"># accept_mutex [on|off]</span>
+
+    <span class="c"># 定义锁文件位置</span>
+    <span class="c"># lock_file /PATH/TO/LOCK_FILE</span>
+
+    multi_accept on<span class="p">;</span>
+
+
+<span class="o">}</span>
+
+
+http <span class="o">{</span>
+    include       mime.types<span class="p">;</span>
+    default_type  application/octet-stream<span class="p">;</span>
+
+    log_format    main  <span class="s1">'$server_name $remote_addr - $remote_user [$time_local] "$request" - $request_body '</span>
+                        <span class="s1">'$status $body_bytes_sent "$http_referer" '</span>
+                        <span class="s1">'"$http_user_agent" "$http_x_forwarded_for" '</span>
+                        <span class="s1">'$ssl_protocol $ssl_cipher $request_time '</span><span class="p">;</span>
+
+    server_names_hash_bucket_size 128<span class="p">;</span>
+    client_header_buffer_size 32k<span class="p">;</span>
+    large_client_header_buffers 4 32k<span class="p">;</span>
+    client_max_body_size 1024m<span class="p">;</span>
+    sendfile on<span class="p">;</span>
+    tcp_nopush on<span class="p">;</span>
+    keepalive_timeout 120<span class="p">;</span>
+    server_tokens off<span class="p">;</span>
+    tcp_nodelay on<span class="p">;</span>
+
+
+    <span class="nb">gzip  </span>on<span class="p">;</span>
+    gzip_buffers 16 8k<span class="p">;</span>
+    gzip_comp_level 6<span class="p">;</span>
+    gzip_http_version 1.1<span class="p">;</span>
+    gzip_min_length 256<span class="p">;</span>
+    gzip_proxied any<span class="p">;</span>
+    gzip_vary on<span class="p">;</span>
+    gzip_types
+        text/xml application/xml application/atom+xml application/rss+xml application/xhtml+xml image/svg+xml
+        text/javascript application/javascript application/x-javascript
+        text/x-json application/json application/x-web-app-manifest+json
+        text/css text/plain text/x-component
+        font/opentype application/x-font-ttf application/vnd.ms-fontobject
+        image/x-icon<span class="p">;</span>
+    gzip_disable <span class="s2">"MSIE [1-6]</span><span class="se">\.</span><span class="s2">(?!.*SV1)"</span><span class="p">;</span>
+
+    open_file_cache <span class="nv">max</span><span class="o">=</span>1000 <span class="nv">inactive</span><span class="o">=</span>20s<span class="p">;</span>
+    open_file_cache_valid 30s<span class="p">;</span>
+    open_file_cache_min_uses 2<span class="p">;</span>
+    open_file_cache_errors on<span class="p">;</span>
+
+    include /etc/nginx/conf.d/<span class="k">*</span>.conf<span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>mirror.conf</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server <span class="o">{</span>
+  listen 80<span class="p">;</span>
+  server_name your-domain<span class="p">;</span>
+  rewrite ^<span class="o">(</span>.<span class="k">*</span><span class="o">)</span> https://<span class="nv">$server_name$1</span> permanent<span class="p">;</span>
+<span class="o">}</span>
+
+server <span class="o">{</span>
+  listen 443<span class="p">;</span>
+  server_name your-domain<span class="p">;</span>
+  access_log /var/log/nginx/your-domain.log main<span class="p">;</span>
+
+  ssl on<span class="p">;</span>
+  ssl_certificate      /etc/nginx/ssl/your-domain.crt<span class="p">;</span>
+  ssl_certificate_key  /etc/nginx/ssl/your-domain.key<span class="p">;</span>
+
+  location / <span class="o">{</span>
+
+    log_not_found on<span class="p">;</span>
+
+    proxy_pass http://mirror:5000<span class="p">;</span>
+    proxy_read_timeout 300<span class="p">;</span>
+    proxy_connect_timeout 300<span class="p">;</span>
+    proxy_redirect off<span class="p">;</span>
+
+    proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+    proxy_set_header Host              <span class="nv">$http_host</span><span class="p">;</span>
+    proxy_set_header X-Real-IP         <span class="nv">$remote_addr</span><span class="p">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

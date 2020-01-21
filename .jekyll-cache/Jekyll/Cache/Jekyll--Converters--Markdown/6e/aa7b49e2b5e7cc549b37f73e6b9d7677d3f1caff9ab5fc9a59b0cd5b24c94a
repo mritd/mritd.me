@@ -1,0 +1,62 @@
+I"�<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-cache search package    <span class="c">#搜索包（相当于yum list | grep pkg）</span>
+apt-cache show package      <span class="c">#显示包的相关信息，如说明、大小、版本等</span>
+apt-cache showpg package    <span class="c">#显示包的相关信息，如Reverse Depends（反向依赖）、依赖等</span>
+apt-get <span class="nb">install </span>package       <span class="c">#安装包</span>
+apt-get reinstall package     <span class="c">#重新安装包</span>
+apt-get <span class="nt">-f</span> <span class="nb">install </span>package    <span class="c">#强制安装</span>
+</code></pre></div></div>
+<!--more-->
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get remove package        <span class="c">#删除包（只是删掉数据和可执行文件，不删除配置文件）</span>
+apt-get remove <span class="nt">--purge</span> package       <span class="c">#删除包，包括删除配置文件等</span>
+apt-get autoremove <span class="nt">--purge</span> package   <span class="c">#删除包及其依赖的软件包+配置文件等</span>
+apt-get update          <span class="c">#更新源</span>
+apt-get upgrade         <span class="c">#更新已安装的包</span>
+apt-get dist-upgrade    <span class="c">#升级系统</span>
+apt-get dselect-upgrade        <span class="c">#使用 dselect 升级</span>
+apt-cache depends package      <span class="c">#了解使用依赖</span>
+apt-cache rdepends package     <span class="c">#查看该包被哪些包依赖</span>
+apt-get build-dep package   <span class="c">#安装相关的编译环境</span>
+apt-get <span class="nb">source </span>package      <span class="c">#下载该包的源代码</span>
+apt-get clean <span class="o">&amp;&amp;</span> apt-get autoclean  <span class="c">#清理下载文件的存档 &amp;&amp; 只清理过时的包</span>
+apt-get check             <span class="c">#检查是否有损坏的依赖</span>
+dpkg <span class="nt">-S</span> filename          <span class="c">#查找filename属于哪个软件包</span>
+apt-file search filename  <span class="c">#查找filename属于哪个软件包</span>
+apt-file list packagename <span class="c">#列出软件包的内容</span>
+apt-file update           <span class="c">#更新apt-file的数据库</span>
+
+dpkg <span class="nt">-l</span>      <span class="c">#列出当前系统中所有的包.可以和参数less一起使用在分屏查看（类似于rpm -qa）</span>
+dpkg <span class="nt">-l</span> |grep <span class="nt">-i</span> <span class="s2">"pkg"</span>   <span class="c">#查看系统中与"pkg"相关联的包（类似于rpm -qa | grep pkg）</span>
+dpkg <span class="nt">-s</span> pkg  <span class="c">#查询一个已安装的包的详细信息（类似于rpm -qi）</span>
+dpkg <span class="nt">-L</span> pkg  <span class="c">#查询一个已安装的软件包释放了哪些文件（类似于rpm -ql）</span>
+dpkg <span class="nt">-S</span> file     <span class="c">#查询系统中某个文件属于哪个软件包（类似于rpm -qf）</span>
+dpkg <span class="nt">-c</span> pkg.deb  <span class="c">#查询一个未安装的deb包将会释放哪些文件（类似于rpm -qpl）</span>
+dpkg <span class="nt">-I</span> pkg.deb  <span class="c">#查看一个未安装的deb包的详细信息（类似于rpm -qpi）</span>
+dpkg <span class="nt">-i</span> pkg.deb  <span class="c">#手动安装软件包（不能解决软依赖性问题，可以用apt-get -f install解决）</span>
+dpkg <span class="nt">-r</span> pkg      <span class="c">#卸载软件包（不是完全的卸载，它的配置文件还存在）</span>
+dpkg <span class="nt">-P</span> pkg      <span class="c">#全部卸载（不能解决依赖性的问题）</span>
+dpkg-reconfigure pkg     <span class="c">#重新配置</span>
+dpkg <span class="nt">-x</span> pkg.deb <span class="nb">dir</span>      <span class="c">#将一个deb包解开至dir目录</span>
+dpkg <span class="nt">--pending</span> <span class="nt">--remove</span>  <span class="c">#移除多余的软件</span>
+
+<span class="c"># 强制安装一个包(忽略依赖及其它问题)</span>
+dpkg <span class="nt">--force-all</span> <span class="nt">-i</span> pkg.deb    <span class="c">#可以参考dpkg --force-help</span>
+
+<span class="c"># 强制卸载一个包</span>
+dpkg <span class="nt">--force-all</span> <span class="nt">-P</span> pkg.deb
+
+aptitude update   <span class="c">#更新可用的包列表</span>
+aptitude upgrade  <span class="c">#升级可用的包</span>
+aptitude dist-upgrade     <span class="c">#将系统升级到新的发行版</span>
+aptitude <span class="nb">install </span>pkgname  <span class="c">#安装包</span>
+aptitude remove pkgname   <span class="c">#删除包</span>
+aptitude purge pkgname    <span class="c">#删除包及其配置文件</span>
+aptitude search string    <span class="c">#搜索包（相当于yum list | grep pkg，重要）</span>
+aptitude show pkgname     <span class="c">#显示包的详细信息 （相当于yum info pkg，重要）</span>
+aptitude clean            <span class="c">#删除下载的包文件</span>
+aptitude autoclean        <span class="c">#仅删除过期的包文件</span>
+
+apt-get <span class="nb">install </span>xrdp      <span class="c">#安装图形化</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

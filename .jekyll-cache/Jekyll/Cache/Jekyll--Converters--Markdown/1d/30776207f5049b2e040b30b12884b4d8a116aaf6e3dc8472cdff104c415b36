@@ -1,0 +1,115 @@
+I"� <blockquote>
+  <p>公司有点小需求，在阿里云上开了几台机器，然后部署了一个 Kubernetes 集群，以下记录一下阿里云踩坑问题，主要是网络组件的坑。</p>
+</blockquote>
+
+<h3 id="一部署环境">一、部署环境</h3>
+
+<p>部署时开启了 4 台 ECS 实例，基本部署环境与裸机部署相似，其中区别是，阿里云网络采用 VPC 网络，不过以下流程适用于经典网络；以下为各个组件版本:</p>
+
+<ul>
+  <li>OS CentOS</li>
+  <li>Kernel 4.4.88-1.el7.elrepo.x86_64</li>
+  <li>docker 1.13.1</li>
+  <li>Kubernetes 1.7.5</li>
+  <li>flannel v0.8.0-amd64</li>
+</ul>
+
+<p>flannel 采用 vxlan 模式，虽然性能不太好，但是兼容度高一点；在阿里云上 flannel 可以采用 vpc 方式，具体可参考 <a href="https://coreos.com/flannel/docs/latest/alicloud-vpc-backend.html">官方文档</a>(这个文档中描述的方法应该更适合 CNM 方式，我用的是 CNI，所以没去折腾他)</p>
+
+<h3 id="二基本部署流程">二、基本部署流程</h3>
+
+<p>关于 Master HA 等基本部署流程可以参考 <a href="https://mritd.me/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">手动档搭建 Kubernetes HA 集群</a> 这篇文章，在部署网络组件之前的流程是相同的，这里不再阐述</p>
+
+<h3 id="三flannel-部署">三、Flannel 部署</h3>
+
+<p>关于 Flannel 部署，基本上有两种模式，一种是 vxlan，一种是采用 VPC，VPC 相关的部署上面已经提了，可以参考官方文档；以下说一下 Flannel 的 vxlan 部署方式:</p>
+
+<h4 id="31cni-配置">3.1、CNI 配置</h4>
+
+<p>首先保证集群在不开启 CNI 插件的情况下所有 Node Ready 状态，然后修改 <code class="highlighter-rouge">/etc/kubernetes/kubelet</code> 配置文件，加入 CNI 支持( <code class="highlighter-rouge">--network-plugin</code> )，配置如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># kubernetes kubelet (minion) config</span>
+
+<span class="c"># The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)</span>
+<span class="nv">KUBELET_ADDRESS</span><span class="o">=</span><span class="s2">"--address=192.168.1.77"</span>
+
+<span class="c"># The port for the info server to serve on</span>
+<span class="c"># KUBELET_PORT="--port=10250"</span>
+
+<span class="c"># You may leave this blank to use the actual hostname</span>
+<span class="nv">KUBELET_HOSTNAME</span><span class="o">=</span><span class="s2">"--hostname-override=docker77.node"</span>
+
+<span class="c"># location of the api-server</span>
+<span class="c"># KUBELET_API_SERVER=""</span>
+
+<span class="c"># Add your own!</span>
+<span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--cgroup-driver=cgroupfs </span><span class="se">\</span><span class="s2">
+              --cluster-dns=10.254.0.2 </span><span class="se">\</span><span class="s2">
+              --network-plugin=cni </span><span class="se">\</span><span class="s2">
+              --resolv-conf=/etc/resolv.conf </span><span class="se">\</span><span class="s2">
+              --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig </span><span class="se">\</span><span class="s2">
+              --kubeconfig=/etc/kubernetes/kubelet.kubeconfig </span><span class="se">\</span><span class="s2">
+              --require-kubeconfig </span><span class="se">\</span><span class="s2">
+              --cert-dir=/etc/kubernetes/ssl </span><span class="se">\</span><span class="s2">
+              --cluster-domain=cluster.local. </span><span class="se">\</span><span class="s2">
+              --hairpin-mode promiscuous-bridge </span><span class="se">\</span><span class="s2">
+              --serialize-image-pulls=false </span><span class="se">\</span><span class="s2">
+              --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"</span>
+</code></pre></div></div>
+
+<h4 id="32cluster-cidr-配置">3.2、Cluster CIDR 配置</h4>
+
+<p><strong>在开启 CNI 时使用 Flannel，要设置 <code class="highlighter-rouge">--allocate-node-cidrs</code> 和 <code class="highlighter-rouge">--cluster-cidr</code> 以保证 Flannel 能正确进行 IP 分配，这两个配置需要加入到 <code class="highlighter-rouge">/etc/kubernetes/controller-manager</code> 配置中，完整配置如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
+<span class="c"># The following values are used to configure the kubernetes controller-manager</span>
+
+<span class="c"># defaults from config and apiserver should be adequate</span>
+
+<span class="c"># Add your own!</span>
+<span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"--address=192.168.1.77 </span><span class="se">\</span><span class="s2">
+                              --allocate-node-cidrs=true </span><span class="se">\</span><span class="s2">
+                              --cluster-cidr=10.244.0.0/16 </span><span class="se">\</span><span class="s2">
+                              --service-cluster-ip-range=10.254.0.0/16 </span><span class="se">\</span><span class="s2">
+                              --cluster-name=kubernetes </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-cert-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --cluster-signing-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --service-account-private-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                              --root-ca-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                              --leader-elect=true </span><span class="se">\</span><span class="s2">
+                              --node-monitor-grace-period=40s </span><span class="se">\</span><span class="s2">
+                              --node-monitor-period=5s </span><span class="se">\</span><span class="s2">
+                              --pod-eviction-timeout=5m0s"</span>
+</code></pre></div></div>
+
+<h4 id="33cni-插件配置">3.3、CNI 插件配置</h4>
+
+<p>开启 CNI 后，kubelet 创建的 POD 则需要 CNI 插件支持，这里让我感觉奇怪的是 Flannel 的 yaml 中对于 <code class="highlighter-rouge">install-cni</code> 这个容器只进行了配置复制，没有做插件复制；所以我们需要手动安装 CNI 插件，CNI 插件最新版本请留意 <a href="https://github.com/containernetworking/plugins/releases">Github</a>；安装过程如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建 CNI 目录</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /opt/cni/bin
+<span class="c"># 下载 CNI 插件</span>
+wget https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> cni-plugins-amd64-v0.6.0.tgz
+<span class="c"># 移动 CNI 插件</span>
+<span class="nb">mv </span>bridge flannel host-local loopback /opt/cni/bin
+</code></pre></div></div>
+
+<h4 id="34安装-flannel">3.4、安装 Flannel</h4>
+
+<p>当上面所有配置和 CNI 插件安装完成后，应当重启 kube-controller-manager 和 kubelet</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
+systemctl restart kube-controller-manager kubelet
+</code></pre></div></div>
+
+<p>然后安装 Flannel 并配置 RBAC 即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply <span class="nt">-f</span> https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+</code></pre></div></div>
+
+<p><strong>其他部署如 dns 等与原流程相同，不在阐述</strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,157 @@
+I"�#<blockquote>
+  <p>nexus 最初用于搭建 maven 私服，提供企业级 maven jar 包管理等功能；2.x 后续支持了 npm、rpm 等包管理；最新版本 3.x 开始支持 Docker 仓库，以下为使用 neuxs 撸一个 docker 仓库的教程</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<p>初始环境如下</p>
+
+<ul>
+  <li>Centos 7 x86_64</li>
+  <li>OpenJDK 8</li>
+  <li>Nexus 3.2.0-01</li>
+</ul>
+
+<p>安装 OpenJDK 命令如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nb">install </span>java-1.8.0-openjdk <span class="nt">-y</span>
+</code></pre></div></div>
+
+<p>安装完成后验证是否安装成功</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ java <span class="nt">-version</span>
+openjdk version <span class="s2">"1.8.0_111"</span>
+OpenJDK Runtime Environment <span class="o">(</span>build 1.8.0_111-b15<span class="o">)</span>
+OpenJDK 64-Bit Server VM <span class="o">(</span>build 25.111-b15, mixed mode<span class="o">)</span>
+</code></pre></div></div>
+
+<p>下载 neuxs3 安装包并解压</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget <span class="nt">--no-check-certificate</span> https://download.sonatype.com/nexus/3/nexus-3.2.0-01-unix.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> nexus-3.2.0-01-unix.tar.gz
+</code></pre></div></div>
+
+<h3 id="二安装-nexus">二、安装 nexus</h3>
+
+<p>首先将 nexus 移动到任意位置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">mv </span>nexus-3.2.0-01 /usr/local
+</code></pre></div></div>
+
+<p>创建 nexus 用户</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adduser <span class="nt">-r</span> <span class="nt">-s</span> /sbin/nologin <span class="nt">-d</span> /data/nexus-data nexus
+</code></pre></div></div>
+
+<p><strong>默认 nexus 运行后会在同级目录下创建一个 <code class="highlighter-rouge">sonatype-work</code> 工作目录，并将其数据保存在此目录中，所以为了数据持久化先手动创建并设置其数据存储位置</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建基本目录结构</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /usr/local/sonatype-work
+<span class="c"># 创建建数据目录</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /data/nexus-data/<span class="o">{</span>etc,log,tmp<span class="o">}</span>
+<span class="c"># 将数据目录软连接到工作目录</span>
+<span class="nb">ln</span> <span class="nt">-s</span> /data/nexus-data /usr/local/sonatype-work/nexus3
+<span class="c"># 更新所有目录权限</span>
+<span class="nb">chmod</span> <span class="nt">-R</span> 755 /usr/local/<span class="o">{</span>sonatype-work,nexus-3.2.0-01<span class="o">}</span> /data/nexus-data
+<span class="nb">chown</span> <span class="nt">-R</span> nexus:nexus /usr/local/<span class="o">{</span>sonatype-work,nexus-3.2.0-01<span class="o">}</span> /data/nexus-data
+</code></pre></div></div>
+
+<p>最后启动 nexus 访问 8081 端口即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 以前台方式运行</span>
+<span class="nb">sudo</span> <span class="nt">-u</span> nexus /usr/local/nexus-3.2.0-01/bin/nexus run
+<span class="c"># 后台运行</span>
+<span class="nb">sudo</span> <span class="nt">-u</span> nexus /usr/local/nexus-3.2.0-01/bin/nexus start
+</code></pre></div></div>
+
+<p>默认账户 <code class="highlighter-rouge">admin</code> 密码 <code class="highlighter-rouge">admin123</code>，登录如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/sb9dw.jpg" alt="nexus_homepage" /></p>
+
+<h3 id="三创建-docker-仓库">三、创建 docker 仓库</h3>
+
+<p>在设置 <code class="highlighter-rouge">Repositories</code> 选项卡中中选择 <code class="highlighter-rouge">Create repository</code></p>
+
+<p><img src="https://cdn.oss.link/markdown/m7m53.jpg" alt="Create repository" /></p>
+
+<p>仓库类型有很多，docker 相关总共有三种类型，其秉承 maven 私服的概念</p>
+
+<p><img src="https://cdn.oss.link/markdown/pm0r8.jpg" alt="repository type" /></p>
+
+<ul>
+  <li>hosted: 本地存储，即同 docker 官方仓库一样提供本地私服功能</li>
+  <li>proxy: 提供代理其他仓库的类型，如 docker 中央仓库</li>
+  <li>group: 组类型，实质作用是组合多个仓库为一个地址</li>
+</ul>
+
+<h4 id="31创建一个私服">3.1、创建一个私服</h4>
+
+<p>选择 <code class="highlighter-rouge">hosted</code> 类型仓库，然后输入一个仓库名，<strong>并勾选 HTTP 选项，端口任意即可(下面截图失误，不补了)</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/972cl.jpg" alt="create hosted repository" /></p>
+
+<h4 id="32测试私服">3.2、测试私服</h4>
+
+<p>创建好以后更改 docker 参数，测试即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 增加非安全仓库</span>
+vim /usr/lib/systemd/system/docker.service
+<span class="c"># 在 ExecStart 后面增加(这里改了 host，上面端口用的 8800)</span>
+<span class="nt">--insecure-registry</span> registry.com:8800
+<span class="c"># 重启 docker</span>
+systemctl daemon-reload
+systemctl restart docker
+</code></pre></div></div>
+
+<p>测试 push 和 pull 镜像</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ docker tag mritd/alpine registry.com:8800/alpine
+➜  ~ docker push registry.com:8800/alpine
+The push refers to a repository <span class="o">[</span>registry.com:8800/alpine]
+754684812d65: Pushed
+60ab55d3379d: Pushed
+latest: digest: sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91 size: 739
+➜  ~ docker rmi registry.com:8800/alpine
+Untagged: registry.com:8800/alpine:latest
+Untagged: registry.com:8800/alpine@sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
+➜  ~ docker rmi mritd/alpine
+Untagged: mritd/alpine:latest
+Untagged: mritd/alpine@sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
+Deleted: sha256:090c790ee6f28f495d92d5be43641573b0d1b5502b35f7662d88cdbf8d548afd
+Deleted: sha256:378e2b887fcdffcbd113a7cf6f97e9f8a58851b0a205b31a93acdb887912850d
+➜  ~ docker pull registry.com:8800/alpine
+Using default tag: latest
+latest: Pulling from alpine
+
+0a8490d0dfd3: Already exists
+8fb018fb4173: Pull <span class="nb">complete
+</span>Digest: sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
+Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpine:latest
+</code></pre></div></div>
+
+<h4 id="32创建代理仓库">3.2、创建代理仓库</h4>
+
+<p>代理仓库参考官方文档 <a href="http://books.sonatype.com/nexus-book/reference3/docker.html#docker-introduction">点这里</a>，本人不才….没成功，有爱探索的可以尝试一下，如果成功可以探讨一下…..个人怀疑是 index 有问题</p>
+
+<p>根据官方文档的这段提示</p>
+
+<blockquote>
+  <p>Just to recap, in order to configure a proxy for Docker Hub you configure the Remote Storage URL to https://registry-1.docker.io, enable Docker V1 API support and for the choice of Docker Index select the Use Docker Hub option.</p>
+</blockquote>
+
+<p>创建仓库类型选择 <code class="highlighter-rouge">proxy</code>，Remote storage 填写 <code class="highlighter-rouge">https://registry-1.docker.io</code>，Docker index 选择 <code class="highlighter-rouge">Use Docker Hub</code>，然后从 代理仓库地址 pull 就可以，但是本人百试不成功，截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/q350r.jpg" alt="proxy registry" /></p>
+
+<h4 id="34创建-group-仓库">3.4、创建 group 仓库</h4>
+
+<p>group 不提供具体存储服务，其主要作用就是类似一个前端反代，可以把多个仓库(比如 hosted 私服和 proxy)组合成一个地址提供访问，创建方法基本相同，主要是添加多个 hosted 或者 proxy 类型的其他仓库即可，这里不再详细阐述，截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/2q1qv.jpg" alt="group registry" /></p>
+
+<h3 id="四其他相关">四、其他相关</h3>
+
+<p>由于 nexus 在 maven jar 管理方面已经是很成熟的产品，增加了 docker 等支持以后基本思想没有太大变化，所以关于其他仓库配置这里不再提及，具体可以参考<a href="http://books.sonatype.com/nexus-book/reference3/index.html">官方文档</a>；2.x 可以通过图形界面上传 jar，3.x 目前只能通过 maven deploy 插件实现，可以参考<a href="https://maven.apache.org/guides/mini/guide-3rd-party-jars-remote.html">这里</a></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

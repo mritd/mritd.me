@@ -1,0 +1,111 @@
+I"�<blockquote>
+  <p>今天对接接口，对方给的 Demo 和已有项目用的 HTTP 工具不是一个；后来出现人家的好使，我的死活不通的情况；无奈之下开始研究 Java 抓包，所以怕忘了记录一下……</p>
+</blockquote>
+
+<h3 id="一mitmproxy-简介">一、mitmproxy 简介</h3>
+
+<p>mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓取 HTTP(S) 数据包并加以分析；对于 HTTPS 抓包，首先要在本地添加 mitmproxy 的根证书，然后 mitmproxy 通过以下方式进行抓包：</p>
+
+<p><img src="https://cdn.oss.link/markdown/x7lir.jpg" alt="mitmproxy1" /></p>
+
+<ul>
+  <li>1、客户端发起一个到 mitmproxy 的连接，并且发出HTTP CONNECT 请求</li>
+  <li>2、mitmproxy作出响应(200)，模拟已经建立了CONNECT通信管道</li>
+  <li>3、客户端确信它正在和远端服务器会话，然后启动SSL连接。在SSL连接中指明了它正在连接的主机名(SNI)</li>
+  <li>4、mitmproxy连接服务器，然后使用客户端发出的SNI指示的主机名建立SSL连接</li>
+  <li>5、服务器以匹配的SSL证书作出响应，这个SSL证书里包含生成的拦截证书所必须的通用名(CN)和服务器备用名(SAN)</li>
+  <li>6、mitmproxy生成拦截证书，然后继续进行与第３步暂停的客户端SSL握手</li>
+  <li>7、客户端通过已经建立的SSL连接发送请求，</li>
+  <li>8、mitmproxy通过第４步建立的SSL连接传递这个请求给服务器</li>
+</ul>
+
+<h3 id="二抓包配置">二、抓包配置</h3>
+
+<h4 id="21安装-mitmproxy">2.1、安装 mitmproxy</h4>
+
+<p>mitmproxy 是由  python 编写的，所以直接通过 pip 即可安装，mac 下也可使用 brew 工具安装</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># mac</span>
+brew <span class="nb">install </span>mitmproxy
+<span class="c"># Linux</span>
+pip <span class="nb">install </span>mitmproxy
+<span class="c"># CentOS 安装时可能会出现 "致命错误：libxml/xmlversion.h：没有那个文件或目录"</span>
+<span class="c"># 需要安装如下软件包即可解决</span>
+yum <span class="nb">install </span>libxml2 libxml2-devel libxslt libxslt-devel <span class="nt">-y</span>
+</code></pre></div></div>
+
+<h4 id="22https-证书配置">2.2、HTTPS 证书配置</h4>
+
+<p>首先由于 HTTPS 的安全性，直接抓包是什么也看不到的；所以需要先在本地配置 mitmproxy 的根证书，使其能够解密 HTTPS 流量完成一个中间人的角色；证书下载方式需要先在本地启动 mitmproxy，然后通过设置本地连接代理到 mitmproxy 端口，访问 <code class="highlighter-rouge">mitm.it</code> 即可，具体可查看 <a href="https://mitmproxy.org/doc/certinstall.html">官方文档</a></p>
+
+<p><strong>首先启动 mitmproxy</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mitmproxy <span class="nt">-p</span> 4000 <span class="nt">--no-mouse</span>
+</code></pre></div></div>
+
+<p><strong>浏览器通过设置代理访问 mitm.it</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/unrnc.jpg" alt="access" /></p>
+
+<p>选择对应平台并将其证书加入到系统信任根证书列表即可；对于 Java 程序来说可能有时候并不会生效，所以必须 <strong>修改 keystore</strong>，修改如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Linux 一般在 JAVA_HOME/jre/lib/security/cacerts 下</span>
+<span class="c"># Mac 在 /Library/Java/JavaVirtualMachines/JAVA_HOME/Contents/Home/jre/lib/security/cacerts</span>
+<span class="nb">sudo </span>keytool <span class="nt">-importcert</span> <span class="nt">-alias</span> mitmproxy <span class="nt">-keystore</span> /Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/jre/lib/security/cacerts <span class="nt">-storepass</span> changeit <span class="nt">-trustcacerts</span> <span class="nt">-file</span> ~/.mitmproxy/mitmproxy-ca-cert.pem
+</code></pre></div></div>
+
+<h4 id="24java-抓包调试">2.4、Java 抓包调试</h4>
+
+<p>JVM 本身在启动时就可以设置代理参数，也可以通过代码层设置；以下为代码层设置代理方式</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public void beforeTest<span class="o">(){</span>
+    logger.info<span class="o">(</span><span class="s2">"设置抓包代理......"</span><span class="o">)</span><span class="p">;</span>
+    System.setProperty<span class="o">(</span><span class="s2">"https.proxyHost"</span>, <span class="s2">"127.0.0.1"</span><span class="o">)</span><span class="p">;</span>
+    System.setProperty<span class="o">(</span><span class="s2">"https.proxyPort"</span>, <span class="s2">"4000"</span><span class="o">)</span><span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>然后保证在发送 HTTPS 请求之前此代码执行即可，以下为抓包示例</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/kuzhd.jpg" alt="zhuabao" /></p>
+
+<p>通过方向键+回车即可选择某个请求查看报文信息</p>
+
+<p><img src="https://cdn.oss.link/markdown/vfifu.jpg" alt="detail" /></p>
+
+<h3 id="三java-其他代理设置">三、Java 其他代理设置</h3>
+
+<p>Java 代理一般可以通过 2 种方式设置，一种是通过代码层，如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// HTTP 代理，只能代理 HTTP 请求
+System.setProperty<span class="o">(</span><span class="s2">"http.proxyHost"</span>, <span class="s2">"127.0.0.1"</span><span class="o">)</span><span class="p">;</span>
+System.setProperty<span class="o">(</span><span class="s2">"http.proxyPort"</span>, <span class="s2">"9876"</span><span class="o">)</span><span class="p">;</span>
+ 
+// HTTPS 代理，只能代理 HTTPS 请求
+System.setProperty<span class="o">(</span><span class="s2">"https.proxyHost"</span>, <span class="s2">"127.0.0.1"</span><span class="o">)</span><span class="p">;</span>
+System.setProperty<span class="o">(</span><span class="s2">"https.proxyPort"</span>, <span class="s2">"9876"</span><span class="o">)</span><span class="p">;</span>
+
+// 同时支持代理 HTTP/HTTPS 请求
+System.setProperty<span class="o">(</span><span class="s2">"proxyHost"</span>, <span class="s2">"127.0.0.1"</span><span class="o">)</span><span class="p">;</span>
+System.setProperty<span class="o">(</span><span class="s2">"proxyPort"</span>, <span class="s2">"9876"</span><span class="o">)</span><span class="p">;</span>
+ 
+// SOCKS 代理，支持 HTTP 和 HTTPS 请求
+// 注意：如果设置了 SOCKS 代理就不要设 HTTP/HTTPS 代理
+System.setProperty<span class="o">(</span><span class="s2">"socksProxyHost"</span>, <span class="s2">"127.0.0.1"</span><span class="o">)</span><span class="p">;</span>
+System.setProperty<span class="o">(</span><span class="s2">"socksProxyPort"</span>, <span class="s2">"1080"</span><span class="o">)</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>另一种还可以通过 JVM 启动参数设置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">-DproxyHost</span><span class="o">=</span>127.0.0.1 <span class="nt">-DproxyPort</span><span class="o">=</span>9876
+</code></pre></div></div>
+
+<p>本文参考：</p>
+
+<ul>
+  <li><a href="http://www.aneasystone.com/archives/2015/12/java-and-http-using-proxy.html">Java 和 HTTP 的那些事</a></li>
+  <li><a href="http://blog.csdn.net/qq_30513483/article/details/53258637">一步一步教你https抓包</a></li>
+</ul>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

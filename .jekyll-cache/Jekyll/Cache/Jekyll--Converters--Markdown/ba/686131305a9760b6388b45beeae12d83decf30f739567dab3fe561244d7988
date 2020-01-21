@@ -1,0 +1,140 @@
+I"�%<h2 id="一简介">一、简介</h2>
+
+<p>Harbor 是 VMware 中国开发的一款 Dokcer Registry 工具，其主要致力于企业级的 Registry 管理，并提供了 LDAP 等高级权限认证功能，从第一次尝试到现在的版本已经有了很大变化，故决定重写一下 Harbor 的相关文章</p>
+
+<h2 id="二harbor-搭建私服">二、Harbor 搭建私服</h2>
+
+<p>Harbor 最主要的功能就是搭建一个企业级的 Registry 私服，并对其进行完善的安全管理等，最新版本的 Harbor 已经支持 Dokcer 容器化的启动方式，各个组件使用 docker-compose 来进行编排，以下为搭建过程</p>
+
+<!--more-->
+
+<h3 id="21获取安装脚本">2.1、获取安装脚本</h3>
+
+<p>安装脚本在 Github 上，直接 wget 下来即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/vmware/harbor/releases/download/0.3.5/harbor-installer.tgz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> harbor-installer.tgz
+</code></pre></div></div>
+
+<p>将其解压开后目录结构如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_harbor_install_scripts.png" alt="hexo_harbor_install_scripts" /></p>
+
+<p>其中最外层有一个 <code class="highlighter-rouge">install.sh</code> 脚本，用于安装 Harbor，config 目录存放了一些配置信息，如 registry 和 ui 目录中存放了相关证书用于组件间加密通讯，<code class="highlighter-rouge">harbor.cfg</code> 是全局配置文件，里面主要包含了一些常用设置，比如是否启用 https 等，<code class="highlighter-rouge">prepare</code> 是一个 python 写的预处理脚本，主要负责初始化一些 <code class="highlighter-rouge">harbor.cfg</code> 的相关配置，<code class="highlighter-rouge">docker-compose.yml</code> 顾名思义，里面顶一个各个组件的依赖关系以及配置挂载、数据持久化等设置。</p>
+
+<h3 id="22基础配置">2.2、基础配置</h3>
+
+<p>修改配置直接编辑 <code class="highlighter-rouge">harbor.cfg</code> 即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim harbor.cfg
+<span class="c"># 其配置信息如下</span>
+<span class="nb">hostname</span> <span class="o">=</span> registry.mritd.me                      <span class="c"># Harbor 服务器域名</span>
+ui_url_protocol <span class="o">=</span> https                           <span class="c"># UI 组件访问协议</span>
+email_server <span class="o">=</span> smtp.mydomain.com                  <span class="c"># email 服务器地址</span>
+email_server_port <span class="o">=</span> 25                            <span class="c"># email 端口</span>
+email_username <span class="o">=</span> sample_admin@mydomain.com        <span class="c"># email 账号</span>
+email_password <span class="o">=</span> abc                              <span class="c"># email 密码</span>
+email_from <span class="o">=</span> admin &lt;sample_admin@mydomain.com&gt;    <span class="c"># email 发件人</span>
+email_ssl <span class="o">=</span> <span class="nb">false</span>                                 <span class="c"># 是否启用 SSL</span>
+harbor_admin_password <span class="o">=</span> Harbor12345               <span class="c"># Harbor 初始化管理员(admin)密码</span>
+auth_mode <span class="o">=</span> db_auth                               <span class="c"># 权限管理模型(db_auth/ldap_auth)</span>
+ldap_url <span class="o">=</span> ldaps://ldap.mydomain.com              <span class="c"># ldap 地址</span>
+ldap_basedn <span class="o">=</span> <span class="nv">uid</span><span class="o">=</span>%s,ou<span class="o">=</span>people,dc<span class="o">=</span>mydomain,dc<span class="o">=</span>com <span class="c"># ldap 权限模型</span>
+db_password <span class="o">=</span> root123                             <span class="c"># 数据库 管理员密码</span>
+self_registration <span class="o">=</span> on                            <span class="c"># 是否打开自动注册</span>
+use_compressed_js <span class="o">=</span> on                            <span class="c"># 是否启用压缩js</span>
+max_job_workers <span class="o">=</span> 3                               <span class="c"># 最大任务数</span>
+token_expiration <span class="o">=</span> 30                             <span class="c"># token 超时</span>
+verify_remote_cert <span class="o">=</span> on                           <span class="c"># 是否验证远程证书</span>
+customize_crt <span class="o">=</span> on                                <span class="c"># 是否启用自定义证书</span>
+<span class="c"># 以下为自定义证书信息</span>
+crt_country <span class="o">=</span> CN
+crt_state <span class="o">=</span> State
+crt_location <span class="o">=</span> CN
+crt_organization <span class="o">=</span> organization
+crt_organizationalunit <span class="o">=</span> organizational unit
+crt_commonname <span class="o">=</span> example.com
+crt_email <span class="o">=</span> example@example.com
+</code></pre></div></div>
+
+<h3 id="23https-配置">2.3、HTTPS 配置</h3>
+
+<p>基础配置中如果启用了 https 协议，那么需要手动生成 nginx 的证书，生成过程如下</p>
+
+<p><strong>CentOS7 下首先需要修改 OpenSSL CA 工作目录</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#  编辑 OpenSSL 配置</span>
+vim /etc/pki/tls/openssl.cnf
+<span class="c"># 主要修改 CA_default 标签下的 dir 为 ./demoCA</span>
+<span class="o">[</span> CA_default <span class="o">]</span>
+<span class="nb">dir</span>             <span class="o">=</span> ./demoCA  
+</code></pre></div></div>
+
+<p><strong>创建 CA</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="se">\</span>
+    <span class="nt">-newkey</span> rsa:4096 <span class="nt">-nodes</span> <span class="nt">-sha256</span> <span class="nt">-keyout</span> ca.key <span class="se">\</span>
+    <span class="nt">-x509</span> <span class="nt">-days</span> 365 <span class="nt">-out</span> ca.crt
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_harbor_createcacert.png" alt="hexo_harbor_createcacert" /></p>
+
+<p><strong>创建签名请求</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="se">\</span>
+    <span class="nt">-newkey</span> rsa:4096 <span class="nt">-nodes</span> <span class="nt">-sha256</span> <span class="nt">-keyout</span> yourdomain.com.key <span class="se">\</span>
+    <span class="nt">-out</span> yourdomain.com.csr
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_harbor_createcsr.png" alt="hexo_harbor_createcsr" /></p>
+
+<p><strong>初始化 CA 信息</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>demoCA
+<span class="nb">cd </span>demoCA
+<span class="nb">touch </span>index.txt
+<span class="nb">echo</span> <span class="s1">'01'</span> <span class="o">&gt;</span> serial
+<span class="nb">cd</span> ../
+</code></pre></div></div>
+
+<p><strong>签署证书</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl ca <span class="nt">-in</span> yourdomain.com.csr <span class="nt">-out</span> yourdomain.com.crt <span class="nt">-cert</span> ca.crt <span class="nt">-keyfile</span> ca.key <span class="nt">-outdir</span> <span class="nb">.</span>
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_harbor_signcrt.png" alt="hexo_harbor_signcrt" /></p>
+
+<p><strong>复制证书到配置目录，并修改 nginx 配置</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 复制证书</span>
+<span class="nb">cp </span>registry.mritd.me.crt config/nginx/cert
+<span class="nb">cp </span>ca/registry.mritd.me.key config/nginx/cert
+<span class="c"># 备份配置</span>
+<span class="nb">mv </span>config/nginx/nginx.conf config/nginx/nginx.conf.bak
+<span class="c"># 使用模板文件</span>
+<span class="nb">mv </span>config/nginx/nginx.https.conf config/nginx/nginx.conf
+<span class="c"># 编辑 Nginx 配置</span>
+vim config/nginx/nginx.conf
+<span class="c"># 主要修改 监听域名 和 ssl 证书位置</span>
+server_name registry.mritd.me<span class="p">;</span>
+ssl_certificate /etc/nginx/cert/registry.mritd.me.crt<span class="p">;</span>
+ssl_certificate_key /etc/nginx/cert/registry.mritd.me.key<span class="p">;</span>
+</code></pre></div></div>
+
+<p><strong>最后执行 install 访问域名即可</strong></p>
+
+<h2 id="三harbor-搭建镜像仓库">三、Harbor 搭建镜像仓库</h2>
+
+<p>搭建镜像仓库只需要简单修改配置即可，不过镜像仓库不允许 push 操作，只作为官方仓库缓存</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim templates/registry/config.yml
+<span class="c"># 增加以下内容</span>
+proxy:
+  remoteurl: https://registry-1.docker.io
+<span class="c"># 然后重新部署即可</span>
+docker-compose down
+<span class="nb">rm</span> <span class="nt">-rf</span> /data/<span class="k">*</span>
+docker up <span class="nt">-d</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

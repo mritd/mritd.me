@@ -1,0 +1,42 @@
+I"�<p><img src="https://cdn.oss.link/markdown/hexo_git_install_logo.png" alt="hexo_git_install_logo" /></p>
+
+<h2 id="一概述">一、概述</h2>
+
+<blockquote>
+  <p>Git是目前世界上最先进的分布式版本控制系统(没有之一)，高端大气上档次的 Git 值得我们去学习，由于CentOS本身的Git版本太低，所以这里记录一下CentOS下编译安装Git的过程。</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="二安装前准备工作">二、安装前准备工作</h2>
+
+<ol>
+  <li>下载 git 源码 <a href="https://github.com/git/git/releases">下载地址</a></li>
+  <li>上传到 CentOS (略过)</li>
+  <li>解压文件 执行 <code class="highlighter-rouge">tar -zxvf git-2.7.0.tar.gz</code></li>
+</ol>
+
+<h2 id="三编译安装">三、编译安装</h2>
+
+<h3 id="1安装编译所需的依赖环境">1、安装编译所需的依赖环境</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nt">-y</span> <span class="nb">install </span>curl-devel expat-devel gettext-devel openssl-devel zlib-devel perl-ExtUtils-MakeMaker
+</code></pre></div></div>
+
+<h3 id="2配置安装目录">2、配置安装目录</h3>
+
+<blockquote>
+  <p>git 默认编译安装会安装到当前用户目录下，所以需要配置安装目录</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>git-2.7.0
+autoconf
+./configure <span class="nt">--prefix</span><span class="o">=</span>/usr/local
+</code></pre></div></div>
+
+<h3 id="3编译并安装">3、编译并安装</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

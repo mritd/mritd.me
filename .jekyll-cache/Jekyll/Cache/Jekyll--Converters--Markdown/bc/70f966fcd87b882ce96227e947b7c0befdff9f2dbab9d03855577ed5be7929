@@ -1,0 +1,14 @@
+I"<blockquote>
+  <p>最近自用的 vim 装了不少插件，但是发现 <code class="highlighter-rouge">kubectl edit</code> 或者 <code class="highlighter-rouge">git merge</code> 时，调用 vim 总是会弹出各种错误，记录一下解决方法</p>
+</blockquote>
+
+<p><strong>出现这个错误一开始以为是 vim 没走 <code class="highlighter-rouge">.vimrc</code> 配置；后来翻了一堆资料，发现 <code class="highlighter-rouge">kubectl edit</code> 或者 <code class="highlighter-rouge">git merge</code> 后并非直接调用 vim，而是调用的 <code class="highlighter-rouge">/usr/bin/view</code>，那么看一下这个文件</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/9c646.png" alt="view" /></p>
+
+<p><strong>这东西就是链接到了 vi，只要把它链接到 vim 就完了</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/f0c4e.png" alt="relink view" /></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

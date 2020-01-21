@@ -1,0 +1,53 @@
+I"{<p><img src="https://cdn.oss.link/markdown/JetBrains_Drive_to_develop.png" alt="JetBrains_logo" /></p>
+
+<h2 id="一前言">一、前言</h2>
+<blockquote>
+  <p>激活采用离线服务器激活方式，如有网的情况下可直接采用 <a href="http://idea.lanyus.com/">http://idea.lanyus.com/</a> 的激活方法。经济许可的情况下请购买正版 <a href="https://www.jetbrains.com/idea/buy/">https://www.jetbrains.com/idea/buy/</a>。</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="二激活教程">二、激活教程</h2>
+
+<h3 id="工具下载">工具下载</h3>
+
+<p>首先下载激活工具，地址：<a href="http://pan.baidu.com/s/1dDYCB5n">百度网盘</a>  密码：ns3u 然后解压的任意目录</p>
+
+<h3 id="windows-下激活">Windows 下激活</h3>
+
+<p>复制解压后的 <code class="highlighter-rouge">windows</code> 文件夹到任意目录，以管理员身份运行 CMD 执行以下命令(文件位置自己改)：</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sc create idea_license_server <span class="nv">binPath</span><span class="o">=</span><span class="s2">"D:</span><span class="se">\W</span><span class="s2">ork</span><span class="se">\w</span><span class="s2">indows</span><span class="se">\j</span><span class="s2">etbrains_license_server</span><span class="se">\j</span><span class="s2">etbrains_license_server.exe runserver localhost:9123"</span> <span class="nv">start</span><span class="o">=</span>auto
+</code></pre></div></div>
+
+<p>此时在系统服务列表中应该存在名称为 <code class="highlighter-rouge">idea_license_server</code> 的服务；然后重启电脑。</p>
+
+<p>最后激活时选择服务器激活，地址填写 <code class="highlighter-rouge">http://127.0.0.1:9123</code>，到此激活完成。</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_idea_license_server_win.png" alt="hexo_idea_license_server_win" /></p>
+
+<h3 id="linuxmac-下激活">Linux/Mac 下激活</h3>
+
+<p>复制解压后的 <code class="highlighter-rouge">linux-mac</code> 文件夹到任意目录，执行以下命令(<strong>系统需要安装 Python</strong>)：</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>linux-mac
+<span class="c"># 木有pip 的自己安装</span>
+pip <span class="nb">install</span> <span class="nt">-r</span> requirements.txt
+<span class="c"># 开启服务器</span>
+python ./jetbrains_license_server/manage.py runserver localhost:9123
+</code></pre></div></div>
+
+<p>激活时同上，不做阐述。</p>
+
+<h2 id="三说明">三、说明</h2>
+
+<p><strong>Windows 执行 sc 那条命令后已经将其安装为系统服务，开机默认就会启动，所以可以保持激活。Linux/Mac 直接开启的服务器，并未设置开机启动和后台运行，可能造成一段时间需要重复激活。</strong></p>
+
+<p><strong>Linux/Mac 解决办法：将那条启动服务器的命令改成后台启动，如下：</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">nohup </span>python ./jetbrains_license_server/manage.py runserver localhost:9123 &amp;
+</code></pre></div></div>
+
+<p><strong>这时可以保持激活服务器后台一直运行，但无法开机启动，设置开机启动的办法有很多，最简单的就是将这条命令写到 <code class="highlighter-rouge">~/.bashrc</code> 等配置文件中，路子多的是，也很野…..自己找吧，我比较穷，买不起Mac……</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

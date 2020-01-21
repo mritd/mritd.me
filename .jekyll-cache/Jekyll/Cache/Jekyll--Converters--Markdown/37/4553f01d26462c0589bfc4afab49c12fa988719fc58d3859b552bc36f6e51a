@@ -1,0 +1,86 @@
+I"B<blockquote>
+  <p>最近从 Hexo 切换到了 jekyll，发现 jekyll 搭建静态博客要比 Hexo 好得多；顺便吐槽一下 node 的依赖管理，感觉很蛋疼；同样的操作步骤往往在其他机器上无法搭建成功，每次挂掉的原因都是依赖不对等等，感觉没有一个良好的依赖管理系统；而 jekyll 使用 ruby 编写，暂不论语言哪个好那个坏，至少有 Genfile 等约束可以保证每次同样的操作搭建时不会出现依赖问题</p>
+</blockquote>
+
+<h3 id="一环境准备">一、环境准备</h3>
+
+<ul>
+  <li>CentOS 7</li>
+  <li>rvm</li>
+  <li>ruby 2.3</li>
+  <li>jekyll 3.2.1</li>
+</ul>
+
+<p>本文基于 CentOS 7 系统，Mac OS 与其他系统基本操作类似，大致步骤相同，唯一差别就是搞定前期的 ruby 相关配置</p>
+
+<h3 id="二安装-ruby">二、安装 ruby</h3>
+
+<p>由于众所周知的原因(就是特么的有GFW)，导致 ruby 源等在国内不可用，所以可以使用淘宝源等替代</p>
+
+<h4 id="21安装-rvm">2.1、安装 rvm</h4>
+
+<p>rvm 是 ruby 管理工具，可以使用 rvm 在系统中安装配置多个版本的 ruby，同时可方便进行切换</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先安装基本工具</span>
+yum <span class="nb">install</span> <span class="nt">-y</span> wget which
+<span class="c"># 设置一下环境变量，下面要用到</span>
+<span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/local/rvm/bin:/usr/local/rvm/rubies/ruby-2.3.0/bin
+<span class="c"># 下载 rvm 的密钥文件(有墙太慢，我已经提取放到了 CDN 里)</span>
+wget http://upyun.mritd.me/keys/rvm.key <span class="nt">-O</span> rvm.key
+<span class="c"># 导入密钥</span>
+gpg2 <span class="nt">--import</span> rvm.key
+<span class="c"># 安装 rvm</span>
+curl <span class="nt">-sSL</span> https://get.rvm.io | bash <span class="nt">-s</span> stable
+<span class="c"># 切换 ruby 源</span>
+<span class="nb">echo</span> <span class="s2">"ruby_url=https://cache.ruby-china.org/pub/ruby"</span> <span class="o">&gt;&gt;</span> /usr/local/rvm/user/db
+rvm requirements
+</code></pre></div></div>
+
+<h4 id="22安装-ruby">2.2、安装 ruby</h4>
+
+<p>安装好 rvm 后，可使用 rvm 直接安装 ruby</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 ruby</span>
+rvm <span class="nb">install </span>2.3.0
+<span class="c"># 设置默认使用的 ruby 版本</span>
+rvm use 2.3.0 <span class="nt">--default</span>
+<span class="c"># 安装 bundler</span>
+gem <span class="nb">install </span>bundler
+</code></pre></div></div>
+
+<h3 id="三搭建-jekyll">三、搭建 jekyll</h3>
+
+<p>jekyll 搭建静态博客非常简单，只需要找一套可用的主题，然后安装好相关依赖即可，关于主题可参考这里 <a href="https://www.zhihu.com/question/20223939">https://www.zhihu.com/question/20223939</a>，以下以 mzlogin.github.io 的主题为例</p>
+
+<h4 id="31clone-主题">3.1、clone 主题</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/mzlogin/mzlogin.github.io.git
+</code></pre></div></div>
+
+<h4 id="32安装-jekyll">3.2、安装 jekyll</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 进入主题目录</span>
+<span class="nb">cd </span>mzlogin.github.io
+<span class="c"># 安装 jekyll 等</span>
+bundle <span class="nb">install</span>
+</code></pre></div></div>
+
+<h4 id="33启动并修改">3.3、启动并修改</h4>
+
+<p>jekyll 等组件安装完成后便可直接启动预览博客</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动 jekyll 并设置监听地址和端口</span>
+jekyll serve <span class="nt">-H</span> 0.0.0.0 <span class="nt">-P</span> 1234
+</code></pre></div></div>
+
+<p>此时访问便可看到效果</p>
+
+<p><img src="https://cdn.oss.link/markdown/jekyll_startjekyll.png" alt="jekyll_startjekyll" /></p>
+
+<p><strong>接下来只需要根据主题作者的说明修改对应配置文件即可</strong></p>
+
+<h3 id="四推送到-github">四、推送到 Github</h3>
+
+<p><strong>首先在 Github 上创建 <code class="highlighter-rouge">用户名.github.io</code> 项目，如 <code class="highlighter-rouge">mritd.github.io</code>，然后删除主题目录下的 <code class="highlighter-rouge">.git</code> 目录，在执行 <code class="highlighter-rouge">git init</code> 初始化一下 git 仓库，最后将 master 地址指向新建的仓库地址推送即可；Github 本身也是使用 jekyll 进行生成，所以会自动识别并生成博客；最后访问 <code class="highlighter-rouge">http://用户名.github.io</code> 即可；其他相关比如 sitemap 设置等可参考 <a href="https://github.com/mritd/mritd.github.io">https://github.com/mritd/mritd.github.io</a></strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

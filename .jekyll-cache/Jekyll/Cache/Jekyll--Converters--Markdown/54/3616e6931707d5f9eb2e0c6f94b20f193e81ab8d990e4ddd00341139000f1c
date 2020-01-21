@@ -1,0 +1,47 @@
+I"g<h2 id="一基本概念和特性">一、基本概念和特性</h2>
+
+<ul>
+  <li>Java 堆内存是全局共享的</li>
+  <li>Java 堆通常是 JVM 中最大的一块内存区域</li>
+  <li>Java 堆得主要作用是用于存放创建的对象实例</li>
+  <li>JVMS 明确要求，此区域必须实现内存自动管理，即 GC；但不要求具体的 GC 实现，包括实现算法和技术</li>
+  <li>Java 堆可以在物理上不连续空间分配，只要逻辑上连续即可</li>
+  <li>Java 堆可能出现 OutOfMemoryError 异常</li>
+  <li>Java 堆可以使固定大小的，也可以实现为动态扩展的，当前主流 JVM 都是可扩展的</li>
+</ul>
+
+<!--more-->
+
+<p><strong>注意：虽然 Java 堆是全集共享的，但是为了避免并发吗创建对象实例进行堆内存分配时的竞争关系，很有可能在 Java 堆内存在私有的线程分配缓冲区(TLAB 线程本地分配缓冲)，当 TLAB 不够用时才会加锁向 Java 堆申请更多的内存。</strong></p>
+
+<p><strong>由 C/C++ 延伸的 “堆内存比占内存更快、对象分配在堆/栈内存” 等相关讨论都是没有意义的，因为 JVM 规范中，所有对象都必须在堆内分配。</strong></p>
+
+<h2 id="二对象分配过程">二、对象分配过程</h2>
+
+<p>Java 堆分配对象实例的图例大致如下：</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_jmm_heap1.png" alt="Java 堆对象分配1" /></p>
+
+<p><strong>左侧代码会让 JVM 编译时在 Java 虚拟机栈的局部变量表中预留一个 Solt，且类型为 reference；右侧的代码在运行时会在 Java 堆中创建对象实例，并在对象头中存放该对象对应数据类型的指针，其指向方法区中的对象数据类型。</strong></p>
+
+<h2 id="三jvm-内存布局选择">三、JVM 内存布局选择</h2>
+
+<p><strong>一般在 JVM 实现时有两种内存布局方案可以选择：</strong></p>
+
+<p>第一种：如上图所示，根据 JMM 规范要求 “一个 reference 至少能间接或者直接的查找到该对象实例的内存地址和对应数据类型”；那么局部变量表中存储的 Solt 中的 reference 将直接指向 Java 堆中的对象实例，而该对象实例头部指针指向方法区中的对象类型数据。</p>
+
+<p><strong>第二种：如下图，局部变量表中的 reference 指向 Java 堆内句柄池中的某个句柄，这个句柄同时存储对象实例的指针和对象类型数据的指针，然后两个指针分别指向对象实例数据和对象类型数据。</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_java_jmm_heap2.png" alt="Java 堆对象分配2" /></p>
+
+<p><strong>两种内存布局各有好处，第二种内存布局保证了局部变量表中 reference 指向的稳定性，因为其一直指向 Java 堆中的句柄，当 GC 时对象的频繁移动导致对象内存地址移动时，不会影响局部变量表中的 reference 的改变；而第一种内存布局的好处在于查找对象速度会很快，对比第二种 reference 引用句柄的方式，reference 直接指向对象实例在查找对象时节省了一次指针切换开销。Oracle HotSpot 采用的是第一种内存布局。</strong></p>
+
+<h2 id="四异常">四、异常</h2>
+
+<p><strong>如果实际所需的堆大小超过了自动内存管理所能提供的容量，那么 JVM 将抛出 <code class="highlighter-rouge">OutOfMemoryError</code> 异常；该区域是最大出现内存异常的区域。</strong></p>
+
+<p><strong>-Xms和-Xmx 用于设置 Java 堆的最大和最小内存；如果两个值相同，则证明 Java 堆不允许扩展。</strong></p>
+
+<p><strong>-XX:+HeapDumpOnOutOfMemoryError 用于指定当 Java 堆出现内存溢出时，将当前内存映像信息 Dump 到磁盘镜像中，供后续分析。</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

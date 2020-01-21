@@ -1,0 +1,180 @@
+I"R<h2 id="一前言">一、前言</h2>
+<p>今天偶尔测试 <code class="highlighter-rouge">List.remove()</code> 和 <code class="highlighter-rouge">List.add()</code> 方法很奇怪的出现了 <code class="highlighter-rouge">UnsupportedOperationException</code> 异常，但是 “某些情况下” 调用则不会出现这个异常，由于只考虑了局部代码，所以让我很困惑，以下分析一下 “搞笑的 UnsupportedOperationException” 异常。</p>
+
+<!--more-->
+
+<h2 id="二测试代码">二、测试代码</h2>
+
+<p><strong>首先一个正常的</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 创建一个 ArrayList</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;();</span>
+
+<span class="c1">// add 操作</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"a"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"b"</span><span class="o">);</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"c"</span><span class="o">);</span>
+
+<span class="c1">// remove 操作</span>
+<span class="n">list</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">list</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><strong>接着一个报错的</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 使用数组来创建 "ArrayList"</span>
+<span class="nc">String</span> <span class="n">s</span><span class="o">[]</span> <span class="o">=</span> <span class="o">{</span><span class="s">"a"</span><span class="o">,</span><span class="s">"b"</span><span class="o">,</span><span class="s">"c"</span><span class="o">};</span>
+
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">list</span> <span class="o">=</span> <span class="nc">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+
+<span class="c1">// UnsupportedOperationException</span>
+<span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"d"</span><span class="o">);</span>
+
+<span class="c1">// UnsupportedOperationException</span>
+<span class="n">list</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="mi">3</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h2 id="三原因分析">三、原因分析</h2>
+
+<p>首先两个代码唯一差别就是第一个直接 <code class="highlighter-rouge">new ArrayList()</code>，第二个通过 <code class="highlighter-rouge">Arrays.asList()</code> 创建；</p>
+
+<h3 id="1arraysaslist-方法">1、Arrays.asList() 方法</h3>
+
+<p>查看源码如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@SafeVarargs</span>
+<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"varargs"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="nc">List</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="nf">asList</span><span class="o">(</span><span class="no">T</span><span class="o">...</span> <span class="n">a</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;(</span><span class="n">a</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>乍眼一看，也是返回 <code class="highlighter-rouge">ArrayList</code>，这就搞笑了，同样是 <code class="highlighter-rouge">ArrayList</code> 一个报错一个不报错……</p>
+
+<p>当点进去这个 <code class="highlighter-rouge">ArrayList</code> 构造方法后，<strong>实质上 <code class="highlighter-rouge">Arrays.aslist()</code> 方法 new 出的 <code class="highlighter-rouge">ArrayList</code> 并非 <code class="highlighter-rouge">java.util.ArrayList</code>，其实质是 <code class="highlighter-rouge">Arrays</code> 的内部类，</strong>如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @serial include
+ */</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="no">E</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="nc">AbstractList</span><span class="o">&lt;</span><span class="no">E</span><span class="o">&gt;</span>
+    <span class="kd">implements</span> <span class="nc">RandomAccess</span><span class="o">,</span> <span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">Serializable</span>
+<span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2764017481108945198L</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="no">E</span><span class="o">[]</span> <span class="n">a</span><span class="o">;</span>
+
+    <span class="nc">ArrayList</span><span class="o">(</span><span class="no">E</span><span class="o">[]</span> <span class="n">array</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">array</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">size</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="nc">Object</span><span class="o">[]</span> <span class="nf">toArray</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="na">clone</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unchecked"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="no">T</span><span class="o">[]</span> <span class="nf">toArray</span><span class="o">(</span><span class="no">T</span><span class="o">[]</span> <span class="n">a</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">size</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&lt;</span> <span class="n">size</span><span class="o">)</span>
+            <span class="k">return</span> <span class="nc">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">a</span><span class="o">,</span> <span class="n">size</span><span class="o">,</span>
+                                 <span class="o">(</span><span class="nc">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="no">T</span><span class="o">[]&gt;)</span> <span class="n">a</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">a</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">a</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">size</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="n">size</span><span class="o">)</span>
+            <span class="n">a</span><span class="o">[</span><span class="n">size</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="no">E</span> <span class="nf">get</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="no">E</span> <span class="nf">set</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">,</span> <span class="no">E</span> <span class="n">element</span><span class="o">)</span> <span class="o">{</span>
+        <span class="no">E</span> <span class="n">oldValue</span> <span class="o">=</span> <span class="n">a</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
+        <span class="n">a</span><span class="o">[</span><span class="n">index</span><span class="o">]</span> <span class="o">=</span> <span class="n">element</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">oldValue</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">indexOf</span><span class="o">(</span><span class="nc">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+        <span class="no">E</span><span class="o">[]</span> <span class="n">a</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">a</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">o</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                    <span class="k">return</span> <span class="n">i</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">o</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">a</span><span class="o">[</span><span class="n">i</span><span class="o">]))</span>
+                    <span class="k">return</span> <span class="n">i</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">contains</span><span class="o">(</span><span class="nc">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">indexOf</span><span class="o">(</span><span class="n">o</span><span class="o">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="nc">Spliterator</span><span class="o">&lt;</span><span class="no">E</span><span class="o">&gt;</span> <span class="nf">spliterator</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nc">Spliterators</span><span class="o">.</span><span class="na">spliterator</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="nc">Spliterator</span><span class="o">.</span><span class="na">ORDERED</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">forEach</span><span class="o">(</span><span class="nc">Consumer</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="no">E</span><span class="o">&gt;</span> <span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">action</span><span class="o">);</span>
+        <span class="k">for</span> <span class="o">(</span><span class="no">E</span> <span class="n">e</span> <span class="o">:</span> <span class="n">a</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">action</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">replaceAll</span><span class="o">(</span><span class="nc">UnaryOperator</span><span class="o">&lt;</span><span class="no">E</span><span class="o">&gt;</span> <span class="n">operator</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">operator</span><span class="o">);</span>
+        <span class="no">E</span><span class="o">[]</span> <span class="n">a</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">a</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="n">a</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="na">apply</span><span class="o">(</span><span class="n">a</span><span class="o">[</span><span class="n">i</span><span class="o">]);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">sort</span><span class="o">(</span><span class="nc">Comparator</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="no">E</span><span class="o">&gt;</span> <span class="n">c</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Arrays</span><span class="o">.</span><span class="na">sort</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">c</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2abstractlist-抽象类">2、AbstractList 抽象类</h3>
+
+<p>通过对比代码发现 <code class="highlighter-rouge">java.util.ArrayList</code> 和 <code class="highlighter-rouge">Arrays$ArrayList</code> 同样继承自 <code class="highlighter-rouge">java.util.AbstractList</code>；而 <code class="highlighter-rouge">add()</code> 和 <code class="highlighter-rouge">remove()</code> 方法同样在此抽象类中定义，以下为两个方法在抽象类中的默认实现：</p>
+
+<p><strong>add() 方法</strong></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">add</span><span class="o">(</span><span class="no">E</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">add</span><span class="o">(</span><span class="n">size</span><span class="o">(),</span> <span class="n">e</span><span class="o">);</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">add</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">,</span> <span class="no">E</span> <span class="n">element</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnsupportedOperationException</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>remove() 方法</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="no">E</span> <span class="nf">remove</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnsupportedOperationException</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="3结论">3、结论</h3>
+
+<p><code class="highlighter-rouge">Arrays.asList</code> 最终返回的 <code class="highlighter-rouge">ArrayList</code> 实质上是其内部类，<code class="highlighter-rouge">java.util.Arrays$ArrayList</code> 和 <code class="highlighter-rouge">java.util.ArrayList</code> 全部继承自 <code class="highlighter-rouge">java.util.AbstractList</code> 抽象类，而 <code class="highlighter-rouge">java.util.AbstractList</code> 中默认的 <code class="highlighter-rouge">add()</code> 和 <code class="highlighter-rouge">remove()</code> 方法默认将抛出 <code class="highlighter-rouge">UnsupportedOperationException</code> 异常，不巧的是 <code class="highlighter-rouge">java.util.Arrays$ArrayList</code> 并未重写这两个方法，导致调用后抛出此异常。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

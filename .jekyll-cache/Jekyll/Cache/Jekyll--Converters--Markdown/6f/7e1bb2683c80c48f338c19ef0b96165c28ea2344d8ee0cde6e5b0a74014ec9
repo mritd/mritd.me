@@ -1,0 +1,329 @@
+I"�E<blockquote>
+  <p>最近在调整公司项目的 CI，目前主要使用 GitLab CI，在尝试多阶段构建中踩了点坑，然后发现了一些有意思的玩意</p>
+</blockquote>
+
+<p>本文参考:</p>
+
+<ul>
+  <li><a href="https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md">Dockerfile frontend experimental syntaxes</a></li>
+  <li><a href="https://medium.com/@tonistiigi/advanced-multi-stage-build-patterns-6f741b852fae">Advanced multi-stage build patterns</a></li>
+  <li><a href="https://docs.docker.com/engine/reference/commandline/build/">docker build Document</a></li>
+</ul>
+
+<h2 id="一起因">一、起因</h2>
+
+<p>公司目前主要使用 GitLab CI 作为主力 CI 构建工具，而且由于机器有限，我们对一些包管理器的本地 cache 直接持久化到了本机；比如 maven 的 <code class="highlighter-rouge">.m2</code> 目录，nodejs 的 <code class="highlighter-rouge">.npm</code> 目录等；虽然我们创建了对应的私服，但是在 build 时毕竟会下载，所以当时索性调整 GitLab Runner 在每个由 GitLab Runner 启动的容器中挂载这些缓存目录(GitLab CI 在 build 时会新启动容器运行 build 任务)；今天调整 nodejs 项目浪了一下，直接采用 Dockerfile 的 multi-stage build 功能进行 “Build =&gt; Package(docker image)” 的实现，基本 Dockerfile 如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM gozap/build as builder
+
+COPY <span class="nb">.</span> /xxxx
+
+WORKDIR /xxxx
+
+RUN <span class="nb">source</span> ~/.bashrc <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> cnpm <span class="nb">install</span> <span class="se">\</span>
+    <span class="o">&amp;&amp;</span> cnpm run build
+
+FROM gozap/nginx-react:v1.0.0
+
+LABEL <span class="nv">maintainer</span><span class="o">=</span><span class="s2">"mritd &lt;mritd@linux.com&gt;"</span>
+
+COPY <span class="nt">--from</span><span class="o">=</span>builder /xxxx/public /usr/share/nginx/html
+
+EXPOSE 80
+
+STOPSIGNAL SIGTERM
+
+CMD <span class="o">[</span><span class="s2">"nginx"</span>, <span class="s2">"-g"</span>, <span class="s2">"daemon off;"</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>本来这个 <code class="highlighter-rouge">cnpm</code> 命令是带有 cache 的(<a href="https://github.com/Gozap/dockerfile/blob/master/build/cnpm">见这里</a>)，不过运行完 build 以后发现很慢，检查宿主机 cache 目录发现根本没有 cache…然后突然感觉</p>
+
+<p><img src="https://cdn.oss.link/markdown/6ieh4.jpg" alt="事情并没有这么简单" /></p>
+
+<p>仔细想想，情况应该是这样事儿的…</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+------------+                +-------------+            +----------------+
+|            |                |             |            |                |
+|            |                |    build    |            |   Multi-stage  |
+|   Runner   +---------------&gt;+  conatiner  +-----------&gt;+     Build      |
+|            |                |             |            |                |
+|            |                |             |            |                |
++------------+                +------+------+            +----------------+
+                                     ^
+                                     |
+                                     |
+                                     |
+                                     |
+                              +------+------+
+                              |             |
+                              |    Cache    |
+                              |             |
+                              +-------------+
+
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/9ov8m.jpg" alt="挂载不管用" /></p>
+
+<p>后来经过查阅文档，发现 Dockerfile 是有扩展语法的(当然最终我还是没用)，具体请见<del>下篇文章</del>(我怕被打死)下面，<strong>先说好，下面的内容无法完美的解决上面的问题，目前只是支持了一部分功能，当然未来很可能支持类似 <code class="highlighter-rouge">IF ELSE</code> 语法、直接挂载宿主机目录等功能</strong></p>
+
+<h2 id="二开启-dockerfile-扩展语法">二、开启 Dockerfile 扩展语法</h2>
+
+<h3 id="21开启实验性功能">2.1、开启实验性功能</h3>
+
+<p>目前这个扩展语法还处于实验性功能，所以需要配置 dockerd 守护进程，修改如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/dockerd  <span class="nt">-H</span> unix:// <span class="se">\</span>
+                            <span class="nt">--init</span> <span class="se">\</span>
+                            <span class="nt">--live-restore</span> <span class="se">\</span>
+                            <span class="nt">--data-root</span><span class="o">=</span>/data/docker <span class="se">\</span>
+                            <span class="nt">--experimental</span> <span class="se">\</span>
+                            <span class="nt">--log-driver</span> json-file <span class="se">\</span>
+                            <span class="nt">--log-opt</span> max-size<span class="o">=</span>30m <span class="se">\</span>
+                            <span class="nt">--log-opt</span> max-file<span class="o">=</span>3
+</code></pre></div></div>
+
+<p>主要是 <code class="highlighter-rouge">--experimental</code> 参数，参考<a href="https://docs.docker.com/engine/reference/commandline/dockerd/#description">官方文档</a>；<strong>同时在 build 前声明 <code class="highlighter-rouge">export DOCKER_BUILDKIT=1</code> 变量</strong></p>
+
+<h3 id="22修改-dockerfile">2.2、修改 Dockerfile</h3>
+
+<p>开启实验性功能后，只需要在 Dockerfile 头部增加 <code class="highlighter-rouge"># syntax=docker/dockerfile:experimental</code> 既可；为了保证稳定性，你也可以指定具体的版本号，类似这样</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax=docker/dockerfile:1.1.1-experimental</span>
+FROM tomcat
+</code></pre></div></div>
+
+<h3 id="23可用的扩展语法">2.3、可用的扩展语法</h3>
+
+<ul>
+  <li><code class="highlighter-rouge">RUN --mount=type=bind</code></li>
+</ul>
+
+<p>这个是默认的挂载模式，这个允许将上下文或者镜像以可都可写/只读模式挂载到 build 容器中，可选参数如下(不翻译了)</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td>Mount path.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">source</code></td>
+      <td>Source path in the <code class="highlighter-rouge">from</code>. Defaults to the root of the <code class="highlighter-rouge">from</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">from</code></td>
+      <td>Build stage or image name for the root of the source. Defaults to the build context.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">rw</code>,<code class="highlighter-rouge">readwrite</code></td>
+      <td>Allow writes on the mount. Written data will be discarded.</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li><code class="highlighter-rouge">RUN --mount=type=cache</code></li>
+</ul>
+
+<p>专用于作为 cache 的挂载位置，一般用于 cache 包管理器的下载等</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">id</code></td>
+      <td>Optional ID to identify separate/different caches</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td>Mount path.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">ro</code>,<code class="highlighter-rouge">readonly</code></td>
+      <td>Read-only if set.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">sharing</code></td>
+      <td>One of <code class="highlighter-rouge">shared</code>, <code class="highlighter-rouge">private</code>, or <code class="highlighter-rouge">locked</code>. Defaults to <code class="highlighter-rouge">shared</code>. A <code class="highlighter-rouge">shared</code> cache mount can be used concurrently by multiple writers. <code class="highlighter-rouge">private</code> creates a new mount if there are multiple writers. <code class="highlighter-rouge">locked</code> pauses the second writer until the first one releases the mount.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">from</code></td>
+      <td>Build stage to use as a base of the cache mount. Defaults to empty directory.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">source</code></td>
+      <td>Subpath in the <code class="highlighter-rouge">from</code> to mount. Defaults to the root of the <code class="highlighter-rouge">from</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Example: cache Go packages</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax = docker/dockerfile:experimental</span>
+FROM golang
+...
+RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>cache,target<span class="o">=</span>/root/.cache/go-build go build ...
+</code></pre></div></div>
+
+<p><strong>Example: cache apt packages</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax = docker/dockerfile:experimental</span>
+FROM ubuntu
+RUN <span class="nb">rm</span> <span class="nt">-f</span> /etc/apt/apt.conf.d/docker-clean<span class="p">;</span> <span class="nb">echo</span> <span class="s1">'Binary::apt::APT::Keep-Downloaded-Packages "true";'</span> <span class="o">&gt;</span> /etc/apt/apt.conf.d/keep-cache
+RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>cache,target<span class="o">=</span>/var/cache/apt <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>cache,target<span class="o">=</span>/var/lib/apt <span class="se">\</span>
+  apt update <span class="o">&amp;&amp;</span> apt <span class="nb">install</span> <span class="nt">-y</span> gcc
+</code></pre></div></div>
+
+<ul>
+  <li><code class="highlighter-rouge">RUN --mount=type=tmpfs</code></li>
+</ul>
+
+<p>专用于挂载 tmpfs 的选项</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td>Mount path.</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li><code class="highlighter-rouge">RUN --mount=type=secret</code></li>
+</ul>
+
+<p>这个类似 k8s 的 secret，用来挂载一些不想打入镜像，但是构建时想使用的密钥等，例如 docker 的 <code class="highlighter-rouge">config.json</code>，S3 的 <code class="highlighter-rouge">credentials</code></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">id</code></td>
+      <td>ID of the secret. Defaults to basename of the target path.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">target</code></td>
+      <td>Mount path. Defaults to <code class="highlighter-rouge">/run/secrets/</code> + <code class="highlighter-rouge">id</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">required</code></td>
+      <td>If set to <code class="highlighter-rouge">true</code>, the instruction errors out when the secret is unavailable. Defaults to <code class="highlighter-rouge">false</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">mode</code></td>
+      <td>File mode for secret file in octal. Default 0400.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">uid</code></td>
+      <td>User ID for secret file. Default 0.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">gid</code></td>
+      <td>Group ID for secret file. Default 0.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Example: access to S3</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax = docker/dockerfile:experimental</span>
+FROM python:3
+RUN pip <span class="nb">install </span>awscli
+RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>secret,id<span class="o">=</span>aws,target<span class="o">=</span>/root/.aws/credentials aws s3 <span class="nb">cp </span>s3://... ...
+</code></pre></div></div>
+
+<p><strong>注意: <code class="highlighter-rouge">buildctl</code> 是 BuildKit 的命令，你要测试的话自己换成 <code class="highlighter-rouge">docker build</code> 相关参数</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="w"> </span>buildctl build <span class="nt">--frontend</span><span class="o">=</span>dockerfile.v0 <span class="nt">--local</span> <span class="nv">context</span><span class="o">=</span><span class="nb">.</span> <span class="nt">--local</span> <span class="nv">dockerfile</span><span class="o">=</span><span class="nb">.</span> <span class="se">\</span>
+  <span class="nt">--secret</span> <span class="nb">id</span><span class="o">=</span>aws,src<span class="o">=</span><span class="nv">$HOME</span>/.aws/credentials
+</code></pre></div></div>
+
+<ul>
+  <li><code class="highlighter-rouge">RUN --mount=type=ssh</code></li>
+</ul>
+
+<p>允许 build 容器通过 SSH agent 访问 SSH key，并且支持 <code class="highlighter-rouge">passphrases</code></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">id</code></td>
+      <td>ID of SSH agent socket or key. Defaults to “default”.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">target</code></td>
+      <td>SSH agent socket path. Defaults to <code class="highlighter-rouge">/run/buildkit/ssh_agent.${N}</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">required</code></td>
+      <td>If set to <code class="highlighter-rouge">true</code>, the instruction errors out when the key is unavailable. Defaults to <code class="highlighter-rouge">false</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">mode</code></td>
+      <td>File mode for socket in octal. Default 0600.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">uid</code></td>
+      <td>User ID for socket. Default 0.</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">gid</code></td>
+      <td>Group ID for socket. Default 0.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Example: access to Gitlab</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax = docker/dockerfile:experimental</span>
+FROM alpine
+RUN apk add <span class="nt">--no-cache</span> openssh-client
+RUN <span class="nb">mkdir</span> <span class="nt">-p</span> <span class="nt">-m</span> 0700 ~/.ssh <span class="o">&amp;&amp;</span> ssh-keyscan gitlab.com <span class="o">&gt;&gt;</span> ~/.ssh/known_hosts
+RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>ssh ssh <span class="nt">-q</span> <span class="nt">-T</span> git@gitlab.com 2&gt;&amp;1 | <span class="nb">tee</span> /hello
+<span class="c"># "Welcome to GitLab, @GITLAB_USERNAME_ASSOCIATED_WITH_SSHKEY" should be printed here</span>
+<span class="c"># with the type of build progress is defined as `plain`.</span>
+</code></pre></div></div>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="si">$(</span>ssh-agent<span class="si">)</span>
+<span class="nv">$ </span>ssh-add ~/.ssh/id_rsa
+<span class="o">(</span>Input your passphrase here<span class="o">)</span>
+<span class="nv">$ </span>buildctl build <span class="nt">--frontend</span><span class="o">=</span>dockerfile.v0 <span class="nt">--local</span> <span class="nv">context</span><span class="o">=</span><span class="nb">.</span> <span class="nt">--local</span> <span class="nv">dockerfile</span><span class="o">=</span><span class="nb">.</span> <span class="se">\</span>
+  <span class="nt">--ssh</span> <span class="nv">default</span><span class="o">=</span><span class="nv">$SSH_AUTH_SOCK</span>
+</code></pre></div></div>
+
+<p>你也可以直接使用宿主机目录的 pem 文件，但是带有密码的 pem 目前不支持</p>
+
+<p><strong>目前根据文档测试，当前的挂载类型比如 <code class="highlighter-rouge">cache</code> 类型，仅用于 multi-stage 内的挂载，比如你有 2+ 个构建步骤，<code class="highlighter-rouge">cache</code> 挂载类型能帮你在各个阶段内共享文件；但是它目前无法解决直接将宿主机目录挂载到 multi-stage 的问题(可以采取些曲线救国方案，但是很不优雅)；但是未来还是很有展望的，可以关注一下</strong></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,213 @@
+I"�-<blockquote>
+  <p>最近新入了一台小主机，家里还有个树莓派，索性想通过小主机跑点东西，然后通过外网访问家里的设备；不过鉴于大天朝内网环境，没有公网 IP 并且多层路由的情况下只能选择使用内网穿透方案，以下记录了一下使用 frp 进行内网穿透的过程</p>
+</blockquote>
+
+<h3 id="一内网穿透原理">一、内网穿透原理</h3>
+
+<p>简单地说，内网穿透依赖于 NAT 原理，根据 NAT 设备不同大致可分为以下 4 大类(前3种NAT类型可统称为cone类型)：</p>
+
+<ul>
+  <li>全克隆(Full Cone)：NAT 把所有来自相同内部 IP 地址和端口的请求映射到相同的外部 IP 地址和端口上，任何一个外部主机均可通过该映射反向发送 IP 包到该内部主机</li>
+  <li>限制性克隆(Restricted Cone)：NAT 把所有来自相同内部 IP 地址和端口的请求映射到相同的外部 IP 地址和端口；但是，只有当内部主机先给 IP 地址为 X 的外部主机发送 IP 包时，该外部主机才能向该内部主机发送 IP 包</li>
+  <li>端口限制性克隆(Port Restricted Cone)：端口限制性克隆与限制性克隆类似，只是多了端口号的限制，即只有内部主机先向 IP 地址为 X，端口号为 P 的外部主机发送1个 IP 包,该外部主机才能够把源端口号为 P 的 IP 包发送给该内部主机</li>
+  <li>对称式NAT(Symmetric NAT)：这种类型的 NAT 与上述3种类型的不同，在于当同一内部主机使用相同的端口与不同地址的外部主机进行通信时， NAT 对该内部主机的映射会有所不同；对称式 NAT 不保证所有会话中的私有地址和公开 IP 之间绑定的一致性；相反，它为每个新的会话分配一个新的端口号；导致此种 NAT 根本没法穿透</li>
+</ul>
+
+<p>内网穿透的作用就是利用以上规则，创建一条从外部服务器到内部设备的 “隧道”，具体的 NAT 原理等可参考 <a href="http://www.cnblogs.com/eyye/archive/2012/10/23/2734807.html">内网打洞</a>、<a href="http://blog.csdn.net/hzhsan/article/details/45038265">网络地址转换NAT原理</a></p>
+
+<h3 id="二环境准备">二、环境准备</h3>
+
+<p>实际上根据以上 NAT 规则，基本上大部分家用设备和运营商上级路由等都在前三种规则之中，所以只需要借助成熟的内网穿透工具即可，以下为本次穿透环境</p>
+
+<ul>
+  <li>最新版本 frp</li>
+  <li>一台公网 VPS 服务器</li>
+  <li>内网一台服务器，最好 Linux 系统</li>
+</ul>
+
+<h3 id="三服务端搭建">三、服务端搭建</h3>
+
+<p>服务器作为公网访问唯一的固定地址，即作为 server 端；内网客户端作为 client 端，会主动向 server 端创建连接，此时再从 server 端反向发送数据即可实现内网穿透</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载 frp 并解压</span>
+wget https://github.com/fatedier/frp/releases/download/v0.9.3/frp_0.9.3_linux_amd64.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> frp_0.9.3_linux_amd64.tar.gz
+<span class="nb">cd </span>frp_0.9.3_linux_amd64
+</code></pre></div></div>
+
+<p>编辑 <code class="highlighter-rouge">frps.ini</code> 如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 通用配置段</span>
+<span class="o">[</span>common]
+<span class="c"># frp 监听地址</span>
+bind_addr <span class="o">=</span> 0.0.0.0
+bind_port <span class="o">=</span> 7000
+
+<span class="c"># 如果需要代理 web(http) 服务，则开启此端口</span>
+vhost_http_port <span class="o">=</span> 4080
+vhost_https_port <span class="o">=</span> 4443
+
+<span class="c"># frp 控制面板</span>
+dashboard_port <span class="o">=</span> 7500
+dashboard_user <span class="o">=</span> admin
+dashboard_pwd <span class="o">=</span> admin
+
+<span class="c"># 默认日志输出位置(这里输出到标准输出)</span>
+log_file <span class="o">=</span> /dev/stdout
+<span class="c"># 日志级别，支持: debug, info, warn, error</span>
+log_level <span class="o">=</span> info
+log_max_days <span class="o">=</span> 3
+
+<span class="c"># 是否开启特权模式(特权模式下，客户端更改配置无需更新服务端)</span>
+privilege_mode <span class="o">=</span> <span class="nb">true</span>
+<span class="c"># 授权 token 建议随机生成</span>
+privilege_token <span class="o">=</span> HE7qTtW8Lg83UDKY
+<span class="c"># 特权模式下允许分配的端口(避免端口滥用)</span>
+privilege_allow_ports <span class="o">=</span> 4000-50000
+
+<span class="c"># 心跳检测超时</span>
+<span class="c"># heartbeat_timeout = 30</span>
+
+<span class="c"># 后端连接池最大连接数量</span>
+max_pool_count <span class="o">=</span> 100
+
+<span class="c"># 口令超时时间</span>
+authentication_timeout <span class="o">=</span> 900
+
+<span class="c"># 子域名(特权模式需下将 *.domain.com 解析到公网服务器)</span>
+subdomain_host <span class="o">=</span> domain.com
+
+<span class="c"># 开启 ssh 穿透(可通过外网链接内网 ssh)</span>
+<span class="o">[</span>ssh]
+<span class="nb">type</span> <span class="o">=</span> tcp
+auth_token <span class="o">=</span> M4P2xsH6RuUkbP9d
+bind_addr <span class="o">=</span> 0.0.0.0
+listen_port <span class="o">=</span> 6000
+
+<span class="c"># 开启 dns 查询穿透(个人用不上)</span>
+<span class="c">#[dns]</span>
+<span class="c">#type = udp</span>
+<span class="c">#auth_token = M4P2xsH6RuUkbP9d</span>
+<span class="c">#bind_addr = 0.0.0.0</span>
+<span class="c">#listen_port = 5353</span>
+</code></pre></div></div>
+
+<p><strong>其他具体配置说明请参考frp <a href="https://github.com/fatedier/frp/blob/master/README_zh.md"> README</a> 文档</strong></p>
+
+<p>设置完成后执行 <code class="highlighter-rouge">./frps -c frps.ini</code> 启动即可</p>
+
+<h3 id="四客户端配置">四、客户端配置</h3>
+
+<p>客户端作为发起链接的主动方，只需要正确配置服务器地址，以及要映射客户端的哪些服务端口等即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载 frp 并解压</span>
+wget https://github.com/fatedier/frp/releases/download/v0.9.3/frp_0.9.3_linux_amd64.tar.gz
+<span class="nb">tar</span> <span class="nt">-zxvf</span> frp_0.9.3_linux_amd64.tar.gz
+<span class="nb">cd </span>frp_0.9.3_linux_amd64
+</code></pre></div></div>
+
+<p>编辑 <code class="highlighter-rouge">frpc.ini</code> 文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 通用配置</span>
+<span class="o">[</span>common]
+<span class="c"># 服务端地址及端口</span>
+server_addr <span class="o">=</span> domain.com
+server_port <span class="o">=</span> 7000
+
+
+log_file <span class="o">=</span> /dev/stdout
+log_level <span class="o">=</span> info
+log_max_days <span class="o">=</span> 3
+
+<span class="c"># 授权 token，必须与服务端保持一致方可实现映射</span>
+auth_token <span class="o">=</span> ouRRXE4tk69oNZ6f
+
+<span class="c"># 特权模式 token，同样要与服务端一致</span>
+privilege_token <span class="o">=</span> VfJiyhDVJ38t7Qu6
+
+<span class="c"># 心跳检测</span>
+<span class="c"># heartbeat_interval = 10</span>
+<span class="c"># heartbeat_timeout = 30</span>
+
+<span class="c"># 将本地 ssh 映射到服务器</span>
+<span class="o">[</span>ssh]
+<span class="nb">type</span> <span class="o">=</span> tcp
+local_ip <span class="o">=</span> 127.0.0.1
+local_port <span class="o">=</span> 22
+<span class="c"># 是否开启加密(流量加密，应对防火墙)</span>
+use_encryption <span class="o">=</span> <span class="nb">true</span>
+<span class="c"># 是否开启压缩</span>
+use_gzip <span class="o">=</span> <span class="nb">true</span>
+
+<span class="c"># dns 用不到</span>
+<span class="c">#[dns]</span>
+<span class="c">#type = udp</span>
+<span class="c">#local_ip = 114.114.114.114</span>
+<span class="c">#local_port = 53</span>
+
+<span class="c"># 发布本地 web 服务</span>
+<span class="o">[</span>web01]
+<span class="nb">type</span> <span class="o">=</span> http
+local_ip <span class="o">=</span> 127.0.0.1
+local_port <span class="o">=</span> 8000
+<span class="c"># 是否启用特权模式(特权模式下服务端无需配置)</span>
+privilege_mode <span class="o">=</span> <span class="nb">true
+</span>use_encryption <span class="o">=</span> <span class="nb">true
+</span>use_gzip <span class="o">=</span> <span class="nb">true</span>
+<span class="c"># 连接数量</span>
+pool_count <span class="o">=</span> 20
+<span class="c"># 是否开启密码访问</span>
+<span class="c">#http_user = admin</span>
+<span class="c">#http_pwd = admin</span>
+
+<span class="c"># 子域名，当服务端开启特权模式，并且将 "*.domain.com" 解析到服务端 IP后，</span>
+<span class="c"># 客户端在选项(privilege_mode)中声明当前映射为特权模式时，服务器端就会</span>
+<span class="c"># 给于一个 "subdomain.domain.com" 映射，此示例将在服务端开一个</span>
+<span class="c"># "http://test.domain.com/:4080" 的服务映射到内网 8000 端口上</span>
+subdomain <span class="o">=</span> <span class="nb">test</span>
+</code></pre></div></div>
+
+<p>最后使用 <code class="highlighter-rouge">./frpc -c frpc.ini</code> 启动即可</p>
+
+<h3 id="五测试">五、测试</h3>
+
+<p>服务端和客户端同时开启完成后，即可访问 <code class="highlighter-rouge">http://domain.com:7500</code> 进入 frp 控制面板，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/1d8pq.jpg" alt="dashboard" /></p>
+
+<p>此时通过 <code class="highlighter-rouge">ssh root@domain.com -p 6000</code> 即可连接到内网服务器，通过访问 <code class="highlighter-rouge">http://test.domain.com:4080</code> 即可访问内网发布的位于 <code class="highlighter-rouge">8000</code> 端口服务</p>
+
+<h3 id="六systemd-管理">六、Systemd 管理</h3>
+
+<p>在较新的 Linux 系统中一经采用 Systemd 作为系统服务管理工具，以下为服务端作为服务方式运行的方式</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 复制文件</span>
+<span class="nb">cp </span>frps /usr/local/bin/frps
+<span class="nb">mkdir</span> /etc/frp
+<span class="nb">cp </span>frps.ini /etc/frp/frps.ini
+
+<span class="c"># 编写 frp service 文件，以 centos7 为例</span>
+vim /usr/lib/systemd/system/frps.service
+<span class="c"># 内容如下</span>
+<span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>frps
+<span class="nv">After</span><span class="o">=</span>network.target
+
+<span class="o">[</span>Service]
+<span class="nv">TimeoutStartSec</span><span class="o">=</span>30
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/local/bin/frps <span class="nt">-c</span> /etc/frp/frps.ini
+<span class="nv">ExecStop</span><span class="o">=</span>/bin/kill <span class="nv">$MAINPID</span>
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+
+<span class="c"># 启动 frp 并设置开机启动</span>
+systemctl <span class="nb">enable </span>frps
+systemctl start frps
+systemctl status frps
+</code></pre></div></div>
+
+<p>客户端与此类似，这里不再重复编写，更多详细设置(如代理 https 等)请参考 frp 官方文档</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,249 @@
+I"z8<blockquote>
+  <p>本文参考自 <a href="https://github.com/vmware/harbor/blob/master/docs/configure_https.md">Harbor Github</a>、<a href="http://liaoph.com/openssl-san/">OpenSSL 创建 SAN 证书</a></p>
+</blockquote>
+
+<h2 id="一创建-ca-并自签证书">一、创建 CA 并自签证书</h2>
+
+<p>创建 CA 即自签名证书请看 <a href="http://mritd.me/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">互联网加密及OpenSSL介绍和简单使用</a>，以下简单介绍一下踩的坑，堆一下命令</p>
+
+<h3 id="11san-证书扩展域名配置">1.1、SAN 证书扩展域名配置</h3>
+
+<p><strong>默认的 OpenSSL 生成的签名请求只适用于生成时填写的域名，即 <code class="highlighter-rouge">Common Name</code> 填的是哪个域名，证书就只能应用于哪个域名，但是一般内网都是以 IP 方式部署，所以需要添加 SAN(Subject Alternative Name) 扩展信息，以支持多域名和IP</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先 cp 一份 openssl 配置</span>
+<span class="nb">cp</span> /etc/ssl/openssl.cnf <span class="nb">.</span>
+<span class="c"># 主要修改 内容如下</span>
+<span class="o">[</span> req <span class="o">]</span>
+<span class="c"># 上面的内容省略，主要增加这个属性(默认在最后一行被注释了，解开即可)</span>
+req_extensions <span class="o">=</span> v3_req
+<span class="o">[</span> v3_req <span class="o">]</span>
+<span class="c"># 修改 subjectAltName</span>
+subjectAltName <span class="o">=</span> @alt_names
+<span class="o">[</span> alt_names <span class="o">]</span>
+<span class="c"># 此节点[ alt_names ]为新增的，内容如下</span>
+IP.1<span class="o">=</span>10.211.55.16   <span class="c"># 扩展IP(私服所在服务器IP)</span>
+DNS.1<span class="o">=</span><span class="k">*</span>.xran.me     <span class="c"># 扩展域名(一般用于公网这里做测试)</span>
+DNS.2<span class="o">=</span><span class="k">*</span>.baidu.com   <span class="c"># 可添加多个扩展域名和IP</span>
+</code></pre></div></div>
+
+<!--more-->
+
+<p>完整的配置文件如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span> req <span class="o">]</span>
+default_bits            <span class="o">=</span> 2048
+default_keyfile         <span class="o">=</span> privkey.pem
+distinguished_name      <span class="o">=</span> req_distinguished_name
+attributes              <span class="o">=</span> req_attributes
+x509_extensions <span class="o">=</span> v3_ca <span class="c"># The extentions to add to the self signed cert</span>
+
+<span class="c"># Passwords for private keys if not present they will be prompted for</span>
+<span class="c"># input_password = secret</span>
+<span class="c"># output_password = secret</span>
+
+<span class="c"># This sets a mask for permitted string types. There are several options.</span>
+<span class="c"># default: PrintableString, T61String, BMPString.</span>
+<span class="c"># pkix   : PrintableString, BMPString (PKIX recommendation before 2004)</span>
+<span class="c"># utf8only: only UTF8Strings (PKIX recommendation after 2004).</span>
+<span class="c"># nombstr : PrintableString, T61String (no BMPStrings or UTF8Strings).</span>
+<span class="c"># MASK:XXXX a literal mask value.</span>
+<span class="c"># WARNING: ancient versions of Netscape crash on BMPStrings or UTF8Strings.</span>
+string_mask <span class="o">=</span> utf8only
+
+req_extensions <span class="o">=</span> v3_req <span class="c"># The extensions to add to a certificate request</span>
+<span class="o">[</span> v3_req <span class="o">]</span>
+
+<span class="c"># Extensions to add to a certificate request</span>
+
+basicConstraints <span class="o">=</span> CA:FALSE
+keyUsage <span class="o">=</span> nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName <span class="o">=</span> @alt_names
+
+<span class="o">[</span> alt_names <span class="o">]</span>
+IP.1<span class="o">=</span>10.211.55.16
+DNS.1<span class="o">=</span><span class="k">*</span>.xran.me
+DNS.2<span class="o">=</span><span class="k">*</span>.baidu.com
+</code></pre></div></div>
+
+<h3 id="12创建-ca-及自签名">1.2、创建 CA 及自签名</h3>
+
+<p>具体原理这里不做过多阐述，直接堆命令，详细请看 <a href="http://mritd.me/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">互联网加密及OpenSSL介绍和简单使用</a></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> ~
+<span class="c"># 创建 CA 工作目录</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> demoCA/<span class="o">{</span>private,certs,crl,newcerts<span class="o">}</span>
+<span class="c"># 创建 CA 私钥</span>
+<span class="o">(</span><span class="nb">umask </span>077<span class="p">;</span> openssl genrsa <span class="nt">-out</span> demoCA/private/cakey.pem 2048<span class="o">)</span>
+<span class="c"># 执行自签名(信息不要乱填，参考下面截图)</span>
+openssl req <span class="nt">-new</span> <span class="nt">-x509</span> <span class="nt">-key</span> demoCA/private/cakey.pem <span class="nt">-days</span> 3655 <span class="nt">-out</span> demoCA/cacert.pem
+<span class="c"># 初始化相关文件</span>
+<span class="nb">touch </span>demoCA/<span class="o">{</span>index.txt,serial,crlnumber<span class="o">}</span>
+<span class="c"># 初始化序列号</span>
+<span class="nb">echo</span> <span class="s2">"01"</span> <span class="o">&gt;</span> demoCA/serial
+</code></pre></div></div>
+
+<p>自签名证书截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_https_createcacrt.png" alt="hexo_harbor_https_createcacrt" /></p>
+
+<h3 id="13创建证书并通过-ca-签名">1.3、创建证书并通过 CA 签名</h3>
+
+<p>同样，直接上命令……嘎嘣脆，奏是这个味</p>
+
+<p><strong>注意: 创建签名请求(csr文件)命令和签名命令(ca)与 <a href="http://mritd.me/2016/07/02/%E4%BA%92%E8%81%94%E7%BD%91%E5%8A%A0%E5%AF%86%E5%8F%8AOpenSSL%E4%BB%8B%E7%BB%8D%E5%92%8C%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">互联网加密及OpenSSL介绍和简单使用</a> 中稍有不同，openssl.cnf 为第一步修改后的，签名请求密码留空即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 证书存放目录</span>
+<span class="nb">mkdir </span>dockercrt
+<span class="c"># 创建私钥</span>
+openssl genrsa <span class="nt">-out</span> dockercrt/docker.key 2048
+<span class="c"># 生成带有 SAN 的证书请求</span>
+openssl req <span class="nt">-new</span> <span class="nt">-key</span> dockercrt/docker.key <span class="nt">-out</span> dockercrt/docker.csr <span class="nt">-config</span> openssl.cnf
+<span class="c"># 签名带有 SAN 的证书</span>
+openssl ca <span class="nt">-in</span> dockercrt/docker.csr <span class="nt">-out</span> dockercrt/docker.crt <span class="nt">-config</span> openssl.cnf <span class="nt">-extensions</span> v3_req
+</code></pre></div></div>
+
+<p>创建签名请求信息填写截图如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_https_createcsr.png" alt="hexo_harbor_https_createcsr" /></p>
+
+<h2 id="二配置-harbor-https">二、配置 Harbor HTTPS</h2>
+
+<h3 id="21服务端配置">2.1、服务端配置</h3>
+
+<p>服务端配置相对简单，只需要修改一下 Harbor 的 Nginx 配置文件，并把签名好的证书和私钥复制过去即可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> ~/harbor/Deploy
+<span class="c"># 复制 crt、key</span>
+<span class="nb">cp</span> ~/dockercrt/docker.crt config/nginx/cert
+<span class="nb">cp</span> ~/dockercrt/docker.key config/nginx/cert
+<span class="c"># 修改配置</span>
+vim config/nginx/nginx.conf
+</code></pre></div></div>
+
+<p><strong>Nginx 样例配置如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>worker_processes auto<span class="p">;</span>
+
+events <span class="o">{</span>
+  worker_connections 1024<span class="p">;</span>
+  use epoll<span class="p">;</span>
+  multi_accept on<span class="p">;</span>
+<span class="o">}</span>
+
+http <span class="o">{</span>
+  tcp_nodelay on<span class="p">;</span>
+
+  <span class="c"># this is necessary for us to be able to disable request buffering in all cases</span>
+  proxy_http_version 1.1<span class="p">;</span>
+
+
+  upstream registry <span class="o">{</span>
+    server registry:5000<span class="p">;</span>
+  <span class="o">}</span>
+
+  upstream ui <span class="o">{</span>
+    server ui:80<span class="p">;</span>
+  <span class="o">}</span>
+
+
+  server <span class="o">{</span>
+    <span class="c"># listen 80;</span>
+    listen 443 ssl<span class="p">;</span>
+
+    <span class="c"># disable any limits to avoid HTTP 413 for large image uploads</span>
+    client_max_body_size 0<span class="p">;</span>
+
+    ssl on<span class="p">;</span>
+    ssl_certificate /etc/nginx/cert/docker.crt<span class="p">;</span>
+    ssl_certificate_key /etc/nginx/cert/docker.key<span class="p">;</span>
+
+    location / <span class="o">{</span>
+      proxy_pass http://ui/<span class="p">;</span>
+      proxy_set_header Host <span class="nv">$host</span><span class="p">;</span>
+      proxy_set_header X-Real-IP <span class="nv">$remote_addr</span><span class="p">;</span>
+      proxy_set_header X-Forwarded-For <span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+
+      <span class="c"># When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already</span>
+has similar settings.
+      proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+
+      proxy_buffering off<span class="p">;</span>
+      proxy_request_buffering off<span class="p">;</span>
+    <span class="o">}</span>
+
+    location /v1/ <span class="o">{</span>
+      <span class="k">return </span>404<span class="p">;</span>
+    <span class="o">}</span>
+
+    location /v2/ <span class="o">{</span>
+      proxy_pass http://registry/v2/<span class="p">;</span>
+      proxy_set_header Host <span class="nv">$http_host</span><span class="p">;</span>
+      proxy_set_header X-Real-IP <span class="nv">$remote_addr</span><span class="p">;</span>
+      proxy_set_header X-Forwarded-For <span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+
+      <span class="c"># When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.</span>
+      proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+
+      proxy_buffering off<span class="p">;</span>
+      proxy_request_buffering off<span class="p">;</span>
+
+    <span class="o">}</span>
+
+    location /service/ <span class="o">{</span>
+      proxy_pass http://ui/service/<span class="p">;</span>
+      proxy_set_header Host <span class="nv">$host</span><span class="p">;</span>
+      proxy_set_header X-Real-IP <span class="nv">$remote_addr</span><span class="p">;</span>
+      proxy_set_header X-Forwarded-For <span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+
+      <span class="c"># When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.</span>
+      proxy_set_header X-Forwarded-Proto <span class="nv">$scheme</span><span class="p">;</span>
+
+      proxy_buffering off<span class="p">;</span>
+      proxy_request_buffering off<span class="p">;</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  server <span class="o">{</span>
+    listen 80<span class="p">;</span>
+    rewrite ^/<span class="o">(</span>.<span class="k">*</span><span class="o">)</span> https://<span class="nv">$server_name$1</span> permanent<span class="p">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>最后重新创建 contianer 即可</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> ~/harbor/Deploy
+./prepare
+<span class="c"># 先 down 一下删除原有配置</span>
+docker-compose down
+docker-compose up <span class="nt">-d</span>
+</code></pre></div></div>
+
+<p>此时访问 <code class="highlighter-rouge">https://hostname</code> 即可</p>
+
+<h3 id="22客户端配置">2.2、客户端配置</h3>
+
+<p><strong>客户端需要将签名 CA 的自签名根证书加入到本机的信任列表中，Ubuntu 下操作如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> ~
+<span class="c"># 本人测试用的两个 虚拟机，需要远程拷贝</span>
+scp root@10.211.55.16:~/demoCA/cacert.pem <span class="nb">.</span>
+<span class="c"># 备份一下 系统原有的根证书信任列表</span>
+<span class="nb">cp</span> /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.bak
+<span class="c"># 追加 自签名的 CA 根证书到 系统信任列表</span>
+<span class="nb">cat </span>cacert.pem <span class="o">&gt;&gt;</span> /etc/ssl/certs/ca-certificates.crt
+<span class="c"># 重启 docker 服务</span>
+service docker restart
+</code></pre></div></div>
+
+<h3 id="23客户端测试">2.3、客户端测试</h3>
+
+<p>客户端直接登录，并 push 即可，<strong>如果原来修改过 <code class="highlighter-rouge">/etc/default/docker</code> 文件的，并加入了 <code class="highlighter-rouge">--insecure-registry</code> 选项的需要将其去除</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录 如果登录成功就代表没问题了</span>
+docker login 10.211.55.16
+<span class="c"># push 测试</span>
+docker push 10.211.55.16/mritd/nginx:1.9
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

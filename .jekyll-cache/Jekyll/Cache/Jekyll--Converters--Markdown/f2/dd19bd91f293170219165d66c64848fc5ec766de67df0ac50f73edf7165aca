@@ -1,0 +1,49 @@
+I"�<blockquote>
+  <p>真心不是搞运维的，命令几天就忘，哎，岁数大了……
+常用的一些MySQL命令在这里记录一下撒</p>
+</blockquote>
+
+<!--more-->
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#开启远程登录</span>
+grant all privileges on <span class="k">*</span>.<span class="k">*</span> to <span class="s1">'user'</span>@<span class="s1">'%'</span> identified by <span class="s1">'passwd'</span> with grant option<span class="p">;</span>
+
+<span class="c">#创建数据库</span>
+create database DB<span class="p">;</span>
+
+<span class="c">#创建用户</span>
+insert into mysql.user<span class="o">(</span>Host,User,Password<span class="o">)</span> values<span class="o">(</span><span class="s2">"localhost"</span>,<span class="s2">"user"</span>,password<span class="o">(</span><span class="s2">"passwd"</span><span class="o">))</span><span class="p">;</span>
+
+<span class="c">#删除用户</span>
+DELETE FROM user WHERE <span class="nv">user</span><span class="o">=</span><span class="s2">"username"</span> and <span class="nv">HOST</span><span class="o">=</span><span class="s2">"localhost"</span><span class="p">;</span>
+
+<span class="c">#修改指定用户密码</span>
+update mysql.user <span class="nb">set </span><span class="nv">password</span><span class="o">=</span>password<span class="o">(</span><span class="s1">'new passwd'</span><span class="o">)</span> where <span class="nv">user</span><span class="o">=</span><span class="s2">"username"</span> and <span class="nv">host</span><span class="o">=</span><span class="s2">"localhost"</span><span class="p">;</span>
+
+<span class="c">#用户授权</span>
+grant all privileges on DB.<span class="k">*</span> to <span class="s1">'user'</span>@<span class="s1">'localhost'</span> identified by <span class="s1">'passwd'</span><span class="p">;</span>
+grant <span class="k">select</span>,update on DB.<span class="k">*</span> to <span class="s1">'user'</span>@<span class="s1">'localhost'</span> identified by <span class="s1">'passwd'</span><span class="p">;</span>
+
+<span class="c">#刷新权限</span>
+flush privileges<span class="p">;</span>
+
+<span class="c">#数据库导出</span>
+mysqldump <span class="nt">-uUSRENAME</span> <span class="nt">-pPASSWD</span> DATABASE <span class="o">&gt;</span> DATABASE.sql
+
+<span class="c">#数据库导出(只导出表结构 -d)</span>
+mysqldump <span class="nt">-uUSRENAME</span> <span class="nt">-pPASSWD</span> <span class="nt">-d</span> DATABASE <span class="o">&gt;</span> DATABASE.sql
+
+<span class="c">#数据库导入</span>
+
+<span class="c">#1.切换数据库</span>
+use DATABASE<span class="p">;</span>
+<span class="c">#2.设置编码</span>
+<span class="nb">set </span>names utf8<span class="p">;</span>
+<span class="c">#3.执行导入操作</span>
+<span class="nb">source</span> /home/abc/abc.sql<span class="p">;</span>
+
+<span class="c">#直接导入</span>
+mysql <span class="nt">-uUSERNAME</span> <span class="nt">-p</span> DATABASE &lt; DATABASE.sql
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

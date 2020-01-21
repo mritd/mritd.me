@@ -1,0 +1,236 @@
+I"�9<p><img src="https://cdn.oss.link/markdown/hexo_shadowsocks_logo.png" alt="ShadowSocks" /></p>
+
+<blockquote>
+  <p>众所周知，由于某种原因，大天朝的网络对外网(国际网路)的访问是封锁的，但作为搞IT的，个人感觉翻墙是必备的技能；因为很多东西(IT资料)谷歌出来的更准确一些，忍不住吐槽百度的垃圾搜索，我已经大约2年没用百度了，因为百度点东西你会发现很多情况都是 <strong>一大片都一样的</strong>，要不就是不同网站，但是内容一样……下面记录一下目前最屌的爬墙工具 <strong>ShadowSocks</strong> 简称 ss 的搭建过程。</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="一准备工作">一、准备工作</h2>
+<ol>
+  <li>一台能连接公网的VPS( <strong>VPS必须能访问Google等，一般是在国外购买</strong>)</li>
+  <li>一个自己的域名，可以到万网什么的购买</li>
+  <li>会点Linux基础、会点Git基础</li>
+  <li>没了。。。没了。。。真没了。。。</li>
+</ol>
+
+<h2 id="二相关工具准备">二、相关工具准备</h2>
+<p>1、 VPS安装CentOS系统，建议6版本(略过)
+2、 获取 <code class="highlighter-rouge">ShadowSocks</code> 后端源码( <strong>需要git，没有的话自行安装</strong> )</p>
+
+<blockquote>
+  <p>克隆(拉取) <code class="highlighter-rouge">ShadowSocks</code> 源码到本地
+ssh 连接VPS，执行如下命令</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 克隆后端代码(多用户版本)</span>
+git clone <span class="nt">-b</span> manyuser https://github.com/mengskysama/shadowsocks-rm.git
+</code></pre></div></div>
+
+<p>3、 下载前端代码( <strong>需要wget <code class="highlighter-rouge">yum install wget</code> 安装</strong> )</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/orvice/ss-panel/archive/v2.4.7.tar.gz
+</code></pre></div></div>
+
+<p>也可下载到本地再上传 <a href="https://github.com/orvice/ss-panel/branches">下载地址</a></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_ss-panel_download.png" alt="hexo_ss-panel_download" /></p>
+
+<h2 id="三安装lnmp环境">三、安装LNMP环境</h2>
+<ol>
+  <li>LNMP一键安装脚本地址 <a href="http://lnmp.org/install.html">点这里</a></li>
+  <li>根据教程安装好LNMP环境</li>
+  <li>创建一个域名映射(站点目录)，执行 <code class="highlighter-rouge">lnmp vhost add</code> ，然后根据提示操作即可</li>
+  <li>完成后可在 <code class="highlighter-rouge">/home/wwwroot/</code> 下找到对应的域名目录</li>
+</ol>
+
+<h2 id="四安装-shadowsocks-后端">四、安装 ShadowSocks 后端</h2>
+<p>1、移动后端源码到任意目录，一般习惯 <code class="highlighter-rouge">/usr/local/</code></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>shadowsocks-rm/shadowsocks/ /usr/local/
+</code></pre></div></div>
+
+<p>2、创建数据库</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录 mysql</span>
+mysql <span class="nt">-uroot</span> <span class="nt">-p</span>       <span class="c"># 然后输入安装lnmp时设置的mysql密码</span>
+<span class="c"># 创建数据库</span>
+create database shadowsocks<span class="p">;</span>
+<span class="c"># 切换数据库</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 创建用户</span>
+insert into mysql.user<span class="o">(</span>Host,User,Password<span class="o">)</span> values<span class="o">(</span><span class="s2">"localhost"</span>,<span class="s2">"shadowsocks"</span>,password<span class="o">(</span><span class="s2">"密码"</span><span class="o">))</span><span class="p">;</span>
+<span class="c"># 刷新权限表</span>
+flush privileges<span class="p">;</span>
+<span class="c"># 用户授权</span>
+grant all privileges on shadowsocks.<span class="k">*</span> to <span class="s1">'shadowsocks'</span>@<span class="s1">'localhost'</span> identified by <span class="s1">'密码'</span><span class="p">;</span>
+<span class="c"># 刷新权限表</span>
+flush privileges<span class="p">;</span>
+</code></pre></div></div>
+
+<p>3、导入相关SQL，创建表结构</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 解压前端代码(前端代码下载下来后应该是个 tar.gz 格式的压缩包，执行以下命令解压它)</span>
+<span class="nb">tar</span> <span class="nt">-zxvf</span> v2.4.7.tar.gz
+<span class="c"># 进入解压后的 sql 存放目录</span>
+<span class="nb">cd </span>ss-panel-2.4.7/sql/
+<span class="c"># 登录mysql 切换数据库</span>
+mysql <span class="nt">-ushadowsocks</span> <span class="nt">-p</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 设置编码</span>
+<span class="nb">set </span>names utf8<span class="p">;</span>
+<span class="c"># 执行导入</span>
+<span class="nb">source </span>invite_code.sql<span class="p">;</span>
+<span class="nb">source </span>ss_node.sql<span class="p">;</span>
+<span class="nb">source </span>ss_reset_pwd.sql<span class="p">;</span>
+<span class="nb">source </span>ss_user_admin.sql<span class="p">;</span>
+<span class="nb">source </span>user.sql<span class="p">;</span>
+</code></pre></div></div>
+
+<p>4、安装相关工具</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 pip</span>
+yum <span class="nb">install </span>python-setuptools <span class="o">&amp;&amp;</span> easy_install pip
+<span class="c"># 安装 cymysql</span>
+pip <span class="nb">install </span>cymysql
+</code></pre></div></div>
+
+<p>5、设置数据库配置</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 vim</span>
+yum <span class="nb">install </span>vim
+<span class="c"># 编辑配置文件 vim使用方法自行谷歌</span>
+vim /usr/local/shadowsocks/config.py
+</code></pre></div></div>
+
+<blockquote>
+  <p>样例配置文件如下，其中 <strong>使用 <code class="highlighter-rouge">aes-256-cfb</code> 加密需要安装其他组件，自行Google</strong></p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import logging
+
+<span class="c">#Config</span>
+MYSQL_HOST <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+MYSQL_PORT <span class="o">=</span> 3306
+MYSQL_USER <span class="o">=</span> <span class="s1">'shadowsocks'</span>
+MYSQL_PASS <span class="o">=</span> <span class="s1">'mysql密码'</span>
+MYSQL_DB <span class="o">=</span> <span class="s1">'shadowsocks'</span>
+
+<span class="c">#if you want manage in other server you should set this value to global ip</span>
+MANAGE_PASS <span class="o">=</span> <span class="s1">'passwd'</span>
+MANAGE_BIND_IP <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+<span class="c">#make sure this port is idle</span>
+MANAGE_PORT <span class="o">=</span> 23333
+<span class="c">#BIND IP</span>
+<span class="c">#if you want bind ipv4 and ipv6 '[::]'</span>
+<span class="c">#if you want bind all of ipv4 if '0.0.0.0'</span>
+<span class="c">#if you want bind all of if only '4.4.4.4'</span>
+SS_BIND_IP <span class="o">=</span> <span class="s1">'0.0.0.0'</span>
+SS_METHOD <span class="o">=</span> <span class="s1">'rc4-md5'</span>
+<span class="c">#</span>
+LOG_ENABLE <span class="o">=</span> False
+LOG_LEVEL <span class="o">=</span> logging.WARNING
+LOG_FILE <span class="o">=</span> <span class="s1">'./shadowsocks.log'</span>
+</code></pre></div></div>
+<p>6、启动后端</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 切换目录</span>
+<span class="nb">cd</span> /usr/local/shadowsocks/
+<span class="c"># 后台运行</span>
+<span class="nb">nohup </span>python /usr/local/shadowsocks/servers.py &amp;
+</code></pre></div></div>
+
+<h2 id="五安装-shadowsocks-前端">五、安装 ShadowSocks 前端</h2>
+<p>1、复制 <code class="highlighter-rouge">ss-panel</code> 文件到网站根目录</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>ss-panel-2.4.7/<span class="k">*</span> /home/wwwroot/网站名称/
+</code></pre></div></div>
+
+<p>2、修改相关配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /home/wwwroot/网站名称/lib/config-simple.php
+</code></pre></div></div>
+
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/* 配置样例 */
+<span class="cp">&lt;?php</span>
+<span class="cm">/*
+ * ss-panel配置文件
+ * https://github.com/orvice/ss-panel
+ * Author @orvice
+ * https://orvice.org
+ */</span>
+
+<span class="c1">//定义流量</span>
+<span class="nv">$tokb</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">;</span>
+<span class="nv">$tomb</span> <span class="o">=</span> <span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">;</span>
+<span class="nv">$togb</span> <span class="o">=</span> <span class="nv">$tomb</span><span class="o">*</span><span class="mi">1024</span><span class="p">;</span>
+<span class="c1">//Define DB Connection  数据库信息</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_HOST'</span><span class="p">,</span><span class="s1">'localhost'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_USER'</span><span class="p">,</span><span class="s1">'shadowsocks'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_PWD'</span><span class="p">,</span><span class="s1">'密码'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_DBNAME'</span><span class="p">,</span><span class="s1">'shadowsocks'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_CHARSET'</span><span class="p">,</span><span class="s1">'utf8'</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'DB_TYPE'</span><span class="p">,</span><span class="s1">'mysql'</span><span class="p">);</span>
+<span class="cm">/*
+ * 下面的东西根据需求修改
+ */</span>
+<span class="c1">//define Plan</span>
+<span class="c1">//注册用户的初始化流量</span>
+<span class="c1">//默认5GiB</span>
+<span class="nv">$a_transfer</span> <span class="o">=</span> <span class="nv">$togb</span><span class="o">*</span><span class="mi">5</span><span class="p">;</span>
+
+<span class="c1">//签到设置 签到活的的最低最高流量,单位MB</span>
+<span class="nv">$check_min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nv">$check_max</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+<span class="c1">//name</span>
+<span class="nv">$site_name</span> <span class="o">=</span> <span class="s2">"Mritd-Shadowsocks"</span><span class="p">;</span>
+<span class="nv">$site_url</span>  <span class="o">=</span> <span class="s2">"http://域名"</span><span class="p">;</span>
+<span class="cd">/**
+ * 站点盐值，用于加密密码
+ * 第一次安装请修改此值，安装后请勿修改！！否则会使所有密码失效，仅限加密方式不为1的时候有效
+ */</span>
+<span class="nv">$salt</span> <span class="o">=</span> <span class="s2">"随便填"</span><span class="p">;</span>
+<span class="cm">/*
+ * 剩下的省略......
+ */</span>
+</code></pre></div></div>
+
+<p>3、重命名配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>config-simple.php config.php
+</code></pre></div></div>
+
+<p>4、更新管理员用户名密码等信息</p>
+
+<blockquote>
+  <p>注意：下面的pass字段是你登陆后台的密码，最新版的默认管理账户的默认密码我也不知道是多少，我的方案是在 config-simple.php 里使用md5加密，然后去 <a href="http://tool.chinaz.com/tools/md5.aspx">在线md5加密</a> 随便写个密码，做一个32位小写的md5，用md5后的字符串覆盖默认用户的pass，这样就能改掉密码了。另一种方案是新注册一个账户，然后这个账户在user表中的uid应该是2；把他加入到 ss_user_admin 表中即可使其成为管理员，再把默认的管理员删了。</p>
+</blockquote>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录数据库</span>
+mysql-ushadowsocks <span class="nt">-p</span>
+<span class="c"># 切换数据库</span>
+use shadowsocks<span class="p">;</span>
+<span class="c"># 更新管理员信息</span>
+update user <span class="nb">set </span><span class="nv">user_name</span><span class="o">=</span><span class="s1">'用户名'</span>,email<span class="o">=</span><span class="s1">'登录邮箱'</span>, <span class="nv">pass</span><span class="o">=</span><span class="s1">'密码'</span>, <span class="nv">passwd</span><span class="o">=</span><span class="s1">'ss连接密码'</span> where <span class="nv">uid</span><span class="o">=</span>1<span class="p">;</span>
+</code></pre></div></div>
+
+<p>5、登录后台，测试ss连接</p>
+
+<blockquote>
+  <p>管理后台默认是 <code class="highlighter-rouge">http://域名/admin</code>，可用刚刚创建的管理员登录测试，关于具体使用过程不再详细叙述，如遇到网站可访问，但ss无法连接的情况，请查看防火墙相关设置和ss日志。本人使用的 <strong>ConoHa VPS</strong> 目前速度不错，这个VPS 还需要在控制面板中设置入站端口，否则关了防火墙也没用。</p>
+</blockquote>
+
+<blockquote>
+  <p><strong>到此 ShadowSocks 搭建结束。</strong></p>
+</blockquote>
+
+<hr />
+
+<p>如果购买 <strong>ConoHa VPS</strong> 的话可使用这个邀请链接 <a href="https://www.conoha.jp/referral/?token=pVMnGJDqY5jjnek.R4GhJnoqv7zaJ2PAMh5lvfWg9PKZ0PppokI-189">ConoHa VPS</a> 注册有优惠。</p>
+
+<h4 id="如果本文对你有帮助可以考虑用支付宝请我喝杯咖啡---_-">如果本文对你有帮助，可以考虑用支付宝请我喝杯咖啡  ( ^_^ )</h4>
+
+<p><img src="https://cdn.oss.link/markdown/zhifubao.png" alt="支付宝" />
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

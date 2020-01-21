@@ -1,0 +1,84 @@
+I"t<blockquote>
+  <p>免费梯子不多，且用亲珍惜，以下为利用樱花 Docker 翻墙教程</p>
+</blockquote>
+
+<h3 id="一注册账号">一、注册账号</h3>
+
+<p>首先在 <a href="https://app.arukas.io/">樱花 Docker 注册地址</a> 注册一个账号</p>
+
+<p><img src="https://cdn.oss.link/markdown/xek39.jpg" alt="crate_account" /></p>
+
+<p>填写邮箱、账户名、密码后点击确认</p>
+
+<p><img src="https://cdn.oss.link/markdown/jax98.jpg" alt="Fill_in_the_account" /></p>
+
+<p>稍等片刻在邮箱中点击验证连接即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/pewta.jpg" alt="Verify_the_mailbox" /></p>
+
+<h3 id="二创建容器">二、创建容器</h3>
+
+<p>注册号账号以后，登录控制台，点击 <code class="highlighter-rouge">Create</code> 创建容器</p>
+
+<p><img src="https://cdn.oss.link/markdown/3ai5c.jpg" alt="login" /></p>
+
+<p>然后填写相关信息，如下</p>
+
+<p><img src="https://cdn.oss.link/markdown/0dkkc.jpg" alt="set_container" /></p>
+
+<p><strong>其中 <code class="highlighter-rouge">Image</code> 填写 <code class="highlighter-rouge">mritd/shadowsocks</code>，表示使用哪个镜像模板创建容器，关于 Docker 镜像含义等请自行 Google，<code class="highlighter-rouge">mritd/shadowsocks</code> 这个镜像是我维护的一个 shadowsocks 镜像，如果想使用其他 shadowsocks 可从 <a href="https://hub.docker.com/">Docker Hub</a> 上自行搜索</strong></p>
+
+<p><strong>其他各选项含义如下:</strong></p>
+
+<ul>
+  <li>Instances: 启动多少个实例，一般 1 个就够用</li>
+  <li>Memory: 容器使用的内存大小，256 也可以</li>
+  <li>Endpoint: 暴露端口，可不填</li>
+  <li>Port: 容器对外提供服务的端口，默认为 5000</li>
+  <li>ENV: 是否使用环境变量，<code class="highlighter-rouge">mritd/shadowsocks</code> 镜像支持使用环境变量设置 shadowsocks 相关参数，这里可以省略</li>
+  <li>CMD: 要执行容器中的命令，<strong>首部必须填写 <code class="highlighter-rouge">/root/entrypoint.sh</code>，后面其他参数可以省略，但是一般会加上 <code class="highlighter-rouge">-k</code> 设置 shadowsocks 的密码，关于都能用哪些参数和参数意义请看考 <a href="https://hub.docker.com/r/mritd/shadowsocks/">Docker Hub</a> 上的说明(shadowsocks 默认加密方式为 aes-256-cfb)</strong></li>
+</ul>
+
+<p>最后点击创建即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/e2d1j.jpg" alt="create_container" /></p>
+
+<h3 id="三启动并连接">三、启动并连接</h3>
+
+<p>创建完成后会回到主页列表，在主页列表中可以看到刚刚创建的容器，此时容器还没有启动，点击启动按钮即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/b9nts.jpg" alt="start_container" /></p>
+
+<p>创建时间稍稍有点长，此时列表中容器变为黄色，点击容器名称后可看到如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/m093z.jpg" alt="create_detail" /></p>
+
+<p>稍等片刻后容器变为绿色，并为 <code class="highlighter-rouge">Running</code> 状态表示创建完成</p>
+
+<p><img src="https://cdn.oss.link/markdown/ybwqj.jpg" alt="create_success" /></p>
+
+<p><strong>容器运行成功后会显示如下信息，其中包含了 shadowsocks 链接地址</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/czjyx.jpg" alt="ss_detail" /></p>
+
+<p>最后使用客户端连接即可</p>
+
+<h3 id="四高级扩展">四、高级扩展</h3>
+
+<p>樱花 Docker 提供了一个 CLI 命令行工具，可以通过相关 API Token 实现命令行下查询、创建 Docker 容器等操作，CLI 使用需要先创建 API Token，点击左侧按钮即可</p>
+
+<p><img src="https://cdn.oss.link/markdown/ol0lv.jpg" alt="crate_api_token" /></p>
+
+<p>创建成功后将 Token 声明道环境变量中，并使用 CLI 工具即可实现命令行下创建 shadowsocks 镜像，关于 CLI 使用说明和下载地址请移步 <a href="https://github.com/arukasio/cli">Github</a> 查看</p>
+
+<h3 id="五其他说明">五、其他说明</h3>
+
+<p>关于镜像使用在 <a href="https://hub.docker.com/r/mritd/shadowsocks/">Docker Hub</a> 页面详细描述了镜像参数，具体可以参考一下</p>
+
+<p><strong>镜像可以理解为一个微型 Linux 系统，其中 CMD 选项代表要执行系统中的那个命令，填写 <code class="highlighter-rouge">/root/entrypoint.sh</code> 是因为制作镜像时指定了 shadowsocks 通过这个脚本启动，后面的 <code class="highlighter-rouge">-k</code> 等参数会被这个脚本执行，脚本支持哪些参数可以从上面的 Docker Hub 页面获取</strong></p>
+
+<p><strong>镜像支持以环境变量的方式设置密码等，环境变量表现为一个 <code class="highlighter-rouge">key-value</code> (键值对) 形式，也就是说 CMD 其实可以只写 <code class="highlighter-rouge">/root/entrypoint.sh</code> 不加 <code class="highlighter-rouge">-k</code> 参数，而通过勾选 <code class="highlighter-rouge">ENV</code> 选项并添加一个 <code class="highlighter-rouge">PASSWORD=Your-PassWord</code> 环境变量来设置</strong></p>
+
+<p><strong>目前镜像内集成了 kcptun，但是由于 kcptun 自定义设置需要挂载配置文件，所以在樱花 Docker 中还无法使用，后期准备支持环境变量设置</strong>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

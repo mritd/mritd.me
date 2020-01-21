@@ -1,0 +1,72 @@
+I"�<blockquote>
+  <p>本文参考 <a href="https://docs.minio.io/">Minio Quickstart Guide</a>、<a href="https://docs.minio.io/docs/minio-client-quickstart-guide">Minio Client Quickstart Guide</a></p>
+</blockquote>
+
+<h2 id="一简介">一、简介</h2>
+
+<p>Minio 是一个基于 golang 语言开发的 AWS S3 存储协议的开源实现，并附带 web ui 界面，可以通过 Minio 搭建私人的兼容 AWS S3 协议的存储服务器</p>
+
+<h2 id="二minio-服务器搭建">二、Minio 服务器搭建</h2>
+
+<p>Minio 基于 golang 开发，所以编译后只有一个可执行文件，启动一个 Minio 服务器极其简单，只需要使用 <code class="highlighter-rouge">server</code> 参数，并附带一个或多个存储目录即可</p>
+
+<!--more-->
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载 Minio</span>
+wget https://dl.minio.io/server/minio/release/linux-amd64/minio
+<span class="c"># 赋予可执行权限</span>
+<span class="nb">chmod</span> +x minio
+<span class="c"># 创建一个目录用于存放 minio 文件</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /data/aws_s3
+<span class="c"># 以后台方式启动一个 minio 服务器</span>
+<span class="nb">nohup</span> ./minio server /data/aws_s3 &amp;
+</code></pre></div></div>
+
+<p>minio 默认监听所有网卡的 9000 端口，此时直接访问 <code class="highlighter-rouge">http://ip:9000</code> 即可查看 web ui 界面，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_minio_homepage.png" alt="hexo_minio_homepage" /></p>
+
+<p>同时在启动 minio 后默认会输出当前 minio 服务器的相关登录参数，如 access_key 等，nohup 启动则默认重定向到了 nohup.out 文件中，如下所示</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_minio_token.png" alt="hexo_minio_token" /></p>
+
+<h2 id="三mc-客户端操作">三、mc 客户端操作</h2>
+
+<p>minio 服务器搭建好以后，就可以使用 mc 客户端进行上传下载操作</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先下载 mc 客户端</span>
+wget https://dl.minio.io/client/mc/release/linux-amd64/mc
+<span class="c"># 增加可执行权限</span>
+<span class="nb">chmod</span> +x mc
+</code></pre></div></div>
+
+<p>mc 客户端通过 <code class="highlighter-rouge">config host add</code> 指令增加 minio 服务器，其实质操作是<strong>向 <code class="highlighter-rouge">~/.mc/config.json</code> 文件中加入新的 json 串</strong>，以下为增加一个 minio 服务器示例，相关参数可从服务端输出日志中找到</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mc config host add aws_s3 http://192.168.1.100:9000 TP6T2AXYYVLI8D2CEHYQ /+4+KVa7p3suABEaJ/E1gv4KQra7GdwsxWNs0Nr7
+</code></pre></div></div>
+
+<p><strong>默认 minio 服务端启动后目录为空，需要手动创建 bucket，然后才能向具体的 bucket 中存放文件</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 在 aws_s3 的服务器上创建一个叫 test 的 bucket</span>
+mc mb aws_s3/test
+</code></pre></div></div>
+
+<p>返回创建成功后可登陆 ui 查看</p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_minio_create_bucket.png" alt="hexo_minio_token" /></p>
+
+<p>创建好 bucket 后就可以向里面增加或删除文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 复制文件到 minio 服务器</span>
+mc <span class="nb">cp </span>test.tar.gz aws_s3/test
+<span class="c"># 列出 minio 服务器上的文件</span>
+mc <span class="nb">ls </span>aws_s3/test
+<span class="c"># 删除 minio 服务器上的文件</span>
+mc <span class="nb">rm </span>aws_s3/test/test.tar.gz
+</code></pre></div></div>
+
+<h2 id="四其他相关">四、其他相关</h2>
+
+<p>minio 提供了生成文件分享连接、创建上传到指定 bucket 文件的连接等高级功能，并且官方提供 docker 镜像，同时由于其 server 创建时只是指定了一个或多个目录作为存储位置，便可以很方便的搭配 GlusterFS 等分布式文件系统，更多玩法需要自己实验
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

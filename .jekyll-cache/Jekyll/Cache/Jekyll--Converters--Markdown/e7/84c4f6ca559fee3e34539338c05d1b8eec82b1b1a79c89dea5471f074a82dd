@@ -1,0 +1,291 @@
+I"�h<blockquote>
+  <p>最近在测试 Kubernetes 1.11.2 新版本的相关东西，发现新版本的 Bootstrap Token 功能已经进入 Beta 阶段，索性便尝试了一下；虽说目前是为 kubeadm 设计的，不过手动挡用起来也不错，这里记录一下使用方式</p>
+</blockquote>
+
+<h2 id="一环境准备">一、环境准备</h2>
+
+<p>首先需要有一个运行状态正常的 Master 节点，目前我测试的是版本是 1.11.2，低版本我没测试；其次本文默认 Node 节点 Docker、kubelet 二进制文件、systemd service 配置等都已经处理好，更具体的环境如下:</p>
+
+<p><strong>Master 节点 IP 为 <code class="highlighter-rouge">192.168.1.61</code>，Node 节点 IP 为 <code class="highlighter-rouge">192.168.1.64</code></strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ kubectl version
+Client Version: version.Info<span class="o">{</span>Major:<span class="s2">"1"</span>, Minor:<span class="s2">"11"</span>, GitVersion:<span class="s2">"v1.11.2"</span>, GitCommit:<span class="s2">"bb9ffb1654d4a729bb4cec18ff088eacc153c239"</span>, GitTreeState:<span class="s2">"clean"</span>, BuildDate:<span class="s2">"2018-08-07T23:08:19Z"</span>, GoVersion:<span class="s2">"go1.10.3"</span>, Compiler:<span class="s2">"gc"</span>, Platform:<span class="s2">"linux/amd64"</span><span class="o">}</span>
+Server Version: version.Info<span class="o">{</span>Major:<span class="s2">"1"</span>, Minor:<span class="s2">"11"</span>, GitVersion:<span class="s2">"v1.11.2"</span>, GitCommit:<span class="s2">"bb9ffb1654d4a729bb4cec18ff088eacc153c239"</span>, GitTreeState:<span class="s2">"clean"</span>, BuildDate:<span class="s2">"2018-08-07T23:08:19Z"</span>, GoVersion:<span class="s2">"go1.10.3"</span>, Compiler:<span class="s2">"gc"</span>, Platform:<span class="s2">"linux/amd64"</span><span class="o">}</span>
+
+docker1.node ➜  ~ docker info
+Containers: 0
+ Running: 0
+ Paused: 0
+ Stopped: 0
+Images: 0
+Server Version: 18.06.1-ce
+Storage Driver: overlay2
+ Backing Filesystem: xfs
+ Supports d_type: <span class="nb">true
+ </span>Native Overlay Diff: <span class="nb">true
+</span>Logging Driver: json-file
+Cgroup Driver: cgroupfs
+Plugins:
+ Volume: <span class="nb">local
+ </span>Network: bridge host macvlan null overlay
+ Log: awslogs fluentd gcplogs gelf journald json-file logentries splunk syslog
+Swarm: inactive
+Runtimes: runc
+Default Runtime: runc
+Init Binary: docker-init
+containerd version: 468a545b9edcd5932818eb9de8e72413e616e86e
+runc version: 69663f0bd4b60df09991c08812a60108003fa340
+init version: fec3683
+Security Options:
+ apparmor
+ seccomp
+  Profile: default
+Kernel Version: 4.15.0-33-generic
+Operating System: Ubuntu 18.04.1 LTS
+OSType: linux
+Architecture: x86_64
+CPUs: 2
+Total Memory: 3.847GiB
+Name: docker1.node
+ID: AJOD:RBJZ:YP3G:HCGV:KT4R:D4AF:SBDN:5B76:JM4M:OCJA:YJMJ:OCYQ
+Docker Root Dir: /data/docker
+Debug Mode <span class="o">(</span>client<span class="o">)</span>: <span class="nb">false
+</span>Debug Mode <span class="o">(</span>server<span class="o">)</span>: <span class="nb">false
+</span>Registry: https://index.docker.io/v1/
+Labels:
+Experimental: <span class="nb">false
+</span>Insecure Registries:
+ 127.0.0.0/8
+Live Restore Enabled: <span class="nb">false</span>
+</code></pre></div></div>
+
+<h2 id="二tls-bootstrapping-回顾">二、TLS Bootstrapping 回顾</h2>
+
+<p>在正式进行 TLS Bootstrapping 操作之前，<strong>如果对 TLS Bootstrapping 完全没接触过的请先阅读 <a href="https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note">Kubernetes TLS bootstrapping 那点事</a></strong>；我想这里有必要简单说明下使用 Token 时整个启动引导过程:</p>
+
+<ul>
+  <li>在集群内创建特定的 <code class="highlighter-rouge">Bootstrap Token Secret</code>，该 Secret 将替代以前的 <code class="highlighter-rouge">token.csv</code> 内置用户声明文件</li>
+  <li>在集群内创建首次 TLS Bootstrap 申请证书的 ClusterRole、后续 renew Kubelet client/server 的 ClusterRole，以及其相关对应的 ClusterRoleBinding；并绑定到对应的组或用户</li>
+  <li>调整 Controller Manager 配置，以使其能自动签署相关证书和自动清理过期的 TLS Bootstrapping Token</li>
+  <li>生成特定的包含 TLS Bootstrapping Token 的 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 以供 kubelet 启动时使用</li>
+  <li>调整 Kubelet 配置，使其首次启动加载 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 并使用其中的 TLS Bootstrapping Token 完成首次证书申请</li>
+  <li>证书被 Controller Manager 签署，成功下发，Kubelet 自动重载完成引导流程</li>
+  <li>后续 Kubelet 自动 renew 相关证书</li>
+  <li>可选的: 集群搭建成功后立即清除 <code class="highlighter-rouge">Bootstrap Token Secret</code>，或等待 Controller Manager 待其过期后删除，以防止被恶意利用</li>
+</ul>
+
+<h2 id="三使用-bootstrap-token">三、使用 Bootstrap Token</h2>
+
+<p>第二部分算作大纲了，这部分将会按照第二部分的总体流程来走，同时会对一些细节进行详细说明</p>
+
+<h3 id="31创建-bootstrap-token">3.1、创建 Bootstrap Token</h3>
+
+<p>既然整个功能都时刻强调这个 Token，那么第一步肯定是生成一个 token，生成方式如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ <span class="nb">echo</span> <span class="s2">"</span><span class="si">$(</span><span class="nb">head</span> <span class="nt">-c</span> 6 /dev/urandom | <span class="nb">md5sum</span> | <span class="nb">head</span> <span class="nt">-c</span> 6<span class="si">)</span><span class="s2">"</span>.<span class="s2">"</span><span class="si">$(</span><span class="nb">head</span> <span class="nt">-c</span> 16 /dev/urandom | <span class="nb">md5sum</span> | <span class="nb">head</span> <span class="nt">-c</span> 16<span class="si">)</span><span class="s2">"</span>
+47f392.d22d04e89a65eb22
+</code></pre></div></div>
+
+<p>这个 <code class="highlighter-rouge">47f392.d22d04e89a65eb22</code> 就是生成的 Bootstrap Token，保存好 token，因为后续要用；关于这个 token 解释如下:</p>
+
+<p>Token 必须满足 <code class="highlighter-rouge">[a-z0-9]{6}\.[a-z0-9]{16}</code> 格式；以 <code class="highlighter-rouge">.</code> 分割，前面的部分被称作  <code class="highlighter-rouge">Token ID</code>，<code class="highlighter-rouge">Token ID</code> 并不是 “机密信息”，它可以暴露出去；相对的后面的部分称为 <code class="highlighter-rouge">Token Secret</code>，它应该是保密的</p>
+
+<p>本部分官方文档地址 <a href="https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/#token-format">Token Format</a></p>
+
+<h3 id="32创建-bootstrap-token-secret">3.2、创建 Bootstrap Token Secret</h3>
+
+<p>对于 Kubernetes 来说 <code class="highlighter-rouge">Bootstrap Token Secret</code> 也仅仅是一个特殊的 <code class="highlighter-rouge">Secret</code> 而已；对于这个特殊的 <code class="highlighter-rouge">Secret</code> 样例 yaml 配置如下:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Secret</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="c1"># Name MUST be of form "bootstrap-token-&lt;token id&gt;"</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">bootstrap-token-07401b</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+
+<span class="c1"># Type MUST be 'bootstrap.kubernetes.io/token'</span>
+<span class="na">type</span><span class="pi">:</span> <span class="s">bootstrap.kubernetes.io/token</span>
+<span class="na">stringData</span><span class="pi">:</span>
+  <span class="c1"># Human readable description. Optional.</span>
+  <span class="na">description</span><span class="pi">:</span> <span class="s2">"</span><span class="s">The</span><span class="nv"> </span><span class="s">default</span><span class="nv"> </span><span class="s">bootstrap</span><span class="nv"> </span><span class="s">token</span><span class="nv"> </span><span class="s">generated</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">'kubeadm</span><span class="nv"> </span><span class="s">init'."</span>
+
+  <span class="c1"># Token ID and secret. Required.</span>
+  <span class="na">token-id</span><span class="pi">:</span> <span class="s">47f392</span>
+  <span class="na">token-secret</span><span class="pi">:</span> <span class="s">d22d04e89a65eb22</span>
+
+  <span class="c1"># Expiration. Optional.</span>
+  <span class="na">expiration</span><span class="pi">:</span> <span class="s">2018-09-10T00:00:11Z</span>
+
+  <span class="c1"># Allowed usages.</span>
+  <span class="na">usage-bootstrap-authentication</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+  <span class="na">usage-bootstrap-signing</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+
+  <span class="c1"># Extra groups to authenticate the token as. Must start with "system:bootstrappers:"</span>
+  <span class="na">auth-extra-groups</span><span class="pi">:</span> <span class="s">system:bootstrappers:worker,system:bootstrappers:ingress</span>
+</code></pre></div></div>
+
+<p>需要注意几点:</p>
+
+<ul>
+  <li>作为 <code class="highlighter-rouge">Bootstrap Token Secret</code> 的 type 必须为 <code class="highlighter-rouge">bootstrap.kubernetes.io/token</code>，name 必须为 <code class="highlighter-rouge">bootstrap-token-&lt;token id&gt;</code> (Token ID 就是上一步创建的 Token 前一部分)</li>
+  <li><code class="highlighter-rouge">usage-bootstrap-authentication</code>、<code class="highlighter-rouge">usage-bootstrap-signing</code> 必须存才且设置为 <code class="highlighter-rouge">true</code> (我个人感觉 <code class="highlighter-rouge">usage-bootstrap-signing</code> 可以没有，具体见文章最后部分)</li>
+  <li><code class="highlighter-rouge">expiration</code> 字段是可选的，如果设置则 <code class="highlighter-rouge">Secret</code> 到期后将由 Controller Manager 中的 <code class="highlighter-rouge">tokencleaner</code> 自动清理</li>
+  <li><code class="highlighter-rouge">auth-extra-groups</code> 也是可选的，令牌的扩展认证组，组必须以 <code class="highlighter-rouge">system:bootstrappers:</code> 开头</li>
+</ul>
+
+<p>最后使用 <code class="highlighter-rouge">kubectl create -f bootstrap.secret.yaml</code> 创建即可</p>
+
+<p>本部分官方文档地址 <a href="https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/#bootstrap-token-secret-format">Bootstrap Token Secret Format</a></p>
+
+<h3 id="33创建-clusterrole-和-clusterrolebinding">3.3、创建 ClusterRole 和 ClusterRoleBinding</h3>
+
+<p>具体都有哪些 <code class="highlighter-rouge">ClusterRole</code> 和 <code class="highlighter-rouge">ClusterRoleBinding</code>，以及其作用请参考上一篇的 <a href="https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note">Kubernetes TLS bootstrapping 那点事</a>，不想在这里重复了</p>
+
+<p>在 1.8 以后三个 <code class="highlighter-rouge">ClusterRole</code> 中有两个已经有了，我们只需要创建剩下的一个即可:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># A ClusterRole which instructs the CSR approver to approve a node requesting a</span>
+<span class="c1"># serving cert matching its client cert.</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:certificates.k8s.io:certificatesigningrequests:selfnodeserver</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificates.k8s.io"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">certificatesigningrequests/selfnodeserver"</span><span class="pi">]</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">create"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>然后是三个 <code class="highlighter-rouge">ClusterRole</code> 对应的 <code class="highlighter-rouge">ClusterRoleBinding</code>；需要注意的是 <strong>在使用 <code class="highlighter-rouge">Bootstrap Token</code> 进行引导时，Kubelet 组件使用 Token 发起的请求其用户名为 <code class="highlighter-rouge">system:bootstrap:&lt;token id&gt;</code>，用户组为 <code class="highlighter-rouge">system:bootstrappers</code>；so 我们在创建 <code class="highlighter-rouge">ClusterRoleBinding</code> 时要绑定到这个用户或者组上</strong>；当然我选择懒一点，全部绑定到组上</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 允许 system:bootstrappers 组用户创建 CSR 请求</span>
+kubectl create clusterrolebinding kubelet-bootstrap <span class="nt">--clusterrole</span><span class="o">=</span>system:node-bootstrapper <span class="nt">--group</span><span class="o">=</span>system:bootstrappers
+
+<span class="c"># 自动批准 system:bootstrappers 组用户 TLS bootstrapping 首次申请证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-approve-csr <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:nodeclient <span class="nt">--group</span><span class="o">=</span>system:bootstrappers
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 自身与 apiserver 通讯证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-client-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:selfnodeclient <span class="nt">--group</span><span class="o">=</span>system:nodes
+
+<span class="c"># 自动批准 system:nodes 组用户更新 kubelet 10250 api 端口证书的 CSR 请求</span>
+kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--clusterrole</span><span class="o">=</span>system:certificates.k8s.io:certificatesigningrequests:selfnodeserver <span class="nt">--group</span><span class="o">=</span>system:nodes
+</code></pre></div></div>
+
+<p>关于本部分首次请求用户名变为 <code class="highlighter-rouge">system:bootstrap:&lt;token id&gt;</code> 官方文档原文如下:</p>
+
+<blockquote>
+  <p>Tokens authenticate as the username system:bootstrap:<token> and are members of the group system:bootstrappers. Additional groups may be specified in the token’s Secret.</token></p>
+</blockquote>
+
+<h3 id="34调整-controller-manager">3.4、调整 Controller Manager</h3>
+
+<p>根据官方文档描述，Controller Manager 需要启用 <code class="highlighter-rouge">tokencleaner</code> 和 <code class="highlighter-rouge">bootstrapsigner</code> (目测这个 <code class="highlighter-rouge">bootstrapsigner</code> 实际上并不需要，顺便加着吧)，完整配置如下(为什么贴完整配置? 文章凑数啊…):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"  --address=127.0.0.1 </span><span class="se">\</span><span class="s2">
+                                --bind-address=192.168.1.61 </span><span class="se">\</span><span class="s2">
+                                --port=10252 </span><span class="se">\</span><span class="s2">
+                                --secure-port=10258 </span><span class="se">\</span><span class="s2">
+                                --cluster-name=kubernetes </span><span class="se">\</span><span class="s2">
+                                --cluster-signing-cert-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                                --cluster-signing-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                                --controllers=*,bootstrapsigner,tokencleaner </span><span class="se">\</span><span class="s2">
+                                --deployment-controller-sync-period=10s </span><span class="se">\</span><span class="s2">
+                                --experimental-cluster-signing-duration=86700h0m0s </span><span class="se">\</span><span class="s2">
+                                --enable-garbage-collector=true </span><span class="se">\</span><span class="s2">
+                                --leader-elect=true </span><span class="se">\</span><span class="s2">
+                                --master=http://127.0.0.1:8080 </span><span class="se">\</span><span class="s2">
+                                --node-monitor-grace-period=40s </span><span class="se">\</span><span class="s2">
+                                --node-monitor-period=5s </span><span class="se">\</span><span class="s2">
+                                --pod-eviction-timeout=5m0s </span><span class="se">\</span><span class="s2">
+                                --terminated-pod-gc-threshold=50 </span><span class="se">\</span><span class="s2">
+                                --root-ca-file=/etc/kubernetes/ssl/k8s-root-ca.pem </span><span class="se">\</span><span class="s2">
+                                --service-account-private-key-file=/etc/kubernetes/ssl/k8s-root-ca-key.pem </span><span class="se">\</span><span class="s2">
+                                --feature-gates=RotateKubeletServerCertificate=true"</span>
+</code></pre></div></div>
+
+<h3 id="35生成-bootstrapkubeconfig">3.5、生成 bootstrap.kubeconfig</h3>
+
+<p>前面所有步骤实际上都是在处理 Api Server、Controller Manager 这一块，为的就是 “老子启动后 TLS Bootstarpping 发证书申请你两个要立马允许，不能拒绝老子”；接下来就是比较重要的 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 配置生成，这个 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 是最终被 Kubelet 使用的，里面包含了相关的 Token，以帮助 Kubelet 在第一次通讯时能成功沟通 Api Server；生成方式如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 设置集群参数</span>
+kubectl config set-cluster kubernetes <span class="se">\</span>
+  <span class="nt">--certificate-authority</span><span class="o">=</span>/etc/kubernetes/ssl/k8s-root-ca.pem <span class="se">\</span>
+  <span class="nt">--embed-certs</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+  <span class="nt">--server</span><span class="o">=</span>https://127.0.0.1:6443 <span class="se">\</span>
+  <span class="nt">--kubeconfig</span><span class="o">=</span>bootstrap.kubeconfig
+<span class="c"># 设置客户端认证参数</span>
+kubectl config set-credentials system:bootstrap:47f392 <span class="se">\</span>
+  <span class="nt">--token</span><span class="o">=</span>47f392.d22d04e89a65eb22 <span class="se">\</span>
+  <span class="nt">--kubeconfig</span><span class="o">=</span>bootstrap.kubeconfig
+<span class="c"># 设置上下文参数</span>
+kubectl config set-context default <span class="se">\</span>
+  <span class="nt">--cluster</span><span class="o">=</span>kubernetes <span class="se">\</span>
+  <span class="nt">--user</span><span class="o">=</span>system:bootstrap:47f392 <span class="se">\</span>
+  <span class="nt">--kubeconfig</span><span class="o">=</span>bootstrap.kubeconfig
+<span class="c"># 设置默认上下文</span>
+kubectl config use-context default <span class="nt">--kubeconfig</span><span class="o">=</span>bootstrap.kubeconfig
+</code></pre></div></div>
+
+<h3 id="36调整-kubelet">3.6、调整 Kubelet</h3>
+
+<p>Kubelet 启动参数需要做一些相应调整，以使其能正确的使用 <code class="highlighter-rouge">Bootstartp Token</code>，完整配置如下(与使用 token.csv 配置没什么变化，因为主要变更在 bootstrap.kubeconfig 中):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"  --address=192.168.1.64 </span><span class="se">\</span><span class="s2">
+                --allow-privileged=true </span><span class="se">\</span><span class="s2">
+                --alsologtostderr </span><span class="se">\</span><span class="s2">
+                --anonymous-auth=true </span><span class="se">\</span><span class="s2">
+                --bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig </span><span class="se">\</span><span class="s2">
+                --cert-dir=/etc/kubernetes/ssl </span><span class="se">\</span><span class="s2">
+                --cgroup-driver=cgroupfs </span><span class="se">\</span><span class="s2">
+                --cluster-dns=10.254.0.2 </span><span class="se">\</span><span class="s2">
+                --cluster-domain=cluster.local. </span><span class="se">\</span><span class="s2">
+                --fail-swap-on=false </span><span class="se">\</span><span class="s2">
+                --healthz-port=10248 </span><span class="se">\</span><span class="s2">
+                --healthz-bind-address=192.168.1.64 </span><span class="se">\</span><span class="s2">
+                --feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true </span><span class="se">\</span><span class="s2">
+                --node-labels=node-role.kubernetes.io/k8s-master=true </span><span class="se">\</span><span class="s2">
+                --image-gc-high-threshold=70 </span><span class="se">\</span><span class="s2">
+                --image-gc-low-threshold=50 </span><span class="se">\</span><span class="s2">
+                --kube-reserved=cpu=500m,memory=512Mi,ephemeral-storage=1Gi </span><span class="se">\</span><span class="s2">
+                --kubeconfig=/etc/kubernetes/kubelet.kubeconfig </span><span class="se">\</span><span class="s2">
+                --system-reserved=cpu=1000m,memory=1024Mi,ephemeral-storage=1Gi </span><span class="se">\</span><span class="s2">
+                --serialize-image-pulls=false </span><span class="se">\</span><span class="s2">
+                --sync-frequency=30s </span><span class="se">\</span><span class="s2">
+                --pod-infra-container-image=k8s.gcr.io/pause:3.1 </span><span class="se">\</span><span class="s2">
+                --resolv-conf=/etc/resolv.conf </span><span class="se">\</span><span class="s2">
+                --rotate-certificates"</span>
+</code></pre></div></div>
+
+<p><strong>一切准备就绪后，执行 <code class="highlighter-rouge">systemctl daemon-reload &amp;&amp; systemctl start kubelet</code> 启动即可</strong></p>
+
+<h2 id="四其他说明">四、其他说明</h2>
+
+<p>可能有人已经注意到，在官方文档中最后部分有关于 <a href="https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/#configmap-signing">ConfigMap Signing</a> 的相关描述，同时要求了启用 <code class="highlighter-rouge">bootstrapsigner</code> 这个 controller，而且在上文创建 <code class="highlighter-rouge">Bootstrap Token Secret</code> 中我也说 <code class="highlighter-rouge">usage-bootstrap-signing</code> 这个可以不设置；其中官方文档上的描述我们能看到的大致只说了这么两段稍微有点用的话:</p>
+
+<blockquote>
+  <p>In addition to authentication, the tokens can be used to sign a ConfigMap. This is used early in a cluster bootstrap process before the client trusts the API server. The signed ConfigMap can be authenticated by the shared token.</p>
+</blockquote>
+
+<blockquote>
+  <p>The ConfigMap that is signed is cluster-info in the kube-public namespace. The typical flow is that a client reads this ConfigMap while unauthenticated and ignoring TLS errors. It then validates the payload of the ConfigMap by looking at a signature embedded in the ConfigMap.</p>
+</blockquote>
+
+<p>从这两段话中我们只能得出两个结论:</p>
+
+<ul>
+  <li>Bootstrap Token 能对 ConfigMap 签名</li>
+  <li>可以签名一个 <code class="highlighter-rouge">kube-public</code> NameSpace 下的名字叫 <code class="highlighter-rouge">cluster-info</code> 的 ConfigMap，并且这个 ConfigMap 可以在没进行引导之前强行读取</li>
+</ul>
+
+<p>说实话这两段话搞得我百思不得<del>骑姐</del>其解，最终我在 kubeadm 的相关文档中找到了真正的说明及作用:</p>
+
+<ul>
+  <li>在使用 <code class="highlighter-rouge">kubeadm init</code> 时创建 <code class="highlighter-rouge">cluster-info</code> 这个 ConfigMap，ConfigMap 中包含了集群基本信息</li>
+  <li>在使用 <code class="highlighter-rouge">kubeadm join</code> 时目标节点强行读取 ConfigMap 以得知集群基本信息，然后进行 <code class="highlighter-rouge">join</code></li>
+</ul>
+
+<p><strong>综上所述，我个人认为手动部署下，在仅仅使用 Bootstrap Token 进行 TLS Bootstrapping 时，<code class="highlighter-rouge">bootstrapsigner</code> 这个 controller 和 <code class="highlighter-rouge">Bootstrap Token Secret</code> 中的 <code class="highlighter-rouge">usage-bootstrap-signing</code> 选项是没有必要的，当然我还没测试(胡吹谁不会)…</strong></p>
+
+<p>最后附上 <code class="highlighter-rouge">kubeadm</code> 的文档说明: <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#create-the-public-cluster-info-configmap">Create the public cluster-info ConfigMap</a>、<a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#discovery-cluster-info">Discovery cluster-info</a></p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

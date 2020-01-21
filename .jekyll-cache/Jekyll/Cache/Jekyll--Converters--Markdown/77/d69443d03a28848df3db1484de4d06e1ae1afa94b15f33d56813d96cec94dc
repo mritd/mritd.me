@@ -1,0 +1,96 @@
+I"I#<blockquote>
+  <p>一直以来自己的 Kubernetes 集群大部分证书配置全部都在使用一个 CA，而事实上很多教程也没有具体的解释过这些证书代表的作用以及含义；今天索性仔细的翻了翻，顺便看到了一篇老外的文章，感觉写的不错，这里顺带着自己的理解总结一下。</p>
+</blockquote>
+
+<h2 id="一kubernetes-证书分类">一、Kubernetes 证书分类</h2>
+
+<p>这里的证书分类只是我自己定义的一种 “并不 ok” 的概念；从整体的作用上 Kubernetes 证书大致上应当分为两类:</p>
+
+<ul>
+  <li>API Server 用于校验请求合法性证书</li>
+  <li>对其他敏感信息进行签名的证书(如 Service Account)</li>
+</ul>
+
+<p>对于 API Server 用于检验请求合法性的证书配置一般会在 API Server 中配置好，而对其他敏感信息签名加密的证书一般会可能放在 Controller Manager 中配置，也可能还在 API Server，具体不同版本需要撸文档</p>
+
+<p>另外需要明确的是: <strong>Kubernetes 中 CA 证书并不一定只有一个，很多证书配置实际上是不相干的，只是大家为了方便普遍选择了使用一个 CA 进行签发；同时有一些证书如果不设置也会自动默认一个，就目前我所知的大约有 5 个可以完全不同的证书签发体系(或者说由不同的 CA 签发)</strong></p>
+
+<h2 id="二api-server-中的证书配置">二、API Server 中的证书配置</h2>
+
+<h3 id="21api-server-证书">2.1、API Server 证书</h3>
+<p>API Server 证书配置中最应当明确的两个选项应该是以下两个:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--tls-cert-file</span> string
+    File containing the default x509 Certificate <span class="k">for </span>HTTPS. <span class="o">(</span>CA cert, <span class="k">if </span>any, concatenated after server cert<span class="o">)</span><span class="nb">.</span> If HTTPS serving is enabled, and <span class="nt">--tls-cert-file</span> and <span class="nt">--tls-private-key-file</span> are not provided, a self-signed certificate and key are generated <span class="k">for </span>the public address and saved to the directory specified by <span class="nt">--cert-dir</span><span class="nb">.</span>
+
+<span class="nt">--tls-private-key-file</span> string
+    File containing the default x509 private key matching <span class="nt">--tls-cert-file</span><span class="nb">.</span>
+</code></pre></div></div>
+
+<p>从描述上就可以看出，这两个选项配置的就是 API Server HTTPS 端点应当使用的证书</p>
+
+<h3 id="22client-ca-证书">2.2、Client CA 证书</h3>
+
+<p>接下来就是我们常见的 CA 配置:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--client-ca-file</span> string
+    If <span class="nb">set</span>, any request presenting a client certificate signed by one of the authorities <span class="k">in </span>the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.
+</code></pre></div></div>
+
+<p>该配置明确了 Clent 连接 API Server 时，API Server 应当确保其证书源自哪个 CA 签发；如果其证书不是由该 CA 签发，则拒绝请求；事实上，这个 CA 不必与 HTTPS 端点所使用的证书 CA 相同；同时这里的 Client 是一个泛指的，可以是 kubectl，也可能是你自己开发的应用</p>
+
+<h3 id="23请求头证书">2.3、请求头证书</h3>
+
+<p>由于 API Server 是支持多种认证方式的，其中一种就是使用 HTTP 头中的指定字段来进行认证，相关配置如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--requestheader-allowed-names</span> stringSlice
+    List of client certificate common names to allow to provide usernames <span class="k">in </span>headers specified by <span class="nt">--requestheader-username-headers</span><span class="nb">.</span> If empty, any client certificate validated by the authorities <span class="k">in</span> <span class="nt">--requestheader-client-ca-file</span> is allowed.
+<span class="nt">--requestheader-client-ca-file</span> string
+    Root certificate bundle to use to verify client certificates on incoming requests before trusting usernames <span class="k">in </span>headers specified by <span class="nt">--requestheader-username-headers</span><span class="nb">.</span> WARNING: generally <span class="k">do </span>not depend on authorization being already <span class="k">done for </span>incoming requests.
+</code></pre></div></div>
+
+<p>当指定这个 CA 证书后，则 API Server 使用 HTTP 头进行认证时会检测其 HTTP 头中发送的证书是否由这个 CA 签发；同样它也可独立于其他 CA(可以是个独立的 CA)；具体可以参考 <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authenticating-proxy">Authenticating Proxy</a></p>
+
+<h3 id="24kubelet-证书">2.4、Kubelet 证书</h3>
+
+<p>对于 Kubelet 组件，API Server 单独提供了证书配置选项，同时 Kubelet 组件也提供了反向设置的相关选项:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># API Server</span>
+<span class="nt">--kubelet-certificate-authority</span> string
+    Path to a cert file <span class="k">for </span>the certificate authority.
+<span class="nt">--kubelet-client-certificate</span> string
+    Path to a client cert file <span class="k">for </span>TLS.
+<span class="nt">--kubelet-client-key</span> string
+    Path to a client key file <span class="k">for </span>TLS.
+
+<span class="c"># Kubelet</span>
+<span class="nt">--client-ca-file</span> string
+    If <span class="nb">set</span>, any request presenting a client certificate signed by one of the authorities <span class="k">in </span>the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.
+<span class="nt">--tls-cert-file</span> string
+    File containing x509 Certificate used <span class="k">for </span>serving HTTPS <span class="o">(</span>with intermediate certs, <span class="k">if </span>any, concatenated after server cert<span class="o">)</span><span class="nb">.</span> If <span class="nt">--tls-cert-file</span> and <span class="nt">--tls-private-key-file</span> are not provided, a self-signed certificate and key are generated <span class="k">for </span>the public address and saved to the directory passed to <span class="nt">--cert-dir</span><span class="nb">.</span>
+<span class="nt">--tls-private-key-file</span> string
+    File containing x509 private key matching <span class="nt">--tls-cert-file</span><span class="nb">.</span>
+</code></pre></div></div>
+
+<p>相信这个配置不用多说就能猜到，这个就是用于指定 API Server 与 Kubelet 通讯所使用的证书以及其签署的 CA；同样这个 CA 可以完全独立与上述其他CA</p>
+
+<h2 id="三service-account-证书">三、Service Account 证书</h2>
+
+<p>在 API Server 配置中，对于 Service Account 同样有两个证书配置:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--service-account-key-file</span> stringArray
+    File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify ServiceAccount tokens. The specified file can contain multiple keys, and the flag can be specified multiple <span class="nb">times </span>with different files. If unspecified, <span class="nt">--tls-private-key-file</span> is used. Must be specified when <span class="nt">--service-account-signing-key</span> is provided
+<span class="nt">--service-account-signing-key-file</span> string
+    Path to the file that contains the current private key of the service account token issuer. The issuer will sign issued ID tokens with this private key. <span class="o">(</span>Requires the <span class="s1">'TokenRequest'</span> feature gate.<span class="o">)</span>
+</code></pre></div></div>
+
+<p>这两个配置描述了对 Service Account 进行签名验证时所使用的证书；不过需要注意的是这里并没有明确要求证书 CA，所以这两个证书的 CA 理论上也是可以完全独立的；至于未要求 CA 问题，可能是由于 jwt 库并不支持 CA 验证</p>
+
+<h2 id="四总结">四、总结</h2>
+
+<p>Kubernetes 中大部分证书都是用于 API Server 各种鉴权使用的；在不同鉴权方案或者对象上实际证书体系可以完全不同；具体是使用多个 CA 好还是都用一个，取决于集群规模、安全性要求等等因素，至少目前来说没有明确的那个好与不好</p>
+
+<p>最后，嗯…吹牛逼就吹到这，有点晚了，得睡觉了…</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

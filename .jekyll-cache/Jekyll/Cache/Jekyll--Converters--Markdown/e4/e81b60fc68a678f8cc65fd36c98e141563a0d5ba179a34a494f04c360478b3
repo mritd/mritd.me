@@ -1,0 +1,270 @@
+I"PM<p><img src="https://cdn.oss.link/markdown/hexo_gradle_logo.png" alt="Gradle_logo" /></p>
+
+<blockquote>
+  <p>本文参考自 <a href="https://www.gitbook.com/book/dongchuan/gradle-user-guide-/details">Gradle User Guide 中文版</a> 感谢其翻译贡献者</p>
+</blockquote>
+
+<!--more-->
+
+<h2 id="安装gradle">安装Gradle</h2>
+<ul>
+  <li>下载安装包 <a href="http://gradle.org/gradle-download/">下载地址</a></li>
+  <li>配置环境变量 如下</li>
+</ul>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_gradle_home.jpg" alt="GRADLE_HOME" /></p>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_gradle_path.jpg" alt="GRADLE_PATH" /></p>
+
+<h2 id="gradle-基本概念">Gradle 基本概念</h2>
+
+<h3 id="projects">Projects</h3>
+<blockquote>
+  <p>每一个构建由一个或者多个 Project 构成，每个 Project 代表一个资源，具体做什么取决与如何定义该 Project，它可能代表一个发布的 zip 文件，也可能代表某项动作，比如部署应用等。</p>
+</blockquote>
+
+<h3 id="tasks">Tasks</h3>
+<blockquote>
+  <p>每个 Project 由一个或者多个 task 组成，每个 task 可以是更细致化的构建操作，比如编译 class文件，创建 jar 文件，生成 javadoc 文档等。</p>
+</blockquote>
+
+<h2 id="gradle-hello-world">Gradle Hello World</h2>
+
+<blockquote>
+  <p>我们可以通过 <code class="highlighter-rouge">gradle</code> 命令来完成一次构建，<strong><code class="highlighter-rouge">gradle</code> 命令会在当前目录查找一个叫 <code class="highlighter-rouge">build.gradle</code> 的描述文件来完成构建</strong>。严格来说它是一个构建脚本，类似于 Maven 的 <code class="highlighter-rouge">POM.xml</code> 文件；用来描述整个构建过程；以下是一个 <code class="highlighter-rouge">Hello World</code> 示例。</p>
+</blockquote>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">{</span>
+    <span class="n">doLast</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s1">'Hello World!'</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>将以上脚本保存为 <code class="highlighter-rouge">build.gradle</code>；并在当前目录执行 <code class="highlighter-rouge">gradle -q helloWorld</code> 尝试运行该 task。
+<strong>注意：<code class="highlighter-rouge">-q</code> 代表 quite 模式，不显示 Gradle 的日志信息。</strong></p>
+
+<h2 id="快捷定义任务">快捷定义任务</h2>
+
+<p>以上代码，<code class="highlighter-rouge">doLast</code> 作为 <code class="highlighter-rouge">helloWorld</code> 的一个 Action，此时可以通过如下方式快捷定义：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s1">'Hello World!'</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="在-gradle-中使用-groovy">在 Gradle 中使用 Groovy</h2>
+<p>Gradle 是基于 Groovy 的，在 build.gradle 中可以使用 Groovy 书写(虽然我不会…)；样例如下(测试命令行中文乱码)：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">upper</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">testStr</span> <span class="o">=</span> <span class="s2">"AbcD"</span>
+    <span class="n">println</span> <span class="s2">"原始字符："</span> <span class="o">+</span> <span class="n">testStr</span>
+    <span class="n">println</span> <span class="s2">"转换大写："</span> <span class="o">+</span> <span class="n">testStr</span><span class="o">.</span><span class="na">toUpperCase</span><span class="o">()</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="任务依赖性">任务依赖性</h2>
+
+<p>Gradle 支持任务间的依赖关系，如下所示：</p>
+
+<pre><code class="language-grovvy">task testDepends &lt;&lt; {
+    println "taskDepends"
+}
+
+// 设置依赖关系
+task test1(dependsOn: testDepends) &lt;&lt; {
+    println "test1"
+}
+
+</code></pre>
+
+<p>执行 <code class="highlighter-rouge">gradle -q test1</code> 命令运行 task1 任务，此时由于 task1 任务依赖于 testDepends 任务，所以会先执行 testDepends 任务，在执行 test1 任务。</p>
+
+<p><strong>注意：build.gradle 脚本中，任务依赖时没有顺序区分，也就是说可以先声明一个任务依赖于另一个任务，而后定义另一个任务，总结来说就是 task 书写顺序不会影响 任务间依赖关系。</strong></p>
+
+<h2 id="任务的动态性">任务的动态性</h2>
+
+<p>由于 Gradle 使用 Groovy 作为构建语言，Groovy 函数式的特性可以让我们动态的创建任务，而无需预先设定好(个人认为实际构建可能没这么变态的需要)；样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 此时相当于定义了 4个 task 分别是 taskDynamic0、...1、...2、...3</span>
+<span class="mi">4</span><span class="o">.</span><span class="na">times</span> <span class="o">{</span> <span class="n">counter</span> <span class="o">-&gt;</span>
+    <span class="n">task</span> <span class="s2">"taskDynamic$counter"</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s2">"taskDynamic$counter"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="通过api使用已存在的任务">通过API使用已存在的任务</h2>
+
+<p>Gradle 中可以先定义 task，然后再指定这些 task 之间的关系，就像下面这样：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 先利用动态性 创建4个任务</span>
+<span class="mi">4</span><span class="o">.</span><span class="na">times</span> <span class="o">{</span> <span class="n">counter</span> <span class="o">-&gt;</span>
+    <span class="n">task</span> <span class="s2">"task$counter"</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+        <span class="n">println</span> <span class="s2">"task----&gt; $counter"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// 再指定依赖关系</span>
+<span class="n">task0</span><span class="o">.</span><span class="na">dependsOn</span> <span class="n">task1</span><span class="o">,</span><span class="n">task3</span>
+
+</code></pre></div></div>
+
+<p>同时 Gradle 还允许在任务定以后动态的改变或添加其行为，如下所示：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义任务</span>
+<span class="n">task</span> <span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"default"</span>
+<span class="o">}</span>
+
+<span class="c1">// 然后动态添加 任务开始动作</span>
+<span class="n">test1</span><span class="o">.</span><span class="na">doFirst</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"First"</span>
+<span class="o">}</span>
+
+<span class="c1">// 动态添加 任务结束动作</span>
+<span class="n">test1</span><span class="o">.</span><span class="na">doLast</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"Last"</span>
+<span class="o">}</span>
+
+<span class="c1">// 在添加一个结束动作</span>
+<span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"the end"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>注意：上面一直使用的 <code class="highlighter-rouge">&lt;&lt;</code> 实际是 doLast 的简写形式。</strong></p>
+
+<h2 id="任务引用短标记语法">任务引用(短标记语法)</h2>
+
+<p>Gradle 可以通过 <code class="highlighter-rouge">$</code> 符号引用另一个任务，可以是另一个任务的执行结果；也可以是其属性，比如 <code class="highlighter-rouge">task.name</code> 将返回某个任务的名字，样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义一个任务</span>
+<span class="n">task</span> <span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">prinln</span> <span class="s2">"test1111111"</span>
+<span class="o">}</span>
+<span class="c1">// 然后在另一个任务里引用</span>
+<span class="n">task</span> <span class="n">test2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"test2---&gt;$test1.name"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="自定义任务属性">自定义任务属性</h2>
+
+<p>在 Gradle 中我们可以自定义任务的属性，然后再恰当的时候加以引用，在设置某个任务属性时 <strong>采用 <code class="highlighter-rouge">ext</code> 关键字定义该属性</strong>；个人理解类似 java 的 this 关键字；样例如下：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 testTask1 的两个属性</span>
+<span class="n">task</span> <span class="n">testTask1</span> <span class="o">{</span>
+    <span class="n">ext</span><span class="o">.</span><span class="na">property1</span> <span class="o">=</span> <span class="s2">"1"</span>
+    <span class="n">ext</span><span class="o">.</span><span class="na">property2</span> <span class="o">=</span> <span class="s2">"2"</span>
+<span class="o">}</span>
+<span class="c1">// 可直接打印引用，字符串中可采用短标记 $ 引用</span>
+<span class="n">task</span> <span class="n">testTask2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="n">testTask1</span><span class="o">.</span><span class="na">property1</span>
+    <span class="n">println</span> <span class="s2">"$testTask1.property2"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>注意：定义任务属性时必须在任务体中，而不能在 doLast 或 doFirst Action 中定义！</strong></p>
+
+<h2 id="调用-ant-任务">调用 Ant 任务</h2>
+
+<blockquote>
+  <p>以下直接 copy 的，本人没玩过 Ant……</p>
+</blockquote>
+
+<p>Ant 任务是 Gradle 的一等公民. Gradle 通过 Groovy 出色的集成了 Ant 任务. Groovy 自带了一个 AntBuilder. 相比于从一个 build.xml 文件中使用 Ant 任务, 在 Gradle 里使用 Ant 任务更为方便和强大. 从下面的例子中, 你可以学习如何执行 Ant 任务以及如何访问 ant 属性：</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">loadfile</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="kt">def</span> <span class="n">files</span> <span class="o">=</span> <span class="n">file</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">listFiles</span><span class="o">().</span><span class="na">sort</span><span class="o">()</span>
+        <span class="n">files</span><span class="o">.</span><span class="na">each</span> <span class="o">{</span> <span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">file</span><span class="o">.</span><span class="na">isFile</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">ant</span><span class="o">.</span><span class="na">loadfile</span><span class="o">(</span><span class="nl">srcFile:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">)</span>
+            <span class="n">println</span> <span class="s2">" *** $file.name ***"</span>
+            <span class="n">println</span> <span class="s2">"${ant.properties[file.name]}"</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="使用方法">使用方法</h2>
+
+<blockquote>
+  <p>又用 Ant…… My God ….. 接着 copy</p>
+</blockquote>
+
+<p>Gradle 能很好地衡量你编写脚本的逻辑能力. 首先要做的是如何提取一个方法.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">checksum</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">fileList</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">each</span> <span class="o">{</span><span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="n">ant</span><span class="o">.</span><span class="na">checksum</span><span class="o">(</span><span class="nl">file:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="s2">"cs_$file.name"</span><span class="o">)</span>
+        <span class="n">println</span> <span class="s2">"$file.name Checksum: ${ant.properties["</span><span class="n">cs_$file</span><span class="o">.</span><span class="na">name</span><span class="s2">"]}"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">loadfile</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">fileList</span><span class="o">(</span><span class="s1">'../antLoadfileResources'</span><span class="o">).</span><span class="na">each</span> <span class="o">{</span><span class="n">File</span> <span class="n">file</span> <span class="o">-&gt;</span>
+        <span class="n">ant</span><span class="o">.</span><span class="na">loadfile</span><span class="o">(</span><span class="nl">srcFile:</span> <span class="n">file</span><span class="o">,</span> <span class="nl">property:</span> <span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">)</span>
+        <span class="n">println</span> <span class="s2">"I'm fond of $file.name"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">File</span><span class="o">[]</span> <span class="nf">fileList</span><span class="o">(</span><span class="n">String</span> <span class="n">dir</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">file</span><span class="o">(</span><span class="n">dir</span><span class="o">).</span><span class="na">listFiles</span><span class="o">({</span><span class="n">file</span> <span class="o">-&gt;</span> <span class="n">file</span><span class="o">.</span><span class="na">isFile</span><span class="o">()</span> <span class="o">}</span> <span class="k">as</span> <span class="n">FileFilter</span><span class="o">).</span><span class="na">sort</span><span class="o">()</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="默认任务">默认任务</h2>
+
+<blockquote>
+  <p>终于没有 Ant 了……</p>
+</blockquote>
+
+<p>Gradle 允许在一个构建脚本(<code class="highlighter-rouge">build.gradle</code>) 中定义默认需要执行的任务，只需要使用 <code class="highlighter-rouge">defaultTasks</code> 关键字即可，此时可直接在构建脚本目录执行 <code class="highlighter-rouge">gradle [-q]</code> 来执行构建过程，样例如下</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 默认的任务</span>
+<span class="n">defaultTasks</span> <span class="s2">"testTask1"</span><span class="o">,</span><span class="s2">"testTask2"</span>
+<span class="n">task</span> <span class="n">testTask1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask1"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">testTask2</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask2"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="n">testTask3</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"testTask3"</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<h2 id="dag-配置">DAG 配置</h2>
+<p><strong>原文：</strong>正如我们之后的详细描述, Gradle 有一个配置阶段和执行阶
+段. 在配置阶段后, Gradle 将会知道应执行的所有任务. Gradle 为你提供一个”钩子”, 以便利用这些信息. 举个例子, 判断发布的任务是否在要被执行的任务当中. 根据这一点, 你可以给一些变量指定不同的值.</p>
+
+<p><strong>样例代码：</strong></p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">distribution</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s2">"We build the zip with version=$version"</span>
+<span class="o">}</span>
+<span class="n">task</span> <span class="nf">release</span><span class="o">(</span><span class="nl">dependsOn:</span> <span class="s1">'distribution'</span><span class="o">)</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
+    <span class="n">println</span> <span class="s1">'We release now'</span>
+<span class="o">}</span>
+<span class="n">gradle</span><span class="o">.</span><span class="na">taskGraph</span><span class="o">.</span><span class="na">whenReady</span> <span class="o">{</span><span class="n">taskGraph</span> <span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">taskGraph</span><span class="o">.</span><span class="na">hasTask</span><span class="o">(</span><span class="n">release</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s1">'1.0'</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s1">'1.0-SNAPSHOT'</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p><strong>个人理解：</strong>关于 DAG 配置的描述，大致意思应该是说，Gradle 构建时会执行两个阶段：配置阶段、执行阶段；在配置阶段；Gradle 主要完成所有的配置工作，应该会读取整个构建脚本，分析里面的语义；这也可能是 Gradle 定义 task 等不分先后顺序的原因；在这个阶段，我们可以通过内置变量(DAG)和内置方法来动态的判断并调整后续的构建流程；当所有构建流程确定后，再进行第二个构建阶段。
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET

@@ -1,0 +1,388 @@
+I"�<<blockquote>
+  <p>操作环境为虚拟机中 CentOS_6.7 , <a href="http://mirrors.aliyun.com/help/centos">阿里镜像源</a></p>
+</blockquote>
+
+<h3 id="一安装-nodejs">一、安装 Node.js</h3>
+
+<ul>
+  <li>首先下载 <code class="highlighter-rouge">Node.js</code> <a href="https://nodejs.org/en/download/">点我下载</a></li>
+  <li>解压到任意目录</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">tar</span> <span class="nt">-zxvf</span> node-v4.2.4-linux-x64.tar.gz /usr/local/node
+</code></pre></div></div>
+
+<ul>
+  <li>配置环境变量</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 /etc/profile (使用vim)</span>
+vim /etc/profile
+<span class="c"># 在底部添加 PATH 变量</span>
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/local/node/bin
+<span class="c"># 最后保存并使其生效即可</span>
+<span class="nb">source</span> /etc/profile
+</code></pre></div></div>
+
+<!--more-->
+
+<h3 id="二安装-hexo">二、安装 Hexo</h3>
+
+<ul>
+  <li>创建博客所在目录</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>hexo
+</code></pre></div></div>
+
+<ul>
+  <li>安装 Hexo</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 切换目录</span>
+<span class="nb">cd </span>hexo
+<span class="c"># 安装Git(已安装可跳过)</span>
+yum <span class="nb">install </span>git-core
+<span class="c"># 安装 Hexo</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> hexo-cli
+<span class="c"># 初始化 hexo</span>
+hexo init
+</code></pre></div></div>
+
+<ul>
+  <li>启动 Hexo 测试 是否安装成功</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动测试</span>
+hexo server
+<span class="c"># 此时控制台应该打印 如下语句</span>
+INFO  Hexo is running at http://0.0.0.0:4000/. Press Ctrl+C to stop.
+<span class="c"># 测试访问 http://IP:4000 ，效果如下</span>
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_start.png" alt="Hexo Start" /></p>
+
+<ul>
+  <li>安装扩展程序包</li>
+</ul>
+
+<blockquote>
+  <p>Hexo 提供了其他许多扩展插件，比如 git插件、快捷命令插件等</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install </span>hexo-generator-index <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-generator-archive <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-generator-category <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-generator-tag <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-server <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-deployer-git <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-deployer-heroku <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-deployer-rsync <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-deployer-openshift <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-renderer-marked <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-renderer-stylus <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-generator-feed <span class="nt">--save</span>
+npm <span class="nb">install </span>hexo-generator-sitemap <span class="nt">--save</span>
+</code></pre></div></div>
+
+<h3 id="三hexo-相关命令">三、Hexo 相关命令</h3>
+
+<ul>
+  <li>新建文章(会在 <code class="highlighter-rouge">hexo/source/_post</code> 下生成对应.md 文件)</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hexo n “文章名称”
+</code></pre></div></div>
+
+<ul>
+  <li>生成静态文件(位于 <code class="highlighter-rouge">hexo/public</code> 目录)</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hexo g
+</code></pre></div></div>
+
+<ul>
+  <li>启动 Hexo 预览</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hexo s
+</code></pre></div></div>
+
+<ul>
+  <li>提交部署(需要相关配置)</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hexo d
+</code></pre></div></div>
+
+<h3 id="四hexo相关设置">四、Hexo相关设置</h3>
+
+<blockquote>
+  <p>直接上配置文件 (<code class="highlighter-rouge">hexo/_config.yml</code>)，里面包括主题、github等参数设置，主题、Github配置请看下面</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Hexo Configuration</span>
+<span class="c">## Docs: http://hexo.io/docs/configuration.html</span>
+<span class="c">## Source: https://github.com/hexojs/hexo/</span>
+
+<span class="c"># Site 站点相关配置</span>
+title: 烟雨平生
+subtitle: 一蓑烟雨任平生，也无风雨也无晴。
+description: 记录生活点滴，不断学习，每走一步，在这里印下足迹。
+author: mritd
+language: zh-CN
+timezone:
+
+<span class="c"># URL 网站URL</span>
+<span class="c">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span>
+url: http://www.mritd.me
+root: /
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+
+<span class="c"># Directory 相关文件夹设置</span>
+source_dir: <span class="nb">source
+</span>public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+<span class="c"># Writing 文章设置</span>
+new_post_name: :title-:year-:month-:day.md <span class="c"># 新文章(post)生成为文件名</span>
+default_layout: post
+titlecase: <span class="nb">false</span> <span class="c"># Transform title into titlecase</span>
+external_link: <span class="nb">true</span> <span class="c"># Open external links in new tab</span>
+filename_case: 0
+render_drafts: <span class="nb">false
+</span>post_asset_folder: <span class="nb">false
+</span>relative_link: <span class="nb">false
+</span>future: <span class="nb">true
+</span>highlight:
+  <span class="nb">enable</span>: <span class="nb">true
+  </span>line_number: <span class="nb">true
+  </span>auto_detect: <span class="nb">true
+  </span>tab_replace:
+
+<span class="c"># Category &amp; Tag</span>
+default_category: uncategorized
+category_map:
+tag_map:
+
+<span class="c"># Date / Time format</span>
+<span class="c">## Hexo uses Moment.js to parse and display date</span>
+<span class="c">## You can customize the date format as defined in</span>
+<span class="c">## http://momentjs.com/docs/#/displaying/format/</span>
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+<span class="c"># Pagination</span>
+<span class="c">## Set per_page to 0 to disable pagination</span>
+per_page: 10
+pagination_dir: page
+
+<span class="c"># Extensions</span>
+<span class="c">## Plugins: http://hexo.io/plugins/</span>
+<span class="c">## Themes: http://hexo.io/themes/</span>
+theme: yilia  <span class="c">#主题设置</span>
+stylus:
+  compress: <span class="nb">true</span>
+<span class="c"># Deployment</span>
+<span class="c">## Docs: http://hexo.io/docs/deployment.html</span>
+deploy: <span class="c">#部署插件设置(目前只自动部署到github)</span>
+  <span class="nb">type</span>: git
+  repo: git@github.com:mritd/mritd.github.io.git
+  branch: master
+  message: <span class="s1">'站点更新: \{\{ now("YYYY-MM-DD HH:mm:ss") }}'</span> <span class="c"># 注意 反斜线应该去掉，这里加上只是因为 jekyll 生成博客有问题</span>
+</code></pre></div></div>
+
+<h3 id="五主题设置">五、主题设置</h3>
+
+<ul>
+  <li>推荐主题 <a href="http://litten.github.io/2014/08/31/hexo-theme-yilia/">yilia</a></li>
+</ul>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_yilia.png" alt="hexo_yilia" /></p>
+
+<ul>
+  <li>主题安装</li>
+</ul>
+
+<blockquote>
+  <p>1、 无论什么主题，先 Download 到本地，拿 yilia 为例，由于其托管于github，直接git clone即可</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 任意目录下执行会生成 yilia 文件夹</span>
+git clone https://github.com/litten/hexo-theme-yilia.git yilia
+</code></pre></div></div>
+
+<blockquote>
+  <p>2、 根据作者教程更改一些参数，主要更改 <strong>主题目录</strong> 下的 _config.yml文件 (yilia/_config.yml)，我的配置样例如下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Header</span>
+menu:
+  主页: /
+  所有文章: /archives
+  随笔: /categories/随笔
+  IT: /categories/IT
+  相册: /tags/相册
+
+<span class="c"># SubNav</span>
+subnav:
+  github: <span class="s2">"https://github.com/mritd/"</span>
+  <span class="c">#weibo: "#"</span>
+  <span class="c">#rss: "#"</span>
+  <span class="c">#zhihu: "#"</span>
+  <span class="c">#douban: "#"</span>
+  mail: <span class="s2">"mailto:mritd1234@gmail.com"</span>
+  <span class="c">#facebook: "#"</span>
+  google: <span class="s2">"https://plus.google.com/u/0/111440014763883747104"</span>
+  <span class="c">#twitter: "#"</span>
+  <span class="c">#linkedin: "#"</span>
+
+rss: /atom.xml
+
+<span class="c"># Content</span>
+excerpt_link: more
+fancybox: <span class="nb">true
+</span>mathjax: <span class="nb">true</span>
+
+<span class="c"># 是否开启动画效果</span>
+animate: <span class="nb">true</span>
+
+<span class="c"># 是否在新窗口打开链接</span>
+open_in_new: <span class="nb">false</span>
+
+<span class="c"># Miscellaneous</span>
+google_analytics: <span class="s1">''</span>
+favicon: /favicon.ico
+
+<span class="c">#你的头像url</span>
+avatar: /logo.jpeg
+<span class="c">#是否开启分享</span>
+share: <span class="nb">true
+</span>share_addthis: <span class="nb">false</span>
+<span class="c">#是否开启多说评论，填写你在多说申请的项目名称 duoshuo: duoshuo-key</span>
+<span class="c">#若使用disqus，请在博客config文件中填写disqus_shortname，并关闭多说评论</span>
+duoshuo: <span class="s1">'mritd4hexo'</span>
+<span class="c">#是否开启云标签</span>
+tagcloud: <span class="nb">true</span>
+
+<span class="c">#是否开启友情链接</span>
+<span class="c">#不开启——</span>
+<span class="c">#friends: false</span>
+<span class="c">#开启——</span>
+friends:
+  HelloDog: http://wsgzao.github.io/
+  咚门: http://www.dearzd.com/DBlog/
+  Coding云: http://www.codingyun.com/
+  伯乐在线: http://blog.jobbole.com/
+
+<span class="c">#是否开启“关于我”。</span>
+<span class="c">#不开启——</span>
+<span class="c">#aboutme: false</span>
+<span class="c">#开启——</span>
+aboutme: 社会三好青年，祖国未来栋梁，世界未来领袖......前面都是吹牛逼的，我就是个逗比......
+</code></pre></div></div>
+
+<blockquote>
+  <p>3、配置完成后将主题目录复制到 <code class="highlighter-rouge">hexo/themes</code> 目录下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> <span class="nt">-r</span> yilia hexo/themes
+</code></pre></div></div>
+
+<blockquote>
+  <p>4、修改hexo主配置文件为对应的主题</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">## Themes: http://hexo.io/themes/</span>
+theme: yilia  <span class="c">#主题名称</span>
+stylus:
+  compress: <span class="nb">true</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>5、重新生成静态文件 访问测试</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hexo clean   <span class="c"># 清除缓存</span>
+hexo g       <span class="c"># 生成静态文件</span>
+hexo s       <span class="c"># 启动服务器预览</span>
+</code></pre></div></div>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_mritd.png" alt="hexo_mritd" /></p>
+
+<h3 id="六部署到github">六、部署到Github</h3>
+
+<ul>
+  <li>新建 Github 项目</li>
+</ul>
+
+<blockquote>
+  <p>首先注册 Github 账户，这里掠过，然后创建一个新项目，项目名称为 <strong><em>用户名.github.io</em></strong> ，比如我的Github用户名是mritd，则创建的项目名为 <code class="highlighter-rouge">mritd.github.io</code></p>
+</blockquote>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_githubproject.png" alt="hexo_githubproject" /></p>
+
+<ul>
+  <li>生成密钥</li>
+</ul>
+
+<blockquote>
+  <p>服务器生成秘钥；如果在 <code class="highlighter-rouge">$HOME/.ssh </code> 下有 id_rsa、id_rsa.pub 则可忽略创建过程</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 执行以下命令然后一路回车 创建秘钥</span>
+ssh-keygen
+<span class="c"># 复制 公钥内容 稍后加入Github 账户的 sshkey中</span>
+less ~/.ssh/id_rsa.pub
+</code></pre></div></div>
+
+<ul>
+  <li>设置 Github SSH Key</li>
+</ul>
+
+<blockquote>
+  <p>登录 Github后访问 <a href="https://github.com/settings/ssh">https://github.com/settings/ssh</a>，选择 <code class="highlighter-rouge">Add SSH key</code> ,取个名字然后把内容粘进去，保存即可。</p>
+</blockquote>
+
+<p><img src="https://cdn.oss.link/markdown/hexo_githubaddsshkey.png" alt="hexo_githubaddsshkey" /></p>
+
+<ul>
+  <li>配置 Hexo 部署到 Github</li>
+</ul>
+
+<blockquote>
+  <p>修改 Hexo 配置文件即可 如下</p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Deployment</span>
+<span class="c">## Docs: http://hexo.io/docs/deployment.html</span>
+deploy: <span class="c">#部署插件设置(目前只自动部署到github)</span>
+  <span class="nb">type</span>: git
+  repo: git@github.com:mritd/mritd.github.io.git <span class="c"># 你新建的Github项目地址(用户名.github.io)</span>
+  branch: master
+  message: <span class="s1">'站点更新: \{\{ now("YYYY-MM-DD HH:mm:ss") }}'</span> <span class="c">#每次部署后更新信息 注意 反斜线应该去掉，这里加上只是因为 jekyll 生成博客有问题</span>
+</code></pre></div></div>
+
+<ul>
+  <li>部署到Github</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 执行以下命令将自动更新到Github</span>
+hexo d
+</code></pre></div></div>
+
+<h3 id="示例站点">示例站点</h3>
+
+<ul>
+  <li>示例站点 ==&gt; <a href="http://mritd.me">漠然</a></li>
+  <li>Github 镜像站点 ==&gt; <a href="https://github.com/mritd/mritd.github.io">mritd.github.io</a></li>
+  <li>OSC@Git Hexo备份 ==&gt; <a href="http://git.oschina.net/D.k/Blog_backup">Blog_backup</a>
+转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
+</ul>
+:ET

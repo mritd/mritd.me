@@ -1,0 +1,157 @@
+I"� <h2 id="一安装-shadowsocks">一、安装 Shadowsocks</h2>
+
+<p>Ubuntu 使用如下命令安装即可，其他系统可使用 python 安装，具体请自行 Google</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get <span class="nb">install </span>shadowsocks <span class="nt">-y</span>
+</code></pre></div></div>
+
+<p>安装完成后编辑配置文件，填写对应服务器地址</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /etc/shadowsocks.json
+</code></pre></div></div>
+
+<p>服务器配置样例如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">{</span>
+    <span class="s2">"server"</span>:<span class="s2">"1.1.1.1"</span>,
+    <span class="s2">"server_port"</span>:8383,
+    <span class="s2">"local_address"</span>: <span class="s2">"127.0.0.1"</span>,
+    <span class="s2">"local_port"</span>:1080,
+    <span class="s2">"password"</span>:<span class="s2">"passwd"</span>,
+    <span class="s2">"timeout"</span>:300,
+    <span class="s2">"method"</span>:<span class="s2">"aes-256-cfb"</span>,
+    <span class="s2">"fast_open"</span>: <span class="nb">true</span>,
+    <span class="s2">"workers"</span>: 1
+<span class="o">}</span>
+</code></pre></div></div>
+
+<!--more-->
+
+<p>最后启动代理</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">nohup </span>sslocal <span class="nt">-c</span> /etc/shadowsocks.json &amp;
+</code></pre></div></div>
+
+<h2 id="二将-socks5-代理转化为-http-代理">二、将 Socks5 代理转化为 http 代理</h2>
+
+<p>socks5 代理转换成 http 代理需要借助第三方软件完成，这里使用 <strong>privoxy</strong>，Ubuntu 下使用如下命令安装 <strong>privoxy</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get <span class="nb">install </span>privoxy <span class="nt">-y</span>
+</code></pre></div></div>
+
+<p>编辑配置文件</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 先备份原配置文件</span>
+<span class="nb">mv</span> /etc/privoxy/config /etc/privoxy/config.bak
+<span class="c"># 在新建一个配置文件</span>
+vim /etc/privoxy/config
+</code></pre></div></div>
+
+<p><strong>privoxy 配置样例如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 转发地址</span>
+forward-socks5   /               127.0.0.1:1080 <span class="nb">.</span>
+<span class="c"># 监听地址</span>
+listen-address  localhost:8118
+<span class="c"># local network do not use proxy</span>
+forward         192.168.<span class="k">*</span>.<span class="k">*</span>/     <span class="nb">.</span>
+forward            10.<span class="k">*</span>.<span class="k">*</span>.<span class="k">*</span>/     <span class="nb">.</span>
+forward           127.<span class="k">*</span>.<span class="k">*</span>.<span class="k">*</span>/     <span class="nb">.</span>
+</code></pre></div></div>
+
+<p><strong>最后启动 privoxy，Ubuntu 16 启动命令如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动</span>
+systemctl start privoxy
+<span class="c"># 查看状态</span>
+systemctl status privoxy
+</code></pre></div></div>
+
+<h2 id="三创建快捷代理命令">三、创建快捷代理命令</h2>
+
+<p>完成上两步配置后，即可将需要代理的软件指向 <code class="highlighter-rouge">127.0.0.1:8118</code> 端口即可，但是有些命令行操作并无法设置，只能通过全局代理变量 <code class="highlighter-rouge">http_proxy</code> 等设置，此时设置后全局都受影响，为此可以写一个代理脚本，如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /usr/local/bin/proxy
+</code></pre></div></div>
+
+<p><strong>脚本内容如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="nv">http_proxy</span><span class="o">=</span>http://127.0.0.1:8118 <span class="nv">https_proxy</span><span class="o">=</span>http://127.0.0.1:8118 <span class="nv">$*</span>
+</code></pre></div></div>
+
+<p><strong>赋予可执行权限</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">chmod</span> +x /usr/local/bin/proxy
+</code></pre></div></div>
+
+<p><strong>最后，对任何想要走代理的命令，只需要在前面加上 <code class="highlighter-rouge">proxy</code> 即可，样例如下</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>proxy gvm <span class="nb">install </span>go1.6.3
+</code></pre></div></div>
+
+<h2 id="四快速配置脚本">四、快速配置脚本</h2>
+
+<p><strong>最后写了一个快速设置脚本，比较简陋…..</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c"># 更新软件源</span>
+apt-get update <span class="o">&amp;&amp;</span> apt-get upgrade <span class="nt">-y</span>
+<span class="c"># 安装 pip 和 privoxy</span>
+apt-get <span class="nb">install </span>python-pip privoxy <span class="nt">-y</span>
+<span class="c">#  安装 shadowsocks</span>
+pip <span class="nb">install </span>shadowsocks
+
+<span class="c"># 相关配置文件</span>
+<span class="nv">sscfg</span><span class="o">=</span><span class="s2">"/etc/ss.json"</span>
+<span class="nv">privoxycfg</span><span class="o">=</span><span class="s2">"/etc/privoxy/config"</span>
+<span class="nv">proxycmd</span><span class="o">=</span><span class="s2">"/usr/local/bin/proxy"</span>
+
+<span class="c"># 创建 shadowsocks 配置样例</span>
+<span class="nb">cat</span> <span class="o">&gt;</span><span class="s2">"</span><span class="nv">$sscfg</span><span class="s2">"</span><span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+{
+    "server":"1.1.1.1",
+    "server_port":8383,
+    "local_address": "127.0.0.1",
+    "local_port":1080,
+    "password":"passwd",
+    "timeout":300,
+    "method":"aes-256-cfb",
+    "fast_open": true,
+    "workers": 1
+}
+</span><span class="no">EOF
+
+</span><span class="c"># 备份 privoxy 配置</span>
+<span class="nb">mv</span> <span class="nv">$privoxycfg</span> /etc/privoxy/config.bak
+
+<span class="c"># 创建 privoxy 配置</span>
+<span class="nb">cat</span> <span class="o">&gt;</span><span class="s2">"</span><span class="nv">$privoxycfg</span><span class="s2">"</span><span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+# 转发地址
+forward-socks5   /               127.0.0.1:1080 .
+# 监听地址
+listen-address  localhost:8118
+# local network do not use proxy
+forward         192.168.*.*/     .
+forward            10.*.*.*/     .
+forward           127.*.*.*/     .
+</span><span class="no">EOF
+
+</span><span class="c"># 创建代理脚本</span>
+<span class="nb">cat</span> <span class="o">&gt;</span><span class="s2">"</span><span class="nv">$proxycmd</span><span class="s2">"</span><span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+#!/bin/bash
+http_proxy=http://127.0.0.1:8118 https_proxy=http://127.0.0.1:8118 </span><span class="se">\$</span><span class="sh">*
+</span><span class="no">EOF
+
+</span><span class="c"># 增加执行权限</span>
+<span class="nb">chmod</span> +x <span class="nv">$proxycmd</span>
+
+<span class="nb">echo</span> <span class="s2">"安装完成!"</span>
+<span class="nb">echo</span> <span class="s2">"shadowsocks 配置请修改 /etc/ss.json!"</span>
+<span class="nb">echo</span> <span class="s2">"使用 nohup sslocal -c /etc/ss.json &amp; 后台运行 shadowsocks!"</span>
+<span class="nb">echo</span> <span class="s2">"使用 systemctl start privoxy 启动privoxy!"</span>
+<span class="nb">echo</span> <span class="s2">"使用 proxy xxxx 代理指定应用!"</span>
+</code></pre></div></div>
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+:ET
