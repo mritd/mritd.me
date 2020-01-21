@@ -177,6 +177,52 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/03/20/btrfs-note/">
+        <h2 class="post-title">
+            Btrfs 笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  btrfs 是 Oracle 07 年基于 GPL 协议开源的 Linux 文件系统，其目的是替换传统的 Ext3、Ext4 系列文件系统；Ext 系列文件系统存在着诸多问题，比如反删除能力有限等；而 btrfs 在解决问题同时提供了更加强大的高级特性
+
+
+一、Btrfs 特性
+
+btrfs 在文件系统级别支持写时复制(cow)机制，并且支持快照(增量快照)、支持对单个文件快照；同时支...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 20, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2017/03/18/set-up-vnc-server-on-centos-7/">
+        <h2 class="post-title">
+            CentOS 7 配置 VNC Server
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近决定把小主机扔到客厅跟路由器放在一起(远程开机 666），因为本来就跑的是 Linux，平时图形化需求也不多；但是为了保险起见准备搞一个 VNC，以便必要时图形化上去，比如强制删除一些 Virtual Box 虚拟机等，记录一下安装过程
+
+
+安装 VNC Server
+
+VNC Server 软件有很多，这里使用 tigervnc-server
+
+yum install epel-...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 18, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
         <h2 class="post-title">
             kargo 集群扩展及细粒度配置
@@ -358,53 +404,6 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/01/27/logical-volume-manager-note/">
-        <h2 class="post-title">
-            Logical Volume Manager 笔记
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  Logical Volume Manager 简称 LVM，LVM 是一种可用在Linux内核的逻辑分卷管理器；可用于管理磁盘驱动器或其他类似的大容量存储设备；LVM 依赖于 内核 device mapper 机制，可以实现动态伸缩逻辑卷大小，而屏蔽底层硬件变化，为后期磁盘扩展提供便利
-
-
-一、LVM 简介
-
-LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 27, 2017
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2017/01/21/use-frp-for-internal-network-wear/">
-        <h2 class="post-title">
-            利用 frp 进行内网穿透
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近新入了一台小主机，家里还有个树莓派，索性想通过小主机跑点东西，然后通过外网访问家里的设备；不过鉴于大天朝内网环境，没有公网 IP 并且多层路由的情况下只能选择使用内网穿透方案，以下记录了一下使用 frp 进行内网穿透的过程
-
-
-一、内网穿透原理
-
-简单地说，内网穿透依赖于 NAT 原理，根据 NAT 设备不同大致可分为以下 4 大类(前3种NAT类型可统称为cone类型)：
-
-
- ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 21, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -439,7 +438,7 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -475,7 +474,7 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             

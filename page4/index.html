@@ -177,6 +177,50 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/11/12/ci-cd-dockerfile/">
+        <h2 class="post-title">
+            CI/CD 之 Dockerfile
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近准备整理一下关于 CI/CD 的相关文档，写一个关于 CI/CD 的系列文章，这篇先从最基本的 Dockerfile 书写开始，本系列文章默认读者已经熟悉 Docker、Kubernetes 相关工具
+
+
+一、基础镜像选择
+
+这里的基础镜像指的是实际项目运行时的基础环境镜像，比如 Java 的 JDK 基础镜像、Nodejs 的基础镜像等；在制作项目的基础镜像时，我个人认为应当考虑...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 12, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2017/11/09/set-up-teleport/">
+        <h2 class="post-title">
+            Teleport 跳板机部署
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  由于业务需求，以前账号管理混乱，所以很多人有生产服务器的 root 权限；所以目前需要一个能 ssh 登录线上服务器的工具，同时具有简单的审计功能；找了好久找到了这个小工具，以下记录一下搭建教程
+
+
+一、环境准备
+
+目前准备了 3 台虚拟机，两台位于内网 NAT 之后，一台位于公网可以直接链接；使用时客户端通过工具连接到公网跳板机上，然后实现自动跳转到内网任意主机；并且具有相应的操作回...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 9, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/11/03/deep-learning-on-kubernetes/">
         <h2 class="post-title">
             Kubernetes 深度学习笔记
@@ -373,43 +417,6 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">
-        <h2 class="post-title">
-            手动档搭建 Kubernetes HA 集群
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  以前一直用 Kargo(基于 ansible) 来搭建 Kubernetes 集群，最近发现 ansible 部署的时候有些东西有点 bug，而且 Kargo 对 rkt 等也做了适配，感觉问题已经有点复杂化了；在 2.2 release 没出来这个时候，准备自己纯手动挡部署一下，Master HA 直接抄 Kargo 的就行了，以下记录一下;本文以下部分所有用到的 rpm 、配置文件...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 21, 2017
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2017/07/17/kubernetes-rbac-chinese-translation/">
-        <h2 class="post-title">
-            Kubernetes RBAC
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  基于角色的访问控制使用 rbac.authorization.k8s.io API 组来实现权限控制，RBAC 允许管理员通过 Kubernetes API 动态的配置权限策略。在 1.6 版本中 RBAC 还处于 Beat 阶段，如果想要开启 RBAC 授权模式需要在 apiserver 组件中指定 --authorization-mode=RBAC 选项。
-
-
-一、API Over...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 17, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -444,7 +451,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -480,7 +487,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             

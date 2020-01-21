@@ -177,6 +177,53 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/">
+        <h2 class="post-title">
+            kubeadm 搭建 HA kubernetes 集群
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  距离上一次折腾 kubeadm 大约已经一两年了(记不太清了)，在很久一段时间内一直采用二进制部署的方式来部署 kubernetes 集群，随着 kubeadm 的不断稳定，目前终于可以重新试试这个不错的工具了
+
+
+一、环境准备
+
+搭建环境为 5 台虚拟机，每台虚拟机配置为 4 核心 8G 内存，虚拟机 IP 范围为 172.16.10.21~25，其他软件配置如下
+
+
+  os ve...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2020/01/21/how-to-modify-dns-on-ubuntu18-server/">
+        <h2 class="post-title">
+            云服务器下 Ubuntu 18 正确的 DNS 修改
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近博客服务器换成了阿里云香港，个人还偶尔看美剧，所以做了一下 Netflix 分流；分流过程主要是做 DNS 解析 SNI 代理，调了半天记录一下
+
+
+一、起因
+
+Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Server，然后在 CoreDNS 上针对 Netflix 全部域名解析 forward 到一台国外可以解锁 Netflix 机器上；...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2019/11/05/writing-plugin-for-coredns/">
         <h2 class="post-title">
             如何编写一个 CoreDNS 插件
@@ -389,50 +436,6 @@ import (
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/">
-        <h2 class="post-title">
-            Kubernetes sample-cli-plugin 源码分析
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  写这篇文章的目的是为了继续上篇 Kubernetes 1.12 新的插件机制 中最后部分对 Golang 的插件辅助库 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例
-
-
-一、基础准备
-
-在...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 16, 2019
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/">
-        <h2 class="post-title">
-            Kubernetes 1.12 新的插件机制
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  在很久以前的版本研究过 kubernetes 的插件机制，当时弄了一个快速切换 namespace 的小插件；最近把自己本机的 kubectl 升级到了 1.12，突然发现插件不能用了；撸了一下文档发现插件机制彻底改了…
-
-
-一、插件编写语言
-
-kubernetes 1.12 新的插件机制在编写语言上同以前一样，可以以任意语言编写，只要能弄一个可执行的文件出来就行，插件可以是一个 ba...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on November 30, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -463,7 +466,7 @@ kubernetes 1.12 新的插件机制在编写语言上同以前一样，可以以�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -499,7 +502,7 @@ kubernetes 1.12 新的插件机制在编写语言上同以前一样，可以以�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             

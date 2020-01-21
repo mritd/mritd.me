@@ -177,6 +177,56 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/09/17/Minio-AWS-S3-%E5%AD%98%E5%82%A8%E5%BC%80%E6%BA%90%E5%AE%9E%E7%8E%B0/">
+        <h2 class="post-title">
+            Minio - AWS S3 存储开源实现
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  本文参考 Minio Quickstart Guide、Minio Client Quickstart Guide
+
+
+一、简介
+
+Minio 是一个基于 golang 语言开发的 AWS S3 存储协议的开源实现，并附带 web ui 界面，可以通过 Minio 搭建私人的兼容 AWS S3 协议的存储服务器
+
+二、Minio 服务器搭建
+
+Minio 基于 golang 开发，所以...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 17, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/09/17/GlusterFS-%E7%AC%94%E8%AE%B0/">
+        <h2 class="post-title">
+            GlusterFS 笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            一、简介
+
+GlusterFS 是近年兴起的一个高性能开源分布式文件系统，其目标是全局命名空间、分布式前端的高性能文件系统，目前已被 RedHat 看中，GlusterFS 具有高扩展、高可性、高性能、可横向扩展等特点，并且 GlusterFS 没有元数据服务器的设计，使其没有单点故障问题。
+
+二、GlusterFS 集群搭建
+
+2.1、环境准备
+
+由于资源有限，所以以虚拟机测试，故性能上无...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 17, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/">
         <h2 class="post-title">
             Harbor 企业级 Docker Registry 第二弹
@@ -384,64 +434,6 @@ listen-address=127.0.0.1,192.168.1.10...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/07/22/Linux-%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8B%E4%BD%BF%E7%94%A8-Shadowsocks-%E4%BB%A3%E7%90%86/">
-        <h2 class="post-title">
-            Linux 命令行下使用 Shadowsocks 代理
-        </h2>
-        
-        <div class="post-content-preview">
-            一、安装 Shadowsocks
-
-Ubuntu 使用如下命令安装即可，其他系统可使用 python 安装，具体请自行 Google
-
-apt-get install shadowsocks -y
-
-
-安装完成后编辑配置文件，填写对应服务器地址
-
-vim /etc/shadowsocks.json
-
-
-服务器配置样例如下
-
-{
-    "server":"1.1.1.1",
-    "ser...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 22, 2016
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2016/07/03/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-HTTPS%E9%85%8D%E7%BD%AE/">
-        <h2 class="post-title">
-            Harbor 企业级 Docker Registry HTTPS配置
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  本文参考自 Harbor Github、OpenSSL 创建 SAN 证书
-
-
-一、创建 CA 并自签证书
-
-创建 CA 即自签名证书请看 互联网加密及OpenSSL介绍和简单使用，以下简单介绍一下踩的坑，堆一下命令
-
-1.1、SAN 证书扩展域名配置
-
-默认的 OpenSSL 生成的签名请求只适用于生成时填写的域名，即 Common Name 填的是哪个域名，证书就只能应用于哪个域名...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 3, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -476,7 +468,7 @@ vim /etc/shadowsocks.json
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -512,7 +504,7 @@ vim /etc/shadowsocks.json
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             

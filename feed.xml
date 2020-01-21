@@ -5,9 +5,870 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 21 Jan 2020 21:25:20 +0800</pubDate>
-    <lastBuildDate>Tue, 21 Jan 2020 21:25:20 +0800</lastBuildDate>
+    <pubDate>Tue, 21 Jan 2020 21:33:28 +0800</pubDate>
+    <lastBuildDate>Tue, 21 Jan 2020 21:33:28 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>kubeadm 搭建 HA kubernetes 集群</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;距离上一次折腾 kubeadm 大约已经一两年了(记不太清了)，在很久一段时间内一直采用二进制部署的方式来部署 kubernetes 集群，随着 kubeadm 的不断稳定，目前终于可以重新试试这个不错的工具了&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一环境准备&quot;&gt;一、环境准备&lt;/h2&gt;
+
+&lt;p&gt;搭建环境为 5 台虚拟机，每台虚拟机配置为 4 核心 8G 内存，虚拟机 IP 范围为 &lt;code class=&quot;highlighter-rouge&quot;&gt;172.16.10.21~25&lt;/code&gt;，其他软件配置如下&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;os version: ubuntu 18.04&lt;/li&gt;
+  &lt;li&gt;kubeadm version: 1.17.0&lt;/li&gt;
+  &lt;li&gt;kubernetes version: 1.17.0&lt;/li&gt;
+  &lt;li&gt;etcd version: 3.3.18&lt;/li&gt;
+  &lt;li&gt;docker version: 19.03.5&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;二ha-方案&quot;&gt;二、HA 方案&lt;/h2&gt;
+
+&lt;p&gt;目前的 HA 方案与官方的不同，官方 HA 方案推荐使用类似 haproxy 等工具进行 4 层代理 apiserver，但是同样会有一个问题就是我们还需要对这个 haproxy 做 HA；由于目前我们实际生产环境都是多个独立的小集群，所以单独弄 2 台 haproxy + keeplived 去维持这个 apiserver LB 的 HA 有点不划算；所以还是准备延续老的 HA 方案，将外部 apiserver 的 4 层 LB 前置到每个 node 节点上；&lt;strong&gt;目前是采用在每个 node 节点上部署 nginx 4 层代理所有 apiserver，nginx 本身资源消耗低而且请求量不大，综合来说对宿主机影响很小；&lt;/strong&gt;以下为 HA 的大致方案图&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/mktld.png&quot; alt=&quot;ha&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;三环境初始化&quot;&gt;三、环境初始化&lt;/h2&gt;
+
+&lt;h3 id=&quot;31系统环境&quot;&gt;3.1、系统环境&lt;/h3&gt;
+
+&lt;p&gt;由于个人操作习惯原因，目前已经将常用的初始化环境整理到一个小脚本里了，脚本具体参见 &lt;a href=&quot;https://github.com/mritd/shell_scripts/blob/master/init_ubuntu.sh&quot;&gt;mritd/shell_scripts&lt;/a&gt; 仓库，基本上常用的初始化内容为:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;设置 locale(en_US.UTF-8)&lt;/li&gt;
+  &lt;li&gt;设置时区(Asia/Shanghai)&lt;/li&gt;
+  &lt;li&gt;更新所有系统软件包(system update)&lt;/li&gt;
+  &lt;li&gt;配置 vim(vim8 + 常用插件、配色)&lt;/li&gt;
+  &lt;li&gt;ohmyzsh(别跟我说不兼容 bash 脚本，我就是喜欢)&lt;/li&gt;
+  &lt;li&gt;docker&lt;/li&gt;
+  &lt;li&gt;ctop(一个 docker 的辅助工具)&lt;/li&gt;
+  &lt;li&gt;docker-compose&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;在以上初始化中，实际对 kubernetes 安装产生影响的主要有三个地方:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;docker 的 cgroup driver 调整为 systemd，具体参考 &lt;a href=&quot;https://github.com/mritd/config/blob/master/docker/docker.service&quot;&gt;docker.service&lt;/a&gt;&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;docker 一定要限制 conatiner 日志大小，防止 apiserver 等日志大量输出导致磁盘占用过大&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;安装 &lt;code class=&quot;highlighter-rouge&quot;&gt;conntrack&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;ipvsadm&lt;/code&gt;，后面可能需要借助其排查问题&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;32配置-ipvs&quot;&gt;3.2、配置 ipvs&lt;/h3&gt;
+
+&lt;p&gt;由于后面 kube-proxy 需要使用 ipvs 模式，所以需要对内核参数、模块做一些调整，调整命令如下:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; /etc/sysctl.conf &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;
+net.ipv4.ip_forward=1
+net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-ip6tables=1
+&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF
+
+&lt;/span&gt;sysctl &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; /etc/modules &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;
+ip_vs
+ip_vs_lc
+ip_vs_wlc
+ip_vs_rr
+ip_vs_wrr
+ip_vs_lblc
+ip_vs_lblcr
+ip_vs_dh
+ip_vs_sh
+ip_vs_fo
+ip_vs_nq
+ip_vs_sed
+ip_vs_ftp
+&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;配置完成后切记需要重启，重启完成后使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;lsmod | grep ip_vs&lt;/code&gt; 验证相关 ipvs 模块加载是否正常，本文将主要使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;ip_vs_wrr&lt;/code&gt;，所以目前只关注这个模块既可。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/4irz1.png&quot; alt=&quot;ipvs_mode&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;四安装-etcd&quot;&gt;四、安装 Etcd&lt;/h2&gt;
+
+&lt;h3 id=&quot;41方案选择&quot;&gt;4.1、方案选择&lt;/h3&gt;
+
+&lt;p&gt;官方对于集群 HA 给出了两种有关于 Etcd 的部署方案:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;一种是深度耦合到 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 上，即每个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 一个 etcd&lt;/li&gt;
+  &lt;li&gt;另一种是使用外部的 Etcd 集群，通过在配置中指定外部集群让 apiserver 等组件连接&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;在测试深度耦合 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 方案后，发现一些比较恶心的问题；比如说开始创建第二个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 时配置写错了需要重建，此时你一旦删除第二个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 会导致第一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 也会失败，原因是&lt;strong&gt;创建第二个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 时 kubeadm 已经自动完成了 etcd 的集群模式，当删除第二个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 的时候由于集群可用原因会导致第一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;control plane&lt;/code&gt; 下的 etcd 发现节点失联从而也不提供服务；&lt;/strong&gt;所以综合考虑到后续迁移、灾备等因素，这里选择了将 etcd 放置在外部集群中；同样也方便我以后各种折腾应对一些极端情况啥的。&lt;/p&gt;
+
+&lt;h3 id=&quot;42部署-etcd&quot;&gt;4.2、部署 Etcd&lt;/h3&gt;
+
+&lt;p&gt;确定了需要在外部部署 etcd 集群后，只需要开干就完事了；查了一下 ubuntu 官方源已经有了 etcd 安装包，但是版本比较老，测试了一下 golang 的 build 版本是 1.10；所以我还是选择了从官方 release 下载最新的版本安装；当然最后还是因为懒，我自己打了一个 deb 包… deb 包可以从这个项目 &lt;a href=&quot;https://github.com/mritd/etcd-deb/releases&quot;&gt;mritd/etcd-deb&lt;/a&gt; 下载，担心安全性的可以利用项目脚本自己打包，以下是安装过程:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 下载软件包&lt;/span&gt;
+wget https://github.com/mritd/etcd-deb/releases/download/v3.3.18/etcd_3.3.18_amd64.deb
+wget https://github.com/mritd/etcd-deb/releases/download/v3.3.18/cfssl_1.4.1_amd64.deb
+&lt;span class=&quot;c&quot;&gt;# 安装 etcd(至少在 3 台节点上执行)&lt;/span&gt;
+dpkg &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; etcd_3.3.18_amd64.deb cfssl_1.4.1_amd64.deb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;既然自己部署 etcd，那么证书签署啥的还得自己来了，证书签署这里借助 cfssl 工具，cfssl 目前提供了 deb 的 make target，但是没找到 deb 包，所以也自己 build 了(担心安全性的可自行去官方下载)；&lt;/strong&gt;接着编辑一下 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/etcd/cfssl/etcd-csr.json&lt;/code&gt; 文件，用 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/etcd/cfssl/create.sh&lt;/code&gt; 脚本创建证书，并将证书复制到指定目录&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 创建证书&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /etc/etcd/cfssl &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./create.sh
+&lt;span class=&quot;c&quot;&gt;# 复制证书&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;mv&lt;/span&gt; /etc/etcd/cfssl/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.pem /etc/etcd/ssl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后在 3 台节点上修改配置，并将刚刚创建的证书同步到其他两台节点启动既可；下面是单台节点的配置样例&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# /etc/etcd/etcd.conf&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# [member]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_NAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;etcd1
+&lt;span class=&quot;nv&quot;&gt;ETCD_DATA_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/var/lib/etcd/data&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_WAL_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/var/lib/etcd/wal&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_SNAPSHOT_COUNT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;100&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_HEARTBEAT_INTERVAL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;100&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_ELECTION_TIMEOUT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1000&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_LISTEN_PEER_URLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://172.16.10.21:2380&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_LISTEN_CLIENT_URLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://172.16.10.21:2379,http://127.0.0.1:2379&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_MAX_SNAPSHOTS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;5&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_MAX_WALS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;5&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_CORS=&quot;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# [cluster]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_INITIAL_ADVERTISE_PEER_URLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://172.16.10.21:2380&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# if you use different ETCD_NAME (e.g. test), set ETCD_INITIAL_CLUSTER value for this name, i.e. &quot;test=http://...&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_INITIAL_CLUSTER&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;etcd1=https://172.16.10.21:2380,etcd2=https://172.16.10.22:2380,etcd3=https://172.16.10.23:2380&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_INITIAL_CLUSTER_STATE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;new&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_INITIAL_CLUSTER_TOKEN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;etcd-cluster&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_ADVERTISE_CLIENT_URLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;https://172.16.10.21:2379&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_DISCOVERY=&quot;&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_DISCOVERY_SRV=&quot;&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_DISCOVERY_FALLBACK=&quot;proxy&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_DISCOVERY_PROXY=&quot;&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_STRICT_RECONFIG_CHECK=&quot;false&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_AUTO_COMPACTION_RETENTION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;24&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# [proxy]&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY=&quot;off&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY_FAILURE_WAIT=&quot;5000&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY_REFRESH_INTERVAL=&quot;30000&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY_DIAL_TIMEOUT=&quot;1000&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY_WRITE_TIMEOUT=&quot;5000&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_PROXY_READ_TIMEOUT=&quot;0&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# [security]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_CERT_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_KEY_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd-key.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_CLIENT_CERT_AUTH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_TRUSTED_CA_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd-root-ca.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_AUTO_TLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_PEER_CERT_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_PEER_KEY_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd-key.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_PEER_CLIENT_CERT_AUTH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_PEER_TRUSTED_CA_FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/etc/etcd/ssl/etcd-root-ca.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_PEER_AUTO_TLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# [logging]&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_DEBUG=&quot;false&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# examples for -log-package-levels etcdserver=WARNING,security=DEBUG&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#ETCD_LOG_PACKAGE_LEVELS=&quot;&quot;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# [performance]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_QUOTA_BACKEND_BYTES&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;5368709120&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;ETCD_AUTO_COMPACTION_RETENTION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;3&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;注意: 其他两台节点请调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_NAME&lt;/code&gt; 为不重复的其他名称，调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_LISTEN_PEER_URLS&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_LISTEN_CLIENT_URLS&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_INITIAL_ADVERTISE_PEER_URLS&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_ADVERTISE_CLIENT_URLS&lt;/code&gt; 为其他节点对应的 IP；同时生产环境请将 &lt;code class=&quot;highlighter-rouge&quot;&gt;ETCD_INITIAL_CLUSTER_TOKEN&lt;/code&gt; 替换为复杂的 token&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 同步证书&lt;/span&gt;
+scp &lt;span class=&quot;nt&quot;&gt;-r&lt;/span&gt; /etc/etcd/ssl 172.16.10.22:/etc/etcd/ssl
+scp &lt;span class=&quot;nt&quot;&gt;-r&lt;/span&gt; /etc/etcd/ssl 172.16.10.23:/etc/etcd/ssl
+&lt;span class=&quot;c&quot;&gt;# 修复权限(3台节点都要执行)&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; etcd:etcd /etc/etcd
+&lt;span class=&quot;c&quot;&gt;# 最后每个节点依次启动既可&lt;/span&gt;
+systemctl start etcd
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;启动完成后可以通过以下命令测试是否正常&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 查看集群成员&lt;/span&gt;
+k1.node ➜ etcdctl member list
+
+3cbbaf77904c6153, started, etcd2, https://172.16.10.22:2380, https://172.16.10.22:2379
+8eb7652b6bd99c30, started, etcd1, https://172.16.10.21:2380, https://172.16.10.21:2379
+91f4e10726460d8c, started, etcd3, https://172.16.10.23:2380, https://172.16.10.23:2379
+
+&lt;span class=&quot;c&quot;&gt;# 检测集群健康状态&lt;/span&gt;
+k1.node ➜ etcdctl endpoint health &lt;span class=&quot;nt&quot;&gt;--cacert&lt;/span&gt; /etc/etcd/ssl/etcd-root-ca.pem &lt;span class=&quot;nt&quot;&gt;--cert&lt;/span&gt; /etc/etcd/ssl/etcd.pem &lt;span class=&quot;nt&quot;&gt;--key&lt;/span&gt; /etc/etcd/ssl/etcd-key.pem &lt;span class=&quot;nt&quot;&gt;--endpoints&lt;/span&gt; https://172.16.10.21:2379,https://172.16.10.22:2379,https://172.16.10.23:2379
+
+https://172.16.10.21:2379 is healthy: successfully committed proposal: took &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 16.632246ms
+https://172.16.10.23:2379 is healthy: successfully committed proposal: took &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 21.122603ms
+https://172.16.10.22:2379 is healthy: successfully committed proposal: took &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 22.592005ms
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;五部署-kubernetes&quot;&gt;五、部署 Kubernetes&lt;/h2&gt;
+
+&lt;h3 id=&quot;51安装-kueadm&quot;&gt;5.1、安装 kueadm&lt;/h3&gt;
+
+&lt;p&gt;安装 kubeadm 没什么好说的，国内被墙用阿里的源既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; apt-transport-https
+curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
+&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt; &amp;gt;/etc/apt/sources.list.d/kubernetes.list
+deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
+&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;EOF
+&lt;/span&gt;apt update
+
+&lt;span class=&quot;c&quot;&gt;# ebtables、ethtool kubelet 可能会用，具体忘了，反正从官方文档上看到的&lt;/span&gt;
+apt &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;kubelet kubeadm kubectl ebtables ethtool &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;52部署-nginx&quot;&gt;5.2、部署 Nginx&lt;/h3&gt;
+
+&lt;p&gt;从上面的 HA 架构图上可以看到，为了维持 apiserver 的 HA，需要在每个机器上部署一个 nginx 做 4 层的 LB；为保证后续的 node 节点正常加入，需要首先行部署 nginx；nginx 安装同样喜欢偷懒，直接 docker 跑了…毕竟都开始 kubeadm 了，那么也没必要去纠结 docker 是否稳定的问题了；以下为 nginx 相关配置&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;apiserver-proxy.conf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;error_log stderr notice&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+worker_processes auto&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+events &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	multi_accept on&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	use epoll&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	worker_connections 1024&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+stream &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    upstream kube_apiserver &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        least_conn&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;c&quot;&gt;# 后端为三台 master 节点的 apiserver 地址&lt;/span&gt;
+        server 172.16.10.21:5443&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        server 172.16.10.22:5443&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        server 172.16.10.23:5443&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    
+    server &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        listen        0.0.0.0:6443&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        proxy_pass    kube_apiserver&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        proxy_timeout 10m&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        proxy_connect_timeout 1s&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;kube-apiserver-proxy.service&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Unit]
+&lt;span class=&quot;nv&quot;&gt;Description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;kubernetes apiserver docker wrapper
+&lt;span class=&quot;nv&quot;&gt;Wants&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;docker.socket
+&lt;span class=&quot;nv&quot;&gt;After&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;docker.service
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Service]
+&lt;span class=&quot;nv&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;root
+&lt;span class=&quot;nv&quot;&gt;PermissionsStartOnly&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/bin/docker run &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 6443:6443 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; /etc/kubernetes/apiserver-proxy.conf:/etc/nginx/nginx.conf &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt; kube-apiserver-proxy &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          &lt;span class=&quot;nt&quot;&gt;--restart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;on-failure:5 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          &lt;span class=&quot;nt&quot;&gt;--memory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;512M &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+                          nginx:1.17.6-alpine
+&lt;span class=&quot;nv&quot;&gt;ExecStartPre&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;-/usr/bin/docker &lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; kube-apiserver-proxy
+&lt;span class=&quot;nv&quot;&gt;ExecStop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/bin/docker &lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-rf&lt;/span&gt; kube-apiserver-proxy
+&lt;span class=&quot;nv&quot;&gt;Restart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;always
+&lt;span class=&quot;nv&quot;&gt;RestartSec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;15s
+&lt;span class=&quot;nv&quot;&gt;TimeoutStartSec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;30s
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Install]
+&lt;span class=&quot;nv&quot;&gt;WantedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;multi-user.target
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;启动 nginx 代理(每台机器都要启动，包括 master 节点)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cp &lt;/span&gt;apiserver-proxy.conf /etc/kubernetes
+&lt;span class=&quot;nb&quot;&gt;cp &lt;/span&gt;kube-apiserver-proxy.service /lib/systemd/system
+systemctl daemon-reload
+systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;kube-apiserver-proxy.service &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; systemctl start kube-apiserver-proxy.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;53启动-control-plane&quot;&gt;5.3、启动 control plane&lt;/h3&gt;
+
+&lt;h4 id=&quot;531关于-swap&quot;&gt;5.3.1、关于 Swap&lt;/h4&gt;
+
+&lt;p&gt;目前 kubelet 为了保证内存 limit，需要在每个节点上关闭 swap；但是说实话我看了这篇文章 &lt;a href=&quot;https://chrisdown.name/2018/01/02/in-defence-of-swap.html&quot;&gt;In defence of swap: common misconceptions&lt;/a&gt; 以后还是不想关闭 swap；更确切的说其实我们生产环境比较 “富”，pod 都不 limit 内存，所以下面的部署我忽略了 swap 错误检测&lt;/p&gt;
+
+&lt;h4 id=&quot;532kubeadm-配置&quot;&gt;5.3.2、kubeadm 配置&lt;/h4&gt;
+
+&lt;p&gt;当前版本的 kubeadm 已经支持了完善的配置管理(当然细节部分还有待支持)，以下为我目前使用的配置，相关位置已经做了注释，更具体的配置自行查阅官方文档&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;kubeadm.yaml&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubeadm.k8s.io/v1beta2&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;InitConfiguration&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;localAPIEndpoint&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 第一个 master 节点 IP&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;advertiseAddress&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;172.16.10.21&quot;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 6443 留给了 nginx，apiserver 换到 5443&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;bindPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5443&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 这个 token 使用以下命令生成&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# kubeadm alpha certs certificate-key&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;certificateKey&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3&lt;/span&gt; 
+&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubeadm.k8s.io/v1beta2&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterConfiguration&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 使用外部 etcd 配置&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;etcd&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;external&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;endpoints&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;https://172.16.10.21:2379&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;https://172.16.10.22:2379&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;https://172.16.10.23:2379&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;caFile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/etcd/ssl/etcd-root-ca.pem&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;certFile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/etcd/ssl/etcd.pem&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;keyFile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/etcd/ssl/etcd-key.pem&quot;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 网络配置&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;networking&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;serviceSubnet&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10.25.0.0/16&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;podSubnet&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10.30.0.1/16&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;dnsDomain&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;cluster.local&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kubernetesVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;v1.17.0&quot;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 全局 apiserver LB 地址，由于采用了 nginx 负载，所以直接指向本地既可&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;controlPlaneEndpoint&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;127.0.0.1:6443&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiServer&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# apiserver 的自定义扩展参数&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;extraArgs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;alsologtostderr&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;true&quot;&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# 审计日志相关配置&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;audit-log-maxage&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;20&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;audit-log-maxbackup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;audit-log-maxsize&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;100&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;audit-log-path&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/kube-audit/audit.log&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;audit-policy-file&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/kubernetes/audit-policy.yaml&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;authorization-mode&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Node,RBAC&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;event-ttl&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;720h&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;runtime-config&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;api/all=true&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;service-node-port-range&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30000-50000&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;service-cluster-ip-range&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10.25.0.0/16&quot;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 由于自行定义了审计日志配置，所以需要将宿主机上的审计配置&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 挂载到 kube-apiserver 的 pod 容器中&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;extraVolumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;audit-config&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;hostPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/kubernetes/audit-policy.yaml&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/kubernetes/audit-policy.yaml&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;readOnly&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pathType&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;File&quot;&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;audit-log&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;hostPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/kube-audit&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/var/log/kube-audit&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pathType&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;DirectoryOrCreate&quot;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 这里是 apiserver 的证书地址配置&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# 为了防止以后出特殊情况，我增加了一个泛域名&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;certSANs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;*.kubernetes.node&quot;&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;172.16.10.21&quot;&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;172.16.10.22&quot;&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;172.16.10.23&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;timeoutForControlPlane&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;5m&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;controllerManager&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;extraArgs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&quot;&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# 宿主机 ip 掩码&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;node-cidr-mask-size&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;19&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;deployment-controller-sync-period&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10s&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;experimental-cluster-signing-duration&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;87600h&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;node-monitor-grace-period&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;20s&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pod-eviction-timeout&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2m&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;terminated-pod-gc-threshold&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;30&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;scheduler&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;extraArgs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;4&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;certificatesDir&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/etc/kubernetes/pki&quot;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# gcr.io 被墙，换成微软的镜像地址&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;imageRepository&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;gcr.azk8s.cn/google_containers&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;clusterName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kuberentes&quot;&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubelet.config.k8s.io/v1beta1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;KubeletConfiguration&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# kubelet specific options here&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 此配置保证了 kubelet 能在 swap 开启的情况下启动&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;failSwapOn&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;nodeStatusUpdateFrequency&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;5s&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 一些驱逐阀值，具体自行查文档修改&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;evictionSoft&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;imagefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;15%&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;memory.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;512Mi&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;15%&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.inodesFree&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10%&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;evictionSoftGracePeriod&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;imagefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3m&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;memory.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1m&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3m&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.inodesFree&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1m&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;evictionHard&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;imagefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10%&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;memory.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;256Mi&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.available&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10%&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nodefs.inodesFree&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;5%&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;evictionMaxPodGracePeriod&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;30&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;imageGCLowThresholdPercent&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;70&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;imageGCHighThresholdPercent&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kubeReserved&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;cpu&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;500m&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;memory&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;512Mi&quot;&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ephemeral-storage&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1Gi&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;rotateCertificates&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubeproxy.config.k8s.io/v1alpha1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;KubeProxyConfiguration&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# kube-proxy specific options here&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;clusterCIDR&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;10.30.0.1/16&quot;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 启用 ipvs 模式&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;ipvs&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;ipvs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;minSyncPeriod&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;5s&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;syncPeriod&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;5s&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# ipvs 负载策略&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;scheduler&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;wrr&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;关于这个配置配置文件的文档还是很不完善，对于不懂 golang 的人来说很难知道具体怎么配置，以下做一下简要说明(请确保你已经拉取了 kubernetes 源码和安装了 Goland)&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;kubeadm 配置中每个配置段都会有个 &lt;code class=&quot;highlighter-rouge&quot;&gt;kind&lt;/code&gt; 字段，&lt;code class=&quot;highlighter-rouge&quot;&gt;kind&lt;/code&gt; 实际上对应了 go 代码中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;struct&lt;/code&gt; 结构体；同时从 &lt;code class=&quot;highlighter-rouge&quot;&gt;apiVersion&lt;/code&gt; 字段中能够看到具体的版本，比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;v1alpha1&lt;/code&gt; 等；有了这两个信息事实上你就可以直接在源码中去找到对应的结构体&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/dwo5h.png&quot; alt=&quot;struct_search&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;在结构体中所有的配置便可以一目了然&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/0jc9b.png&quot; alt=&quot;struct_detail&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;关于数据类型，如果是 &lt;code class=&quot;highlighter-rouge&quot;&gt;string&lt;/code&gt; 的类型，那么意味着你要在 yaml 里写 &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;xxxx&quot;&lt;/code&gt; 带引号这种，当然有些时候不写能兼容，有些时候不行比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;extraArgs&lt;/code&gt; 字段是一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;map[string]string&lt;/code&gt; 如果 value 不带引号就报错；&lt;strong&gt;如果数据类型为 &lt;code class=&quot;highlighter-rouge&quot;&gt;metav1.Duration&lt;/code&gt;(实际上就是 &lt;code class=&quot;highlighter-rouge&quot;&gt;time.Duration&lt;/code&gt;)，那么你看着它是个 &lt;code class=&quot;highlighter-rouge&quot;&gt;int64&lt;/code&gt; 但实际上你要写 &lt;code class=&quot;highlighter-rouge&quot;&gt;1h2m3s&lt;/code&gt; 这种人类可读的格式，这是 go 的特色…&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;audit-policy.yaml&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# Log all requests at the Metadata level.&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;audit.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Policy&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;level&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Metadata&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;可能 &lt;code class=&quot;highlighter-rouge&quot;&gt;Metadata&lt;/code&gt; 级别的审计日志比较多，想自行调整审计日志级别的可以参考&lt;a href=&quot;https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy&quot;&gt;官方文档&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;533拉起-control-plane&quot;&gt;5.3.3、拉起 control plane&lt;/h4&gt;
+
+&lt;p&gt;有了完整的 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm.yaml&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;audit-policy.yaml&lt;/code&gt; 配置后，直接一条命令拉起 control plane 既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 先将审计配置放到目标位置(3 台 master 都要执行)&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cp &lt;/span&gt;audit-policy.yaml /etc/kubernetes
+&lt;span class=&quot;c&quot;&gt;# 拉起 control plane&lt;/span&gt;
+kubeadm init &lt;span class=&quot;nt&quot;&gt;--config&lt;/span&gt; kubeadm.yaml &lt;span class=&quot;nt&quot;&gt;--upload-certs&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--ignore-preflight-errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Swap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;control plane 拉起以后注意要保存屏幕输出，方便后续添加其他集群节点&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  &lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube
+  &lt;span class=&quot;nb&quot;&gt;sudo cp&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; /etc/kubernetes/admin.conf &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+  &lt;span class=&quot;nb&quot;&gt;sudo chown&lt;/span&gt; &lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;:&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run &lt;span class=&quot;s2&quot;&gt;&quot;kubectl apply -f [podnetwork].yaml&quot;&lt;/span&gt; with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;any number of the control-plane node running the following &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;on each as root:
+
+  kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; r4t3l3.14mmuivm7xbtaeoj &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--control-plane&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--certificate-key&lt;/span&gt; 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+
+Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
+As a safeguard, uploaded-certs will be deleted &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;two hours&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; If necessary, you can use
+&lt;span class=&quot;s2&quot;&gt;&quot;kubeadm init phase upload-certs --upload-certs&quot;&lt;/span&gt; to reload certs afterward.
+
+Then you can &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;any number of worker nodes by running the following on each as root:
+
+kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; r4t3l3.14mmuivm7xbtaeoj &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;根据屏幕提示配置 kubectl&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube
+&lt;span class=&quot;nb&quot;&gt;sudo cp&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; /etc/kubernetes/admin.conf &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+&lt;span class=&quot;nb&quot;&gt;sudo chown&lt;/span&gt; &lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;:&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;54部署-cni&quot;&gt;5.4、部署 CNI&lt;/h3&gt;
+
+&lt;p&gt;关于网络插件的选择，以前一直喜欢 Calico，因为其性能确实好；到后来 flannel 出了 &lt;code class=&quot;highlighter-rouge&quot;&gt;host-gw&lt;/code&gt; 以后现在两者性能也差不多了；但是 &lt;strong&gt;flannel 好处是一个工具通吃所有环境(云环境+裸机2层直通)，坏处是 flannel 缺乏比较好的策略管理(当然可以使用两者结合的 Canal)；&lt;/strong&gt;后来思来想去其实我们生产倒是很少需要策略管理，所以这回怂回到 flannel 了(逃…)&lt;/p&gt;
+
+&lt;p&gt;Flannel 部署非常简单，根据官方文档下载配置，根据情况调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;backend&lt;/code&gt; 和 pod 的 CIDR，然后 apply 一下既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 下载配置文件&lt;/span&gt;
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+&lt;span class=&quot;c&quot;&gt;# 调整 backend 为 host-gw(测试环境 2 层直连)&lt;/span&gt;
+k1.node ➜  &lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt; 35 ConfigMap kube-flannel.yml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+data:
+  cni-conf.json: |
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&quot;name&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;cbr0&quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&quot;cniVersion&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;0.3.1&quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&quot;plugins&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;s2&quot;&gt;&quot;type&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;flannel&quot;&lt;/span&gt;,
+          &lt;span class=&quot;s2&quot;&gt;&quot;delegate&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s2&quot;&gt;&quot;hairpinMode&quot;&lt;/span&gt;: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;,
+            &lt;span class=&quot;s2&quot;&gt;&quot;isDefaultGateway&quot;&lt;/span&gt;: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+          &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+        &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;s2&quot;&gt;&quot;type&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;portmap&quot;&lt;/span&gt;,
+          &lt;span class=&quot;s2&quot;&gt;&quot;capabilities&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s2&quot;&gt;&quot;portMappings&quot;&lt;/span&gt;: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+          &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  net-conf.json: |
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&quot;Network&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;10.30.0.0/16&quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&quot;Backend&quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&quot;Type&quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&quot;host-gw&quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# 调整完成后 apply 一下&lt;/span&gt;
+kubectl apply &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; kube-flannel.yml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;55启动其他-control-plane&quot;&gt;5.5、启动其他 control plane&lt;/h3&gt;
+
+&lt;p&gt;为了保证 HA 架构，还需要在另外两台 master 上启动 control plane；&lt;strong&gt;在启动之前请确保另外两台 master 节点节点上 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/kubernetes/audit-policy.yaml&lt;/code&gt; 审计配置已经分发完成，确保 &lt;code class=&quot;highlighter-rouge&quot;&gt;127.0.0.1:6443&lt;/code&gt; 上监听的 4 层 LB 工作正常(可尝试使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;curl -k https://127.0.0.1:6443&lt;/code&gt; 测试)；&lt;/strong&gt;根据第一个 control plane 终端输出，其他 control plane 加入命令如下&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; r4t3l3.14mmuivm7xbtaeoj &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--control-plane&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--certificate-key&lt;/span&gt; 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;由于在使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm join&lt;/code&gt; 时相关选项(&lt;code class=&quot;highlighter-rouge&quot;&gt;--discovery-token-ca-cert-hash&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;--control-plane&lt;/code&gt;)无法与 &lt;code class=&quot;highlighter-rouge&quot;&gt;--config&lt;/code&gt; 一起使用，这也就意味着我们必须增加一些附加指令来提供 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm.yaml&lt;/code&gt; 配置文件中的一些属性&lt;/strong&gt;；最终完整的 control plane 加入命令如下，在其他 master 直接执行既可(&lt;strong&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--apiserver-advertise-address&lt;/code&gt; 的 IP 地址是目标 master 的 IP&lt;/strong&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; r4t3l3.14mmuivm7xbtaeoj &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--control-plane&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--certificate-key&lt;/span&gt; 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--apiserver-advertise-address&lt;/span&gt; 172.16.10.22 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--apiserver-bind-port&lt;/span&gt; 5443 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--ignore-preflight-errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Swap 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;所有 control plane 启动完成后应当通过在每个节点上运行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get cs&lt;/code&gt; 验证各个组件运行状态&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;k2.node ➜ kubectl get cs
+NAME                 STATUS    MESSAGE             ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-1               Healthy   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;health&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+etcd-0               Healthy   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;health&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+etcd-2               Healthy   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;health&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;true&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+k2.node ➜ kubectl get node &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; wide
+NAME      STATUS   ROLES    AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k1.node   Ready    master   28m   v1.17.0   172.16.10.21   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k2.node   Ready    master   10m   v1.17.0   172.16.10.22   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k3.node   Ready    master   3m    v1.17.0   172.16.10.23   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;56启动-node&quot;&gt;5.6、启动 Node&lt;/h3&gt;
+
+&lt;p&gt;node 节点的启动相较于 master 来说要简单得多，只需要增加一个防止 &lt;code class=&quot;highlighter-rouge&quot;&gt;swap&lt;/code&gt; 开启拒绝启动的参数既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; r4t3l3.14mmuivm7xbtaeoj &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;--ignore-preflight-errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;Swap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;启动成功后在 master 上可以看到所有 node 信息&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;k1.node ➜ kubectl get node &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; wide
+NAME      STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k1.node   Ready    master   32m     v1.17.0   172.16.10.21   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k2.node   Ready    master   14m     v1.17.0   172.16.10.22   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k3.node   Ready    master   6m35s   v1.17.0   172.16.10.23   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k4.node   Ready    &amp;lt;none&amp;gt;   72s     v1.17.0   172.16.10.24   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k5.node   Ready    &amp;lt;none&amp;gt;   66s     v1.17.0   172.16.10.25   &amp;lt;none&amp;gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;57调整及测试&quot;&gt;5.7、调整及测试&lt;/h3&gt;
+
+&lt;p&gt;集群搭建好以后，如果想让 master 节点也参与调度任务，需要在任意一台 master 节点执行以下命令&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# node 节点报错属于正常情况&lt;/span&gt;
+k1.node ➜ kubectl taint nodes &lt;span class=&quot;nt&quot;&gt;--all&lt;/span&gt; node-role.kubernetes.io/master-
+node/k1.node untainted
+node/k2.node untainted
+node/k3.node untainted
+taint &lt;span class=&quot;s2&quot;&gt;&quot;node-role.kubernetes.io/master&quot;&lt;/span&gt; not found
+taint &lt;span class=&quot;s2&quot;&gt;&quot;node-role.kubernetes.io/master&quot;&lt;/span&gt; not found
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后创建一个 deployment 和一个 service，并在不同主机上 ping pod IP 测试网络联通性，在 pod 内直接 curl service 名称测试 dns 解析既可&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;test-nginx.deploy.yaml&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;apps/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Deployment&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;replicas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;selector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;matchLabels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx:1.17.6-alpine&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;containerPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;test-nginx.svc.yaml&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Service&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;selector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-nginx&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;TCP&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;targetPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;六后续处理&quot;&gt;六、后续处理&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;说实话使用 kubeadm 后，我更关注的是集群后续的扩展性调整是否能达到目标；搭建其实很简单，大部份时间都在测试后续调整上&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;61etcd-迁移&quot;&gt;6.1、Etcd 迁移&lt;/h3&gt;
+
+&lt;p&gt;由于我们采用的是外部的 Etcd，所以迁移起来比较简单怎么折腾都行；需要注意的是换 IP 的时候注意保证老的 3 个节点至少有一个可用，否则可能导致集群崩溃；调整完成后记得分发相关 Etcd 节点的证书，重启时顺序一个一个重启，不要并行操作&lt;/p&gt;
+
+&lt;h3 id=&quot;62master-配置修改&quot;&gt;6.2、Master 配置修改&lt;/h3&gt;
+
+&lt;p&gt;如果需要修改 conrol plane 上 apiserver、scheduler 等配置，直接修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm.yaml&lt;/code&gt; 配置文件(&lt;strong&gt;所以集群搭建好后务必保存好&lt;/strong&gt;)，然后执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubeadm upgrade apply --config kubeadm.yaml&lt;/code&gt; 升级集群既可，升级前一定作好相关备份工作；我只在测试环境测试这个命令工作还可以，生产环境还是需要谨慎&lt;/p&gt;
+
+&lt;h3 id=&quot;63证书续期&quot;&gt;6.3、证书续期&lt;/h3&gt;
+
+&lt;p&gt;目前根据我测试的结果，controller manager 的 &lt;strong&gt;experimental-cluster-signing-duration&lt;/strong&gt; 参数在 init 的签发证书阶段似乎并未生效；&lt;strong&gt;目前根据文档描述 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubelet&lt;/code&gt; client 的证书会自动滚动，其他证书默认 1 年有效期，需要自己使用命令续签；&lt;/strong&gt;续签命令如下&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 查看证书过期时间&lt;/span&gt;
+k1.node ➜ kubeadm alpha certs check-expiration
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;check-expiration] Reading configuration from the cluster...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;check-expiration] FYI: You can look at this config file with &lt;span class=&quot;s1&quot;&gt;'kubectl -n kube-system get cm kubeadm-config -oyaml'&lt;/span&gt;
+
+CERTIFICATE                EXPIRES                  RESIDUAL TIME   CERTIFICATE AUTHORITY   EXTERNALLY MANAGED
+admin.conf                 Jan 11, 2021 10:06 UTC   364d                                    no
+apiserver                  Jan 11, 2021 10:06 UTC   364d            ca                      no
+apiserver-kubelet-client   Jan 11, 2021 10:06 UTC   364d            ca                      no
+controller-manager.conf    Jan 11, 2021 10:06 UTC   364d                                    no
+front-proxy-client         Jan 11, 2021 10:06 UTC   364d            front-proxy-ca          no
+scheduler.conf             Jan 11, 2021 10:06 UTC   364d                                    no
+
+CERTIFICATE AUTHORITY   EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED
+ca                      Jan 09, 2030 10:06 UTC   9y              no
+front-proxy-ca          Jan 09, 2030 10:06 UTC   9y              no
+
+&lt;span class=&quot;c&quot;&gt;# 续签证书&lt;/span&gt;
+k1.node ➜ kubeadm alpha certs renew all
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;renew] Reading configuration from the cluster...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;renew] FYI: You can look at this config file with &lt;span class=&quot;s1&quot;&gt;'kubectl -n kube-system get cm kubeadm-config -oyaml'&lt;/span&gt;
+
+certificate embedded &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;the kubeconfig file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the admin to use and &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;kubeadm itself renewed
+certificate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;serving the Kubernetes API renewed
+certificate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the API server to connect to kubelet renewed
+certificate embedded &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;the kubeconfig file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the controller manager to use renewed
+certificate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the front proxy client renewed
+certificate embedded &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;the kubeconfig file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the scheduler manager to use renewed
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;64node-重加入&quot;&gt;6.4、Node 重加入&lt;/h3&gt;
+
+&lt;p&gt;默认的 bootstrap token 会在 24h 后失效，所以后续增加新节点需要重新创建 token，重新创建 token 可以通过以下命令完成&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 列出 token&lt;/span&gt;
+k1.node ➜ kubeadm token list
+TOKEN                     TTL         EXPIRES                     USAGES                   DESCRIPTION                                                EXTRA GROUPS
+r4t3l3.14mmuivm7xbtaeoj   22h         2020-01-13T18:06:54+08:00   authentication,signing   &amp;lt;none&amp;gt;                                                     system:bootstrappers:kubeadm:default-node-token
+zady4i.57f9i2o6zl9vf9hy   45m         2020-01-12T20:06:53+08:00   &amp;lt;none&amp;gt;                   Proxy &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;managing TTL &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the kubeadm-certs secret        &amp;lt;none&amp;gt;
+
+&lt;span class=&quot;c&quot;&gt;# 创建新 token&lt;/span&gt;
+k1.node ➜ kubeadm token create &lt;span class=&quot;nt&quot;&gt;--print-join-command&lt;/span&gt;
+W0112 19:21:15.174765   26626 validation.go:28] Cannot validate kube-proxy config - no validator is available
+W0112 19:21:15.174836   26626 validation.go:28] Cannot validate kubelet config - no validator is available
+kubeadm &lt;span class=&quot;nb&quot;&gt;join &lt;/span&gt;127.0.0.1:6443 &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; 2dz4dc.mobzgjbvu0bkxz7j     &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;如果忘记了 certificate-key 可以通过一下命令重新 upload 并查看&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;k1.node ➜ kubeadm init &lt;span class=&quot;nt&quot;&gt;--config&lt;/span&gt; kubeadm.yaml phase upload-certs &lt;span class=&quot;nt&quot;&gt;--upload-certs&lt;/span&gt;
+W0112 19:23:06.466711   28637 validation.go:28] Cannot validate kubelet config - no validator is available
+W0112 19:23:06.466778   28637 validation.go:28] Cannot validate kube-proxy config - no validator is available
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;upload-certs] Storing the certificates &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;Secret &lt;span class=&quot;s2&quot;&gt;&quot;kubeadm-certs&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;the &lt;span class=&quot;s2&quot;&gt;&quot;kube-system&quot;&lt;/span&gt; Namespace
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;upload-certs] Using certificate key:
+7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;65调整-kubelet&quot;&gt;6.5、调整 kubelet&lt;/h3&gt;
+
+&lt;p&gt;node 节点一旦启动完成后，kubelet 配置便不可再修改；如果想要修改 kubelet 配置，可以通过调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/systemd/system/kubelet.service.d/10-kubeadm.conf&lt;/code&gt; 配置文件完成&lt;/p&gt;
+
+&lt;h2 id=&quot;七其他&quot;&gt;七、其他&lt;/h2&gt;
+
+&lt;p&gt;本文参考了许多官方文档，以下是一些个人认为比较有价值并且在使用 kubeadm 后应该阅读的文档&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details&quot;&gt;Implementation details&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/kubelet-integration/&quot;&gt;Configuring each kubelet in your cluster using kubeadm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/&quot;&gt;Customizing control plane configuration with kubeadm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/&quot;&gt;Creating Highly Available clusters with kubeadm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/&quot;&gt;Certificate Management with kubeadm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/&quot;&gt;Upgrading kubeadm clusters&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/reconfigure-kubelet/&quot;&gt;Reconfigure a Node’s Kubelet in a Live Cluster&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 21 Jan 2020 21:31:39 +0800</pubDate>
+        <link>https://mritd.me/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/</guid>
+        
+        <category>Kubernetes</category>
+        
+        
+        <category>Kubernetes</category>
+        
+      </item>
+    
+      <item>
+        <title>云服务器下 Ubuntu 18 正确的 DNS 修改</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;最近博客服务器换成了阿里云香港，个人还偶尔看美剧，所以做了一下 Netflix 分流；分流过程主要是做 DNS 解析 SNI 代理，调了半天记录一下&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一起因&quot;&gt;一、起因&lt;/h2&gt;
+
+&lt;p&gt;Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Server，然后在 CoreDNS 上针对 Netflix 全部域名解析 forward 到一台国外可以解锁 Netflix 机器上；如果直接将 CoreDNS 暴露在公网，那么无疑是在作死，为 DNS 反射 DDos 提供肉鸡；所以想到的方案是自己编写一个不可描述的工具，本地 Client 到 Server 端以后，Server 端再去设置到 CoreDNS 做分流；其中不可避免的需要调整 Server 端默认 DNS。&lt;/p&gt;
+
+&lt;h2 id=&quot;二已废弃修改方式&quot;&gt;二、已废弃修改方式&lt;/h2&gt;
+
+&lt;p&gt;目前大部份人还是习惯修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt; 配置文件，这个配置文件上面已经明确标注了不要去修改它；&lt;strong&gt;因为自 Systemd 一统江山以后，系统 DNS 已经被 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 服务接管；一但修改了 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;，机器重启后就会被恢复；&lt;/strong&gt;所以根源解决方案还是需要修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 的配置。&lt;/p&gt;
+
+&lt;h2 id=&quot;三netplan-的调整&quot;&gt;三、netplan 的调整&lt;/h2&gt;
+
+&lt;p&gt;在调整完 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 配置后其实有些地方仍然是不生效的；&lt;strong&gt;原因是 Ubuntu 18 开始网络已经被 netplan 接管，所以问题又回到了如何修改 netplan；&lt;/strong&gt;由于云服务器初始化全部是由 cloud-init 完成的，netplan 配置里 IP 全部是由 DHCP 完成；那么直接修改 netplan 为 static IP 理论上可行，但是事实上还是不够优雅；后来研究了一下其实更优雅的方式是覆盖掉 DHCP 的某些配置，比如 DNS 配置；在阿里云上配置如下(&lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/netplan/99-netcfg.yaml&lt;/code&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;network&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;renderer&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;networkd&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;ethernets&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;eth0&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp4&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;yes&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp4-overrides&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;use-dns&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;no&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp6&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;no&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nameservers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# 我自己的 CoreDNS 服务器&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;addresses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;172.17.3.17&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;修改完成后执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;netplan try&lt;/code&gt; 等待几秒钟，如果屏幕的读秒倒计时一直在动，说明修改没问题，接着回车既可(尽量不要 &lt;code class=&quot;highlighter-rouge&quot;&gt;netplan apply&lt;/code&gt;，一旦修改错误你就再也连不上了…)&lt;/p&gt;
+
+&lt;h2 id=&quot;四dns-分流&quot;&gt;四、DNS 分流&lt;/h2&gt;
+
+&lt;p&gt;顺便贴一下 CoreDNS 配置吧，可能有些人也需要；第一部分的域名是目前我整理的 Netflix 全部访问域名，针对这些域名的流量转发到自己其他可解锁 Netflix 的机器既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;bind &lt;/span&gt;172.17.3.17
+
+    cache 30 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        success 4096
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    forward &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; 158.1.1.1 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        max_fails 2
+        prefer_udp
+        expire 20s
+        policy random
+        health_check 0.2s
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    errors
+    log &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{remote}:{port} - {&amp;gt;id} &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;{type} {class} {name} {proto} {size} {&amp;gt;do} {&amp;gt;bufsize}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; {rcode} {&amp;gt;rflags} {rsize} {duration}&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+.:53 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;bind &lt;/span&gt;172.17.3.17
+
+    cache 30 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        success 4096
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    forward &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; 8.8.8.8 1.1.1.1 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        except netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net
+        max_fails 2
+        expire 20s
+        policy random
+        health_check 0.2s
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    errors
+    log &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{remote}:{port} - {&amp;gt;id} &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;{type} {class} {name} {proto} {size} {&amp;gt;do} {&amp;gt;bufsize}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; {rcode} {&amp;gt;rflags} {rsize} {duration}&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;五关于-docker&quot;&gt;五、关于 docker&lt;/h2&gt;
+
+&lt;p&gt;当 netplan 修改完成后，只需要重启 docker 既可保证 docker 内所有容器 DNS 请求全部发送到自己定义的 DNS 服务器上；&lt;strong&gt;请不要尝试将自己的 CoreDNS 监听到 &lt;code class=&quot;highlighter-rouge&quot;&gt;127.*&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;::1&lt;/code&gt; 上，这两个地址会导致 docker 中的 DNS 无效&lt;/strong&gt;，因为在 &lt;a href=&quot;https://github.com/docker/libnetwork/blob/fec6476dfa21380bf8ee4d74048515d968c1ee63/resolvconf/resolvconf.go#L148&quot;&gt;libnetwork&lt;/a&gt; 中针对这两个地址做了过滤，并且 &lt;code class=&quot;highlighter-rouge&quot;&gt;FilterResolvDNS&lt;/code&gt; 方法在剔除这两种地址时不会给予任何警告日志&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 21 Jan 2020 21:20:08 +0800</pubDate>
+        <link>https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/</guid>
+        
+        <category>Linux</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>如何编写一个 CoreDNS 插件</title>
@@ -3593,337 +4454,6 @@ calico-node-vj8np                         1/1     Running   0          85s   192
         <pubDate>Sat, 16 Mar 2019 17:36:52 +0800</pubDate>
         <link>https://mritd.me/2019/03/16/set-up-kubernetes-1.13.4-cluster/</link>
         <guid isPermaLink="true">https://mritd.me/2019/03/16/set-up-kubernetes-1.13.4-cluster/</guid>
-        
-        <category>Kubernetes</category>
-        
-        
-        <category>Kubernetes</category>
-        
-      </item>
-    
-      <item>
-        <title>Kubernetes sample-cli-plugin 源码分析</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;写这篇文章的目的是为了继续上篇 &lt;a href=&quot;https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/&quot;&gt;Kubernetes 1.12 新的插件机制&lt;/a&gt; 中最后部分对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Golang 的插件辅助库&lt;/code&gt; 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 &lt;strong&gt;sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例&lt;/strong&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;一基础准备&quot;&gt;一、基础准备&lt;/h2&gt;
-
-&lt;p&gt;在开始分析源码之前，&lt;strong&gt;我们假设读者已经熟悉 Golang 语言，至少对基本语法、指针、依赖管理工具有一定认知&lt;/strong&gt;；下面介绍一下 &lt;a href=&quot;https://github.com/kubernetes/sample-cli-plugin&quot;&gt;sample-cli-plugin&lt;/a&gt; 这个项目一些基础核心的依赖:&lt;/p&gt;
-
-&lt;h3 id=&quot;11cobra-终端库&quot;&gt;1.1、Cobra 终端库&lt;/h3&gt;
-
-&lt;p&gt;这是一个强大的 Golang 的 command line interface 库，其支持用非常简单的代码创建出符合 Unix 风格的 cli 程序；甚至官方提供了用于创建 cli 工程脚手架的 cli 命令工具；Cobra 官方 Github 地址 &lt;a href=&quot;https://github.com/spf13/cobra&quot;&gt;点击这里&lt;/a&gt;，具体用法请自行 Google，以下只做一个简单的命令定义介绍(docker、kubernetes 终端 cli 都基于这个库)&lt;/p&gt;
-
-&lt;div class=&quot;language-golang highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;每一个命令&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;不论是子命令还是主命令&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;都会是一个&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cobra&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Command&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;对象&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lsCmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cobra&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c&quot;&gt;// 一些命令帮助文档有关的描述信息&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Use&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;s&quot;&gt;&quot;ls&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Short&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;A brief description of your command&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;`A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;c&quot;&gt;// 命令运行时真正执行逻辑，如果需要返回 Error 信息，我们一般设置 RunE&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Run&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cobra&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;ls called&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;// 为这个命令添加 flag，比如 `--help`、`-p`&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;// PersistentFlags() 方法添加的 flag 在所有子 command 也会生效&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;// Cobra 的 command 可以无限级联，比如 `kubectl get pod` 就是在 `kubectl` command 下增加了子 `get` command&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;lsCmd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PersistentFlags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;foo&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;A help for foo&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;// Flags() 方法添加的 flag 仅在直接调用此子命令时生效&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;lsCmd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Flags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BoolP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;toggle&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;t&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Help message for toggle&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;12vendor-依赖&quot;&gt;1.2、vendor 依赖&lt;/h3&gt;
-
-&lt;p&gt;vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目采用 &lt;a href=&quot;https://github.com/tools/godep&quot;&gt;godep&lt;/a&gt; 工具管理依赖；依赖配置信息被保存在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Godeps/Godeps.json&lt;/code&gt; 中，&lt;strong&gt;一般项目不会上传 vendor 目录，因为它的依赖信息已经在 Godeps.json 中存在，只需要在项目下使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;godep restore&lt;/code&gt; 命令恢复就可自动重新下载&lt;/strong&gt;；这里上传了 vendor 目录的原因应该是为了方便开发者直接使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;go get&lt;/code&gt; 命令安装；顺边说一下在 Golang 新版本已经开始转换到 &lt;code class=&quot;highlighter-rouge&quot;&gt;go mod&lt;/code&gt; 依赖管理工具，标志就是项目下会有 &lt;code class=&quot;highlighter-rouge&quot;&gt;go.mod&lt;/code&gt; 文件&lt;/p&gt;
-
-&lt;h2 id=&quot;二源码分析&quot;&gt;二、源码分析&lt;/h2&gt;
-
-&lt;h3 id=&quot;21环境搭建&quot;&gt;2.1、环境搭建&lt;/h3&gt;
-
-&lt;p&gt;这里准备一笔带过了，基本就是 clone 源码到 &lt;code class=&quot;highlighter-rouge&quot;&gt;$GOPATH/src/k8s.io/sample-cli-plugin&lt;/code&gt; 目录，然后在 GoLand 中打开；目前我使用的 Go 版本为最新的 1.11.4；以下时导入源码后的截图&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/sn8o8.png&quot; alt=&quot;GoLand&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;22定位核心运行方法&quot;&gt;2.2、定位核心运行方法&lt;/h3&gt;
-
-&lt;p&gt;熟悉过 Cobra 库以后，再从整个项目包名上分析，首先想到的启动入口应该在 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包下(一般 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包下的文件都会编译成最终可执行文件名，Kubernetes 也是一样)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/rafeq.png&quot; alt=&quot;main&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;从以上截图中可以看出，首先通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd.NewCmdNamespace&lt;/code&gt; 方法创建了一个 Command 对象 &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt;，然后调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;root.Execute&lt;/code&gt; 就结束了；那么也就说明 &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; 这个 Command 是唯一的核心命令对象，整个插件实现都在这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; 里；所以我们需要查看一下这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd.NewCmdNamespace&lt;/code&gt; 是如何对它初始化的，找到 Cobra 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;Run&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;RunE&lt;/code&gt; 设置&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/77krg.png&quot; alt=&quot;NewCmdNamespace&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;定位到 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewCmdNamespace&lt;/code&gt; 方法以后，基本上就是标准的 Cobra 库的使用方式了；&lt;strong&gt;从截图上可以看到，&lt;code class=&quot;highlighter-rouge&quot;&gt;RunE&lt;/code&gt; 设置的函数总共运行了 3 个动作: &lt;code class=&quot;highlighter-rouge&quot;&gt;o.Complete&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;o.Validate&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;o.Run&lt;/code&gt;&lt;/strong&gt;；所以接下来我们主要分析这三个方法就行了&lt;/p&gt;
-
-&lt;h3 id=&quot;23namespaceoptions-结构体&quot;&gt;2.3、NamespaceOptions 结构体&lt;/h3&gt;
-
-&lt;p&gt;在分析上面说的这三个方法之前，我们还应当了解一下这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;o&lt;/code&gt; 是什么玩意&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/4b3cc.png&quot; alt=&quot;NamespaceOptions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;从源码中可以看到，&lt;code class=&quot;highlighter-rouge&quot;&gt;o&lt;/code&gt; 这个对象由 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewNamespaceOptions&lt;/code&gt; 创建，而 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewNamespaceOptions&lt;/code&gt; 方法返回的实际上是一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;NamespaceOptions&lt;/code&gt; 结构体；接下来我们需要研究一下这个结构体都是由什么组成的，换句话说要基本大致上整明白结构体的基本结构，比如里面的属性都是干啥的&lt;/p&gt;
-
-&lt;h4 id=&quot;231genericclioptionsconfigflags&quot;&gt;2.3.1、*genericclioptions.ConfigFlags&lt;/h4&gt;
-
-&lt;p&gt;首先看下第一个属性 &lt;code class=&quot;highlighter-rouge&quot;&gt;configFlags&lt;/code&gt;，它的实际类型是 &lt;code class=&quot;highlighter-rouge&quot;&gt;*genericclioptions.ConfigFlags&lt;/code&gt;，点击查看以后如下&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/li6s4.png&quot; alt=&quot;genericclioptions.ConfigFlags&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;从这些字段上来看，我们可以暂且模糊的推测出这应该是个基础配置型的字段，负责存储一些全局基本设置，比如 API Server 认证信息等&lt;/p&gt;
-
-&lt;h4 id=&quot;232apicontext&quot;&gt;2.3.2、*api.Context&lt;/h4&gt;
-
-&lt;p&gt;下面这两个 &lt;code class=&quot;highlighter-rouge&quot;&gt;resultingContext&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;resultingContextName&lt;/code&gt; 就很好理解了，从名字上看就可以知道它们应该是用来存储结果集的 Context 信息的；当然这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;*api.Context&lt;/code&gt; 就是 Kubernetes 配置文件中 Context 的 Go 结构体&lt;/p&gt;
-
-&lt;h4 id=&quot;233userspecified&quot;&gt;2.3.3、userSpecified*&lt;/h4&gt;
-
-&lt;p&gt;这几个字段从名字上就可以区分出，他们应该用于存储用户设置的或者说是通过命令行选项输入的一些指定配置信息，比如 Cluster、Context 等&lt;/p&gt;
-
-&lt;h4 id=&quot;234rawconfig&quot;&gt;2.3.4、rawConfig&lt;/h4&gt;
-
-&lt;p&gt;rawConfig 这个变量名字有点子奇怪，不过它实际上是个 &lt;code class=&quot;highlighter-rouge&quot;&gt;api.Config&lt;/code&gt;；里面保存了与 API Server 通讯的配置信息；&lt;strong&gt;至于为什么要有这玩意，是因为配置信息输入源有两个: cli 命令行选项(eg: &lt;code class=&quot;highlighter-rouge&quot;&gt;--namespace&lt;/code&gt;)和用户配置文件(eg: &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.kube/config&lt;/code&gt;)；最终这两个地方的配置合并后会存储在这个 rawConfig 里&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;235listnamespaces&quot;&gt;2.3.5、listNamespaces&lt;/h4&gt;
-
-&lt;p&gt;这个变量实际上相当于一个 flag，用于存储插件是否使用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;--list&lt;/code&gt; 选项；在分析结构体这里没法看出来；不过只要稍稍的多看一眼代码就能看在 &lt;code class=&quot;highlighter-rouge&quot;&gt;NewCmdNamespace&lt;/code&gt; 方法中有这么一行代码&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/f07l3.png&quot; alt=&quot;listNamespaces&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;24核心处理逻辑&quot;&gt;2.4、核心处理逻辑&lt;/h3&gt;
-
-&lt;p&gt;介绍完了结构体的基本属性，最后我们只需要弄明白在核心 Command 方法内运行的这三个核心方法就行了&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/8lm4b.png&quot; alt=&quot;core func&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;241namespaceoptionscomplete&quot;&gt;2.4.1、*NamespaceOptions.Complete&lt;/h4&gt;
-
-&lt;p&gt;这个方法代码稍微有点多，这里不会对每一行代码都做解释，只要大体明白都在干什么就行了；我们的目的是理解它，后续模仿它创造自己的插件；下面是代码截图&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/qqf0f.png&quot; alt=&quot;NamespaceOptions.Complete&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;从截图上可以看到，首先弄出了 &lt;code class=&quot;highlighter-rouge&quot;&gt;rawConfig&lt;/code&gt; 这个玩意，&lt;code class=&quot;highlighter-rouge&quot;&gt;rawConfig&lt;/code&gt; 上面也提到了，它就是终端选项和用户配置文件的最终合并，至于为什么可以查看 &lt;code class=&quot;highlighter-rouge&quot;&gt;ToRawKubeConfigLoader().RawConfig()&lt;/code&gt; 这两个方法的注释和实现即可；&lt;/p&gt;
-
-&lt;p&gt;接下来就是各种获取插件执行所需要的变量信息，比如获取用户指定的 &lt;code class=&quot;highlighter-rouge&quot;&gt;Namespace&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;Cluster&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; 等，其中还包含了一些必要的校验；比如不允许使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl ns NS_NAME1 --namespace NS_NAME2&lt;/code&gt; 这种操作(因为这么干很让人难以理解 “你到底是要切换到 &lt;code class=&quot;highlighter-rouge&quot;&gt;NS_NAME1&lt;/code&gt; 还是 &lt;code class=&quot;highlighter-rouge&quot;&gt;NS_NAME2&lt;/code&gt;”)&lt;/p&gt;
-
-&lt;p&gt;最后从 &lt;code class=&quot;highlighter-rouge&quot;&gt;153&lt;/code&gt; 行 &lt;code class=&quot;highlighter-rouge&quot;&gt;o.resultingContext = api.NewContext()&lt;/code&gt; 开始就是创建最终的 &lt;code class=&quot;highlighter-rouge&quot;&gt;resultingContext&lt;/code&gt; 对象，把获取到的用户指定的 &lt;code class=&quot;highlighter-rouge&quot;&gt;Namespace&lt;/code&gt; 等各种信息赋值好，为下一步将其持久化到配置文件中做准备&lt;/p&gt;
-
-&lt;h4 id=&quot;242namespaceoptionsvalidate&quot;&gt;2.4.2、*NamespaceOptions.Validate&lt;/h4&gt;
-
-&lt;p&gt;这个方法看名字就知道，里面全是对最终结果的校验；比如检查一下 &lt;code class=&quot;highlighter-rouge&quot;&gt;rawConfig&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;CurrentContext&lt;/code&gt; 是否获取到了，看看命令行参数是否正确，确保你不会瞎鸡儿输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl ns NS_NAME1 NS_NAME2&lt;/code&gt; 这种命令&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/frqpb.png&quot; alt=&quot;NamespaceOptions.Validate&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;243namespaceoptionsrun&quot;&gt;2.4.3、*NamespaceOptions.Run&lt;/h4&gt;
-
-&lt;p&gt;第一步合并配置信息并获取到用户设置(输入)的配置，第二部做参数校验；可以说前面的两步操作都是为这一步做准备，&lt;code class=&quot;highlighter-rouge&quot;&gt;Run&lt;/code&gt; 方法真正的做了配置文件写入、终端返回结果打印操作&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/6tkjz.png&quot; alt=&quot;NamespaceOptions.Run&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到，&lt;code class=&quot;highlighter-rouge&quot;&gt;Run&lt;/code&gt; 方法第一步就是更加谨慎的检查了一下参数是否正常，然后调用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;o.setNamespace&lt;/code&gt;；这个方法截图如下&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/1jc3k.png&quot; alt=&quot;NamespaceOptions.setNamespace&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;setNamespace&lt;/code&gt;是真正的做了配置文件写入动作的，实际写入方法就是 &lt;code class=&quot;highlighter-rouge&quot;&gt;clientcmd.ModifyConfig&lt;/code&gt;；这个是 &lt;code class=&quot;highlighter-rouge&quot;&gt;Kubernetes&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;client-go&lt;/code&gt; 提供的方法，这些库的作用就是提供给我们非常方便的 API 操作；比如修改配置文件，你不需要关心配置文件在哪，你更不需要关系文件句柄是否被释放&lt;/p&gt;
-
-&lt;p&gt;从 &lt;code class=&quot;highlighter-rouge&quot;&gt;o.setNamespace&lt;/code&gt; 方法以后其实就没什么看头了，毕竟插件的核心功能就是快速修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;Namespace&lt;/code&gt;；下面的各种 &lt;code class=&quot;highlighter-rouge&quot;&gt;for&lt;/code&gt; 循环遍历其实就是在做打印输出；比如当你没有设置 &lt;code class=&quot;highlighter-rouge&quot;&gt;Namespace&lt;/code&gt; 而使用了 &lt;code class=&quot;highlighter-rouge&quot;&gt;--list&lt;/code&gt; 选项，插件就通过这里帮你打印设置过那些 &lt;code class=&quot;highlighter-rouge&quot;&gt;Namespace&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;三插件总结&quot;&gt;三、插件总结&lt;/h2&gt;
-
-&lt;p&gt;分析完了这个官方的插件，然后想一下自己以后写插件可能的需求，最后对比一下，可以为以后写插件做个总结:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;我们最好也弄个 &lt;code class=&quot;highlighter-rouge&quot;&gt;xxxOptions&lt;/code&gt; 这种结构体存存一些配置&lt;/li&gt;
-  &lt;li&gt;结构体内至少我们应当存储 &lt;code class=&quot;highlighter-rouge&quot;&gt;configFlags&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;rawConfig&lt;/code&gt; 这两个基础配置信息&lt;/li&gt;
-  &lt;li&gt;结构体内其它参数都应当是跟自己实际业务有关的&lt;/li&gt;
-  &lt;li&gt;最后在在结构体上增加适当的方法完成自己的业务逻辑并保持好适当的校验&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;转载请注明出n，本文采用 [CC4.0](http://c 1.12 新的插件机制](https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/) 中最后部分对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Golang 的插件辅助库&lt;/code&gt; 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 &lt;strong&gt;sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例&lt;/strong&gt;&lt;/p&gt;
-
-</description>
-        <pubDate>Wed, 16 Jan 2019 12:16:42 +0800</pubDate>
-        <link>https://mritd.me/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/</guid>
-        
-        <category>Kubernetes</category>
-        
-        
-        <category>Kubernetes</category>
-        
-      </item>
-    
-      <item>
-        <title>Kubernetes 1.12 新的插件机制</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;在很久以前的版本研究过 kubernetes 的插件机制，当时弄了一个快速切换 &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace&lt;/code&gt; 的小插件；最近把自己本机的 kubectl 升级到了 1.12，突然发现插件不能用了；撸了一下文档发现插件机制彻底改了…&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;一插件编写语言&quot;&gt;一、插件编写语言&lt;/h2&gt;
-
-&lt;p&gt;kubernetes 1.12 新的插件机制在编写语言上同以前一样，&lt;strong&gt;可以以任意语言编写，只要能弄一个可执行的文件出来就行&lt;/strong&gt;，插件可以是一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;python&lt;/code&gt; 脚本，也可以是 &lt;code class=&quot;highlighter-rouge&quot;&gt;Go&lt;/code&gt; 等编译语言最终编译的二进制；以下是一个 Copy 自官方文档的 &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt; 编写的插件样例&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# optional argument handling&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;version&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;then
-    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1.0.0&quot;&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;0
-&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# optional argument handling&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;config&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;then
-    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$KUBECONFIG&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;0
-&lt;span class=&quot;k&quot;&gt;fi
-
-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;I am a plugin named kubectl-foo&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;二插件加载方式&quot;&gt;二、插件加载方式&lt;/h2&gt;
-
-&lt;h3 id=&quot;21插件位置&quot;&gt;2.1、插件位置&lt;/h3&gt;
-
-&lt;p&gt;1.12 kubectl 插件最大的变化就是加载方式变了，由原来的放置在指定位置，还要为其编写 yaml 配置变成了现在的类似 git 扩展命令的方式: &lt;strong&gt;只要放置在 PATH 下，并以 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-&lt;/code&gt; 开头的可执行文件都被认为是 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 的插件&lt;/strong&gt;；所以你可以随便弄个小脚本(比如上面的代码)，然后改好名字赋予可执行权限，扔到 PATH 下即可&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/s64v6.png&quot; alt=&quot;test-plugin&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;22插件变量&quot;&gt;2.2、插件变量&lt;/h3&gt;
-
-&lt;p&gt;同以前不通，&lt;strong&gt;以前版本的执行插件时，&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 会向插件传递一些特定的与 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 相关的变量，现在则只会传递标准变量；即 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 能读到什么变量，插件就能读到，其他的私有化变量(比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;KUBECTL_PLUGINS_CURRENT_NAMESPACE&lt;/code&gt;)不会再提供&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/vs1c3.png&quot; alt=&quot;plugin env&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;并且新版本的插件体系，所有选项(&lt;code class=&quot;highlighter-rouge&quot;&gt;flag&lt;/code&gt;) 将全部交由插件本身处理，kubectl 不会再解析&lt;/strong&gt;，比如下面的 &lt;code class=&quot;highlighter-rouge&quot;&gt;--help&lt;/code&gt; 交给了自定义插件处理，由于脚本内没有处理这个选项，所以相当于选项无效了&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/8ch88.png&quot; alt=&quot;plugin flag&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;还有就是 &lt;strong&gt;传递给插件的第一个参数永远是插件自己的绝对位置，比如这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;test&lt;/code&gt; 插件在执行时的 &lt;code class=&quot;highlighter-rouge&quot;&gt;$0&lt;/code&gt; 是 &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/local/bin/kubectl-test&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;23插件命名及查找&quot;&gt;2.3、插件命名及查找&lt;/h3&gt;
-
-&lt;p&gt;目前在插件命名及查找顺序上官方文档写的非常详尽，不给过对于普通使用者来说，实际上命名规则和查找与常规的 Linux 下的命令查找机制相同，只不过还做了增强；增强后的基本规则如下&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PATH&lt;/code&gt; 优先匹配原则&lt;/li&gt;
-  &lt;li&gt;短横线 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 自动分割匹配以及智能转义&lt;/li&gt;
-  &lt;li&gt;以最精确匹配为首要目标&lt;/li&gt;
-  &lt;li&gt;查找失败自动转换参数&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PATH&lt;/code&gt; 优先匹配原则跟传统的命令查找一致，即当多个路径下存在同名的插件时，则采用最先查找到的插件&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/ljyp5.png&quot; alt=&quot;plugin path&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;当你的插件文件名中包含 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; ，并且 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 在无法精确找到插件时会尝试自动拼接命令来尝试匹配；如下所示，在没有找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test&lt;/code&gt; 这个命令时会尝试拼接参数查找&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/l85bp.png&quot; alt=&quot;auto merge&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;由于以上这种查找机制，&lt;strong&gt;当命令中确实包含 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 时，必须进行转义以 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt; 替换，否则 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 会提示命令未找到错误&lt;/strong&gt;；替换后可直接使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl 插件命令(包含-)&lt;/code&gt; 执行，同时也支持以原始插件名称执行(使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/7vm0l.png&quot; alt=&quot;name contains dash&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;在复杂插件体系下，多个插件可能包含同样的前缀，此时将遵序最精确查找原则；即当两个插件 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa-bbb&lt;/code&gt; 同时存在，并且执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl test aaa bbb&lt;/code&gt; 命令时，优先匹配最精确的插件 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa-bbb&lt;/code&gt;，&lt;strong&gt;而不是将 &lt;code class=&quot;highlighter-rouge&quot;&gt;bbb&lt;/code&gt; 作为参数传递给 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa&lt;/code&gt; 插件&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/god8q.png&quot; alt=&quot;precise search&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;24总结&quot;&gt;2.4、总结&lt;/h3&gt;
-
-&lt;p&gt;插件查找机制在一般情况下与传统 PATH 查找方式相同，同时 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 实现了智能的 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 自动匹配查找、更精确的命令命中功能；这两种机制的实现主要为了方便编写插件的命令树(插件命令的子命令…)，类似下面这种&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; ./plugin_command_tree
-kubectl-parent
-kubectl-parent-subcommand
-kubectl-parent-subcommand-subsubcommand
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;当出现多个位置有同名插件时，执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl plugin list&lt;/code&gt; 能够检测出哪些插件由于 PATH 查找顺序原因导致永远不会被执行问题&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl plugin list
-The following kubectl-compatible plugins are available:
-
-&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;/fixtures/pkg/kubectl/plugins/kubectl-foo
-/usr/local/bin/kubectl-foo
-  - warning: /usr/local/bin/kubectl-foo is overshadowed by a similarly named plugin: &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;/fixtures/pkg/kubectl/plugins/kubectl-foo
-plugins/kubectl-invalid
-  - warning: plugins/kubectl-invalid identified as a kubectl plugin, but it is not executable
-
-error: 2 plugin warnings were found
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;三golang-的插件辅助库&quot;&gt;三、Golang 的插件辅助库&lt;/h3&gt;
-
-&lt;p&gt;由于插件机制的变更，导致其他语言编写的插件在实时获取某些配置信息、动态修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 配置方面可能造成一定的阻碍；为此 kubernetes 提供了一个 &lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;command line runtime package&lt;/a&gt;，使用 Go 编写插件，配合这个库可以更加方便的解析和调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 的配置信息&lt;/p&gt;
-
-&lt;p&gt;官方为了演示如何使用这个 &lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;cli-runtime&lt;/a&gt; 库编写了一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace&lt;/code&gt; 切换的插件(自己白写了…)，仓库地址在 &lt;a href=&quot;https://github.com/kubernetes/sample-cli-plugin&quot;&gt;Github&lt;/a&gt; 上，基本编译使用如下(直接 &lt;code class=&quot;highlighter-rouge&quot;&gt;go get&lt;/code&gt; 后编译文件默认为目录名 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd&lt;/code&gt;)&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  ~ go get k8s.io/sample-cli-plugin/cmd
-➜  ~ &lt;span class=&quot;nb&quot;&gt;sudo mv &lt;/span&gt;gopath/bin/cmd /usr/local/bin/kubectl-ns
-➜  ~ kubectl ns
-default
-➜  ~ kubectl ns &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;
-View or &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;the current namespace
-
-Usage:
-  ns &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;new-namespace] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;flags]
-
-Examples:
-
-        &lt;span class=&quot;c&quot;&gt;# view the current namespace in your KUBECONFIG&lt;/span&gt;
-        kubectl ns
-
-        &lt;span class=&quot;c&quot;&gt;# view all of the namespaces in use by contexts in your KUBECONFIG&lt;/span&gt;
-        kubectl ns &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
-
-        &lt;span class=&quot;c&quot;&gt;# switch your current-context to one that contains the desired namespace&lt;/span&gt;
-        kubectl ns foo
-
-
-Flags:
-      &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt; string                      Username to impersonate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the operation
-      &lt;span class=&quot;nt&quot;&gt;--as-group&lt;/span&gt; stringArray           Group to impersonate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the operation, this flag can be repeated to specify multiple groups.
-      &lt;span class=&quot;nt&quot;&gt;--cache-dir&lt;/span&gt; string               Default HTTP cache directory &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default &lt;span class=&quot;s2&quot;&gt;&quot;/Users/mritd/.kube/http-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;nt&quot;&gt;--certificate-authority&lt;/span&gt; string   Path to a cert file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the certificate authority
-      &lt;span class=&quot;nt&quot;&gt;--client-certificate&lt;/span&gt; string      Path to a client certificate file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;TLS
-      &lt;span class=&quot;nt&quot;&gt;--client-key&lt;/span&gt; string              Path to a client key file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;TLS
-      &lt;span class=&quot;nt&quot;&gt;--cluster&lt;/span&gt; string                 The name of the kubeconfig cluster to use
-      &lt;span class=&quot;nt&quot;&gt;--context&lt;/span&gt; string                 The name of the kubeconfig context to use
-  &lt;span class=&quot;nt&quot;&gt;-h&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;                           &lt;span class=&quot;nb&quot;&gt;help &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ns
-      &lt;span class=&quot;nt&quot;&gt;--insecure-skip-tls-verify&lt;/span&gt;       If &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;, the server&lt;span class=&quot;s1&quot;&gt;'s certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
-      --list                           if true, print the list of all namespaces in the current KUBECONFIG
-  -n, --namespace string               If present, the namespace scope for this CLI request
-      --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don'&lt;/span&gt;t &lt;span class=&quot;nb&quot;&gt;timeout &lt;/span&gt;requests. &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default &lt;span class=&quot;s2&quot;&gt;&quot;0&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--server&lt;/span&gt; string                  The address and port of the Kubernetes API server
-      &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; string                   Bearer token &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;authentication to the API server
-      &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; string                    The name of the kubeconfig user to use
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;限于篇幅原因，具体这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;cli-runtime&lt;/code&gt; 包怎么用请自行参考官方写的这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;sample-cli-plugin&lt;/code&gt; (其实并不怎么 “simple”…)&lt;/p&gt;
-
-&lt;p&gt;本文参考文档:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/&quot;&gt;Extend kubectl with plugins&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;cli-runtime&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/sample-cli-plugin&quot;&gt;sample-cli-plugin&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Fri, 30 Nov 2018 00:05:34 +0800</pubDate>
-        <link>https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/</link>
-        <guid isPermaLink="true">https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/</guid>
         
         <category>Kubernetes</category>
         

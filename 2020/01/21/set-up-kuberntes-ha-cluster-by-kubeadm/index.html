@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="kubeadm 搭建 HA kubernetes 集群">
+    <meta name="keywords"  content="kuberntes,kubeadm,ha">
+    <meta name="theme-color" content="#000000">
+    
+    <title>kubeadm 搭建 HA kubernetes 集群 - 漠然的博客 | mritd Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mritd.me/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Rouge CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/mritd-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">漠然</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
+                        
+                    </div>
+                    <h1>kubeadm 搭建 HA kubernetes 集群</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by 漠然 on January 21, 2020</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+                <blockquote>
+  <p>距离上一次折腾 kubeadm 大约已经一两年了(记不太清了)，在很久一段时间内一直采用二进制部署的方式来部署 kubernetes 集群，随着 kubeadm 的不断稳定，目前终于可以重新试试这个不错的工具了</p>
+</blockquote>
+
+<h2 id="一环境准备">一、环境准备</h2>
+
+<p>搭建环境为 5 台虚拟机，每台虚拟机配置为 4 核心 8G 内存，虚拟机 IP 范围为 <code class="highlighter-rouge">172.16.10.21~25</code>，其他软件配置如下</p>
+
+<ul>
+  <li>os version: ubuntu 18.04</li>
+  <li>kubeadm version: 1.17.0</li>
+  <li>kubernetes version: 1.17.0</li>
+  <li>etcd version: 3.3.18</li>
+  <li>docker version: 19.03.5</li>
+</ul>
+
+<h2 id="二ha-方案">二、HA 方案</h2>
+
+<p>目前的 HA 方案与官方的不同，官方 HA 方案推荐使用类似 haproxy 等工具进行 4 层代理 apiserver，但是同样会有一个问题就是我们还需要对这个 haproxy 做 HA；由于目前我们实际生产环境都是多个独立的小集群，所以单独弄 2 台 haproxy + keeplived 去维持这个 apiserver LB 的 HA 有点不划算；所以还是准备延续老的 HA 方案，将外部 apiserver 的 4 层 LB 前置到每个 node 节点上；<strong>目前是采用在每个 node 节点上部署 nginx 4 层代理所有 apiserver，nginx 本身资源消耗低而且请求量不大，综合来说对宿主机影响很小；</strong>以下为 HA 的大致方案图</p>
+
+<p><img src="https://cdn.oss.link/markdown/mktld.png" alt="ha" /></p>
+
+<h2 id="三环境初始化">三、环境初始化</h2>
+
+<h3 id="31系统环境">3.1、系统环境</h3>
+
+<p>由于个人操作习惯原因，目前已经将常用的初始化环境整理到一个小脚本里了，脚本具体参见 <a href="https://github.com/mritd/shell_scripts/blob/master/init_ubuntu.sh">mritd/shell_scripts</a> 仓库，基本上常用的初始化内容为:</p>
+
+<ul>
+  <li>设置 locale(en_US.UTF-8)</li>
+  <li>设置时区(Asia/Shanghai)</li>
+  <li>更新所有系统软件包(system update)</li>
+  <li>配置 vim(vim8 + 常用插件、配色)</li>
+  <li>ohmyzsh(别跟我说不兼容 bash 脚本，我就是喜欢)</li>
+  <li>docker</li>
+  <li>ctop(一个 docker 的辅助工具)</li>
+  <li>docker-compose</li>
+</ul>
+
+<p><strong>在以上初始化中，实际对 kubernetes 安装产生影响的主要有三个地方:</strong></p>
+
+<ul>
+  <li><strong>docker 的 cgroup driver 调整为 systemd，具体参考 <a href="https://github.com/mritd/config/blob/master/docker/docker.service">docker.service</a></strong></li>
+  <li><strong>docker 一定要限制 conatiner 日志大小，防止 apiserver 等日志大量输出导致磁盘占用过大</strong></li>
+  <li><strong>安装 <code class="highlighter-rouge">conntrack</code> 和 <code class="highlighter-rouge">ipvsadm</code>，后面可能需要借助其排查问题</strong></li>
+</ul>
+
+<h3 id="32配置-ipvs">3.2、配置 ipvs</h3>
+
+<p>由于后面 kube-proxy 需要使用 ipvs 模式，所以需要对内核参数、模块做一些调整，调整命令如下:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/sysctl.conf <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+net.ipv4.ip_forward=1
+net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-ip6tables=1
+</span><span class="no">EOF
+
+</span>sysctl <span class="nt">-p</span>
+
+<span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/modules <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+ip_vs
+ip_vs_lc
+ip_vs_wlc
+ip_vs_rr
+ip_vs_wrr
+ip_vs_lblc
+ip_vs_lblcr
+ip_vs_dh
+ip_vs_sh
+ip_vs_fo
+ip_vs_nq
+ip_vs_sed
+ip_vs_ftp
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<p><strong>配置完成后切记需要重启，重启完成后使用 <code class="highlighter-rouge">lsmod | grep ip_vs</code> 验证相关 ipvs 模块加载是否正常，本文将主要使用 <code class="highlighter-rouge">ip_vs_wrr</code>，所以目前只关注这个模块既可。</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/4irz1.png" alt="ipvs_mode" /></p>
+
+<h2 id="四安装-etcd">四、安装 Etcd</h2>
+
+<h3 id="41方案选择">4.1、方案选择</h3>
+
+<p>官方对于集群 HA 给出了两种有关于 Etcd 的部署方案:</p>
+
+<ul>
+  <li>一种是深度耦合到 <code class="highlighter-rouge">control plane</code> 上，即每个 <code class="highlighter-rouge">control plane</code> 一个 etcd</li>
+  <li>另一种是使用外部的 Etcd 集群，通过在配置中指定外部集群让 apiserver 等组件连接</li>
+</ul>
+
+<p>在测试深度耦合 <code class="highlighter-rouge">control plane</code> 方案后，发现一些比较恶心的问题；比如说开始创建第二个 <code class="highlighter-rouge">control plane</code> 时配置写错了需要重建，此时你一旦删除第二个 <code class="highlighter-rouge">control plane</code> 会导致第一个 <code class="highlighter-rouge">control plane</code> 也会失败，原因是<strong>创建第二个 <code class="highlighter-rouge">control plane</code> 时 kubeadm 已经自动完成了 etcd 的集群模式，当删除第二个 <code class="highlighter-rouge">control plane</code> 的时候由于集群可用原因会导致第一个 <code class="highlighter-rouge">control plane</code> 下的 etcd 发现节点失联从而也不提供服务；</strong>所以综合考虑到后续迁移、灾备等因素，这里选择了将 etcd 放置在外部集群中；同样也方便我以后各种折腾应对一些极端情况啥的。</p>
+
+<h3 id="42部署-etcd">4.2、部署 Etcd</h3>
+
+<p>确定了需要在外部部署 etcd 集群后，只需要开干就完事了；查了一下 ubuntu 官方源已经有了 etcd 安装包，但是版本比较老，测试了一下 golang 的 build 版本是 1.10；所以我还是选择了从官方 release 下载最新的版本安装；当然最后还是因为懒，我自己打了一个 deb 包… deb 包可以从这个项目 <a href="https://github.com/mritd/etcd-deb/releases">mritd/etcd-deb</a> 下载，担心安全性的可以利用项目脚本自己打包，以下是安装过程:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载软件包</span>
+wget https://github.com/mritd/etcd-deb/releases/download/v3.3.18/etcd_3.3.18_amd64.deb
+wget https://github.com/mritd/etcd-deb/releases/download/v3.3.18/cfssl_1.4.1_amd64.deb
+<span class="c"># 安装 etcd(至少在 3 台节点上执行)</span>
+dpkg <span class="nt">-i</span> etcd_3.3.18_amd64.deb cfssl_1.4.1_amd64.deb
+</code></pre></div></div>
+
+<p><strong>既然自己部署 etcd，那么证书签署啥的还得自己来了，证书签署这里借助 cfssl 工具，cfssl 目前提供了 deb 的 make target，但是没找到 deb 包，所以也自己 build 了(担心安全性的可自行去官方下载)；</strong>接着编辑一下 <code class="highlighter-rouge">/etc/etcd/cfssl/etcd-csr.json</code> 文件，用 <code class="highlighter-rouge">/etc/etcd/cfssl/create.sh</code> 脚本创建证书，并将证书复制到指定目录</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建证书</span>
+<span class="nb">cd</span> /etc/etcd/cfssl <span class="o">&amp;&amp;</span> ./create.sh
+<span class="c"># 复制证书</span>
+<span class="nb">mv</span> /etc/etcd/cfssl/<span class="k">*</span>.pem /etc/etcd/ssl
+</code></pre></div></div>
+
+<p>最后在 3 台节点上修改配置，并将刚刚创建的证书同步到其他两台节点启动既可；下面是单台节点的配置样例</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># /etc/etcd/etcd.conf</span>
+<span class="c"># [member]</span>
+<span class="nv">ETCD_NAME</span><span class="o">=</span>etcd1
+<span class="nv">ETCD_DATA_DIR</span><span class="o">=</span><span class="s2">"/var/lib/etcd/data"</span>
+<span class="nv">ETCD_WAL_DIR</span><span class="o">=</span><span class="s2">"/var/lib/etcd/wal"</span>
+<span class="nv">ETCD_SNAPSHOT_COUNT</span><span class="o">=</span><span class="s2">"100"</span>
+<span class="nv">ETCD_HEARTBEAT_INTERVAL</span><span class="o">=</span><span class="s2">"100"</span>
+<span class="nv">ETCD_ELECTION_TIMEOUT</span><span class="o">=</span><span class="s2">"1000"</span>
+<span class="nv">ETCD_LISTEN_PEER_URLS</span><span class="o">=</span><span class="s2">"https://172.16.10.21:2380"</span>
+<span class="nv">ETCD_LISTEN_CLIENT_URLS</span><span class="o">=</span><span class="s2">"https://172.16.10.21:2379,http://127.0.0.1:2379"</span>
+<span class="nv">ETCD_MAX_SNAPSHOTS</span><span class="o">=</span><span class="s2">"5"</span>
+<span class="nv">ETCD_MAX_WALS</span><span class="o">=</span><span class="s2">"5"</span>
+<span class="c">#ETCD_CORS=""</span>
+
+<span class="c"># [cluster]</span>
+<span class="nv">ETCD_INITIAL_ADVERTISE_PEER_URLS</span><span class="o">=</span><span class="s2">"https://172.16.10.21:2380"</span>
+<span class="c"># if you use different ETCD_NAME (e.g. test), set ETCD_INITIAL_CLUSTER value for this name, i.e. "test=http://..."</span>
+<span class="nv">ETCD_INITIAL_CLUSTER</span><span class="o">=</span><span class="s2">"etcd1=https://172.16.10.21:2380,etcd2=https://172.16.10.22:2380,etcd3=https://172.16.10.23:2380"</span>
+<span class="nv">ETCD_INITIAL_CLUSTER_STATE</span><span class="o">=</span><span class="s2">"new"</span>
+<span class="nv">ETCD_INITIAL_CLUSTER_TOKEN</span><span class="o">=</span><span class="s2">"etcd-cluster"</span>
+<span class="nv">ETCD_ADVERTISE_CLIENT_URLS</span><span class="o">=</span><span class="s2">"https://172.16.10.21:2379"</span>
+<span class="c">#ETCD_DISCOVERY=""</span>
+<span class="c">#ETCD_DISCOVERY_SRV=""</span>
+<span class="c">#ETCD_DISCOVERY_FALLBACK="proxy"</span>
+<span class="c">#ETCD_DISCOVERY_PROXY=""</span>
+<span class="c">#ETCD_STRICT_RECONFIG_CHECK="false"</span>
+<span class="nv">ETCD_AUTO_COMPACTION_RETENTION</span><span class="o">=</span><span class="s2">"24"</span>
+
+<span class="c"># [proxy]</span>
+<span class="c">#ETCD_PROXY="off"</span>
+<span class="c">#ETCD_PROXY_FAILURE_WAIT="5000"</span>
+<span class="c">#ETCD_PROXY_REFRESH_INTERVAL="30000"</span>
+<span class="c">#ETCD_PROXY_DIAL_TIMEOUT="1000"</span>
+<span class="c">#ETCD_PROXY_WRITE_TIMEOUT="5000"</span>
+<span class="c">#ETCD_PROXY_READ_TIMEOUT="0"</span>
+
+<span class="c"># [security]</span>
+<span class="nv">ETCD_CERT_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd.pem"</span>
+<span class="nv">ETCD_KEY_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd-key.pem"</span>
+<span class="nv">ETCD_CLIENT_CERT_AUTH</span><span class="o">=</span><span class="s2">"true"</span>
+<span class="nv">ETCD_TRUSTED_CA_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd-root-ca.pem"</span>
+<span class="nv">ETCD_AUTO_TLS</span><span class="o">=</span><span class="s2">"true"</span>
+<span class="nv">ETCD_PEER_CERT_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd.pem"</span>
+<span class="nv">ETCD_PEER_KEY_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd-key.pem"</span>
+<span class="nv">ETCD_PEER_CLIENT_CERT_AUTH</span><span class="o">=</span><span class="s2">"true"</span>
+<span class="nv">ETCD_PEER_TRUSTED_CA_FILE</span><span class="o">=</span><span class="s2">"/etc/etcd/ssl/etcd-root-ca.pem"</span>
+<span class="nv">ETCD_PEER_AUTO_TLS</span><span class="o">=</span><span class="s2">"true"</span>
+
+<span class="c"># [logging]</span>
+<span class="c">#ETCD_DEBUG="false"</span>
+<span class="c"># examples for -log-package-levels etcdserver=WARNING,security=DEBUG</span>
+<span class="c">#ETCD_LOG_PACKAGE_LEVELS=""</span>
+
+<span class="c"># [performance]</span>
+<span class="nv">ETCD_QUOTA_BACKEND_BYTES</span><span class="o">=</span><span class="s2">"5368709120"</span>
+<span class="nv">ETCD_AUTO_COMPACTION_RETENTION</span><span class="o">=</span><span class="s2">"3"</span>
+</code></pre></div></div>
+
+<p><strong>注意: 其他两台节点请调整 <code class="highlighter-rouge">ETCD_NAME</code> 为不重复的其他名称，调整 <code class="highlighter-rouge">ETCD_LISTEN_PEER_URLS</code>、<code class="highlighter-rouge">ETCD_LISTEN_CLIENT_URLS</code>、<code class="highlighter-rouge">ETCD_INITIAL_ADVERTISE_PEER_URLS</code>、<code class="highlighter-rouge">ETCD_ADVERTISE_CLIENT_URLS</code> 为其他节点对应的 IP；同时生产环境请将 <code class="highlighter-rouge">ETCD_INITIAL_CLUSTER_TOKEN</code> 替换为复杂的 token</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 同步证书</span>
+scp <span class="nt">-r</span> /etc/etcd/ssl 172.16.10.22:/etc/etcd/ssl
+scp <span class="nt">-r</span> /etc/etcd/ssl 172.16.10.23:/etc/etcd/ssl
+<span class="c"># 修复权限(3台节点都要执行)</span>
+<span class="nb">chown</span> <span class="nt">-R</span> etcd:etcd /etc/etcd
+<span class="c"># 最后每个节点依次启动既可</span>
+systemctl start etcd
+</code></pre></div></div>
+
+<p>启动完成后可以通过以下命令测试是否正常</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看集群成员</span>
+k1.node ➜ etcdctl member list
+
+3cbbaf77904c6153, started, etcd2, https://172.16.10.22:2380, https://172.16.10.22:2379
+8eb7652b6bd99c30, started, etcd1, https://172.16.10.21:2380, https://172.16.10.21:2379
+91f4e10726460d8c, started, etcd3, https://172.16.10.23:2380, https://172.16.10.23:2379
+
+<span class="c"># 检测集群健康状态</span>
+k1.node ➜ etcdctl endpoint health <span class="nt">--cacert</span> /etc/etcd/ssl/etcd-root-ca.pem <span class="nt">--cert</span> /etc/etcd/ssl/etcd.pem <span class="nt">--key</span> /etc/etcd/ssl/etcd-key.pem <span class="nt">--endpoints</span> https://172.16.10.21:2379,https://172.16.10.22:2379,https://172.16.10.23:2379
+
+https://172.16.10.21:2379 is healthy: successfully committed proposal: took <span class="o">=</span> 16.632246ms
+https://172.16.10.23:2379 is healthy: successfully committed proposal: took <span class="o">=</span> 21.122603ms
+https://172.16.10.22:2379 is healthy: successfully committed proposal: took <span class="o">=</span> 22.592005ms
+</code></pre></div></div>
+
+<h2 id="五部署-kubernetes">五、部署 Kubernetes</h2>
+
+<h3 id="51安装-kueadm">5.1、安装 kueadm</h3>
+
+<p>安装 kubeadm 没什么好说的，国内被墙用阿里的源既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get <span class="nb">install</span> <span class="nt">-y</span> apt-transport-https
+curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
+<span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt;/etc/apt/sources.list.d/kubernetes.list
+deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
+</span><span class="no">EOF
+</span>apt update
+
+<span class="c"># ebtables、ethtool kubelet 可能会用，具体忘了，反正从官方文档上看到的</span>
+apt <span class="nb">install </span>kubelet kubeadm kubectl ebtables ethtool <span class="nt">-y</span>
+</code></pre></div></div>
+
+<h3 id="52部署-nginx">5.2、部署 Nginx</h3>
+
+<p>从上面的 HA 架构图上可以看到，为了维持 apiserver 的 HA，需要在每个机器上部署一个 nginx 做 4 层的 LB；为保证后续的 node 节点正常加入，需要首先行部署 nginx；nginx 安装同样喜欢偷懒，直接 docker 跑了…毕竟都开始 kubeadm 了，那么也没必要去纠结 docker 是否稳定的问题了；以下为 nginx 相关配置</p>
+
+<p><strong>apiserver-proxy.conf</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>error_log stderr notice<span class="p">;</span>
+
+worker_processes auto<span class="p">;</span>
+events <span class="o">{</span>
+	multi_accept on<span class="p">;</span>
+	use epoll<span class="p">;</span>
+	worker_connections 1024<span class="p">;</span>
+<span class="o">}</span>
+
+stream <span class="o">{</span>
+    upstream kube_apiserver <span class="o">{</span>
+        least_conn<span class="p">;</span>
+        <span class="c"># 后端为三台 master 节点的 apiserver 地址</span>
+        server 172.16.10.21:5443<span class="p">;</span>
+        server 172.16.10.22:5443<span class="p">;</span>
+        server 172.16.10.23:5443<span class="p">;</span>
+    <span class="o">}</span>
+    
+    server <span class="o">{</span>
+        listen        0.0.0.0:6443<span class="p">;</span>
+        proxy_pass    kube_apiserver<span class="p">;</span>
+        proxy_timeout 10m<span class="p">;</span>
+        proxy_connect_timeout 1s<span class="p">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>kube-apiserver-proxy.service</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
+<span class="nv">Description</span><span class="o">=</span>kubernetes apiserver docker wrapper
+<span class="nv">Wants</span><span class="o">=</span>docker.socket
+<span class="nv">After</span><span class="o">=</span>docker.service
+
+<span class="o">[</span>Service]
+<span class="nv">User</span><span class="o">=</span>root
+<span class="nv">PermissionsStartOnly</span><span class="o">=</span><span class="nb">true
+</span><span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/docker run <span class="nt">-p</span> 6443:6443 <span class="se">\</span>
+                          <span class="nt">-v</span> /etc/kubernetes/apiserver-proxy.conf:/etc/nginx/nginx.conf <span class="se">\</span>
+                          <span class="nt">--name</span> kube-apiserver-proxy <span class="se">\</span>
+                          <span class="nt">--net</span><span class="o">=</span>host <span class="se">\</span>
+                          <span class="nt">--restart</span><span class="o">=</span>on-failure:5 <span class="se">\</span>
+                          <span class="nt">--memory</span><span class="o">=</span>512M <span class="se">\</span>
+                          nginx:1.17.6-alpine
+<span class="nv">ExecStartPre</span><span class="o">=</span>-/usr/bin/docker <span class="nb">rm</span> <span class="nt">-f</span> kube-apiserver-proxy
+<span class="nv">ExecStop</span><span class="o">=</span>/usr/bin/docker <span class="nb">rm</span> <span class="nt">-rf</span> kube-apiserver-proxy
+<span class="nv">Restart</span><span class="o">=</span>always
+<span class="nv">RestartSec</span><span class="o">=</span>15s
+<span class="nv">TimeoutStartSec</span><span class="o">=</span>30s
+
+<span class="o">[</span>Install]
+<span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+</code></pre></div></div>
+
+<p>启动 nginx 代理(每台机器都要启动，包括 master 节点)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp </span>apiserver-proxy.conf /etc/kubernetes
+<span class="nb">cp </span>kube-apiserver-proxy.service /lib/systemd/system
+systemctl daemon-reload
+systemctl <span class="nb">enable </span>kube-apiserver-proxy.service <span class="o">&amp;&amp;</span> systemctl start kube-apiserver-proxy.service
+</code></pre></div></div>
+
+<h3 id="53启动-control-plane">5.3、启动 control plane</h3>
+
+<h4 id="531关于-swap">5.3.1、关于 Swap</h4>
+
+<p>目前 kubelet 为了保证内存 limit，需要在每个节点上关闭 swap；但是说实话我看了这篇文章 <a href="https://chrisdown.name/2018/01/02/in-defence-of-swap.html">In defence of swap: common misconceptions</a> 以后还是不想关闭 swap；更确切的说其实我们生产环境比较 “富”，pod 都不 limit 内存，所以下面的部署我忽略了 swap 错误检测</p>
+
+<h4 id="532kubeadm-配置">5.3.2、kubeadm 配置</h4>
+
+<p>当前版本的 kubeadm 已经支持了完善的配置管理(当然细节部分还有待支持)，以下为我目前使用的配置，相关位置已经做了注释，更具体的配置自行查阅官方文档</p>
+
+<p><strong>kubeadm.yaml</strong></p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">kubeadm.k8s.io/v1beta2</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">InitConfiguration</span>
+<span class="na">localAPIEndpoint</span><span class="pi">:</span>
+  <span class="c1"># 第一个 master 节点 IP</span>
+  <span class="na">advertiseAddress</span><span class="pi">:</span> <span class="s2">"</span><span class="s">172.16.10.21"</span>
+  <span class="c1"># 6443 留给了 nginx，apiserver 换到 5443</span>
+  <span class="na">bindPort</span><span class="pi">:</span> <span class="m">5443</span>
+<span class="c1"># 这个 token 使用以下命令生成</span>
+<span class="c1"># kubeadm alpha certs certificate-key</span>
+<span class="na">certificateKey</span><span class="pi">:</span> <span class="s">7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3</span> 
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">kubeadm.k8s.io/v1beta2</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterConfiguration</span>
+<span class="c1"># 使用外部 etcd 配置</span>
+<span class="na">etcd</span><span class="pi">:</span>
+  <span class="na">external</span><span class="pi">:</span>
+    <span class="na">endpoints</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">https://172.16.10.21:2379"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">https://172.16.10.22:2379"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">https://172.16.10.23:2379"</span>
+    <span class="na">caFile</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/etcd/ssl/etcd-root-ca.pem"</span>
+    <span class="na">certFile</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/etcd/ssl/etcd.pem"</span>
+    <span class="na">keyFile</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/etcd/ssl/etcd-key.pem"</span>
+<span class="c1"># 网络配置</span>
+<span class="na">networking</span><span class="pi">:</span>
+  <span class="na">serviceSubnet</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10.25.0.0/16"</span>
+  <span class="na">podSubnet</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10.30.0.1/16"</span>
+  <span class="na">dnsDomain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">cluster.local"</span>
+<span class="na">kubernetesVersion</span><span class="pi">:</span> <span class="s2">"</span><span class="s">v1.17.0"</span>
+<span class="c1"># 全局 apiserver LB 地址，由于采用了 nginx 负载，所以直接指向本地既可</span>
+<span class="na">controlPlaneEndpoint</span><span class="pi">:</span> <span class="s2">"</span><span class="s">127.0.0.1:6443"</span>
+<span class="na">apiServer</span><span class="pi">:</span>
+  <span class="c1"># apiserver 的自定义扩展参数</span>
+  <span class="na">extraArgs</span><span class="pi">:</span>
+    <span class="na">v</span><span class="pi">:</span> <span class="s2">"</span><span class="s">4"</span>
+    <span class="na">alsologtostderr</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+    <span class="c1"># 审计日志相关配置</span>
+    <span class="na">audit-log-maxage</span><span class="pi">:</span> <span class="s2">"</span><span class="s">20"</span>
+    <span class="na">audit-log-maxbackup</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10"</span>
+    <span class="na">audit-log-maxsize</span><span class="pi">:</span> <span class="s2">"</span><span class="s">100"</span>
+    <span class="na">audit-log-path</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/log/kube-audit/audit.log"</span>
+    <span class="na">audit-policy-file</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/kubernetes/audit-policy.yaml"</span>
+    <span class="na">authorization-mode</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Node,RBAC"</span>
+    <span class="na">event-ttl</span><span class="pi">:</span> <span class="s2">"</span><span class="s">720h"</span>
+    <span class="na">runtime-config</span><span class="pi">:</span> <span class="s2">"</span><span class="s">api/all=true"</span>
+    <span class="na">service-node-port-range</span><span class="pi">:</span> <span class="s2">"</span><span class="s">30000-50000"</span>
+    <span class="na">service-cluster-ip-range</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10.25.0.0/16"</span>
+  <span class="c1"># 由于自行定义了审计日志配置，所以需要将宿主机上的审计配置</span>
+  <span class="c1"># 挂载到 kube-apiserver 的 pod 容器中</span>
+  <span class="na">extraVolumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">audit-config"</span>
+    <span class="na">hostPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/kubernetes/audit-policy.yaml"</span>
+    <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/kubernetes/audit-policy.yaml"</span>
+    <span class="na">readOnly</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">pathType</span><span class="pi">:</span> <span class="s2">"</span><span class="s">File"</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">audit-log"</span>
+    <span class="na">hostPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/log/kube-audit"</span>
+    <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/log/kube-audit"</span>
+    <span class="na">pathType</span><span class="pi">:</span> <span class="s2">"</span><span class="s">DirectoryOrCreate"</span>
+  <span class="c1"># 这里是 apiserver 的证书地址配置</span>
+  <span class="c1"># 为了防止以后出特殊情况，我增加了一个泛域名</span>
+  <span class="na">certSANs</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s2">"</span><span class="s">*.kubernetes.node"</span>
+  <span class="pi">-</span> <span class="s2">"</span><span class="s">172.16.10.21"</span>
+  <span class="pi">-</span> <span class="s2">"</span><span class="s">172.16.10.22"</span>
+  <span class="pi">-</span> <span class="s2">"</span><span class="s">172.16.10.23"</span>
+  <span class="na">timeoutForControlPlane</span><span class="pi">:</span> <span class="s">5m</span>
+<span class="na">controllerManager</span><span class="pi">:</span>
+  <span class="na">extraArgs</span><span class="pi">:</span>
+    <span class="na">v</span><span class="pi">:</span> <span class="s2">"</span><span class="s">4"</span>
+    <span class="c1"># 宿主机 ip 掩码</span>
+    <span class="na">node-cidr-mask-size</span><span class="pi">:</span> <span class="s2">"</span><span class="s">19"</span>
+    <span class="na">deployment-controller-sync-period</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10s"</span>
+    <span class="na">experimental-cluster-signing-duration</span><span class="pi">:</span> <span class="s2">"</span><span class="s">87600h"</span>
+    <span class="na">node-monitor-grace-period</span><span class="pi">:</span> <span class="s2">"</span><span class="s">20s"</span>
+    <span class="na">pod-eviction-timeout</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2m"</span>
+    <span class="na">terminated-pod-gc-threshold</span><span class="pi">:</span> <span class="s2">"</span><span class="s">30"</span>
+<span class="na">scheduler</span><span class="pi">:</span>
+  <span class="na">extraArgs</span><span class="pi">:</span>
+    <span class="na">v</span><span class="pi">:</span> <span class="s2">"</span><span class="s">4"</span>
+<span class="na">certificatesDir</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/etc/kubernetes/pki"</span>
+<span class="c1"># gcr.io 被墙，换成微软的镜像地址</span>
+<span class="na">imageRepository</span><span class="pi">:</span> <span class="s2">"</span><span class="s">gcr.azk8s.cn/google_containers"</span>
+<span class="na">clusterName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">kuberentes"</span>
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">kubelet.config.k8s.io/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">KubeletConfiguration</span>
+<span class="c1"># kubelet specific options here</span>
+<span class="c1"># 此配置保证了 kubelet 能在 swap 开启的情况下启动</span>
+<span class="na">failSwapOn</span><span class="pi">:</span> <span class="no">false</span>
+<span class="na">nodeStatusUpdateFrequency</span><span class="pi">:</span> <span class="s">5s</span>
+<span class="c1"># 一些驱逐阀值，具体自行查文档修改</span>
+<span class="na">evictionSoft</span><span class="pi">:</span>
+  <span class="s2">"</span><span class="s">imagefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">15%"</span>
+  <span class="s2">"</span><span class="s">memory.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512Mi"</span>
+  <span class="s2">"</span><span class="s">nodefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">15%"</span>
+  <span class="s2">"</span><span class="s">nodefs.inodesFree"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10%"</span>
+<span class="na">evictionSoftGracePeriod</span><span class="pi">:</span>
+  <span class="s2">"</span><span class="s">imagefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3m"</span>
+  <span class="s2">"</span><span class="s">memory.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1m"</span>
+  <span class="s2">"</span><span class="s">nodefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3m"</span>
+  <span class="s2">"</span><span class="s">nodefs.inodesFree"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1m"</span>
+<span class="na">evictionHard</span><span class="pi">:</span>
+  <span class="s2">"</span><span class="s">imagefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10%"</span>
+  <span class="s2">"</span><span class="s">memory.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">256Mi"</span>
+  <span class="s2">"</span><span class="s">nodefs.available"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10%"</span>
+  <span class="s2">"</span><span class="s">nodefs.inodesFree"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">5%"</span>
+<span class="na">evictionMaxPodGracePeriod</span><span class="pi">:</span> <span class="m">30</span>
+<span class="na">imageGCLowThresholdPercent</span><span class="pi">:</span> <span class="m">70</span>
+<span class="na">imageGCHighThresholdPercent</span><span class="pi">:</span> <span class="m">80</span>
+<span class="na">kubeReserved</span><span class="pi">:</span>
+  <span class="s2">"</span><span class="s">cpu"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">500m"</span>
+  <span class="s2">"</span><span class="s">memory"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512Mi"</span>
+  <span class="s2">"</span><span class="s">ephemeral-storage"</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1Gi"</span>
+<span class="na">rotateCertificates</span><span class="pi">:</span> <span class="no">true</span>
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">kubeproxy.config.k8s.io/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">KubeProxyConfiguration</span>
+<span class="c1"># kube-proxy specific options here</span>
+<span class="na">clusterCIDR</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10.30.0.1/16"</span>
+<span class="c1"># 启用 ipvs 模式</span>
+<span class="na">mode</span><span class="pi">:</span> <span class="s2">"</span><span class="s">ipvs"</span>
+<span class="na">ipvs</span><span class="pi">:</span>
+  <span class="na">minSyncPeriod</span><span class="pi">:</span> <span class="s">5s</span>
+  <span class="na">syncPeriod</span><span class="pi">:</span> <span class="s">5s</span>
+  <span class="c1"># ipvs 负载策略</span>
+  <span class="na">scheduler</span><span class="pi">:</span> <span class="s2">"</span><span class="s">wrr"</span>
+</code></pre></div></div>
+
+<p><strong>关于这个配置配置文件的文档还是很不完善，对于不懂 golang 的人来说很难知道具体怎么配置，以下做一下简要说明(请确保你已经拉取了 kubernetes 源码和安装了 Goland)</strong></p>
+
+<p><strong>kubeadm 配置中每个配置段都会有个 <code class="highlighter-rouge">kind</code> 字段，<code class="highlighter-rouge">kind</code> 实际上对应了 go 代码中的 <code class="highlighter-rouge">struct</code> 结构体；同时从 <code class="highlighter-rouge">apiVersion</code> 字段中能够看到具体的版本，比如 <code class="highlighter-rouge">v1alpha1</code> 等；有了这两个信息事实上你就可以直接在源码中去找到对应的结构体</strong></p>
+
+<p><img src="https://cdn.oss.link/markdown/dwo5h.png" alt="struct_search" /></p>
+
+<p>在结构体中所有的配置便可以一目了然</p>
+
+<p><img src="https://cdn.oss.link/markdown/0jc9b.png" alt="struct_detail" /></p>
+
+<p>关于数据类型，如果是 <code class="highlighter-rouge">string</code> 的类型，那么意味着你要在 yaml 里写 <code class="highlighter-rouge">"xxxx"</code> 带引号这种，当然有些时候不写能兼容，有些时候不行比如 <code class="highlighter-rouge">extraArgs</code> 字段是一个 <code class="highlighter-rouge">map[string]string</code> 如果 value 不带引号就报错；<strong>如果数据类型为 <code class="highlighter-rouge">metav1.Duration</code>(实际上就是 <code class="highlighter-rouge">time.Duration</code>)，那么你看着它是个 <code class="highlighter-rouge">int64</code> 但实际上你要写 <code class="highlighter-rouge">1h2m3s</code> 这种人类可读的格式，这是 go 的特色…</strong></p>
+
+<p><strong>audit-policy.yaml</strong></p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Log all requests at the Metadata level.</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">audit.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Policy</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">level</span><span class="pi">:</span> <span class="s">Metadata</span>
+</code></pre></div></div>
+
+<p>可能 <code class="highlighter-rouge">Metadata</code> 级别的审计日志比较多，想自行调整审计日志级别的可以参考<a href="https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy">官方文档</a></p>
+
+<h4 id="533拉起-control-plane">5.3.3、拉起 control plane</h4>
+
+<p>有了完整的 <code class="highlighter-rouge">kubeadm.yaml</code> 和 <code class="highlighter-rouge">audit-policy.yaml</code> 配置后，直接一条命令拉起 control plane 既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 先将审计配置放到目标位置(3 台 master 都要执行)</span>
+<span class="nb">cp </span>audit-policy.yaml /etc/kubernetes
+<span class="c"># 拉起 control plane</span>
+kubeadm init <span class="nt">--config</span> kubeadm.yaml <span class="nt">--upload-certs</span> <span class="nt">--ignore-preflight-errors</span><span class="o">=</span>Swap
+</code></pre></div></div>
+
+<p><strong>control plane 拉起以后注意要保存屏幕输出，方便后续添加其他集群节点</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  <span class="nb">mkdir</span> <span class="nt">-p</span> <span class="nv">$HOME</span>/.kube
+  <span class="nb">sudo cp</span> <span class="nt">-i</span> /etc/kubernetes/admin.conf <span class="nv">$HOME</span>/.kube/config
+  <span class="nb">sudo chown</span> <span class="si">$(</span><span class="nb">id</span> <span class="nt">-u</span><span class="si">)</span>:<span class="si">$(</span><span class="nb">id</span> <span class="nt">-g</span><span class="si">)</span> <span class="nv">$HOME</span>/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run <span class="s2">"kubectl apply -f [podnetwork].yaml"</span> with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now <span class="nb">join </span>any number of the control-plane node running the following <span class="nb">command </span>on each as root:
+
+  kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
+    <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
+    <span class="nt">--control-plane</span> <span class="nt">--certificate-key</span> 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+
+Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
+As a safeguard, uploaded-certs will be deleted <span class="k">in </span>two hours<span class="p">;</span> If necessary, you can use
+<span class="s2">"kubeadm init phase upload-certs --upload-certs"</span> to reload certs afterward.
+
+Then you can <span class="nb">join </span>any number of worker nodes by running the following on each as root:
+
+kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
+    <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d
+</code></pre></div></div>
+
+<p><strong>根据屏幕提示配置 kubectl</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> <span class="nv">$HOME</span>/.kube
+<span class="nb">sudo cp</span> <span class="nt">-i</span> /etc/kubernetes/admin.conf <span class="nv">$HOME</span>/.kube/config
+<span class="nb">sudo chown</span> <span class="si">$(</span><span class="nb">id</span> <span class="nt">-u</span><span class="si">)</span>:<span class="si">$(</span><span class="nb">id</span> <span class="nt">-g</span><span class="si">)</span> <span class="nv">$HOME</span>/.kube/config
+</code></pre></div></div>
+
+<h3 id="54部署-cni">5.4、部署 CNI</h3>
+
+<p>关于网络插件的选择，以前一直喜欢 Calico，因为其性能确实好；到后来 flannel 出了 <code class="highlighter-rouge">host-gw</code> 以后现在两者性能也差不多了；但是 <strong>flannel 好处是一个工具通吃所有环境(云环境+裸机2层直通)，坏处是 flannel 缺乏比较好的策略管理(当然可以使用两者结合的 Canal)；</strong>后来思来想去其实我们生产倒是很少需要策略管理，所以这回怂回到 flannel 了(逃…)</p>
+
+<p>Flannel 部署非常简单，根据官方文档下载配置，根据情况调整 <code class="highlighter-rouge">backend</code> 和 pod 的 CIDR，然后 apply 一下既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载配置文件</span>
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+<span class="c"># 调整 backend 为 host-gw(测试环境 2 层直连)</span>
+k1.node ➜  <span class="nb">grep</span> <span class="nt">-A</span> 35 ConfigMap kube-flannel.yml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+data:
+  cni-conf.json: |
+    <span class="o">{</span>
+      <span class="s2">"name"</span>: <span class="s2">"cbr0"</span>,
+      <span class="s2">"cniVersion"</span>: <span class="s2">"0.3.1"</span>,
+      <span class="s2">"plugins"</span>: <span class="o">[</span>
+        <span class="o">{</span>
+          <span class="s2">"type"</span>: <span class="s2">"flannel"</span>,
+          <span class="s2">"delegate"</span>: <span class="o">{</span>
+            <span class="s2">"hairpinMode"</span>: <span class="nb">true</span>,
+            <span class="s2">"isDefaultGateway"</span>: <span class="nb">true</span>
+          <span class="o">}</span>
+        <span class="o">}</span>,
+        <span class="o">{</span>
+          <span class="s2">"type"</span>: <span class="s2">"portmap"</span>,
+          <span class="s2">"capabilities"</span>: <span class="o">{</span>
+            <span class="s2">"portMappings"</span>: <span class="nb">true</span>
+          <span class="o">}</span>
+        <span class="o">}</span>
+      <span class="o">]</span>
+    <span class="o">}</span>
+  net-conf.json: |
+    <span class="o">{</span>
+      <span class="s2">"Network"</span>: <span class="s2">"10.30.0.0/16"</span>,
+      <span class="s2">"Backend"</span>: <span class="o">{</span>
+        <span class="s2">"Type"</span>: <span class="s2">"host-gw"</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+
+<span class="c"># 调整完成后 apply 一下</span>
+kubectl apply <span class="nt">-f</span> kube-flannel.yml
+</code></pre></div></div>
+
+<h3 id="55启动其他-control-plane">5.5、启动其他 control plane</h3>
+
+<p>为了保证 HA 架构，还需要在另外两台 master 上启动 control plane；<strong>在启动之前请确保另外两台 master 节点节点上 <code class="highlighter-rouge">/etc/kubernetes/audit-policy.yaml</code> 审计配置已经分发完成，确保 <code class="highlighter-rouge">127.0.0.1:6443</code> 上监听的 4 层 LB 工作正常(可尝试使用 <code class="highlighter-rouge">curl -k https://127.0.0.1:6443</code> 测试)；</strong>根据第一个 control plane 终端输出，其他 control plane 加入命令如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
+    <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
+    <span class="nt">--control-plane</span> <span class="nt">--certificate-key</span> 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+</code></pre></div></div>
+
+<p><strong>由于在使用 <code class="highlighter-rouge">kubeadm join</code> 时相关选项(<code class="highlighter-rouge">--discovery-token-ca-cert-hash</code>、<code class="highlighter-rouge">--control-plane</code>)无法与 <code class="highlighter-rouge">--config</code> 一起使用，这也就意味着我们必须增加一些附加指令来提供 <code class="highlighter-rouge">kubeadm.yaml</code> 配置文件中的一些属性</strong>；最终完整的 control plane 加入命令如下，在其他 master 直接执行既可(<strong><code class="highlighter-rouge">--apiserver-advertise-address</code> 的 IP 地址是目标 master 的 IP</strong>)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
+    <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
+    <span class="nt">--control-plane</span> <span class="nt">--certificate-key</span> 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3 <span class="se">\</span>
+    <span class="nt">--apiserver-advertise-address</span> 172.16.10.22 <span class="se">\</span>
+    <span class="nt">--apiserver-bind-port</span> 5443 <span class="se">\</span>
+    <span class="nt">--ignore-preflight-errors</span><span class="o">=</span>Swap 
+</code></pre></div></div>
+
+<p><strong>所有 control plane 启动完成后应当通过在每个节点上运行 <code class="highlighter-rouge">kubectl get cs</code> 验证各个组件运行状态</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k2.node ➜ kubectl get cs
+NAME                 STATUS    MESSAGE             ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-1               Healthy   <span class="o">{</span><span class="s2">"health"</span>:<span class="s2">"true"</span><span class="o">}</span>
+etcd-0               Healthy   <span class="o">{</span><span class="s2">"health"</span>:<span class="s2">"true"</span><span class="o">}</span>
+etcd-2               Healthy   <span class="o">{</span><span class="s2">"health"</span>:<span class="s2">"true"</span><span class="o">}</span>
+
+k2.node ➜ kubectl get node <span class="nt">-o</span> wide
+NAME      STATUS   ROLES    AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k1.node   Ready    master   28m   v1.17.0   172.16.10.21   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k2.node   Ready    master   10m   v1.17.0   172.16.10.22   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k3.node   Ready    master   3m    v1.17.0   172.16.10.23   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+</code></pre></div></div>
+
+<h3 id="56启动-node">5.6、启动 Node</h3>
+
+<p>node 节点的启动相较于 master 来说要简单得多，只需要增加一个防止 <code class="highlighter-rouge">swap</code> 开启拒绝启动的参数既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
+    <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
+    <span class="nt">--ignore-preflight-errors</span><span class="o">=</span>Swap
+</code></pre></div></div>
+
+<p>启动成功后在 master 上可以看到所有 node 信息</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k1.node ➜ kubectl get node <span class="nt">-o</span> wide
+NAME      STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k1.node   Ready    master   32m     v1.17.0   172.16.10.21   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k2.node   Ready    master   14m     v1.17.0   172.16.10.22   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k3.node   Ready    master   6m35s   v1.17.0   172.16.10.23   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k4.node   Ready    &lt;none&gt;   72s     v1.17.0   172.16.10.24   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+k5.node   Ready    &lt;none&gt;   66s     v1.17.0   172.16.10.25   &lt;none&gt;        Ubuntu 18.04.3 LTS   4.15.0-74-generic   docker://19.3.5
+</code></pre></div></div>
+
+<h3 id="57调整及测试">5.7、调整及测试</h3>
+
+<p>集群搭建好以后，如果想让 master 节点也参与调度任务，需要在任意一台 master 节点执行以下命令</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># node 节点报错属于正常情况</span>
+k1.node ➜ kubectl taint nodes <span class="nt">--all</span> node-role.kubernetes.io/master-
+node/k1.node untainted
+node/k2.node untainted
+node/k3.node untainted
+taint <span class="s2">"node-role.kubernetes.io/master"</span> not found
+taint <span class="s2">"node-role.kubernetes.io/master"</span> not found
+</code></pre></div></div>
+
+<p>最后创建一个 deployment 和一个 service，并在不同主机上 ping pod IP 测试网络联通性，在 pod 内直接 curl service 名称测试 dns 解析既可</p>
+
+<p><strong>test-nginx.deploy.yaml</strong></p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">test-nginx</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">test-nginx</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="m">3</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">app</span><span class="pi">:</span> <span class="s">test-nginx</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">app</span><span class="pi">:</span> <span class="s">test-nginx</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">test-nginx</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:1.17.6-alpine</span>
+        <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="m">80</span>
+</code></pre></div></div>
+
+<p><strong>test-nginx.svc.yaml</strong></p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">test-nginx</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">test-nginx</span>
+  <span class="na">ports</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">protocol</span><span class="pi">:</span> <span class="s">TCP</span>
+      <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+      <span class="na">targetPort</span><span class="pi">:</span> <span class="m">80</span>
+</code></pre></div></div>
+
+<h2 id="六后续处理">六、后续处理</h2>
+
+<blockquote>
+  <p>说实话使用 kubeadm 后，我更关注的是集群后续的扩展性调整是否能达到目标；搭建其实很简单，大部份时间都在测试后续调整上</p>
+</blockquote>
+
+<h3 id="61etcd-迁移">6.1、Etcd 迁移</h3>
+
+<p>由于我们采用的是外部的 Etcd，所以迁移起来比较简单怎么折腾都行；需要注意的是换 IP 的时候注意保证老的 3 个节点至少有一个可用，否则可能导致集群崩溃；调整完成后记得分发相关 Etcd 节点的证书，重启时顺序一个一个重启，不要并行操作</p>
+
+<h3 id="62master-配置修改">6.2、Master 配置修改</h3>
+
+<p>如果需要修改 conrol plane 上 apiserver、scheduler 等配置，直接修改 <code class="highlighter-rouge">kubeadm.yaml</code> 配置文件(<strong>所以集群搭建好后务必保存好</strong>)，然后执行 <code class="highlighter-rouge">kubeadm upgrade apply --config kubeadm.yaml</code> 升级集群既可，升级前一定作好相关备份工作；我只在测试环境测试这个命令工作还可以，生产环境还是需要谨慎</p>
+
+<h3 id="63证书续期">6.3、证书续期</h3>
+
+<p>目前根据我测试的结果，controller manager 的 <strong>experimental-cluster-signing-duration</strong> 参数在 init 的签发证书阶段似乎并未生效；<strong>目前根据文档描述 <code class="highlighter-rouge">kubelet</code> client 的证书会自动滚动，其他证书默认 1 年有效期，需要自己使用命令续签；</strong>续签命令如下</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看证书过期时间</span>
+k1.node ➜ kubeadm alpha certs check-expiration
+<span class="o">[</span>check-expiration] Reading configuration from the cluster...
+<span class="o">[</span>check-expiration] FYI: You can look at this config file with <span class="s1">'kubectl -n kube-system get cm kubeadm-config -oyaml'</span>
+
+CERTIFICATE                EXPIRES                  RESIDUAL TIME   CERTIFICATE AUTHORITY   EXTERNALLY MANAGED
+admin.conf                 Jan 11, 2021 10:06 UTC   364d                                    no
+apiserver                  Jan 11, 2021 10:06 UTC   364d            ca                      no
+apiserver-kubelet-client   Jan 11, 2021 10:06 UTC   364d            ca                      no
+controller-manager.conf    Jan 11, 2021 10:06 UTC   364d                                    no
+front-proxy-client         Jan 11, 2021 10:06 UTC   364d            front-proxy-ca          no
+scheduler.conf             Jan 11, 2021 10:06 UTC   364d                                    no
+
+CERTIFICATE AUTHORITY   EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED
+ca                      Jan 09, 2030 10:06 UTC   9y              no
+front-proxy-ca          Jan 09, 2030 10:06 UTC   9y              no
+
+<span class="c"># 续签证书</span>
+k1.node ➜ kubeadm alpha certs renew all
+<span class="o">[</span>renew] Reading configuration from the cluster...
+<span class="o">[</span>renew] FYI: You can look at this config file with <span class="s1">'kubectl -n kube-system get cm kubeadm-config -oyaml'</span>
+
+certificate embedded <span class="k">in </span>the kubeconfig file <span class="k">for </span>the admin to use and <span class="k">for </span>kubeadm itself renewed
+certificate <span class="k">for </span>serving the Kubernetes API renewed
+certificate <span class="k">for </span>the API server to connect to kubelet renewed
+certificate embedded <span class="k">in </span>the kubeconfig file <span class="k">for </span>the controller manager to use renewed
+certificate <span class="k">for </span>the front proxy client renewed
+certificate embedded <span class="k">in </span>the kubeconfig file <span class="k">for </span>the scheduler manager to use renewed
+</code></pre></div></div>
+
+<h3 id="64node-重加入">6.4、Node 重加入</h3>
+
+<p>默认的 bootstrap token 会在 24h 后失效，所以后续增加新节点需要重新创建 token，重新创建 token 可以通过以下命令完成</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 列出 token</span>
+k1.node ➜ kubeadm token list
+TOKEN                     TTL         EXPIRES                     USAGES                   DESCRIPTION                                                EXTRA GROUPS
+r4t3l3.14mmuivm7xbtaeoj   22h         2020-01-13T18:06:54+08:00   authentication,signing   &lt;none&gt;                                                     system:bootstrappers:kubeadm:default-node-token
+zady4i.57f9i2o6zl9vf9hy   45m         2020-01-12T20:06:53+08:00   &lt;none&gt;                   Proxy <span class="k">for </span>managing TTL <span class="k">for </span>the kubeadm-certs secret        &lt;none&gt;
+
+<span class="c"># 创建新 token</span>
+k1.node ➜ kubeadm token create <span class="nt">--print-join-command</span>
+W0112 19:21:15.174765   26626 validation.go:28] Cannot validate kube-proxy config - no validator is available
+W0112 19:21:15.174836   26626 validation.go:28] Cannot validate kubelet config - no validator is available
+kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> 2dz4dc.mobzgjbvu0bkxz7j     <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d
+</code></pre></div></div>
+
+<p>如果忘记了 certificate-key 可以通过一下命令重新 upload 并查看</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k1.node ➜ kubeadm init <span class="nt">--config</span> kubeadm.yaml phase upload-certs <span class="nt">--upload-certs</span>
+W0112 19:23:06.466711   28637 validation.go:28] Cannot validate kubelet config - no validator is available
+W0112 19:23:06.466778   28637 validation.go:28] Cannot validate kube-proxy config - no validator is available
+<span class="o">[</span>upload-certs] Storing the certificates <span class="k">in </span>Secret <span class="s2">"kubeadm-certs"</span> <span class="k">in </span>the <span class="s2">"kube-system"</span> Namespace
+<span class="o">[</span>upload-certs] Using certificate key:
+7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
+</code></pre></div></div>
+
+<h3 id="65调整-kubelet">6.5、调整 kubelet</h3>
+
+<p>node 节点一旦启动完成后，kubelet 配置便不可再修改；如果想要修改 kubelet 配置，可以通过调整 <code class="highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 配置文件完成</p>
+
+<h2 id="七其他">七、其他</h2>
+
+<p>本文参考了许多官方文档，以下是一些个人认为比较有价值并且在使用 kubeadm 后应该阅读的文档</p>
+
+<ul>
+  <li><a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details">Implementation details</a></li>
+  <li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/kubelet-integration/">Configuring each kubelet in your cluster using kubeadm</a></li>
+  <li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/">Customizing control plane configuration with kubeadm</a></li>
+  <li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/">Creating Highly Available clusters with kubeadm</a></li>
+  <li><a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/">Certificate Management with kubeadm</a></li>
+  <li><a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">Upgrading kubeadm clusters</a></li>
+  <li><a href="https://kubernetes.io/docs/tasks/administer-cluster/reconfigure-kubelet/">Reconfigure a Node’s Kubelet in a Live Cluster</a></li>
+</ul>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2020/01/21/how-to-modify-dns-on-ubuntu18-server/" data-toggle="tooltip" data-placement="top" title="云服务器下 Ubuntu 18 正确的 DNS 修改">
+                        Previous<br>
+                        <span>云服务器下 Ubuntu 18 正确的 DNS 修改</span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#Linux" title="Linux" rel="82">
+                                    Linux
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#SQL" title="SQL" rel="4">
+                                    SQL
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Java" title="Java" rel="25">
+                                    Java
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#随笔" title="随笔" rel="9">
+                                    随笔
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#GitHub" title="GitHub" rel="3">
+                                    GitHub
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                    Docker
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                    Kubernetes
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#CI/CD" title="CI/CD" rel="4">
+                                    CI/CD
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                    Golang
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Mac" title="Mac" rel="1">
+                                    Mac
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Podman" title="Podman" rel="1">
+                                    Podman
+                                </a>
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+                    
+                        <li><a href="http://mdba.cn">DBA的罗浮宫</a></li>
+                    
+                        <li><a href="http://www.xieyuxuan.cc">谢雨轩</a></li>
+                    
+                        <li><a href="https://ehlxr.me">Ehlxr's Blog</a></li>
+                    
+                        <li><a href="http://www.dearzd.com/DBlog">咚门</a></li>
+                    
+                        <li><a href="http://log.zvz.im">Z</a></li>
+                    
+                        <li><a href="https://www.4spaces.org">容休博客</a></li>
+                    
+                        <li><a href="http://www.webank.pw">幽鸿居</a></li>
+                    
+                        <li><a href="http://ephen.me">Ephen's Blog</a></li>
+                    
+                        <li><a href="https://www.codesheep.cn">CodeSheep</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "mritd";
+    var disqus_identifier = "/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm";
+    var disqus_url = "https://mritd.me/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a href="https://twitter.com/mritd1234">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://t.me/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-telegram fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/mritd">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 漠然 2020
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/mritd-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-82387173-1';
+    var _gaDomain = 'mritd.me';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if (false) {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/avatar.jpg" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

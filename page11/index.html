@@ -177,6 +177,69 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/06/07/Quartz-%E4%BB%BB%E5%8A%A1%E5%BC%BA%E5%88%B6%E5%88%A0%E9%99%A4/">
+        <h2 class="post-title">
+            Quartz 任务强制删除
+        </h2>
+        
+        <div class="post-content-preview">
+            一、扯淡
+
+
+  公司调度平台使用 Quartz 框架实现，Job 信息持久化到 Oracle 数据库中；坑爹队友在开发环境开发了一个 Job，结果后期需求变更，又将此 Job 实现类移除，但移除代码前未删除相关的数据信息，导致数据库中残留相关 trigger、JobDetails 等信息，最终项目启动初始化 scheduler 失败，整个调度平台不可用……
+
+
+
+
+二、强删 Job
+
+1、...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 7, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/05/26/vim-%E7%AC%94%E8%AE%B0/">
+        <h2 class="post-title">
+            vim 笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+一、Vim 模式
+
+
+  编辑模式 : 键盘操作通常被解析为编辑命令
+  输入模式 : 大部分键盘操作被存储到文档中
+  末行模式 : 用于解释运行 Vim 内置命令
+
+
+二、模式切换
+
+
+
+1、 编辑模式 –&gt; 输入模式
+
+
+  i : 在当前光标所在处输入
+  I : 在当前光标所在行的行首输入
+  a : 在当前光标所在处后方输入
+  A : 在当前光标所在行行尾输入
+  o...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on May 26, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/05/22/Hexo-Upyun-%E5%AE%9E%E7%8E%B0%E6%95%B4%E7%AB%99%E5%85%A8%E7%BD%91-CDN/">
         <h2 class="post-title">
             Hexo+Upyun 实现整站全网 CDN
@@ -371,56 +434,6 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/">
-        <h2 class="post-title">
-            Java 内存之方法区和运行时常量池
-        </h2>
-        
-        <div class="post-content-preview">
-            一、相关特征
-
-1、方法区特征
-
-
-  同 Java 堆一样，方法区也是全局共享的一块内存区域
-  方法区的作用是存储 Java 类的结构信息，当我们创建对象实例后，对象的类型信息存储在方法堆之中，实例数据存放在堆中；实例数据指的是在 Java 中创建的各种实例对象以及它们的值，类型信息指的是定义在 Java 代码中的常量、静态变量、以及在类中声明的各种方法、方法字段等等；同事可能包括即时编...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 22, 2016
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/">
-        <h2 class="post-title">
-            Java 内存自动管理-虚拟机和内存区域概述
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  本文参考 JVM自动内存管理：内存区域基础概念
-
-
-一、虚拟机及其定义
-
-1、虚拟机概述
-
-虚拟机： 模拟某种计算机体系结构，执行特定指令的软件；虚拟机一般分为 系统虚拟机、进程虚拟机。
-
-系统虚拟机：如 Virtual Box、VMware 等，完整的模拟整个操作系统。
-
-进程虚拟机：如 JVM、Adobe Flash Player、FC模拟器 等，进程虚拟机不会完整的模拟系统，而只...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 21, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -455,7 +468,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -491,7 +504,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             

@@ -177,6 +177,56 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/">
+        <h2 class="post-title">
+            Java 内存之方法区和运行时常量池
+        </h2>
+        
+        <div class="post-content-preview">
+            一、相关特征
+
+1、方法区特征
+
+
+  同 Java 堆一样，方法区也是全局共享的一块内存区域
+  方法区的作用是存储 Java 类的结构信息，当我们创建对象实例后，对象的类型信息存储在方法堆之中，实例数据存放在堆中；实例数据指的是在 Java 中创建的各种实例对象以及它们的值，类型信息指的是定义在 Java 代码中的常量、静态变量、以及在类中声明的各种方法、方法字段等等；同事可能包括即时编...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 22, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E6%A6%82%E8%BF%B0/">
+        <h2 class="post-title">
+            Java 内存自动管理-虚拟机和内存区域概述
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  本文参考 JVM自动内存管理：内存区域基础概念
+
+
+一、虚拟机及其定义
+
+1、虚拟机概述
+
+虚拟机： 模拟某种计算机体系结构，执行特定指令的软件；虚拟机一般分为 系统虚拟机、进程虚拟机。
+
+系统虚拟机：如 Virtual Box、VMware 等，完整的模拟整个操作系统。
+
+进程虚拟机：如 JVM、Adobe Flash Player、FC模拟器 等，进程虚拟机不会完整的模拟系统，而只...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 21, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/">
         <h2 class="post-title">
             Java 内存之 Java 堆
@@ -434,69 +484,6 @@ Projects
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/02/05/Java%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
-        <h2 class="post-title">
-            JAVA 异常处理
-        </h2>
-        
-        <div class="post-content-preview">
-            一、异常分类
-
-在JAVA中，所有异常都由 Throwable 继承而来；但在下一层立即分解为两个分支：Error 和 Exception。
-
-Error
-
-
-  Error 类层次结构描述了JAVA运行时系统的内部错误和资源耗尽。应用程序不该抛出此种异常；如果出现了内部错误，除了告知用户和安全的退出，对于其他处理我们是无能为力的；比如出现 断电、硬盘损坏等等；但这种情况一般很少出现。
-
-
-...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 5, 2016
-    </p>
-</div>
-<hr>
-
-<div class="post-preview">
-    <a href="/2016/02/02/%E6%B5%85%E8%B0%88-java%E4%B8%AD%E7%9A%84-equals-%E5%92%8C-hashcode/">
-        <h2 class="post-title">
-            浅谈 java中的 equals 和 hashcode
-        </h2>
-        
-        <div class="post-content-preview">
-            
-
-equals 方法
-
-  equals 方法来源于 Object 超类；该方法用于检测一个对象与另一个对象是否相等。
-
-
-Object 中的 equals
-
-
-  在 java 源码中，Object 的 equals 实现如下
-
-
-public boolean equals(Object obj) {
-    return (this == obj);
-}
-
-
-
-
-
-  由此可见，Obj...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 2, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -531,7 +518,7 @@ public boolean equals(Object obj) {
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="81">
+                                <a href="/tags/#Linux" title="Linux" rel="82">
                                     Linux
                                 </a>
                             
@@ -567,7 +554,7 @@ public boolean equals(Object obj) {
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="39">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
                                     Kubernetes
                                 </a>
                             
