@@ -6,18 +6,6 @@ ENV GOSUMDB sum.golang.google.cn
 
 RUN go get -u github.com/mritd/httpcmd
 
-FROM jekyll/builder AS builder
-
-COPY . /srv/jekyll
-
-WORKDIR /srv/jekyll
-
-# fix _site missing when build success
-RUN set -ex \
-    && gem install jekyll-paginate jekyll-sitemap \
-    && jekyll build \
-    && mv _site /dist
-
 FROM nginx:1.17.6-alpine
 
 LABEL maintainer="mritd <mritd@linux.com>"
@@ -36,7 +24,6 @@ RUN set -ex \
     && rm -rf /usr/share/nginx/html /var/cache/apk/*
 
 COPY --from=httpcmd /go/bin/httpcmd /usr/local/bin/httpcmd
-COPY --from=builder /dist /usr/share/nginx/html
 COPY entrypoint.sh /entrypoint.sh
 
 CMD ["/entrypoint.sh"]

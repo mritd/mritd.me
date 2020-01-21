@@ -1,0 +1,24 @@
+FROM jekyll/builder
+
+ARG GITHUB_USER
+ARG GITHUB_TOKEN
+
+ENV GITHUB_USER ${GITHUB_USER}
+ENV GITHUB_TOKEN ${GITHUB_TOKEN}
+
+ENV BLOG_HOME /srv/jekyll
+ENV BLOG_GITHUB_ADDRESS https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/mritd/mritd.me.git
+
+RUN set -ex \
+    && git clone --recursive ${BLOG_GITHUB_ADDRESS} ${BLOG_HOME} \
+    && cd ${BLOG_HOME} \
+    && gem install jekyll-paginate jekyll-sitemap \
+    && jekyll build \
+    && mv _site ../gh-pages \
+    && git checkout gh-pages \
+    && rm -rf * && cp -r ../gh-pages/* . \
+    && git config --global user.email "mritd@linux.com" \
+    && git config --global user.name "mritd" \
+    && git add . \
+    && git commit -m "CI Auto Build($(date '+%Y-%m-%d %H:%M:%S'))" \
+    && git push -f ${BLOG_GITHUB_ADDRESS}
