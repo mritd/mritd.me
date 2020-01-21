@@ -5,9 +5,103 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 21 Jan 2020 21:17:07 +0800</pubDate>
-    <lastBuildDate>Tue, 21 Jan 2020 21:17:07 +0800</lastBuildDate>
+    <pubDate>Tue, 21 Jan 2020 21:21:49 +0800</pubDate>
+    <lastBuildDate>Tue, 21 Jan 2020 21:21:49 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>云服务器下 Ubuntu 18 正确的 DNS 修改</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;最近博客服务器换成了阿里云香港，个人还偶尔看美剧，所以做了一下 Netflix 分流；分流过程主要是做 DNS 解析 SNI 代理，调了半天记录一下&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一起因&quot;&gt;一、起因&lt;/h2&gt;
+
+&lt;p&gt;Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Server，然后在 CoreDNS 上针对 Netflix 全部域名解析 forward 到一台国外可以解锁 Netflix 机器上；如果直接将 CoreDNS 暴露在公网，那么无疑是在作死，为 DNS 反射 DDos 提供肉鸡；所以想到的方案是自己编写一个不可描述的工具，本地 Client 到 Server 端以后，Server 端再去设置到 CoreDNS 做分流；其中不可避免的需要调整 Server 端默认 DNS。&lt;/p&gt;
+
+&lt;h2 id=&quot;二已废弃修改方式&quot;&gt;二、已废弃修改方式&lt;/h2&gt;
+
+&lt;p&gt;目前大部份人还是习惯修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt; 配置文件，这个配置文件上面已经明确标注了不要去修改它；&lt;strong&gt;因为自 Systemd 一统江山以后，系统 DNS 已经被 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 服务接管；一但修改了 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;，机器重启后就会被恢复；&lt;/strong&gt;所以根源解决方案还是需要修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 的配置。&lt;/p&gt;
+
+&lt;h2 id=&quot;三netplan-的调整&quot;&gt;三、netplan 的调整&lt;/h2&gt;
+
+&lt;p&gt;在调整完 &lt;code class=&quot;highlighter-rouge&quot;&gt;systemd-resolved&lt;/code&gt; 配置后其实有些地方仍然是不生效的；&lt;strong&gt;原因是 Ubuntu 18 开始网络已经被 netplan 接管，所以问题又回到了如何修改 netplan；&lt;/strong&gt;由于云服务器初始化全部是由 cloud-init 完成的，netplan 配置里 IP 全部是由 DHCP 完成；那么直接修改 netplan 为 static IP 理论上可行，但是事实上还是不够优雅；后来研究了一下其实更优雅的方式是覆盖掉 DHCP 的某些配置，比如 DNS 配置；在阿里云上配置如下(&lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/netplan/99-netcfg.yaml&lt;/code&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;network&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;renderer&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;networkd&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;ethernets&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;eth0&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp4&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;yes&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp4-overrides&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;use-dns&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;no&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;dhcp6&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;no&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nameservers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;local&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# 我自己的 CoreDNS 服务器&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;addresses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;172.17.3.17&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;修改完成后执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;netplan try&lt;/code&gt; 等待几秒钟，如果屏幕的读秒倒计时一直在动，说明修改没问题，接着回车既可(尽量不要 &lt;code class=&quot;highlighter-rouge&quot;&gt;netplan apply&lt;/code&gt;，一旦修改错误你就再也连不上了…)&lt;/p&gt;
+
+&lt;h2 id=&quot;四dns-分流&quot;&gt;四、DNS 分流&lt;/h2&gt;
+
+&lt;p&gt;顺便贴一下 CoreDNS 配置吧，可能有些人也需要；第一部分的域名是目前我整理的 Netflix 全部访问域名，针对这些域名的流量转发到自己其他可解锁 Netflix 的机器既可&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;bind &lt;/span&gt;172.17.3.17
+
+    cache 30 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        success 4096
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    forward &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; 158.1.1.1 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        max_fails 2
+        prefer_udp
+        expire 20s
+        policy random
+        health_check 0.2s
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    errors
+    log &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{remote}:{port} - {&amp;gt;id} &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;{type} {class} {name} {proto} {size} {&amp;gt;do} {&amp;gt;bufsize}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; {rcode} {&amp;gt;rflags} {rsize} {duration}&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+.:53 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;bind &lt;/span&gt;172.17.3.17
+
+    cache 30 &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        success 4096
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    forward &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; 8.8.8.8 1.1.1.1 &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        except netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net
+        max_fails 2
+        expire 20s
+        policy random
+        health_check 0.2s
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    errors
+    log &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;{remote}:{port} - {&amp;gt;id} &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;{type} {class} {name} {proto} {size} {&amp;gt;do} {&amp;gt;bufsize}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt; {rcode} {&amp;gt;rflags} {rsize} {duration}&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;五关于-docker&quot;&gt;五、关于 docker&lt;/h2&gt;
+
+&lt;p&gt;当 netplan 修改完成后，只需要重启 docker 既可保证 docker 内所有容器 DNS 请求全部发送到自己定义的 DNS 服务器上；&lt;strong&gt;请不要尝试将自己的 CoreDNS 监听到 &lt;code class=&quot;highlighter-rouge&quot;&gt;127.*&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;::1&lt;/code&gt; 上，这两个地址会导致 docker 中的 DNS 无效&lt;/strong&gt;，因为在 &lt;a href=&quot;https://github.com/docker/libnetwork/blob/fec6476dfa21380bf8ee4d74048515d968c1ee63/resolvconf/resolvconf.go#L148&quot;&gt;libnetwork&lt;/a&gt; 中针对这两个地址做了过滤，并且 &lt;code class=&quot;highlighter-rouge&quot;&gt;FilterResolvDNS&lt;/code&gt; 方法在剔除这两种地址时不会给予任何警告日志&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 21 Jan 2020 21:20:08 +0800</pubDate>
+        <link>https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/</guid>
+        
+        <category>Linux</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>如何编写一个 CoreDNS 插件</title>
@@ -3753,177 +3847,6 @@ to quickly create a Cobra application.`&lt;/span&gt;&lt;span class=&quot;p&quot;
         <pubDate>Wed, 16 Jan 2019 12:16:42 +0800</pubDate>
         <link>https://mritd.me/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/</link>
         <guid isPermaLink="true">https://mritd.me/2019/01/16/understand-kubernetes-sample-cli-plugin-source-code/</guid>
-        
-        <category>Kubernetes</category>
-        
-        
-        <category>Kubernetes</category>
-        
-      </item>
-    
-      <item>
-        <title>Kubernetes 1.12 新的插件机制</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;在很久以前的版本研究过 kubernetes 的插件机制，当时弄了一个快速切换 &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace&lt;/code&gt; 的小插件；最近把自己本机的 kubectl 升级到了 1.12，突然发现插件不能用了；撸了一下文档发现插件机制彻底改了…&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;一插件编写语言&quot;&gt;一、插件编写语言&lt;/h2&gt;
-
-&lt;p&gt;kubernetes 1.12 新的插件机制在编写语言上同以前一样，&lt;strong&gt;可以以任意语言编写，只要能弄一个可执行的文件出来就行&lt;/strong&gt;，插件可以是一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;python&lt;/code&gt; 脚本，也可以是 &lt;code class=&quot;highlighter-rouge&quot;&gt;Go&lt;/code&gt; 等编译语言最终编译的二进制；以下是一个 Copy 自官方文档的 &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt; 编写的插件样例&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# optional argument handling&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;version&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;then
-    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;1.0.0&quot;&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;0
-&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# optional argument handling&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;config&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;then
-    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$KUBECONFIG&lt;/span&gt;
-    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;0
-&lt;span class=&quot;k&quot;&gt;fi
-
-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;I am a plugin named kubectl-foo&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;二插件加载方式&quot;&gt;二、插件加载方式&lt;/h2&gt;
-
-&lt;h3 id=&quot;21插件位置&quot;&gt;2.1、插件位置&lt;/h3&gt;
-
-&lt;p&gt;1.12 kubectl 插件最大的变化就是加载方式变了，由原来的放置在指定位置，还要为其编写 yaml 配置变成了现在的类似 git 扩展命令的方式: &lt;strong&gt;只要放置在 PATH 下，并以 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-&lt;/code&gt; 开头的可执行文件都被认为是 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 的插件&lt;/strong&gt;；所以你可以随便弄个小脚本(比如上面的代码)，然后改好名字赋予可执行权限，扔到 PATH 下即可&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/s64v6.png&quot; alt=&quot;test-plugin&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;22插件变量&quot;&gt;2.2、插件变量&lt;/h3&gt;
-
-&lt;p&gt;同以前不通，&lt;strong&gt;以前版本的执行插件时，&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 会向插件传递一些特定的与 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 相关的变量，现在则只会传递标准变量；即 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 能读到什么变量，插件就能读到，其他的私有化变量(比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;KUBECTL_PLUGINS_CURRENT_NAMESPACE&lt;/code&gt;)不会再提供&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/vs1c3.png&quot; alt=&quot;plugin env&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;并且新版本的插件体系，所有选项(&lt;code class=&quot;highlighter-rouge&quot;&gt;flag&lt;/code&gt;) 将全部交由插件本身处理，kubectl 不会再解析&lt;/strong&gt;，比如下面的 &lt;code class=&quot;highlighter-rouge&quot;&gt;--help&lt;/code&gt; 交给了自定义插件处理，由于脚本内没有处理这个选项，所以相当于选项无效了&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/8ch88.png&quot; alt=&quot;plugin flag&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;还有就是 &lt;strong&gt;传递给插件的第一个参数永远是插件自己的绝对位置，比如这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;test&lt;/code&gt; 插件在执行时的 &lt;code class=&quot;highlighter-rouge&quot;&gt;$0&lt;/code&gt; 是 &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/local/bin/kubectl-test&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;23插件命名及查找&quot;&gt;2.3、插件命名及查找&lt;/h3&gt;
-
-&lt;p&gt;目前在插件命名及查找顺序上官方文档写的非常详尽，不给过对于普通使用者来说，实际上命名规则和查找与常规的 Linux 下的命令查找机制相同，只不过还做了增强；增强后的基本规则如下&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PATH&lt;/code&gt; 优先匹配原则&lt;/li&gt;
-  &lt;li&gt;短横线 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 自动分割匹配以及智能转义&lt;/li&gt;
-  &lt;li&gt;以最精确匹配为首要目标&lt;/li&gt;
-  &lt;li&gt;查找失败自动转换参数&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;PATH&lt;/code&gt; 优先匹配原则跟传统的命令查找一致，即当多个路径下存在同名的插件时，则采用最先查找到的插件&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/ljyp5.png&quot; alt=&quot;plugin path&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;当你的插件文件名中包含 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; ，并且 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 在无法精确找到插件时会尝试自动拼接命令来尝试匹配；如下所示，在没有找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test&lt;/code&gt; 这个命令时会尝试拼接参数查找&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/l85bp.png&quot; alt=&quot;auto merge&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;由于以上这种查找机制，&lt;strong&gt;当命令中确实包含 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 时，必须进行转义以 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt; 替换，否则 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 会提示命令未找到错误&lt;/strong&gt;；替换后可直接使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl 插件命令(包含-)&lt;/code&gt; 执行，同时也支持以原始插件名称执行(使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;_&lt;/code&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/7vm0l.png&quot; alt=&quot;name contains dash&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;在复杂插件体系下，多个插件可能包含同样的前缀，此时将遵序最精确查找原则；即当两个插件 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa-bbb&lt;/code&gt; 同时存在，并且执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl test aaa bbb&lt;/code&gt; 命令时，优先匹配最精确的插件 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa-bbb&lt;/code&gt;，&lt;strong&gt;而不是将 &lt;code class=&quot;highlighter-rouge&quot;&gt;bbb&lt;/code&gt; 作为参数传递给 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl-test-aaa&lt;/code&gt; 插件&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/god8q.png&quot; alt=&quot;precise search&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;24总结&quot;&gt;2.4、总结&lt;/h3&gt;
-
-&lt;p&gt;插件查找机制在一般情况下与传统 PATH 查找方式相同，同时 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 实现了智能的 &lt;code class=&quot;highlighter-rouge&quot;&gt;-&lt;/code&gt; 自动匹配查找、更精确的命令命中功能；这两种机制的实现主要为了方便编写插件的命令树(插件命令的子命令…)，类似下面这种&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; ./plugin_command_tree
-kubectl-parent
-kubectl-parent-subcommand
-kubectl-parent-subcommand-subsubcommand
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;当出现多个位置有同名插件时，执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl plugin list&lt;/code&gt; 能够检测出哪些插件由于 PATH 查找顺序原因导致永远不会被执行问题&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl plugin list
-The following kubectl-compatible plugins are available:
-
-&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;/fixtures/pkg/kubectl/plugins/kubectl-foo
-/usr/local/bin/kubectl-foo
-  - warning: /usr/local/bin/kubectl-foo is overshadowed by a similarly named plugin: &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;/fixtures/pkg/kubectl/plugins/kubectl-foo
-plugins/kubectl-invalid
-  - warning: plugins/kubectl-invalid identified as a kubectl plugin, but it is not executable
-
-error: 2 plugin warnings were found
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;三golang-的插件辅助库&quot;&gt;三、Golang 的插件辅助库&lt;/h3&gt;
-
-&lt;p&gt;由于插件机制的变更，导致其他语言编写的插件在实时获取某些配置信息、动态修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 配置方面可能造成一定的阻碍；为此 kubernetes 提供了一个 &lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;command line runtime package&lt;/a&gt;，使用 Go 编写插件，配合这个库可以更加方便的解析和调整 &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; 的配置信息&lt;/p&gt;
-
-&lt;p&gt;官方为了演示如何使用这个 &lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;cli-runtime&lt;/a&gt; 库编写了一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace&lt;/code&gt; 切换的插件(自己白写了…)，仓库地址在 &lt;a href=&quot;https://github.com/kubernetes/sample-cli-plugin&quot;&gt;Github&lt;/a&gt; 上，基本编译使用如下(直接 &lt;code class=&quot;highlighter-rouge&quot;&gt;go get&lt;/code&gt; 后编译文件默认为目录名 &lt;code class=&quot;highlighter-rouge&quot;&gt;cmd&lt;/code&gt;)&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  ~ go get k8s.io/sample-cli-plugin/cmd
-➜  ~ &lt;span class=&quot;nb&quot;&gt;sudo mv &lt;/span&gt;gopath/bin/cmd /usr/local/bin/kubectl-ns
-➜  ~ kubectl ns
-default
-➜  ~ kubectl ns &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;
-View or &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;the current namespace
-
-Usage:
-  ns &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;new-namespace] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;flags]
-
-Examples:
-
-        &lt;span class=&quot;c&quot;&gt;# view the current namespace in your KUBECONFIG&lt;/span&gt;
-        kubectl ns
-
-        &lt;span class=&quot;c&quot;&gt;# view all of the namespaces in use by contexts in your KUBECONFIG&lt;/span&gt;
-        kubectl ns &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
-
-        &lt;span class=&quot;c&quot;&gt;# switch your current-context to one that contains the desired namespace&lt;/span&gt;
-        kubectl ns foo
-
-
-Flags:
-      &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt; string                      Username to impersonate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the operation
-      &lt;span class=&quot;nt&quot;&gt;--as-group&lt;/span&gt; stringArray           Group to impersonate &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the operation, this flag can be repeated to specify multiple groups.
-      &lt;span class=&quot;nt&quot;&gt;--cache-dir&lt;/span&gt; string               Default HTTP cache directory &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default &lt;span class=&quot;s2&quot;&gt;&quot;/Users/mritd/.kube/http-cache&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;nt&quot;&gt;--certificate-authority&lt;/span&gt; string   Path to a cert file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the certificate authority
-      &lt;span class=&quot;nt&quot;&gt;--client-certificate&lt;/span&gt; string      Path to a client certificate file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;TLS
-      &lt;span class=&quot;nt&quot;&gt;--client-key&lt;/span&gt; string              Path to a client key file &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;TLS
-      &lt;span class=&quot;nt&quot;&gt;--cluster&lt;/span&gt; string                 The name of the kubeconfig cluster to use
-      &lt;span class=&quot;nt&quot;&gt;--context&lt;/span&gt; string                 The name of the kubeconfig context to use
-  &lt;span class=&quot;nt&quot;&gt;-h&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;                           &lt;span class=&quot;nb&quot;&gt;help &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ns
-      &lt;span class=&quot;nt&quot;&gt;--insecure-skip-tls-verify&lt;/span&gt;       If &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;, the server&lt;span class=&quot;s1&quot;&gt;'s certificate will not be checked for validity. This will make your HTTPS connections insecure
-      --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
-      --list                           if true, print the list of all namespaces in the current KUBECONFIG
-  -n, --namespace string               If present, the namespace scope for this CLI request
-      --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don'&lt;/span&gt;t &lt;span class=&quot;nb&quot;&gt;timeout &lt;/span&gt;requests. &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default &lt;span class=&quot;s2&quot;&gt;&quot;0&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;--server&lt;/span&gt; string                  The address and port of the Kubernetes API server
-      &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; string                   Bearer token &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;authentication to the API server
-      &lt;span class=&quot;nt&quot;&gt;--user&lt;/span&gt; string                    The name of the kubeconfig user to use
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;限于篇幅原因，具体这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;cli-runtime&lt;/code&gt; 包怎么用请自行参考官方写的这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;sample-cli-plugin&lt;/code&gt; (其实并不怎么 “simple”…)&lt;/p&gt;
-
-&lt;p&gt;本文参考文档:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/&quot;&gt;Extend kubectl with plugins&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/cli-runtime&quot;&gt;cli-runtime&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/sample-cli-plugin&quot;&gt;sample-cli-plugin&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Fri, 30 Nov 2018 00:05:34 +0800</pubDate>
-        <link>https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/</link>
-        <guid isPermaLink="true">https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/</guid>
         
         <category>Kubernetes</category>
         

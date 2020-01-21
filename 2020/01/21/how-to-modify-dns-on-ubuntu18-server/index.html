@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="DBA视频笔记">
-    <meta name="keywords"  content="ORACLE,DBA">
+    <meta name="description" content="云服务器下 Ubuntu 18 正确的 DNS 修改">
+    <meta name="keywords"  content="linux,ubuntu,dns,netplan">
     <meta name="theme-color" content="#000000">
     
-    <title>DBA视频笔记 - 漠然的博客 | mritd Blog</title>
+    <title>云服务器下 Ubuntu 18 正确的 DNS 修改 - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2016/01/08/DBA%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/">
+    <link rel="canonical" href="https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -163,15 +163,15 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/tags/#SQL" title="SQL">SQL</a>
+                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
                         
                     </div>
-                    <h1>DBA视频笔记</h1>
+                    <h1>云服务器下 Ubuntu 18 正确的 DNS 修改</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on January 8, 2016</span>
+                    <span class="meta">Posted by 漠然 on January 21, 2020</span>
                 </div>
             </div>
         </div>
@@ -192,196 +192,86 @@
                 <!-- Multi-Lingual -->
                 
 
-                <p><img src="https://cdn.oss.link/markdown/hexo_oracledatabase_log.png" alt="Oracle Logo" /></p>
-
-<blockquote>
-  <p>数据库是个硬伤，最近在X宝(真特么是个神奇的地方)搞了点OCP、OCA、OCM的视频，看点记点……不定时更新……</p>
+                <blockquote>
+  <p>最近博客服务器换成了阿里云香港，个人还偶尔看美剧，所以做了一下 Netflix 分流；分流过程主要是做 DNS 解析 SNI 代理，调了半天记录一下</p>
 </blockquote>
 
-<!--more-->
+<h2 id="一起因">一、起因</h2>
 
-<h2 id="sql部分">SQL部分</h2>
+<p>Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Server，然后在 CoreDNS 上针对 Netflix 全部域名解析 forward 到一台国外可以解锁 Netflix 机器上；如果直接将 CoreDNS 暴露在公网，那么无疑是在作死，为 DNS 反射 DDos 提供肉鸡；所以想到的方案是自己编写一个不可描述的工具，本地 Client 到 Server 端以后，Server 端再去设置到 CoreDNS 做分流；其中不可避免的需要调整 Server 端默认 DNS。</p>
 
-<h3 id="sql分类">SQL分类</h3>
+<h2 id="二已废弃修改方式">二、已废弃修改方式</h2>
 
-<ol>
-  <li>DML 数据操纵语言
-  SELECT、INSERT、DELETE、UPDATE、MERGE(11G)
-  SELECT 对表数据进行读操作
-  INSERT、DELETE、UPDATE 对表数据进行读操作 会引起UNDO，UBDO会引起REDO</li>
-  <li>DDL 数据定义语言
-  CREATE、ALTER、DROP、TRUNCAT、RENAME、COMMON (会更新数据字典)</li>
-  <li>TCL 事务操作语言
-  COMMIT、ROLLBAK、SAVEPOINT</li>
-  <li>DCL 权限操作语言
-  GRANT、REVOKE</li>
-</ol>
+<p>目前大部份人还是习惯修改 <code class="highlighter-rouge">/etc/resolv.conf</code> 配置文件，这个配置文件上面已经明确标注了不要去修改它；<strong>因为自 Systemd 一统江山以后，系统 DNS 已经被 <code class="highlighter-rouge">systemd-resolved</code> 服务接管；一但修改了 <code class="highlighter-rouge">/etc/resolv.conf</code>，机器重启后就会被恢复；</strong>所以根源解决方案还是需要修改 <code class="highlighter-rouge">systemd-resolved</code> 的配置。</p>
 
-<h3 id="基本sql">基本SQL</h3>
+<h2 id="三netplan-的调整">三、netplan 的调整</h2>
 
-<ol>
-  <li>数据类型
-    <ul>
-      <li>字符型
- CHAR                    固定字符，最长2000 (建表后无数据可改变，有数据只能涨)
- VARCHAR2                可变长度，最长4000，最小1
- NCHAR/NVARCHAR2         NCAHR/NVARCHAR2类型的列使用国家字符集(<strong>字母汉字一视同仁，都视为同一长度</strong>)
- RAW/LANG RAW            固定/可变长二进制数据长度，最大2G (老类型，逐步淘汰)
- LONG                    可变长字符数据，最大2G，具有VARCHAR2特性，<strong>一个表最多1列</strong> (老类型，逐步淘汰)</li>
-    </ul>
-  </li>
-</ol>
+<p>在调整完 <code class="highlighter-rouge">systemd-resolved</code> 配置后其实有些地方仍然是不生效的；<strong>原因是 Ubuntu 18 开始网络已经被 netplan 接管，所以问题又回到了如何修改 netplan；</strong>由于云服务器初始化全部是由 cloud-init 完成的，netplan 配置里 IP 全部是由 DHCP 完成；那么直接修改 netplan 为 static IP 理论上可行，但是事实上还是不够优雅；后来研究了一下其实更优雅的方式是覆盖掉 DHCP 的某些配置，比如 DNS 配置；在阿里云上配置如下(<code class="highlighter-rouge">/etc/netplan/99-netcfg.yaml</code>)</p>
 
-<ul>
-  <li>
-    <p>数值型
-NUMBER(P,S)             实数类型，以可变长内部类型存储数据，内部格式精度高达38位
-INT                     NUMBER子类型，范围同上</p>
-  </li>
-  <li>
-    <p>日期型
-DATE                    日期普通格式，精度只能到秒
-TIMESTAMP               日期扩展格式，精度可达秒后小数点9位(十亿分之一秒)
-TIMESTAMP WHITH TIMEZONE          带时区
-TIMESTAMP WITH LOCAL TIMEZONE     时区转换成本地日期</p>
-  </li>
-  <li>
-    <p>LOB型(大对象)
-10G引入，11G重新定义，在字段中存储大数据，所有大对象最大4G
-CLOB                    用于存储单字节字符数据，包含在数据库内(查询必须使用 like)
-NCLOB                   用于存储多字节字符数据
-BLOB                    用于存储二进制数据，包含在数据库内
-BFILE                   存储在数据库之外的二进制文件中，文件中数据只能只读访问</p>
-    <blockquote>
-      <p>CLOB、NCLOB、BLOB都是内部LOB类型，没有LONG每个表只能有一列的限制；保存图片或者电影BLOB最好，小说等文本使用VLOB最好；LONG、RAW即将废弃，但并未完全废弃，11G重要视图dba_views，对于text(视图定义)仍沿用LONG类型</p>
-
-      <p>Oracle 11g 重新设计了大对象，提出Secure Lobs的概念，相关参数是 <code class="highlighter-rouge">db_securefile</code>，采用Secure File的前提是11g以上版本，ASSM管理等；符合这些条件的BasicFile Lobs也可以转换成 SecureFile Lobs，<strong>较之前的BasicFile Lobs，SecureFile Lobs有极大改进：压缩、去重、加密</strong></p>
-
-      <p><strong>当 <code class="highlighter-rouge">CREATE TABLE</code> 定义LOB列时，往往用到 <code class="highlighter-rouge">LOB_storage_clause</code>；之后对LOB的操作往往是ORACLE提供的 <code class="highlighter-rouge">DBMS_LOB</code> 包，通过编写 PL/SQL 块来对LOB数据进行管理</strong></p>
-    </blockquote>
-  </li>
-</ul>
-
-<ol>
-  <li>数据类型转换
-    <ul>
-      <li>隐性类型转换
- 是指ORACLE自动完成的类型转换；自一些带有明显意图的字面值上，可由ORACLE自主判断进行数制转换，如
-        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="c1">-- ORACLE 自主将字符型'7788'转换为数值型7788进行比较</span>
- <span class="k">SELECT</span> <span class="n">EMPNO</span> <span class="k">FROM</span> <span class="n">EMP</span> <span class="k">WHERE</span> <span class="n">EMPNO</span> <span class="o">=</span><span class="s1">'7788'</span><span class="p">;</span>
- <span class="c1">-- 将日期型转换为字符型进行长度判断</span>
- <span class="k">SELECT</span> <span class="k">LENGTH</span><span class="p">(</span><span class="n">SYSDATE</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">DUAL</span><span class="p">;</span>
- <span class="c1">-- 将字符型 '1028' 转换成数值型进行计算</span>
- <span class="k">SELECT</span> <span class="s1">'1028'</span><span class="o">+</span><span class="mi">123</span> <span class="k">FROM</span> <span class="n">DUAL</span><span class="p">;</span>
- <span class="c1">-- 将数值型123转换为字符型进行拼接</span>
- <span class="k">SELECT</span> <span class="s1">'1028'</span><span class="o">||</span><span class="mi">123</span> <span class="k">FROM</span> <span class="n">DUAL</span><span class="p">;</span>
-</code></pre></div>        </div>
-      </li>
-      <li>显性类型转换
- TO_CHAR、TO_DATE、TO_NUMBER
- <img src="https://cdn.oss.link/markdown/hexo_ORACLE_datacoversion.png" alt="转换图" /></li>
-    </ul>
-  </li>
-  <li>单行函数
-  ``` sql
-  –字符函数</li>
-</ol>
-
-<p>lower(‘SQL’)                    –返回小写
-  upper(‘sql’)                    –返回大写
-  initcap(‘sql’)                  –首字母大写
-  concat(‘sql’,’test’)            –字符串拼接
-  substr(‘String’,1,3)            –字符串截取
-  instr(‘sqlsq#l#sql’,’#’,3)      –从第3个位置查找’#’字符绝对位置
-  length(‘String’)                –返回字符串长度
-  lpad(‘test’10,’#’)              –左填充
-  rpad(‘test’,10,’*’)             –右填充
-  replace(‘11111q111’,’q’,’0’)    –字符串替换
-  trim(‘  1  ‘)                   –首尾去空格</p>
-
-<p>–数值函数</p>
-
-<p>round(p,s)                –对指定值做四舍五入，s为正数时表示小数点后保留位数，
-                              –也可位负数，意义不大；可用于按照指定精度对十进制数做四舍五入
-  round(45.923,1)                 –结果45.9
-  round(45.923,0)                 –结果46
-  round(45.923,-1)                –结果50</p>
-
-<p>trunc(p,s)                      –对指定数值进行取整，可按精度截断指定十进制数
-  trun(45.923,0)                  –结果45</p>
-
-<p>mod(100,12)                     –取余</p>
-
-<p>–日期函数</p>
-
-<p>–日期数值在ORALCE中按照数字存储，所以可以进行加减运算，计算时以天为单位，缺省格式 DD-MON-RR
-  SELECT SYSDATE+2 FROM DUAL;                                     –当前日期+2天
-  SELECT SYSDATE+2/24 FROM DUAL;                                  –当前日期+2小时
-  TO_DATE(‘2016-01-01 21:40:30’,’YYYY-MM-DD HH24:MI:SS’)          –字符串转日期
-  TO_CHAR(SYSDATE,’YYYY-MM-DD HH24:MI:SS’)                        –日期转字符串
-  MONTHS_BETWEEN                                                  –计算两个日期之间相差月数
-  ADD_MONTHS                                                      –给指定日期加月份
-  LAST_DAY                                                        –指定日期月份最后一天
-  NEXT_DAY                                                        –指定日期下一天 第二个参数为1~7，表示周日~周六
-                                                                –NEXT_DAY(SYSDATE,7)  表示下一个星期六</p>
-
-<p>–对于日期可使用 四舍五入、取整操作 s是’MONTH’按30天计算15舍16进，s是’YEAR’5舍7如
-ROUND(p,s)、TRUNC(p,s)</p>
-
-<p>–其它函数(表达式)
-  DECODE(COLUMN,KEY1,VALUE1，KEY2，VALUE2…DEFAULT)
-  CASE COLUMN WHEN XXXX THEN XXXX    –等值判断相当于 DECODE
-              WHEN XXXX THEN XXXX
-              ELSE XXXX END
-  CASE WHEN 条件 THEN XXXX           –条件判断
-       WHEN 条件 THEN XXXX
-       ELSE XXXX END</p>
-
-<p>DISTINCT                           –去重
-  CHR()                              –字符转ASCII
-  ASCII()                            –ASCII转字符
-  SYS_CONTEXT                        –获取上下文环境函数</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  **SYS_CONTEXT函数参考** **[其他参考](http://alany.blog.51cto.com/6125308/1418163)**
-  ``` sql
-  select sys_context('USERENV','AUTHENTICATION_TYPE') from dual;--用户的认证类型
-  select sys_context('USERENV','AUTHENTICATION_DATA') from dual;--未知
-  select sys_context('USERENV','BG_JOB_ID') from dual;--当前指定id的会话是否为oracle后台程序建立，不是则返回null
-  select sys_context('USERENV','CLIENT_INFO') from dual;--通过dbms_application_info包可以存储高达64字节的用户会话信息
-  select sys_context('USERENV','CURRENT_SCHEMA') from dual;--默认的schema将被当做当前的schema。当在当前会话中使用ALTER SESSION SET CURRENT_SCHEMA语句的时候，它的查询返回值将被改变
-  select sys_context('USERENV','CURRENT_SCHEMAID') from dual;--当前schema的id
-  select sys_context('USERENV','CURRENT_USER') from dual;--当前的登陆用户
-  select REPLACE(SUBSTR(sys_context('USERENV','HOST'),1,30),'\',':') from dual;'--当前会话主机操作系统名
-  select sys_context('USERENV','CURRENT_USERID') from dual;--当前登陆的用户的id
-  select sys_context('USERENV','DB_DOMAIN') from dual;--为数据库的域指定初始化参数
-  select sys_context('USERENV','DB_NAME') from dual;--数据库实例名
-  select sys_context('USERENV','ENTRYID') from dual;--可用的审计标示符。不能再分布式sql语句中使用此选项。使用USERENV关键字必须置AUDIT_TRAIL的初始化参数为真。
-  select sys_context('USERENV','EXTERNAL_NAME') from dual;--数据库用户的扩展名
-  select sys_context('USERENV','FG_JOB_ID') from dual;--返回作业id当此会话是客户端进程创建。否则，返回null
-  select sys_context('USERENV','INSTANCE') from dual;--当前数据库实例的标示id
-  select sys_context('USERENV','ISDBA') from dual;--当前用户是否是以dba身份登录
-  select sys_context('USERENV','LANG') from dual;--iso对‘LANGUAGE’的简称，查询的参数比“LANGUAGE”短
-  select sys_context('USERENV','LANGUAGE') from dual;--结果为当前数据库使用的存储语言，跟上面查询意义一样
-  select sys_context('USERENV','NETWORK_PROTOCOL') from dual;--用于通信的网络协议
-  select sys_context('USERENV','NLS_CALENDAR') from dual;--当前会话使用的，格林尼治时间
-  select sys_context('USERENV','NLS_CURRENCY') from dual;--本地化的货币符，如人民币为￥，美元符为$
-  select sys_context('USERENV','NLS_DATE_FORMAT') from dual;--当前使用的日期格式，一般中国为dd-mon-rr
-  select sys_context('USERENV','NLS_DATE_LANGUAGE') from dual;--表示日期的语言，如中文简体SIMPLIFIED CHINESE
-  select sys_context('USERENV','NLS_TERRITORY') from dual;--数据库服务器所在区域，如中国CHINA
-  select sys_context('USERENV','OS_USER') from dual;--操作系统的用户名
-  select sys_context('USERENV','PROXY_USER') from dual;--是否使用代理用户。否返回null
-  select sys_context('USERENV','PROXY_USERID') from dual;--代理用户id
-  select sys_context('USERENV','SESSION_USER') from dual;--当前认证的数据库用户名
-  select sys_context('USERENV','SESSION_USERID') from dual;--当前认证的数据库用户名id
-  select sys_context('USERENV','SESSIONID') from dual;--当前会话id
-  select sys_context('USERENV','TERMINAL') from dual;--操作系统用户组
-  select sys_context('USERENV','IP_ADDRESS') from dual;--当前会话主机ip
-  select sys_context('USERENV','HOST') from dual;--当前会话主机操作系统名
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">network</span><span class="pi">:</span>
+  <span class="na">version</span><span class="pi">:</span> <span class="m">2</span>
+  <span class="na">renderer</span><span class="pi">:</span> <span class="s">networkd</span>
+  <span class="na">ethernets</span><span class="pi">:</span>
+    <span class="na">eth0</span><span class="pi">:</span>
+      <span class="na">dhcp4</span><span class="pi">:</span> <span class="s">yes</span>
+      <span class="na">dhcp4-overrides</span><span class="pi">:</span>
+        <span class="na">use-dns</span><span class="pi">:</span> <span class="s">no</span>
+      <span class="na">dhcp6</span><span class="pi">:</span> <span class="s">no</span>
+      <span class="na">nameservers</span><span class="pi">:</span>
+        <span class="na">search</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">local</span><span class="pi">,</span><span class="nv">node</span><span class="pi">]</span>
+        <span class="c1"># 我自己的 CoreDNS 服务器</span>
+        <span class="na">addresses</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">172.17.3.17</span><span class="pi">]</span>
 </code></pre></div></div>
-<ol>
-  <li>多行函数
-转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
-</ol>
+
+<p>修改完成后执行 <code class="highlighter-rouge">netplan try</code> 等待几秒钟，如果屏幕的读秒倒计时一直在动，说明修改没问题，接着回车既可(尽量不要 <code class="highlighter-rouge">netplan apply</code>，一旦修改错误你就再也连不上了…)</p>
+
+<h2 id="四dns-分流">四、DNS 分流</h2>
+
+<p>顺便贴一下 CoreDNS 配置吧，可能有些人也需要；第一部分的域名是目前我整理的 Netflix 全部访问域名，针对这些域名的流量转发到自己其他可解锁 Netflix 的机器既可</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net <span class="o">{</span>
+    <span class="nb">bind </span>172.17.3.17
+
+    cache 30 <span class="nb">.</span> <span class="o">{</span>
+        success 4096
+    <span class="o">}</span>
+
+    forward <span class="nb">.</span> 158.1.1.1 <span class="o">{</span>
+        max_fails 2
+        prefer_udp
+        expire 20s
+        policy random
+        health_check 0.2s
+    <span class="o">}</span>
+
+    errors
+    log <span class="nb">.</span> <span class="s2">"{remote}:{port} - {&gt;id} </span><span class="se">\"</span><span class="s2">{type} {class} {name} {proto} {size} {&gt;do} {&gt;bufsize}</span><span class="se">\"</span><span class="s2"> {rcode} {&gt;rflags} {rsize} {duration}"</span>
+<span class="o">}</span>
+
+.:53 <span class="o">{</span>
+    <span class="nb">bind </span>172.17.3.17
+
+    cache 30 <span class="nb">.</span> <span class="o">{</span>
+        success 4096
+    <span class="o">}</span>
+
+    forward <span class="nb">.</span> 8.8.8.8 1.1.1.1 <span class="o">{</span>
+        except netflix.com nflxext.com nflximg.net nflxso.net nflxvideo.net
+        max_fails 2
+        expire 20s
+        policy random
+        health_check 0.2s
+    <span class="o">}</span>
+
+    errors
+    log <span class="nb">.</span> <span class="s2">"{remote}:{port} - {&gt;id} </span><span class="se">\"</span><span class="s2">{type} {class} {name} {proto} {size} {&gt;do} {&gt;bufsize}</span><span class="se">\"</span><span class="s2"> {rcode} {&gt;rflags} {rsize} {duration}"</span>
+</code></pre></div></div>
+
+<h2 id="五关于-docker">五、关于 docker</h2>
+
+<p>当 netplan 修改完成后，只需要重启 docker 既可保证 docker 内所有容器 DNS 请求全部发送到自己定义的 DNS 服务器上；<strong>请不要尝试将自己的 CoreDNS 监听到 <code class="highlighter-rouge">127.*</code> 或者 <code class="highlighter-rouge">::1</code> 上，这两个地址会导致 docker 中的 DNS 无效</strong>，因为在 <a href="https://github.com/docker/libnetwork/blob/fec6476dfa21380bf8ee4d74048515d968c1ee63/resolvconf/resolvconf.go#L148">libnetwork</a> 中针对这两个地址做了过滤，并且 <code class="highlighter-rouge">FilterResolvDNS</code> 方法在剔除这两种地址时不会给予任何警告日志</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
 
                 <hr style="visibility: hidden;">
@@ -389,19 +279,12 @@ ROUND(p,s)、TRUNC(p,s)</p>
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2016/01/02/%E6%9C%AA%E6%9D%A5%E7%A7%91%E6%8A%80%E6%B8%B2%E6%9F%93%E8%A7%86%E9%A2%91/" data-toggle="tooltip" data-placement="top" title="未来科技渲染视频">
+                        <a href="/2019/11/05/writing-plugin-for-coredns/" data-toggle="tooltip" data-placement="top" title="如何编写一个 CoreDNS 插件">
                         Previous<br>
-                        <span>未来科技渲染视频</span>
+                        <span>如何编写一个 CoreDNS 插件</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2016/01/10/ShadowSocks-%E5%A4%9A%E7%94%A8%E6%88%B7%E7%89%88%E6%90%AD%E5%BB%BA%E6%95%99%E7%A8%8B/" data-toggle="tooltip" data-placement="top" title="ShadowSocks 多用户版搭建教程">
-                        Next<br>
-                        <span>ShadowSocks 多用户版搭建教程</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -557,8 +440,8 @@ ROUND(p,s)、TRUNC(p,s)</p>
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2016/01/08/DBA视频笔记";
-    var disqus_url = "https://mritd.me/2016/01/08/DBA%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/";
+    var disqus_identifier = "/2020/01/21/how-to-modify-dns-on-ubuntu18-server";
+    var disqus_url = "https://mritd.me/2020/01/21/how-to-modify-dns-on-ubuntu18-server/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
