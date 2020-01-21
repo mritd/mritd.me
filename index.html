@@ -177,6 +177,33 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/01/21/how-to-upgrade-kubeadm-cluster/">
+        <h2 class="post-title">
+            kubeadm 集群升级
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  真是不巧，刚折腾完 kubeadm 搭建集群(v1.17.0)，第二天早上醒来特么的 v1.17.1 发布了；这我能忍么，肯定不能忍，然后就开始了集群升级之路…
+
+
+一、升级前准备
+
+
+  确保你的集群是 kubeadm 搭建的(等同于废话)
+  确保当前集群已经完成 HA(多个 master 节点)
+  确保在夜深人静的时候(无大量业务流量)
+  确保集群版本大于 v1.16.0
+ ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 21, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/">
         <h2 class="post-title">
             kubeadm 搭建 HA kubernetes 集群
@@ -401,41 +428,6 @@ import (
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/03/16/set-up-kubernetes-1.13.4-cluster/">
-        <h2 class="post-title">
-            Kubernetes 1.13.4 搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  年后回来有点懒，也有点忙；1.13 出来好久了，周末还是决定折腾一下吧
-
-
-一、环境准备
-
-老样子，安装环境为 5 台 Ubuntu 18.04.2 LTS 虚拟机，其他详细信息如下
-
-
-  
-    
-      System OS
-      IP Address
-      Docker
-      Kernel
-      Application
-    
-  
-  
-    ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 16, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -502,7 +494,7 @@ import (
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

@@ -177,6 +177,31 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/07/31/calico-yml-bug/">
+        <h2 class="post-title">
+            Calico 部署踩坑记录
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  自从上次在虚拟机中手动了部署了 Kubernetes 1.7.2 以后，自己在测试环境就来了一下，结果网络组件死活起不来，最后找到原因记录一下
+
+
+一、Calico 部署注意事项
+
+在使用 Calico 前当然最好撸一下官方文档，地址在这里 Calico 官方文档，其中部署前需要注意以下几点
+
+
+  官方文档中要求 kubelet 配置必须增加 --network-plugin=cni...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on July 31, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">
         <h2 class="post-title">
             手动档搭建 Kubernetes HA 集群
@@ -372,30 +397,6 @@ mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/03/21/vim-e492-not-an-editor-command-plugin-xxxx/">
-        <h2 class="post-title">
-            vim E492 Not an editor command Plugin xxxx
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近自用的 vim 装了不少插件，但是发现 kubectl edit 或者 git merge 时，调用 vim 总是会弹出各种错误，记录一下解决方法
-
-
-出现这个错误一开始以为是 vim 没走 .vimrc 配置；后来翻了一堆资料，发现 kubectl edit 或者 git merge 后并非直接调用 vim，而是调用的 /usr/bin/view，那么看一下这个文件
-
-
-
-这东西...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 21, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -466,7 +467,7 @@ mitmproxy 是一个命令行下的强大抓包工具，可以在命令行下抓�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

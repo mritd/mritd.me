@@ -177,6 +177,30 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/03/21/vim-e492-not-an-editor-command-plugin-xxxx/">
+        <h2 class="post-title">
+            vim E492 Not an editor command Plugin xxxx
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近自用的 vim 装了不少插件，但是发现 kubectl edit 或者 git merge 时，调用 vim 总是会弹出各种错误，记录一下解决方法
+
+
+出现这个错误一开始以为是 vim 没走 .vimrc 配置；后来翻了一堆资料，发现 kubectl edit 或者 git merge 后并非直接调用 vim，而是调用的 /usr/bin/view，那么看一下这个文件
+
+
+
+这东西...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 21, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/20/btrfs-note/">
         <h2 class="post-title">
             Btrfs 笔记
@@ -382,28 +406,6 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/02/06/java-cas/">
-        <h2 class="post-title">
-            Java CAS 理解
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  CAS(Compare and Swap) 是利用底层硬件平台特性，实现原子性操作的算法，Java 1.5 以后 JUC(java.util.concurrent) 实现主要以此为基础；找了不少资料以下记录一下个人对于 CAS 的理解(部分资料 copy 的)
-
-
-一、CAS 简述
-
-从最基础的 Java 中的 i++ 操作来说，i++ 并非原子操作，实质上相当于先读取 i 值，然后在...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 6, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -474,7 +476,7 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

@@ -177,6 +177,26 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/06/08/Can-t-connect-to-MySQL-server-on-xxxx-61/">
+        <h2 class="post-title">
+            Can't connect to MySQL server on 'xxxx' (61)
+        </h2>
+        
+        <div class="post-content-preview">
+            记录一下 Ubuntu 下安装 MySql 踩得坑；刚刚安装完 MySQL，连接时始终报 Can't connect to MySQL server on '10.211.55.14' (61)；后来查询此错误的原因就是网络不通，于是检查 ufw 防火墙、本机杀软、MySql远程访问开启情况…发现没问题以后，最终找到了答案：
+
+
+
+MySql 默认 监听 127.0.0.1，也就是说只有本地...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 8, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/06/07/Quartz-%E4%BB%BB%E5%8A%A1%E5%BC%BA%E5%88%B6%E5%88%A0%E9%99%A4/">
         <h2 class="post-title">
             Quartz 任务强制删除
@@ -407,33 +427,6 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98/">
-        <h2 class="post-title">
-            Java 内存之直接内存
-        </h2>
-        
-        <div class="post-content-preview">
-            一、概念和特征
-
-
-  直接内存并非 JVMS 定义的标准 Java 运行时内存。
-  JDK1.4 加入了新的 NIO 机制，目的是防止 Java 堆 和 Native 堆之间往复的数据复制带来的性能损耗，此后 NIO 可以使用 Native 的方式直接在 Native 堆分配内存。
-  直接内存区域是全局共享的内存区域。
-
-
-
-
-
-  直接内存区域可以进行自动内存管理(GC)，但机制并不...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 22, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -504,7 +497,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

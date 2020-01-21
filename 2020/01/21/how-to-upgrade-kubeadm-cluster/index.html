@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="使用 Nexus 搭建 Docker 仓库">
-    <meta name="keywords"  content="Docker,Nexus,私服">
+    <meta name="description" content="kubeadm 集群升级">
+    <meta name="keywords"  content="kubernetes,kubeadm,upgrade">
     <meta name="theme-color" content="#000000">
     
-    <title>使用 Nexus 搭建 Docker 仓库 - 漠然的博客 | mritd Blog</title>
+    <title>kubeadm 集群升级 - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2017/01/08/set-up-docker-registry-by-nexus/">
+    <link rel="canonical" href="https://mritd.me/2020/01/21/how-to-upgrade-kubeadm-cluster/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -163,17 +163,15 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
-                        
-                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
+                        <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
                         
                     </div>
-                    <h1>使用 Nexus 搭建 Docker 仓库</h1>
+                    <h1>kubeadm 集群升级</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on January 8, 2017</span>
+                    <span class="meta">Posted by 漠然 on January 21, 2020</span>
                 </div>
             </div>
         </div>
@@ -195,159 +193,137 @@
                 
 
                 <blockquote>
-  <p>nexus 最初用于搭建 maven 私服，提供企业级 maven jar 包管理等功能；2.x 后续支持了 npm、rpm 等包管理；最新版本 3.x 开始支持 Docker 仓库，以下为使用 neuxs 撸一个 docker 仓库的教程</p>
+  <p>真是不巧，刚折腾完 kubeadm 搭建集群(v1.17.0)，第二天早上醒来特么的 v1.17.1 发布了；这我能忍么，肯定不能忍，然后就开始了集群升级之路…</p>
 </blockquote>
 
-<h3 id="一环境准备">一、环境准备</h3>
-
-<p>初始环境如下</p>
+<h2 id="一升级前准备">一、升级前准备</h2>
 
 <ul>
-  <li>Centos 7 x86_64</li>
-  <li>OpenJDK 8</li>
-  <li>Nexus 3.2.0-01</li>
+  <li>确保你的集群是 kubeadm 搭建的(等同于废话)</li>
+  <li>确保当前集群已经完成 HA(多个 master 节点)</li>
+  <li>确保在夜深人静的时候(无大量业务流量)</li>
+  <li>确保集群版本大于 v1.16.0</li>
+  <li>确保已经仔细阅读了目标版本 CHANGELOG</li>
+  <li>确保做好了完整地集群备份</li>
 </ul>
 
-<p>安装 OpenJDK 命令如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nb">install </span>java-1.8.0-openjdk <span class="nt">-y</span>
-</code></pre></div></div>
-
-<p>安装完成后验证是否安装成功</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ java <span class="nt">-version</span>
-openjdk version <span class="s2">"1.8.0_111"</span>
-OpenJDK Runtime Environment <span class="o">(</span>build 1.8.0_111-b15<span class="o">)</span>
-OpenJDK 64-Bit Server VM <span class="o">(</span>build 25.111-b15, mixed mode<span class="o">)</span>
-</code></pre></div></div>
-
-<p>下载 neuxs3 安装包并解压</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget <span class="nt">--no-check-certificate</span> https://download.sonatype.com/nexus/3/nexus-3.2.0-01-unix.tar.gz
-<span class="nb">tar</span> <span class="nt">-zxvf</span> nexus-3.2.0-01-unix.tar.gz
-</code></pre></div></div>
-
-<h3 id="二安装-nexus">二、安装 nexus</h3>
-
-<p>首先将 nexus 移动到任意位置</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">mv </span>nexus-3.2.0-01 /usr/local
-</code></pre></div></div>
-
-<p>创建 nexus 用户</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adduser <span class="nt">-r</span> <span class="nt">-s</span> /sbin/nologin <span class="nt">-d</span> /data/nexus-data nexus
-</code></pre></div></div>
-
-<p><strong>默认 nexus 运行后会在同级目录下创建一个 <code class="highlighter-rouge">sonatype-work</code> 工作目录，并将其数据保存在此目录中，所以为了数据持久化先手动创建并设置其数据存储位置</strong></p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建基本目录结构</span>
-<span class="nb">mkdir</span> <span class="nt">-p</span> /usr/local/sonatype-work
-<span class="c"># 创建建数据目录</span>
-<span class="nb">mkdir</span> <span class="nt">-p</span> /data/nexus-data/<span class="o">{</span>etc,log,tmp<span class="o">}</span>
-<span class="c"># 将数据目录软连接到工作目录</span>
-<span class="nb">ln</span> <span class="nt">-s</span> /data/nexus-data /usr/local/sonatype-work/nexus3
-<span class="c"># 更新所有目录权限</span>
-<span class="nb">chmod</span> <span class="nt">-R</span> 755 /usr/local/<span class="o">{</span>sonatype-work,nexus-3.2.0-01<span class="o">}</span> /data/nexus-data
-<span class="nb">chown</span> <span class="nt">-R</span> nexus:nexus /usr/local/<span class="o">{</span>sonatype-work,nexus-3.2.0-01<span class="o">}</span> /data/nexus-data
-</code></pre></div></div>
-
-<p>最后启动 nexus 访问 8081 端口即可</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 以前台方式运行</span>
-<span class="nb">sudo</span> <span class="nt">-u</span> nexus /usr/local/nexus-3.2.0-01/bin/nexus run
-<span class="c"># 后台运行</span>
-<span class="nb">sudo</span> <span class="nt">-u</span> nexus /usr/local/nexus-3.2.0-01/bin/nexus start
-</code></pre></div></div>
-
-<p>默认账户 <code class="highlighter-rouge">admin</code> 密码 <code class="highlighter-rouge">admin123</code>，登录如下</p>
-
-<p><img src="https://cdn.oss.link/markdown/sb9dw.jpg" alt="nexus_homepage" /></p>
-
-<h3 id="三创建-docker-仓库">三、创建 docker 仓库</h3>
-
-<p>在设置 <code class="highlighter-rouge">Repositories</code> 选项卡中中选择 <code class="highlighter-rouge">Create repository</code></p>
-
-<p><img src="https://cdn.oss.link/markdown/m7m53.jpg" alt="Create repository" /></p>
-
-<p>仓库类型有很多，docker 相关总共有三种类型，其秉承 maven 私服的概念</p>
-
-<p><img src="https://cdn.oss.link/markdown/pm0r8.jpg" alt="repository type" /></p>
+<h2 id="二升级注意事项">二、升级注意事项</h2>
 
 <ul>
-  <li>hosted: 本地存储，即同 docker 官方仓库一样提供本地私服功能</li>
-  <li>proxy: 提供代理其他仓库的类型，如 docker 中央仓库</li>
-  <li>group: 组类型，实质作用是组合多个仓库为一个地址</li>
+  <li>升级后所有集群组件 Pod 会重启(hash 变更)</li>
+  <li><strong>升级时 <code class="highlighter-rouge">kubeadm</code> 版本必须大于或等于目标版本</strong></li>
+  <li><strong>升级期间所有 <code class="highlighter-rouge">kube-proxy</code> 组件会有一次全节点滚动更新</strong></li>
+  <li><strong>升级只支持顺次进行，不支持跨版本升级(You only can upgrade from one MINOR version to the next MINOR version, or between PATCH versions of the same MINOR. That is, you cannot skip MINOR versions when you upgrade. For example, you can upgrade from 1.y to 1.y+1, but not from 1.y to 1.y+2.)</strong></li>
 </ul>
 
-<h4 id="31创建一个私服">3.1、创建一个私服</h4>
+<p>关于升级版本问题…虽然是这么说的，但是官方文档样例代码里是从 <code class="highlighter-rouge">v1.16.0</code> 升级到 <code class="highlighter-rouge">v1.17.0</code>；可能是我理解有误，跨大版本升级好像官方没提，具体啥后果不清楚…</p>
 
-<p>选择 <code class="highlighter-rouge">hosted</code> 类型仓库，然后输入一个仓库名，<strong>并勾选 HTTP 选项，端口任意即可(下面截图失误，不补了)</strong></p>
-
-<p><img src="https://cdn.oss.link/markdown/972cl.jpg" alt="create hosted repository" /></p>
-
-<h4 id="32测试私服">3.2、测试私服</h4>
-
-<p>创建好以后更改 docker 参数，测试即可</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 增加非安全仓库</span>
-vim /usr/lib/systemd/system/docker.service
-<span class="c"># 在 ExecStart 后面增加(这里改了 host，上面端口用的 8800)</span>
-<span class="nt">--insecure-registry</span> registry.com:8800
-<span class="c"># 重启 docker</span>
-systemctl daemon-reload
-systemctl restart docker
-</code></pre></div></div>
-
-<p>测试 push 和 pull 镜像</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ docker tag mritd/alpine registry.com:8800/alpine
-➜  ~ docker push registry.com:8800/alpine
-The push refers to a repository <span class="o">[</span>registry.com:8800/alpine]
-754684812d65: Pushed
-60ab55d3379d: Pushed
-latest: digest: sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91 size: 739
-➜  ~ docker rmi registry.com:8800/alpine
-Untagged: registry.com:8800/alpine:latest
-Untagged: registry.com:8800/alpine@sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
-➜  ~ docker rmi mritd/alpine
-Untagged: mritd/alpine:latest
-Untagged: mritd/alpine@sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
-Deleted: sha256:090c790ee6f28f495d92d5be43641573b0d1b5502b35f7662d88cdbf8d548afd
-Deleted: sha256:378e2b887fcdffcbd113a7cf6f97e9f8a58851b0a205b31a93acdb887912850d
-➜  ~ docker pull registry.com:8800/alpine
-Using default tag: latest
-latest: Pulling from alpine
-
-0a8490d0dfd3: Already exists
-8fb018fb4173: Pull <span class="nb">complete
-</span>Digest: sha256:28f397aca53eb3e8ea1627f4af9c262fca7db17f0c6db492b53adc7bca7d0f91
-Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpine:latest
-</code></pre></div></div>
-
-<h4 id="32创建代理仓库">3.2、创建代理仓库</h4>
-
-<p>代理仓库参考官方文档 <a href="http://books.sonatype.com/nexus-book/reference3/docker.html#docker-introduction">点这里</a>，本人不才….没成功，有爱探索的可以尝试一下，如果成功可以探讨一下…..个人怀疑是 index 有问题</p>
-
-<p>根据官方文档的这段提示</p>
+<h2 id="三升级-master">三、升级 Master</h2>
 
 <blockquote>
-  <p>Just to recap, in order to configure a proxy for Docker Hub you configure the Remote Storage URL to https://registry-1.docker.io, enable Docker V1 API support and for the choice of Docker Index select the Use Docker Hub option.</p>
+  <p>事实上所有升级工作主要是针对 master 节点做的，所以整个升级流程中最重要的是如何把 master 升级好。</p>
 </blockquote>
 
-<p>创建仓库类型选择 <code class="highlighter-rouge">proxy</code>，Remote storage 填写 <code class="highlighter-rouge">https://registry-1.docker.io</code>，Docker index 选择 <code class="highlighter-rouge">Use Docker Hub</code>，然后从 代理仓库地址 pull 就可以，但是本人百试不成功，截图如下</p>
+<h3 id="31升级-kubeadmkubectl">3.1、升级 kubeadm、kubectl</h3>
 
-<p><img src="https://cdn.oss.link/markdown/q350r.jpg" alt="proxy registry" /></p>
+<p>首先由于升级限制，必须先将 <code class="highlighter-rouge">kubeadm</code> 和 <code class="highlighter-rouge">kubectl</code> 升级到大于等于目标版本</p>
 
-<h4 id="34创建-group-仓库">3.4、创建 group 仓库</h4>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># replace x in 1.17.x-00 with the latest patch version</span>
+apt-mark unhold kubeadm kubectl
+apt-get update
+apt-get <span class="nb">install</span> <span class="nt">-y</span> <span class="nv">kubeadm</span><span class="o">=</span>1.17.x-00 <span class="nv">kubectl</span><span class="o">=</span>1.17.x-00
+apt-mark hold kubeadm kubectl
+</code></pre></div></div>
 
-<p>group 不提供具体存储服务，其主要作用就是类似一个前端反代，可以把多个仓库(比如 hosted 私服和 proxy)组合成一个地址提供访问，创建方法基本相同，主要是添加多个 hosted 或者 proxy 类型的其他仓库即可，这里不再详细阐述，截图如下</p>
+<p>当然如果你之前没有 <code class="highlighter-rouge">hold</code> 住这几个软件包的版本，那么就不需要 <code class="highlighter-rouge">unhold</code>；我的做法可能比较极端…一般为了防止后面的误升级安装完成后我会直接 <code class="highlighter-rouge">rename</code> 掉相关软件包的 <code class="highlighter-rouge">apt source</code> 配置(从根本上防止手贱)。</p>
 
-<p><img src="https://cdn.oss.link/markdown/2q1qv.jpg" alt="group registry" /></p>
+<h3 id="32升级前准备">3.2、升级前准备</h3>
 
-<h3 id="四其他相关">四、其他相关</h3>
+<h4 id="321配置修改">3.2.1、配置修改</h4>
 
-<p>由于 nexus 在 maven jar 管理方面已经是很成熟的产品，增加了 docker 等支持以后基本思想没有太大变化，所以关于其他仓库配置这里不再提及，具体可以参考<a href="http://books.sonatype.com/nexus-book/reference3/index.html">官方文档</a>；2.x 可以通过图形界面上传 jar，3.x 目前只能通过 maven deploy 插件实现，可以参考<a href="https://maven.apache.org/guides/mini/guide-3rd-party-jars-remote.html">这里</a></p>
+<p>对于高级玩家一般安装集群时都会自定义很多组件参数，此时不可避免的会采用配置文件；所以安装完新版本的 <code class="highlighter-rouge">kubeadm</code> 后就要着手修改配置文件中的 <code class="highlighter-rouge">kubernetesVersion</code> 字段为目标集群版本，当然有其他变更也可以一起修改。</p>
+
+<h4 id="322节点驱逐">3.2.2、节点驱逐</h4>
+
+<p>如果你的 master 节点也当作 node 在跑一些工作负载，则需要执行以下命令驱逐这些 pod 并使节点进入维护模式(禁止调度)。</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 将 NODE_NAME 换成 Master 节点名称</span>
+kubectl drain NODE_NAME <span class="nt">--ignore-daemonsets</span>
+</code></pre></div></div>
+
+<h4 id="323查看升级计划">3.2.3、查看升级计划</h4>
+
+<p>完成节点驱逐以后，可以通过以下命令查看升级计划；<strong>升级计划中列出了升级期间要执行的所有步骤以及相关警告，一定要仔细查看。</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k8s16.node ➜  ~ kubeadm upgrade plan <span class="nt">--config</span> /etc/kubernetes/kubeadm.yaml
+W0115 10:59:52.586204     983 validation.go:28] Cannot validate kube-proxy config - no validator is available
+W0115 10:59:52.586241     983 validation.go:28] Cannot validate kubelet config - no validator is available
+<span class="o">[</span>upgrade/config] Making sure the configuration is correct:
+W0115 10:59:52.605458     983 common.go:94] WARNING: Usage of the <span class="nt">--config</span> flag <span class="k">for </span>reconfiguring the cluster during upgrade is not recommended!
+W0115 10:59:52.607258     983 validation.go:28] Cannot validate kube-proxy config - no validator is available
+W0115 10:59:52.607274     983 validation.go:28] Cannot validate kubelet config - no validator is available
+<span class="o">[</span>preflight] Running pre-flight checks.
+<span class="o">[</span>upgrade] Making sure the cluster is healthy:
+<span class="o">[</span>upgrade] Fetching available versions to upgrade to
+<span class="o">[</span>upgrade/versions] Cluster version: v1.17.0
+<span class="o">[</span>upgrade/versions] kubeadm version: v1.17.1
+
+External components that should be upgraded manually before you upgrade the control plane with <span class="s1">'kubeadm upgrade apply'</span>:
+COMPONENT   CURRENT   AVAILABLE
+Etcd        3.3.18    3.4.3-0
+
+Components that must be upgraded manually after you have upgraded the control plane with <span class="s1">'kubeadm upgrade apply'</span>:
+COMPONENT   CURRENT       AVAILABLE
+Kubelet     5 x v1.17.0   v1.17.1
+
+Upgrade to the latest version <span class="k">in </span>the v1.17 series:
+
+COMPONENT            CURRENT   AVAILABLE
+API Server           v1.17.0   v1.17.1
+Controller Manager   v1.17.0   v1.17.1
+Scheduler            v1.17.0   v1.17.1
+Kube Proxy           v1.17.0   v1.17.1
+CoreDNS              1.6.5     1.6.5
+
+You can now apply the upgrade by executing the following <span class="nb">command</span>:
+
+        kubeadm upgrade apply v1.17.1
+
+_____________________________________________________________________
+</code></pre></div></div>
+
+<h3 id="33执行升级">3.3、执行升级</h3>
+
+<p>确认好升级计划以后，只需要一条命令既可将当前 master 节点升级到目标版本</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm upgrade apply v1.17.1 <span class="nt">--config</span> /etc/kubernetes/kubeadm.yaml
+</code></pre></div></div>
+
+<p>升级期间会打印很详细的日志，在日志中可以实时观察到升级流程，建议仔细关注升级流程；<strong>在最后一步会有一条日志 <code class="highlighter-rouge">[addons] Applied essential addon: kube-proxy</code>，这意味着集群开始更新 <code class="highlighter-rouge">kube-proxy</code> 组件，该组件目前是通过 <code class="highlighter-rouge">daemonset</code> 方式启动的；这会意味着此时会造成全节点的 <code class="highlighter-rouge">kube-proxy</code> 更新；</strong>理论上不会有很大影响，但是升级是还是需要注意一下这一步操作，在我的观察中似乎 <code class="highlighter-rouge">kube-proxy</code> 也是通过滚动更新完成的，所以问题应该不大。</p>
+
+<h3 id="34升级-kubelet">3.4、升级 kubelet</h3>
+
+<p>在单个 master 上升级完成后，<strong>只会升级本节点的 master 相关组件和全节点的 <code class="highlighter-rouge">kube-proxy</code> 组件；</strong>由于 kubelet 是在宿主机安装的，所以需要通过包管理器手动升级 kubelet</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># replace x in 1.17.x-00 with the latest patch version</span>
+apt-mark unhold kubelet
+apt-get <span class="nb">install</span> <span class="nt">-y</span> <span class="nv">kubelet</span><span class="o">=</span>1.17.x-00
+apt-mark hold kubelet
+</code></pre></div></div>
+
+<p>更新完成后执行 <code class="highlighter-rouge">systemctl restart kubelet</code> 重启，并等待启动成功既可；最后不要忘记解除当前节点的维护模式(<code class="highlighter-rouge">uncordon</code>)。</p>
+
+<h3 id="35升级其他-master">3.5、升级其他 Master</h3>
+
+<p>当其中一个 master 节点升级完成后，其他的 master 升级就会相对简单的多；<strong>首先国际惯例升级一下 <code class="highlighter-rouge">kubeadm</code> 和 <code class="highlighter-rouge">kubectl</code> 软件包，然后直接在其他 master 节点执行 <code class="highlighter-rouge">kubeadm upgrade node</code> 既可。</strong>由于 apiserver 等组件配置已经在升级第一个 master 时上传到了集群的 configMap 中，所以事实上其他 master 节点只是正常拉取然后重启相关组件既可；这一步同样会输出详细日志，可以仔细观察进度，<strong>最后不要忘记升级之前先进入维护模式，升级完成后重新安装 <code class="highlighter-rouge">kubelet</code> 并关闭节点维护模式。</strong></p>
+
+<h2 id="四升级-node">四、升级 Node</h2>
+
+<p>node 节点的升级实际上在升级完 master 节点以后不需要什么特殊操作，node 节点唯一需要升级的就是 <code class="highlighter-rouge">kubelet</code> 组件；<strong>首先在 node 节点执行 <code class="highlighter-rouge">kubeadm upgrade node</code> 命令，该命令会拉取集群内的 <code class="highlighter-rouge">kubelet</code> 配置文件，然后重新安装 <code class="highlighter-rouge">kubelet</code> 重启既可；</strong>同样升级 node 节点时不要忘记开启维护模式。针对于 CNI 组件请按需手动升级，并且确认好 CNI 组件的兼容版本。</p>
+
+<h2 id="五验证集群">五、验证集群</h2>
+
+<p>所有组件升级完成后，可以通过 <code class="highlighter-rouge">kubectl describe POD_NAME</code> 的方式验证 master 组件是否都升级到了最新版本；通过 <code class="highlighter-rouge">kuebctl version</code> 命令验证 api 相关信息(HA rr 轮训模式下可以多执行几遍)；还有就是通过 <code class="highlighter-rouge">kubectl get node -o wide</code> 查看相关 node 的信息，确保 <code class="highlighter-rouge">kubelet</code> 都升级成功，同时全部节点维护模式都已经关闭，其他细节可以参考<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade">官方文档</a>。</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -357,19 +333,12 @@ Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpi
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2016/12/30/configure-nginx-https-under-centos-to-support-ios-ats/" data-toggle="tooltip" data-placement="top" title="从 WWDC16 ATS 说起">
+                        <a href="/2020/01/21/set-up-kuberntes-ha-cluster-by-kubeadm/" data-toggle="tooltip" data-placement="top" title="kubeadm 搭建 HA kubernetes 集群">
                         Previous<br>
-                        <span>从 WWDC16 ATS 说起</span>
+                        <span>kubeadm 搭建 HA kubernetes 集群</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2017/01/12/git-uses-the-socks5-proxy/" data-toggle="tooltip" data-placement="top" title="Git 使用 socks5 代理">
-                        Next<br>
-                        <span>Git 使用 socks5 代理</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -525,8 +494,8 @@ Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpi
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2017/01/08/set-up-docker-registry-by-nexus";
-    var disqus_url = "https://mritd.me/2017/01/08/set-up-docker-registry-by-nexus/";
+    var disqus_identifier = "/2020/01/21/how-to-upgrade-kubeadm-cluster";
+    var disqus_url = "https://mritd.me/2020/01/21/how-to-upgrade-kubeadm-cluster/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

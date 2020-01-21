@@ -177,6 +177,30 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/11/14/ohmydocker/">
+        <h2 class="post-title">
+            ohmydocker 镜像加速
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  国外一直有台服务器闲置，准备用来做 Docker 镜像下载加速，写了个小工具打成了镜像放了出来 😀
+
+
+ohmydocker 镜像基于 docker:dind，也就是所谓的 Dcoker in Docker 俄罗斯套娃镜像，使用方法如下:
+
+1、启动镜像
+
+镜像启动后相当于镜像里运行了一个 Docker daemon 进程，Docker in Docker 需要使用 privilege...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 14, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/11/12/ci-cd-dockerfile/">
         <h2 class="post-title">
             CI/CD 之 Dockerfile
@@ -392,31 +416,6 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/07/31/calico-yml-bug/">
-        <h2 class="post-title">
-            Calico 部署踩坑记录
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  自从上次在虚拟机中手动了部署了 Kubernetes 1.7.2 以后，自己在测试环境就来了一下，结果网络组件死活起不来，最后找到原因记录一下
-
-
-一、Calico 部署注意事项
-
-在使用 Calico 前当然最好撸一下官方文档，地址在这里 Calico 官方文档，其中部署前需要注意以下几点
-
-
-  官方文档中要求 kubelet 配置必须增加 --network-plugin=cni...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 31, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -487,7 +486,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

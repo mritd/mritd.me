@@ -177,6 +177,33 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98/">
+        <h2 class="post-title">
+            Java 内存之直接内存
+        </h2>
+        
+        <div class="post-content-preview">
+            一、概念和特征
+
+
+  直接内存并非 JVMS 定义的标准 Java 运行时内存。
+  JDK1.4 加入了新的 NIO 机制，目的是防止 Java 堆 和 Native 堆之间往复的数据复制带来的性能损耗，此后 NIO 可以使用 Native 的方式直接在 Native 堆分配内存。
+  直接内存区域是全局共享的内存区域。
+
+
+
+
+
+  直接内存区域可以进行自动内存管理(GC)，但机制并不...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 22, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/03/22/Java-%E5%86%85%E5%AD%98%E4%B9%8B%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0/">
         <h2 class="post-title">
             Java 内存之方法区和运行时常量池
@@ -446,44 +473,6 @@ path: a...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/02/18/Gradle-%E6%9E%84%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
-        <h2 class="post-title">
-            Gradle 构建基础笔记
-        </h2>
-        
-        <div class="post-content-preview">
-            
-
-
-  本文参考自 Gradle User Guide 中文版 感谢其翻译贡献者
-
-
-
-
-安装Gradle
-
-  下载安装包 下载地址
-  配置环境变量 如下
-
-
-
-
-
-
-Gradle 基本概念
-
-Projects
-
-  每一个构建由一个或者多个 Project 构成，每个 Project 代表一个资源，具体做什么取决与如何定义该 Project，它可能代表一个发布的 zip 文件，也可能...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 18, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -554,7 +543,7 @@ Projects
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             

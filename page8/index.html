@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/11/21/kubeadm-other-problems/">
+        <h2 class="post-title">
+            kubeadm 续坑篇
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  断断续续鼓捣 kubeadm 搭建集群已经很长时间了，目前 kubeadm 已经进入了 beat 阶段，各项功能相对稳定，但是继上篇 kubeadm 搭建 kubernetes 集群 之后还是踩了许多坑，在此记录一下
+
+
+一、etcd 单点问题
+
+默认 kubeadm 创建的集群会在内部启动一个单点的 etcd，当然大部分情况下 etcd 还是很稳定的，但是一但 etcd 由于某种原因...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 21, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/11/08/update-centos-kernel/">
         <h2 class="post-title">
             CentOS 升级 kernel
@@ -449,34 +471,6 @@ yum install -y gmp-...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/09/24/Docker-mirror-Registry/">
-        <h2 class="post-title">
-            Docker mirror Registry
-        </h2>
-        
-        <div class="post-content-preview">
-            一、扯淡
-
-撸 Dokcer 这么长时间以来，由于国内众所周知的网络原因，Docker pull 镜像会非常慢，慢到你怀疑这个世界，甚至怀疑你来到这个世界的正确性与合理性，为了为了让自己不怀疑世界，记录一下如何撸一个 docker mirror registry
-
-二、动手撸一个
-
-2.1、基本环境
-
-以下操作基本环境如下
-
-
-  Docker 1.12.1
-  registry 2.5.1...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on September 24, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -547,7 +541,7 @@ yum install -y gmp-...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="40">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="41">
                                     Kubernetes
                                 </a>
                             
