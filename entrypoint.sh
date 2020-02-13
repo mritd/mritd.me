@@ -2,6 +2,7 @@
 
 set -e
 
+rm -rf /usr/share/nginx/html
 git clone -b gh-pages https://github.com/mritd/mritd.me.git /usr/share/nginx/html
 
 echo "blog starting..."
