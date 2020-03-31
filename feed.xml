@@ -5,9 +5,134 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 10 Mar 2020 07:11:53 +0800</pubDate>
-    <lastBuildDate>Tue, 10 Mar 2020 07:11:53 +0800</lastBuildDate>
+    <pubDate>Tue, 31 Mar 2020 23:09:27 +0800</pubDate>
+    <lastBuildDate>Tue, 31 Mar 2020 23:09:27 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>如何不通过 docker 下载 docker image</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;这是一个比较骚的动作，但是事实上确实有这个需求，折腾半天找工具看源码，这里记录一下(不想看源码分析啥的请直接跳转到第五部份)。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一起因&quot;&gt;一、起因&lt;/h2&gt;
+
+&lt;p&gt;由于最近某个爬虫业务需要抓取微信公众号的一些文章，某开发小伙伴想到了通过启动安卓虚拟机然后抓包的方式实现；经过几番寻找最终我们选择采用 docker 的方式启动安卓虚拟机，docker 里安卓虚拟机比较成熟的项目我们找到了 &lt;a href=&quot;https://github.com/budtmo/docker-android&quot;&gt;https://github.com/budtmo/docker-android&lt;/a&gt; 这个项目；但是由于众所周知的原因这个 2G+ 的镜像国内拉取是非常慢的，于是我想到了通过国外 VPS 拉取然后 scp 回来… 由于贫穷的原因，当我实际操作的时候遇到了比较尴尬的问题: &lt;strong&gt;VPS 磁盘空间 25G，镜像拉取后解压接近 10G，我需要 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker save&lt;/code&gt; 成 tar 包再进行打包成 &lt;code class=&quot;highlighter-rouge&quot;&gt;tar.gz&lt;/code&gt; 格式 scp 回来，这个时候空间不够用了…&lt;/strong&gt;所以我当时就在想有没有办法让 docker daemon 拉取镜像时不解压？或者说自己通过 HTTP 下载镜像直接存储为 tar？&lt;/p&gt;
+
+&lt;h2 id=&quot;二尝试造轮子&quot;&gt;二、尝试造轮子&lt;/h2&gt;
+
+&lt;p&gt;当出现了上面的问题后，我第一反应就是:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1、docker 拆分为 moby&lt;/li&gt;
+  &lt;li&gt;2、moby 模块化，大部份开源到 &lt;a href=&quot;https://github.com/containers&quot;&gt;containers&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;3、&lt;a href=&quot;https://github.com/containers/image&quot;&gt;containers/image&lt;/a&gt; 项目是镜像部份源码&lt;/li&gt;
+  &lt;li&gt;4、看 &lt;a href=&quot;https://github.com/containers/image&quot;&gt;containers/image&lt;/a&gt; 源码造轮子&lt;/li&gt;
+  &lt;li&gt;5、不确定是否需要 &lt;a href=&quot;https://github.com/containers/storage&quot;&gt;containers/storage&lt;/a&gt; 做存储&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;三猜测源码&quot;&gt;三、猜测源码&lt;/h2&gt;
+
+&lt;p&gt;当我查看 &lt;a href=&quot;https://github.com/containers/image&quot;&gt;containers/image&lt;/a&gt; README 文档时发现其提到了 &lt;a href=&quot;https://github.com/containers/skopeo&quot;&gt;skopeo&lt;/a&gt; 项目，并且很明确的说了&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The containers/image project is only a library with no user interface; you can either incorporate it into your Go programs, or use the skopeo tool:
+The skopeo tool uses the containers/image library and takes advantage of many of its features, e.g. skopeo copy exposes the containers/image/copy.Image functionality.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;那么也就是说镜像下载这块很大可能应该调用 &lt;code class=&quot;highlighter-rouge&quot;&gt;containers/image/copy.Image&lt;/code&gt; 完成，随即就看了下源码文档&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/tv7iy.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显，&lt;code class=&quot;highlighter-rouge&quot;&gt;types.ImageReference&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;Options&lt;/code&gt; 里面的属性啥的我完全看不懂… 😂😂😂&lt;/p&gt;
+
+&lt;h2 id=&quot;四看-skopeo-源码&quot;&gt;四、看 skopeo 源码&lt;/h2&gt;
+
+&lt;p&gt;当 &lt;a href=&quot;https://github.com/containers/image&quot;&gt;containers/image&lt;/a&gt; 源码看不懂时，突然想到 &lt;a href=&quot;https://github.com/containers/skopeo&quot;&gt;skopeo&lt;/a&gt; 调用的是这个玩意，那么依葫芦画瓢看 &lt;a href=&quot;https://github.com/containers/skopeo&quot;&gt;skopeo&lt;/a&gt; 源码应该能行；接下来常规操作 clone skopeo 源码然后编译运行测试；编译后 skopeo 支持命令如下&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME:
+   skopeo - Various operations with container images and container image registries
+
+USAGE:
+   skopeo &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;global options] &lt;span class=&quot;nb&quot;&gt;command&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;options] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;arguments...]
+
+VERSION:
+   0.1.42-dev commit: 018a0108b103341526b41289c434b59d65783f6f
+
+COMMANDS:
+   copy               Copy an IMAGE-NAME from one location to another
+   inspect            Inspect image IMAGE-NAME
+   delete             Delete image IMAGE-NAME
+   manifest-digest    Compute a manifest digest of a file
+   &lt;span class=&quot;nb&quot;&gt;sync               &lt;/span&gt;Synchronize one or more images from one location to another
+   standalone-sign    Create a signature using &lt;span class=&quot;nb&quot;&gt;local &lt;/span&gt;files
+   standalone-verify  Verify a signature using &lt;span class=&quot;nb&quot;&gt;local &lt;/span&gt;files
+   list-tags          List tags &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;the transport/repository specified by the REPOSITORY-NAME
+   &lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;, h            Shows a list of commands or &lt;span class=&quot;nb&quot;&gt;help &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;one &lt;span class=&quot;nb&quot;&gt;command
+
+&lt;/span&gt;GLOBAL OPTIONS:
+   &lt;span class=&quot;nt&quot;&gt;--debug&lt;/span&gt;                     &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;debug output
+   &lt;span class=&quot;nt&quot;&gt;--policy&lt;/span&gt; value              Path to a trust policy file
+   &lt;span class=&quot;nt&quot;&gt;--insecure-policy&lt;/span&gt;           run the tool without any policy check
+   &lt;span class=&quot;nt&quot;&gt;--registries&lt;/span&gt;.d DIR          use registry configuration files &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;DIR &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;e.g. &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;container signature storage&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;--override-arch&lt;/span&gt; ARCH        use ARCH instead of the architecture of the machine &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;choosing images
+   &lt;span class=&quot;nt&quot;&gt;--override-os&lt;/span&gt; OS            use OS instead of the running OS &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;choosing images
+   &lt;span class=&quot;nt&quot;&gt;--override-variant&lt;/span&gt; VARIANT  use VARIANT instead of the running architecture variant &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;choosing images
+   &lt;span class=&quot;nt&quot;&gt;--command-timeout&lt;/span&gt; value     &lt;span class=&quot;nb&quot;&gt;timeout &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;the &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;execution &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default: 0s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;-h&lt;/span&gt;                  show &lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;
+   &lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt;, &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt;               print the version
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;我掐指一算调用 copy 命令应该是我要找的那个它&lt;/strong&gt;，所以常规操作打开源码直接看&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/urn3l.png&quot; alt=&quot;copy_cmd&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;通过继续追踪 &lt;code class=&quot;highlighter-rouge&quot;&gt;alltransports.ParseImageName&lt;/code&gt; 方法最终可以得知 copy 命令的 &lt;code class=&quot;highlighter-rouge&quot;&gt;SOURCE-IMAGE&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;DESTINATION-IMAGE&lt;/code&gt; 都支持哪些写法&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/ush4t.png&quot; alt=&quot;tp_register&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;每一个 Transport 的实现都提供了 Name 方法，其名称即为 src 或 dest 镜像名称的前缀，例如 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker://nginx:1.17.6&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/7fpap.png&quot; alt=&quot;tp_docker&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;经过测试不同的 Transport 格式并不完全一致(具体看源码)，比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker://nginx:1.17.6&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;dir:/tmp/nginx&lt;/code&gt;；同时这些 Transport 并非完全都适用与 src 与 dest，比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;tarball:/tmp/nginx.tar&lt;/code&gt; 支持 src 而不支持 dest；&lt;/strong&gt;其判断核心依据为 &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageReference.NewImageSource&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageReference.NewImageDestination&lt;/code&gt; 方法实现是否返回 error&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/jb087.png&quot; alt=&quot;NewImageDestination&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;当我看了一会各种 Transport 源码后我发现一件事: &lt;strong&gt;这特么不就是我要造的轮子么！😱😱😱&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;五skopeo-copy-使用&quot;&gt;五、skopeo copy 使用&lt;/h2&gt;
+
+&lt;h3 id=&quot;51不借助-docker-下载镜像&quot;&gt;5.1、不借助 docker 下载镜像&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;skopeo &lt;span class=&quot;nt&quot;&gt;--insecure-policy&lt;/span&gt; copy docker://nginx:1.17.6 docker-archive:/tmp/nginx.tar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--insecure-policy&lt;/code&gt; 选项用于忽略安全策略配置文件，该命令将会直接通过 http 下载目标镜像并存储为 &lt;code class=&quot;highlighter-rouge&quot;&gt;/tmp/nginx.tar&lt;/code&gt;，此文件可以直接通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker load&lt;/code&gt; 命令导入&lt;/p&gt;
+
+&lt;h3 id=&quot;52从-docker-daemon-导出镜像&quot;&gt;5.2、从 docker daemon 导出镜像&lt;/h3&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;skopeo &lt;span class=&quot;nt&quot;&gt;--insecure-policy&lt;/span&gt; copy docker-daemon:nginx:1.17.6 docker-archive:/tmp/nginx.tar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;该命令将会从 docker daemon 导出镜像到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/tmp/nginx.tar&lt;/code&gt;；为什么不用 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker save&lt;/code&gt;？因为我是偷懒 dest 也是 docker-archive，实际上 skopeo 可以导出为其他格式比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;oci&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;oci-archive&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;ostree&lt;/code&gt; 等&lt;/p&gt;
+
+&lt;h3 id=&quot;53其他命令&quot;&gt;5.3、其他命令&lt;/h3&gt;
+
+&lt;p&gt;skopeo 还有一些其他的实用命令，比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;sync&lt;/code&gt; 可以在两个位置之间同步镜像(😂早知道我还写个鸡儿 gcrsync)，&lt;code class=&quot;highlighter-rouge&quot;&gt;inspect&lt;/code&gt; 可以查看镜像信息等，迫于本人太懒，剩下的请自行查阅文档、&lt;code class=&quot;highlighter-rouge&quot;&gt;--help&lt;/code&gt; 以及源码(没错，整篇文章都没写 skopeo 怎么安装)。&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Tue, 31 Mar 2020 23:07:34 +0800</pubDate>
+        <link>https://mritd.me/2020/03/31/how-to-download-docker-image-without-docker/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/03/31/how-to-download-docker-image-without-docker/</guid>
+        
+        <category>Docker</category>
+        
+        
+        <category>Docker</category>
+        
+      </item>
     
       <item>
         <title>kubeadm 证书期限调整</title>
@@ -2991,348 +3116,6 @@ ip route add 10.254.0.0/16 via 172.16.0.13
         
         
         <category>Kuberentes</category>
-        
-      </item>
-    
-      <item>
-        <title>Dockerfile 目前可扩展的语法</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;最近在调整公司项目的 CI，目前主要使用 GitLab CI，在尝试多阶段构建中踩了点坑，然后发现了一些有意思的玩意&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;本文参考:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md&quot;&gt;Dockerfile frontend experimental syntaxes&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://medium.com/@tonistiigi/advanced-multi-stage-build-patterns-6f741b852fae&quot;&gt;Advanced multi-stage build patterns&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/build/&quot;&gt;docker build Document&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;一起因&quot;&gt;一、起因&lt;/h2&gt;
-
-&lt;p&gt;公司目前主要使用 GitLab CI 作为主力 CI 构建工具，而且由于机器有限，我们对一些包管理器的本地 cache 直接持久化到了本机；比如 maven 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;.m2&lt;/code&gt; 目录，nodejs 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;.npm&lt;/code&gt; 目录等；虽然我们创建了对应的私服，但是在 build 时毕竟会下载，所以当时索性调整 GitLab Runner 在每个由 GitLab Runner 启动的容器中挂载这些缓存目录(GitLab CI 在 build 时会新启动容器运行 build 任务)；今天调整 nodejs 项目浪了一下，直接采用 Dockerfile 的 multi-stage build 功能进行 “Build =&amp;gt; Package(docker image)” 的实现，基本 Dockerfile 如下&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM gozap/build as builder
-
-COPY &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; /xxxx
-
-WORKDIR /xxxx
-
-RUN &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt; ~/.bashrc &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; cnpm &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; cnpm run build
-
-FROM gozap/nginx-react:v1.0.0
-
-LABEL &lt;span class=&quot;nv&quot;&gt;maintainer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;mritd &amp;lt;mritd@linux.com&amp;gt;&quot;&lt;/span&gt;
-
-COPY &lt;span class=&quot;nt&quot;&gt;--from&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;builder /xxxx/public /usr/share/nginx/html
-
-EXPOSE 80
-
-STOPSIGNAL SIGTERM
-
-CMD &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;nginx&quot;&lt;/span&gt;, &lt;span class=&quot;s2&quot;&gt;&quot;-g&quot;&lt;/span&gt;, &lt;span class=&quot;s2&quot;&gt;&quot;daemon off;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;本来这个 &lt;code class=&quot;highlighter-rouge&quot;&gt;cnpm&lt;/code&gt; 命令是带有 cache 的(&lt;a href=&quot;https://github.com/Gozap/dockerfile/blob/master/build/cnpm&quot;&gt;见这里&lt;/a&gt;)，不过运行完 build 以后发现很慢，检查宿主机 cache 目录发现根本没有 cache…然后突然感觉&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/6ieh4.jpg&quot; alt=&quot;事情并没有这么简单&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;仔细想想，情况应该是这样事儿的…&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;+------------+                +-------------+            +----------------+
-|            |                |             |            |                |
-|            |                |    build    |            |   Multi-stage  |
-|   Runner   +---------------&amp;gt;+  conatiner  +-----------&amp;gt;+     Build      |
-|            |                |             |            |                |
-|            |                |             |            |                |
-+------------+                +------+------+            +----------------+
-                                     ^
-                                     |
-                                     |
-                                     |
-                                     |
-                              +------+------+
-                              |             |
-                              |    Cache    |
-                              |             |
-                              +-------------+
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/9ov8m.jpg&quot; alt=&quot;挂载不管用&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;后来经过查阅文档，发现 Dockerfile 是有扩展语法的(当然最终我还是没用)，具体请见&lt;del&gt;下篇文章&lt;/del&gt;(我怕被打死)下面，&lt;strong&gt;先说好，下面的内容无法完美的解决上面的问题，目前只是支持了一部分功能，当然未来很可能支持类似 &lt;code class=&quot;highlighter-rouge&quot;&gt;IF ELSE&lt;/code&gt; 语法、直接挂载宿主机目录等功能&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;二开启-dockerfile-扩展语法&quot;&gt;二、开启 Dockerfile 扩展语法&lt;/h2&gt;
-
-&lt;h3 id=&quot;21开启实验性功能&quot;&gt;2.1、开启实验性功能&lt;/h3&gt;
-
-&lt;p&gt;目前这个扩展语法还处于实验性功能，所以需要配置 dockerd 守护进程，修改如下&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;ExecStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/bin/dockerd  &lt;span class=&quot;nt&quot;&gt;-H&lt;/span&gt; unix:// &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--init&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--live-restore&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--data-root&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/data/docker &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--experimental&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--log-driver&lt;/span&gt; json-file &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--log-opt&lt;/span&gt; max-size&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;30m &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-                            &lt;span class=&quot;nt&quot;&gt;--log-opt&lt;/span&gt; max-file&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;3
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;主要是 &lt;code class=&quot;highlighter-rouge&quot;&gt;--experimental&lt;/code&gt; 参数，参考&lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/dockerd/#description&quot;&gt;官方文档&lt;/a&gt;；&lt;strong&gt;同时在 build 前声明 &lt;code class=&quot;highlighter-rouge&quot;&gt;export DOCKER_BUILDKIT=1&lt;/code&gt; 变量&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;22修改-dockerfile&quot;&gt;2.2、修改 Dockerfile&lt;/h3&gt;
-
-&lt;p&gt;开启实验性功能后，只需要在 Dockerfile 头部增加 &lt;code class=&quot;highlighter-rouge&quot;&gt;# syntax=docker/dockerfile:experimental&lt;/code&gt; 既可；为了保证稳定性，你也可以指定具体的版本号，类似这样&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# syntax=docker/dockerfile:1.1.1-experimental&lt;/span&gt;
-FROM tomcat
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;23可用的扩展语法&quot;&gt;2.3、可用的扩展语法&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RUN --mount=type=bind&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;这个是默认的挂载模式，这个允许将上下文或者镜像以可都可写/只读模式挂载到 build 容器中，可选参数如下(不翻译了)&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Option&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;target&lt;/code&gt; (required)&lt;/td&gt;
-      &lt;td&gt;Mount path.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;source&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Source path in the &lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt;. Defaults to the root of the &lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Build stage or image name for the root of the source. Defaults to the build context.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;rw&lt;/code&gt;,&lt;code class=&quot;highlighter-rouge&quot;&gt;readwrite&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Allow writes on the mount. Written data will be discarded.&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RUN --mount=type=cache&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;专用于作为 cache 的挂载位置，一般用于 cache 包管理器的下载等&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Option&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;id&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Optional ID to identify separate/different caches&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;target&lt;/code&gt; (required)&lt;/td&gt;
-      &lt;td&gt;Mount path.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ro&lt;/code&gt;,&lt;code class=&quot;highlighter-rouge&quot;&gt;readonly&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Read-only if set.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sharing&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;One of &lt;code class=&quot;highlighter-rouge&quot;&gt;shared&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;private&lt;/code&gt;, or &lt;code class=&quot;highlighter-rouge&quot;&gt;locked&lt;/code&gt;. Defaults to &lt;code class=&quot;highlighter-rouge&quot;&gt;shared&lt;/code&gt;. A &lt;code class=&quot;highlighter-rouge&quot;&gt;shared&lt;/code&gt; cache mount can be used concurrently by multiple writers. &lt;code class=&quot;highlighter-rouge&quot;&gt;private&lt;/code&gt; creates a new mount if there are multiple writers. &lt;code class=&quot;highlighter-rouge&quot;&gt;locked&lt;/code&gt; pauses the second writer until the first one releases the mount.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Build stage to use as a base of the cache mount. Defaults to empty directory.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;source&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Subpath in the &lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt; to mount. Defaults to the root of the &lt;code class=&quot;highlighter-rouge&quot;&gt;from&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;&lt;strong&gt;Example: cache Go packages&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# syntax = docker/dockerfile:experimental&lt;/span&gt;
-FROM golang
-...
-RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cache,target&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/root/.cache/go-build go build ...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Example: cache apt packages&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# syntax = docker/dockerfile:experimental&lt;/span&gt;
-FROM ubuntu
-RUN &lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; /etc/apt/apt.conf.d/docker-clean&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Binary::apt::APT::Keep-Downloaded-Packages &quot;true&quot;;'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /etc/apt/apt.conf.d/keep-cache
-RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cache,target&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/var/cache/apt &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cache,target&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/var/lib/apt &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-  apt update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; gcc
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RUN --mount=type=tmpfs&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;专用于挂载 tmpfs 的选项&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Option&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;target&lt;/code&gt; (required)&lt;/td&gt;
-      &lt;td&gt;Mount path.&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RUN --mount=type=secret&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;这个类似 k8s 的 secret，用来挂载一些不想打入镜像，但是构建时想使用的密钥等，例如 docker 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;config.json&lt;/code&gt;，S3 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;credentials&lt;/code&gt;&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Option&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;id&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;ID of the secret. Defaults to basename of the target path.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;target&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Mount path. Defaults to &lt;code class=&quot;highlighter-rouge&quot;&gt;/run/secrets/&lt;/code&gt; + &lt;code class=&quot;highlighter-rouge&quot;&gt;id&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;required&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;If set to &lt;code class=&quot;highlighter-rouge&quot;&gt;true&lt;/code&gt;, the instruction errors out when the secret is unavailable. Defaults to &lt;code class=&quot;highlighter-rouge&quot;&gt;false&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mode&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;File mode for secret file in octal. Default 0400.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;uid&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;User ID for secret file. Default 0.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gid&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Group ID for secret file. Default 0.&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;&lt;strong&gt;Example: access to S3&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# syntax = docker/dockerfile:experimental&lt;/span&gt;
-FROM python:3
-RUN pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;awscli
-RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;secret,id&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;aws,target&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/root/.aws/credentials aws s3 &lt;span class=&quot;nb&quot;&gt;cp &lt;/span&gt;s3://... ...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;注意: &lt;code class=&quot;highlighter-rouge&quot;&gt;buildctl&lt;/code&gt; 是 BuildKit 的命令，你要测试的话自己换成 &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; 相关参数&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;buildctl build &lt;span class=&quot;nt&quot;&gt;--frontend&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;dockerfile.v0 &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dockerfile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;--secret&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;aws,src&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.aws/credentials
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;RUN --mount=type=ssh&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;允许 build 容器通过 SSH agent 访问 SSH key，并且支持 &lt;code class=&quot;highlighter-rouge&quot;&gt;passphrases&lt;/code&gt;&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Option&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;id&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;ID of SSH agent socket or key. Defaults to “default”.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;target&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;SSH agent socket path. Defaults to &lt;code class=&quot;highlighter-rouge&quot;&gt;/run/buildkit/ssh_agent.${N}&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;required&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;If set to &lt;code class=&quot;highlighter-rouge&quot;&gt;true&lt;/code&gt;, the instruction errors out when the key is unavailable. Defaults to &lt;code class=&quot;highlighter-rouge&quot;&gt;false&lt;/code&gt;.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mode&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;File mode for socket in octal. Default 0600.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;uid&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;User ID for socket. Default 0.&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gid&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;Group ID for socket. Default 0.&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;&lt;strong&gt;Example: access to Gitlab&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# syntax = docker/dockerfile:experimental&lt;/span&gt;
-FROM alpine
-RUN apk add &lt;span class=&quot;nt&quot;&gt;--no-cache&lt;/span&gt; openssh-client
-RUN &lt;span class=&quot;nb&quot;&gt;mkdir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; 0700 ~/.ssh &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ssh-keyscan gitlab.com &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.ssh/known_hosts
-RUN &lt;span class=&quot;nt&quot;&gt;--mount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ssh ssh &lt;span class=&quot;nt&quot;&gt;-q&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-T&lt;/span&gt; git@gitlab.com 2&amp;gt;&amp;amp;1 | &lt;span class=&quot;nb&quot;&gt;tee&lt;/span&gt; /hello
-&lt;span class=&quot;c&quot;&gt;# &quot;Welcome to GitLab, @GITLAB_USERNAME_ASSOCIATED_WITH_SSHKEY&quot; should be printed here&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# with the type of build progress is defined as `plain`.&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;ssh-agent&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ssh-add ~/.ssh/id_rsa
-&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Input your passphrase here&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;buildctl build &lt;span class=&quot;nt&quot;&gt;--frontend&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;dockerfile.v0 &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--local&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dockerfile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;--ssh&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$SSH_AUTH_SOCK&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;你也可以直接使用宿主机目录的 pem 文件，但是带有密码的 pem 目前不支持&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;目前根据文档测试，当前的挂载类型比如 &lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; 类型，仅用于 multi-stage 内的挂载，比如你有 2+ 个构建步骤，&lt;code class=&quot;highlighter-rouge&quot;&gt;cache&lt;/code&gt; 挂载类型能帮你在各个阶段内共享文件；但是它目前无法解决直接将宿主机目录挂载到 multi-stage 的问题(可以采取些曲线救国方案，但是很不优雅)；但是未来还是很有展望的，可以关注一下&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Mon, 13 May 2019 22:57:07 +0800</pubDate>
-        <link>https://mritd.me/2019/05/13/dockerfile-extended-syntax/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/05/13/dockerfile-extended-syntax/</guid>
-        
-        <category>Docker</category>
-        
-        
-        <category>Docker</category>
         
       </item>
     

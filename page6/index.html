@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/">
+        <h2 class="post-title">
+            Docker 分配宿主机网段 IP
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  工作需要临时启动一个 gitlab,无奈 gitlab 需要 ssh 的 22 端口;而使用传统网桥方式映射端口则 clone 等都需要输入端口号,很麻烦;22 端口宿主机又有 sshd 监听;研究了下 docker 网络,记录一下如何分配宿主机网段 IP
+
+
+创建 macvlan 网络
+
+关于 Docker 网络模式这里不再细说;由于默认的网桥方式无法满足需要,所以需要创建一个 ma...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on May 12, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/25/java-capturing-https-packets-use-mitmproxy/">
         <h2 class="post-title">
             Java 配合 mitmproxy HTTPS 抓包调试
@@ -377,33 +399,6 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/">
-        <h2 class="post-title">
-            如何下载 Kubernetes 镜像和 rpm
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  随着 kubernetes 容器化部署逐渐推进，gcr.io 镜像、kubernetes rpm 下载由于 “伟大的” 墙的原因成为阻碍玩 kubernetes 第一道屏障，以下记录了个人维护的 yum 仓库和 gcr.io 反代仓库使用
-
-
-一、yum 源
-
-目前个人维护了一个 kubernetes 的 yum 源，目前 yum 源包含 rpm 如下
-
-
-  
-    
-      ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on February 27, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -468,7 +463,7 @@ Kubernetes 暴露服务的方式目前只有三种：LoadBlancer Service、NodeP
                             
                         
                             
-                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                <a href="/tags/#Docker" title="Docker" rel="44">
                                     Docker
                                 </a>
                             

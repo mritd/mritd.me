@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Jekyll + Travis CI 自动化部署博客">
-    <meta name="keywords"  content="Jekyll,Travis-CI">
+    <meta name="description" content="如何不通过 docker 下载 docker image">
+    <meta name="keywords"  content="docker,skopeo">
     <meta name="theme-color" content="#000000">
     
-    <title>Jekyll + Travis CI 自动化部署博客 - 漠然的博客 | mritd Blog</title>
+    <title>如何不通过 docker 下载 docker image - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/">
+    <link rel="canonical" href="https://mritd.me/2020/03/31/how-to-download-docker-image-without-docker/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -163,15 +163,15 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
                         
                     </div>
-                    <h1>Jekyll + Travis CI 自动化部署博客</h1>
+                    <h1>如何不通过 docker 下载 docker image</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on February 25, 2017</span>
+                    <span class="meta">Posted by 漠然 on March 31, 2020</span>
                 </div>
             </div>
         </div>
@@ -193,176 +193,114 @@
                 
 
                 <blockquote>
-  <p>由于 Github 访问过慢，所以博客一直放在自己的服务器上托管；博客采用了 Jekyll 生成静态展点，最近鼓捣了一下完成了 Travis CI 自动化部署，顺便在此记录下</p>
+  <p>这是一个比较骚的动作，但是事实上确实有这个需求，折腾半天找工具看源码，这里记录一下(不想看源码分析啥的请直接跳转到第五部份)。</p>
 </blockquote>
 
-<h3 id="一原部署方式">一、原部署方式</h3>
+<h2 id="一起因">一、起因</h2>
 
-<h4 id="11原部署流程">1.1、原部署流程</h4>
+<p>由于最近某个爬虫业务需要抓取微信公众号的一些文章，某开发小伙伴想到了通过启动安卓虚拟机然后抓包的方式实现；经过几番寻找最终我们选择采用 docker 的方式启动安卓虚拟机，docker 里安卓虚拟机比较成熟的项目我们找到了 <a href="https://github.com/budtmo/docker-android">https://github.com/budtmo/docker-android</a> 这个项目；但是由于众所周知的原因这个 2G+ 的镜像国内拉取是非常慢的，于是我想到了通过国外 VPS 拉取然后 scp 回来… 由于贫穷的原因，当我实际操作的时候遇到了比较尴尬的问题: <strong>VPS 磁盘空间 25G，镜像拉取后解压接近 10G，我需要 <code class="highlighter-rouge">docker save</code> 成 tar 包再进行打包成 <code class="highlighter-rouge">tar.gz</code> 格式 scp 回来，这个时候空间不够用了…</strong>所以我当时就在想有没有办法让 docker daemon 拉取镜像时不解压？或者说自己通过 HTTP 下载镜像直接存储为 tar？</p>
 
-<p>由于博客访问量不大，同时 jekyll 启动后会开启 http 服务器，还能自动监听文件变化实现刷新；所以以前的方式就是打了一个 docker 镜像，然后镜像每隔 15 分钟拉取 Github 仓库，实现定时更新，基本流程如下</p>
+<h2 id="二尝试造轮子">二、尝试造轮子</h2>
 
-<ul>
-  <li>本地写博客 Markdown 文件 commit 到 Github</li>
-  <li>服务器上将 jekyll 打成 docker 镜像启动</li>
-  <li>服务器镜像内使用 crond 每隔 15 分钟拉取最新代码</li>
-  <li>jekyll 获得最新代码后自动刷新</li>
-</ul>
-
-<p>整体 “架构” 如下</p>
-
-<p><img src="https://cdn.oss.link/markdown/44qmr.jpg" alt="老架构" /></p>
-
-<h4 id="12存在问题">1.2、存在问题</h4>
-
-<p>按照以前的方式其实存在一个很大问题就是部署不及时，每次写完文章实际上都是自己 ssh 到服务器手动 pull 一下，感觉很繁琐；另一个大问题(这也不能算 bug) jekyll 的 rss 插件默认生成的 rss 引用地址为 <code class="highlighter-rouge">jekyll server -H x.x.x.x</code> 的监听地址，而容器化启动 jekyll 监听地址必然是 <code class="highlighter-rouge">0.0.0.0</code>；后果就是 feed.xml 无法访问，如下所示(这里监听的是 localhost)</p>
-
-<p><img src="https://cdn.oss.link/markdown/fq9im.jpg" alt="feed error" /></p>
-
-<h4 id="13新部署思路">1.3、新部署思路</h4>
-
-<p>从问题角度上来说，每次手动 pull 虽然有点烦，但是并不是大问题；而 rss 订阅由于网友反馈，再加个人强迫症感觉确实是个大毛病；随着试验发现，<strong>在进行 <code class="highlighter-rouge">jekyll build</code> 时生成的 feed.xml 中的引用地址会正确读取 _config.yml 中的网址</strong>；而 <code class="highlighter-rouge">jekyll server</code> 命令实际上也是先 build，然后生成静态文件到 <code class="highlighter-rouge">_site</code> 目录，最后搞个 http 服务器发布出去</p>
-
-<p>基于以上试验可以得到一个简单的解决方案：不使用 <code class="highlighter-rouge">jekyll server</code> 启动，先 build 生成正确的 feed.xml 等静态文件，然后自己搞个 nginx 把它发布出去</p>
-
-<h3 id="二travis-ci-自动化部署">二、Travis CI 自动化部署</h3>
-
-<h4 id="21任务拆分">2.1、任务拆分</h4>
-
-<p>从上面的结论上基本要实现自动化部署需要以下步骤：</p>
+<p>当出现了上面的问题后，我第一反应就是:</p>
 
 <ul>
-  <li>Github commit 后要能自动 build</li>
-  <li>生成的 _site 目录文件能实时更新到容器</li>
+  <li>1、docker 拆分为 moby</li>
+  <li>2、moby 模块化，大部份开源到 <a href="https://github.com/containers">containers</a></li>
+  <li>3、<a href="https://github.com/containers/image">containers/image</a> 项目是镜像部份源码</li>
+  <li>4、看 <a href="https://github.com/containers/image">containers/image</a> 源码造轮子</li>
+  <li>5、不确定是否需要 <a href="https://github.com/containers/storage">containers/storage</a> 做存储</li>
 </ul>
 
-<h4 id="22travis-ci-配置">2.2、Travis CI 配置</h4>
+<h2 id="三猜测源码">三、猜测源码</h2>
 
-<h5 id="221基本配置">2.2.1、基本配置</h5>
+<p>当我查看 <a href="https://github.com/containers/image">containers/image</a> README 文档时发现其提到了 <a href="https://github.com/containers/skopeo">skopeo</a> 项目，并且很明确的说了</p>
 
-<p>对于自动 build，好在 Travis CI 对于开源项目完全免费，并且能自动感知到 Github 的 commit；所以自动 build 生成 静态文件这个过程就由 Travis CI 完成，以下为配置过程</p>
+<blockquote>
+  <p>The containers/image project is only a library with no user interface; you can either incorporate it into your Go programs, or use the skopeo tool:
+The skopeo tool uses the containers/image library and takes advantage of many of its features, e.g. skopeo copy exposes the containers/image/copy.Image functionality.</p>
+</blockquote>
 
-<p>首先注册好 Travis CI 账号，然后点击最左侧 <code class="highlighter-rouge">+</code> 按钮添加项目</p>
+<p>那么也就是说镜像下载这块很大可能应该调用 <code class="highlighter-rouge">containers/image/copy.Image</code> 完成，随即就看了下源码文档</p>
 
-<p><img src="https://cdn.oss.link/markdown/7axvx.jpg" alt="add repo" /></p>
+<p><img src="https://cdn.oss.link/markdown/tv7iy.png" alt="" /></p>
 
-<p>在想要使用 Travis CI 的项目上开启 build</p>
+<p>很明显，<code class="highlighter-rouge">types.ImageReference</code>、<code class="highlighter-rouge">Options</code> 里面的属性啥的我完全看不懂… 😂😂😂</p>
 
-<p><img src="https://cdn.oss.link/markdown/ouod9.jpg" alt="open" /></p>
+<h2 id="四看-skopeo-源码">四、看 skopeo 源码</h2>
 
-<p>点击设置按钮设置一下项目</p>
+<p>当 <a href="https://github.com/containers/image">containers/image</a> 源码看不懂时，突然想到 <a href="https://github.com/containers/skopeo">skopeo</a> 调用的是这个玩意，那么依葫芦画瓢看 <a href="https://github.com/containers/skopeo">skopeo</a> 源码应该能行；接下来常规操作 clone skopeo 源码然后编译运行测试；编译后 skopeo 支持命令如下</p>
 
-<p><img src="https://cdn.oss.link/markdown/p1cad.jpg" alt="set options" /></p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME:
+   skopeo - Various operations with container images and container image registries
 
-<h5 id="222travisyml-配置">2.2.2、.travis.yml 配置</h5>
+USAGE:
+   skopeo <span class="o">[</span>global options] <span class="nb">command</span> <span class="o">[</span><span class="nb">command </span>options] <span class="o">[</span>arguments...]
 
-<p>当项目内存在 <code class="highlighter-rouge">.travis.yml</code> 文件时，Travis CI 会按照其定义完成自动 build 过程，所以开启了上述配置以后还要在项目下创建 <code class="highlighter-rouge">.travis.yml</code> 配置文件，配置文件定义如下</p>
+VERSION:
+   0.1.42-dev commit: 018a0108b103341526b41289c434b59d65783f6f
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>language: ruby
-rvm:
-  - 2.3.3
-before_install:
-  - openssl aes-256-cbc <span class="nt">-K</span> <span class="nv">$encrypted_ecabfac08d8e_key</span> <span class="nt">-iv</span> <span class="nv">$encrypted_ecabfac08d8e_iv</span>
-    <span class="nt">-in</span> id_rsa.enc <span class="nt">-out</span> ~/.ssh/id_rsa <span class="nt">-d</span>
-  - <span class="nb">chmod </span>600 ~/.ssh/id_rsa
-  - <span class="nb">echo</span> <span class="nt">-e</span> <span class="s2">"Host mritd.me</span><span class="se">\n\t</span><span class="s2">StrictHostKeyChecking no</span><span class="se">\n</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> ~/.ssh/config
-script:
-  - bundle <span class="nb">install</span>
-  - bundle <span class="nb">exec </span>jekyll build
-after_success:
-  - git clone https://github.com/mritd/mritd.me.git
-  - <span class="nb">cd </span>mritd.me <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> <span class="k">*</span> <span class="o">&amp;&amp;</span> <span class="nb">cp</span> <span class="nt">-r</span> ../_site/<span class="k">*</span> <span class="nb">.</span>
-  - git config user.name <span class="s2">"mritd"</span>
-  - git config user.email <span class="s2">"mritd1234@gmail.com"</span>
-  - git add <span class="nt">--all</span> <span class="nb">.</span>
-  - git commit <span class="nt">-m</span> <span class="s2">"Travis CI Auto Builder"</span>
-  - git push <span class="nt">--force</span> https://<span class="nv">$DEPLOY_TOKEN</span>@github.com/mritd/mritd.me.git master
-  - ssh root@mritd.me <span class="s2">"docker restart mritd_jekyll_1"</span>
-branches:
-  only:
-  - master
-<span class="nb">env</span>:
-  global:
-  - <span class="nv">NOKOGIRI_USE_SYSTEM_LIBRARIES</span><span class="o">=</span><span class="nb">true</span>
+COMMANDS:
+   copy               Copy an IMAGE-NAME from one location to another
+   inspect            Inspect image IMAGE-NAME
+   delete             Delete image IMAGE-NAME
+   manifest-digest    Compute a manifest digest of a file
+   <span class="nb">sync               </span>Synchronize one or more images from one location to another
+   standalone-sign    Create a signature using <span class="nb">local </span>files
+   standalone-verify  Verify a signature using <span class="nb">local </span>files
+   list-tags          List tags <span class="k">in </span>the transport/repository specified by the REPOSITORY-NAME
+   <span class="nb">help</span>, h            Shows a list of commands or <span class="nb">help </span><span class="k">for </span>one <span class="nb">command
+
+</span>GLOBAL OPTIONS:
+   <span class="nt">--debug</span>                     <span class="nb">enable </span>debug output
+   <span class="nt">--policy</span> value              Path to a trust policy file
+   <span class="nt">--insecure-policy</span>           run the tool without any policy check
+   <span class="nt">--registries</span>.d DIR          use registry configuration files <span class="k">in </span>DIR <span class="o">(</span>e.g. <span class="k">for </span>container signature storage<span class="o">)</span>
+   <span class="nt">--override-arch</span> ARCH        use ARCH instead of the architecture of the machine <span class="k">for </span>choosing images
+   <span class="nt">--override-os</span> OS            use OS instead of the running OS <span class="k">for </span>choosing images
+   <span class="nt">--override-variant</span> VARIANT  use VARIANT instead of the running architecture variant <span class="k">for </span>choosing images
+   <span class="nt">--command-timeout</span> value     <span class="nb">timeout </span><span class="k">for </span>the <span class="nb">command </span>execution <span class="o">(</span>default: 0s<span class="o">)</span>
+   <span class="nt">--help</span>, <span class="nt">-h</span>                  show <span class="nb">help</span>
+   <span class="nt">--version</span>, <span class="nt">-v</span>               print the version
 </code></pre></div></div>
 
-<p>其中 <code class="highlighter-rouge">language</code>声明使用的语言，<code class="highlighter-rouge">rvm</code> 是 ruby 的管理工具，并定义了 ruby 版本；<code class="highlighter-rouge">before_install</code> 定义了执行前的预处理动作，上面增加了一个密钥用于远程登录服务器；<code class="highlighter-rouge">script</code> 段真正定义了编译过程的命令，<code class="highlighter-rouge">after_success</code> 定义了如何 build 后如何处理发布物，<code class="highlighter-rouge">branches</code> 指定有哪些分支变动后触发 CI build，env 是一些环境变量，上面添加了一个变量(根据 jekyll 官方文档)用于加速 jekyll 编译(有些配置不理解往下看)</p>
+<p><strong>我掐指一算调用 copy 命令应该是我要找的那个它</strong>，所以常规操作打开源码直接看</p>
 
-<p><strong>具体 <code class="highlighter-rouge">.travis.yml</code> 配置请参考 <a href="https://docs.travis-ci.com/">官方文档</a></strong></p>
+<p><img src="https://cdn.oss.link/markdown/urn3l.png" alt="copy_cmd" /></p>
 
-<h4 id="23静态文件的自动更新">2.3、静态文件的自动更新</h4>
+<p>通过继续追踪 <code class="highlighter-rouge">alltransports.ParseImageName</code> 方法最终可以得知 copy 命令的 <code class="highlighter-rouge">SOURCE-IMAGE</code> 和 <code class="highlighter-rouge">DESTINATION-IMAGE</code> 都支持哪些写法</p>
 
-<p>Travis CI 在完成 build 后会在 <code class="highlighter-rouge">_site</code> 目录生成博客的静态文件，而如如何将这些静态文件发送到服务器完成更新是个待解决的问题</p>
+<p><img src="https://cdn.oss.link/markdown/ush4t.png" alt="tp_register" /></p>
 
-<h5 id="231解决思路">2.3.1、解决思路</h5>
+<p><strong>每一个 Transport 的实现都提供了 Name 方法，其名称即为 src 或 dest 镜像名称的前缀，例如 <code class="highlighter-rouge">docker://nginx:1.17.6</code></strong></p>
 
-<p>将 Travis CI 生成的静态文件推送到 Github，博客仍然 docker 化部署，采用 <code class="highlighter-rouge">nginx</code> + <code class="highlighter-rouge">静态文件</code> 方式；每次容器启动后都要从 Github pull 最新的静态文件，流程如下</p>
+<p><img src="https://cdn.oss.link/markdown/7fpap.png" alt="tp_docker" /></p>
 
-<ul>
-  <li>本地提交博客 Markdown 文件 到 Github</li>
-  <li>Github 触发 Travis CI 执行自动编译</li>
-  <li>Travis CI 编译后 push 静态文件到 Github</li>
-  <li>Travis CI 通知服务器重启博客容器</li>
-  <li>容器重启拉取最新静态文件完成更新</li>
-</ul>
+<p><strong>经过测试不同的 Transport 格式并不完全一致(具体看源码)，比如 <code class="highlighter-rouge">docker://nginx:1.17.6</code> 和 <code class="highlighter-rouge">dir:/tmp/nginx</code>；同时这些 Transport 并非完全都适用与 src 与 dest，比如 <code class="highlighter-rouge">tarball:/tmp/nginx.tar</code> 支持 src 而不支持 dest；</strong>其判断核心依据为 <code class="highlighter-rouge">ImageReference.NewImageSource</code> 和 <code class="highlighter-rouge">ImageReference.NewImageDestination</code> 方法实现是否返回 error</p>
 
-<p>流程图如下</p>
+<p><img src="https://cdn.oss.link/markdown/jb087.png" alt="NewImageDestination" /></p>
 
-<p><img src="https://cdn.oss.link/markdown/8tro9.jpg" alt="new auto deploy" /></p>
+<p>当我看了一会各种 Transport 源码后我发现一件事: <strong>这特么不就是我要造的轮子么！😱😱😱</strong></p>
 
-<h5 id="232实现方法">2.3.2、实现方法</h5>
+<h2 id="五skopeo-copy-使用">五、skopeo copy 使用</h2>
 
-<p>其实主要问题是从上面第三步开始：</p>
+<h3 id="51不借助-docker-下载镜像">5.1、不借助 docker 下载镜像</h3>
 
-<p>Travis CI push 静态文件到 Github 通过 Github 的 token 
-实现授权，代码如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>after_success:
-  - git clone https://github.com/mritd/mritd.me.git
-  - <span class="nb">cd </span>mritd.me <span class="o">&amp;&amp;</span> <span class="nb">rm</span> <span class="nt">-rf</span> <span class="k">*</span> <span class="o">&amp;&amp;</span> <span class="nb">cp</span> <span class="nt">-r</span> ../_site/<span class="k">*</span> <span class="nb">.</span>
-  - git config user.name <span class="s2">"mritd"</span>
-  - git config user.email <span class="s2">"mritd1234@gmail.com"</span>
-  - git add <span class="nt">--all</span> <span class="nb">.</span>
-  - git commit <span class="nt">-m</span> <span class="s2">"Travis CI Auto Builder"</span>
-  - git push <span class="nt">--force</span> https://<span class="nv">$DEPLOY_TOKEN</span>@github.com/mritd/mritd.me.git master
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>skopeo <span class="nt">--insecure-policy</span> copy docker://nginx:1.17.6 docker-archive:/tmp/nginx.tar
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">$DEPLOY_TOKEN</code> 是从 Github 授权得到的，然后给于相应权限即可</p>
+<p><code class="highlighter-rouge">--insecure-policy</code> 选项用于忽略安全策略配置文件，该命令将会直接通过 http 下载目标镜像并存储为 <code class="highlighter-rouge">/tmp/nginx.tar</code>，此文件可以直接通过 <code class="highlighter-rouge">docker load</code> 命令导入</p>
 
-<p><img src="https://cdn.oss.link/markdown/pco7k.jpg" alt="Github token" /></p>
+<h3 id="52从-docker-daemon-导出镜像">5.2、从 docker daemon 导出镜像</h3>
 
-<p><strong>关于代码中 <code class="highlighter-rouge">$DEPLOY_TOKEN</code> 这种重要的密码类变量，Travis CI 在每个项目下提供了设置环境变量功能，如下图</strong></p>
-
-<p><img src="https://cdn.oss.link/markdown/7zmj2.jpg" alt="setting" /></p>
-
-<p><img src="https://cdn.oss.link/markdown/0b91x.jpg" alt="add env" /></p>
-
-<p><strong>设置后可在 <code class="highlighter-rouge">.travis.yml</code> 中直接引用，不过注意一定要关闭 <code class="highlighter-rouge">Display value in build log</code> 功能，否则 CI log 中会显示 <code class="highlighter-rouge">export XXXX=XXXX</code> 这种 log 从而暴露重要密码(公有项目的 log 别人可以查看的)；如果开启了那么尽快找到相应 build 并删除 log 日志，如下</strong></p>
-
-<p><img src="https://cdn.oss.link/markdown/kal69.jpg" alt="delete log" /></p>
-
-<p>在成功 push 了静态文件以后，就要实现服务器的自动更新，自动更新很简单，只需要写个脚本让容器启动后自动 pull 即可，这里不再阐述；下面说一下怎么通知服务器重启容器，这里的思路很简单，<strong>让 CI ssh 上去执行一些 docker 命令即可</strong>；但是有个很大问题是 <strong>SSH 密码怎么整？</strong></p>
-
-<p><strong>Travis CI 提供了存放加密文件的方式，文档见 <a href="https://docs.travis-ci.com/user/encrypting-files/">这里</a></strong></p>
-
-<p>简单的说就是将你的 ssh 私钥加密以后扔进去即可，按照稳当的步骤很简单：</p>
-
-<ul>
-  <li>先安装 ruby 环境，然后用 gem 装 travis (gem install travis)</li>
-  <li>然后登陆 travis (travis login)</li>
-  <li>登陆后加密文件 (travis encrypt-file xxxx)，注意要在 <code class="highlighter-rouge">.travis.yml</code> 同级目录下执行，待加密文件可在任意位置</li>
-  <li>travis 会在 <code class="highlighter-rouge">.travis.yml</code> 写入 <code class="highlighter-rouge">before_install</code> 段解密还原回该文件，如果是 ssh 密钥的话参考上面的配置再改一下权限即可</li>
-</ul>
-
-<p>最后一个小问题是可能会有主机信任问题，因为 CI 服务器第一次连接我的服务器会出现 ssh 主机验证，官方给出的做法是添加 addons 配置</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>addons:
-  ssh_known_hosts: mritd.me
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>skopeo <span class="nt">--insecure-policy</span> copy docker-daemon:nginx:1.17.6 docker-archive:/tmp/nginx.tar
 </code></pre></div></div>
 
-<h3 id="三一些想法">三、一些想法</h3>
+<p>该命令将会从 docker daemon 导出镜像到 <code class="highlighter-rouge">/tmp/nginx.tar</code>；为什么不用 <code class="highlighter-rouge">docker save</code>？因为我是偷懒 dest 也是 docker-archive，实际上 skopeo 可以导出为其他格式比如 <code class="highlighter-rouge">oci</code>、<code class="highlighter-rouge">oci-archive</code>、<code class="highlighter-rouge">ostree</code> 等</p>
 
-<p>这只是一个小博客，所以服务中断以下无所谓；如果大型部署肯定不会直接重启容器，至少应该是 k8s 滚动升级等措施；与服务器通讯也不应该采用 ssh 方式，虽然 Travis CI 做了加密，但是总感觉不那么稳妥，最好应该写个程序开放一个 REST 接口，并做好授权，必要的话需要开启一次性认证令牌那种方式，其他的后续接着优化 ( :</p>
+<h3 id="53其他命令">5.3、其他命令</h3>
+
+<p>skopeo 还有一些其他的实用命令，比如 <code class="highlighter-rouge">sync</code> 可以在两个位置之间同步镜像(😂早知道我还写个鸡儿 gcrsync)，<code class="highlighter-rouge">inspect</code> 可以查看镜像信息等，迫于本人太懒，剩下的请自行查阅文档、<code class="highlighter-rouge">--help</code> 以及源码(没错，整篇文章都没写 skopeo 怎么安装)。</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -372,19 +310,12 @@ branches:
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2017/02/09/gcr.io-registy-proxy/" data-toggle="tooltip" data-placement="top" title="gcr.io 仓库代理">
+                        <a href="/2020/01/21/how-to-extend-the-validity-of-your-kubeadm-certificate/" data-toggle="tooltip" data-placement="top" title="kubeadm 证书期限调整">
                         Previous<br>
-                        <span>gcr.io 仓库代理</span>
+                        <span>kubeadm 证书期限调整</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2017/02/27/how-to-download-kubernetes-images-and-rpm/" data-toggle="tooltip" data-placement="top" title="如何下载 Kubernetes 镜像和 rpm">
-                        Next<br>
-                        <span>如何下载 Kubernetes 镜像和 rpm</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -540,8 +471,8 @@ branches:
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy";
-    var disqus_url = "https://mritd.me/2017/02/25/jekyll-blog-+-travis-ci-auto-deploy/";
+    var disqus_identifier = "/2020/03/31/how-to-download-docker-image-without-docker";
+    var disqus_url = "https://mritd.me/2020/03/31/how-to-download-docker-image-without-docker/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

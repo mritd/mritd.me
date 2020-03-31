@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/09/21/set-up-ha-consul-cluster/">
+        <h2 class="post-title">
+            Consul 集群搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  不知道 Consul 用的人多还是少，最近有人问怎么搭建 Consul 集群，这里顺手记录一下吧
+
+
+一、简介
+
+Consul 与 Etcd 一样，都属于分布式一致性数据库，其主要特性就是在分布式系统中出现意外情况如节点宕机的情况下保证数据的一致性；相对于 Etcd 来说，Consul 提供了更加实用的其他功能特性，如 DNS、健康检查、服务发现、多数据中心等，同时还有 web ui ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 21, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/09/20/set-up-ha-kubernetes-cluster-on-aliyun-ecs/">
         <h2 class="post-title">
             阿里云部署 Kubernetes
@@ -379,28 +401,6 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/05/12/docker-uses-the-host-network-segment-ip/">
-        <h2 class="post-title">
-            Docker 分配宿主机网段 IP
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  工作需要临时启动一个 gitlab,无奈 gitlab 需要 ssh 的 22 端口;而使用传统网桥方式映射端口则 clone 等都需要输入端口号,很麻烦;22 端口宿主机又有 sshd 监听;研究了下 docker 网络,记录一下如何分配宿主机网段 IP
-
-
-创建 macvlan 网络
-
-关于 Docker 网络模式这里不再细说;由于默认的网桥方式无法满足需要,所以需要创建一个 ma...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on May 12, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -465,7 +465,7 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
                             
                         
                             
-                                <a href="/tags/#Docker" title="Docker" rel="43">
+                                <a href="/tags/#Docker" title="Docker" rel="44">
                                     Docker
                                 </a>
                             
