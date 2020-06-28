@@ -213,12 +213,12 @@
 
 <h3 id="11获取源码">1.1、获取源码</h3>
 
-<p>需要注意的是 Kubernetes 源码虽然托管在 Github，但是在使用 <code class="highlighter-rouge">go get</code> 的时候要使用 <code class="highlighter-rouge">k8s.io</code> 域名</p>
+<p>需要注意的是 Kubernetes 源码虽然托管在 Github，但是在使用 <code class="language-plaintext highlighter-rouge">go get</code> 的时候要使用 <code class="language-plaintext highlighter-rouge">k8s.io</code> 域名</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go get <span class="nt">-d</span> k8s.io/kubernetes
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">go get</code> 命令是接受标准的 http 代理的，这个源码下载会非常慢，源码大约 1G 左右，所以最好使用加速工具下载</p>
+<p><code class="language-plaintext highlighter-rouge">go get</code> 命令是接受标准的 http 代理的，这个源码下载会非常慢，源码大约 1G 左右，所以最好使用加速工具下载</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ which proxy
 /usr/local/bin/proxy
@@ -275,7 +275,7 @@ go get <span class="nt">-u</span> github.com/derekparker/delve/cmd/dlv
 
 <p><img src="https://cdn.oss.link/markdown/ns2yw.png" alt="debug" /></p>
 
-<p><strong>在没有运行 GoLand debug 之前，目标机器的实际指令是不会运行的，也就是说在 GoLand 没有连接到远程 delve 启动的 <code class="highlighter-rouge">kubeadm init</code> 命令之前，<code class="highlighter-rouge">kubeadm init</code> 并不会真正运行；当点击 GoLand 的终止 debug 按钮后，远程的 delve 也会随之退出</strong></p>
+<p><strong>在没有运行 GoLand debug 之前，目标机器的实际指令是不会运行的，也就是说在 GoLand 没有连接到远程 delve 启动的 <code class="language-plaintext highlighter-rouge">kubeadm init</code> 命令之前，<code class="language-plaintext highlighter-rouge">kubeadm init</code> 并不会真正运行；当点击 GoLand 的终止 debug 按钮后，远程的 delve 也会随之退出</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/lmdke.png" alt="stop" /></p>
 
@@ -382,7 +382,7 @@ go get <span class="nt">-u</span> github.com/derekparker/delve/cmd/dlv
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

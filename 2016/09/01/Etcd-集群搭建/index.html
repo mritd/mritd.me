@@ -250,7 +250,7 @@
 
 <h3 id="23修改-etcd-配置">2.3、修改 Etcd 配置</h3>
 
-<p>yum 安装的 Etcd 默认配置文件在 <code class="highlighter-rouge">/etc/etcd/etcd.conf</code>，以下为 <code class="highlighter-rouge">etcd0</code> 上的样例(etcd1、etcd2同理)：</p>
+<p>yum 安装的 Etcd 默认配置文件在 <code class="language-plaintext highlighter-rouge">/etc/etcd/etcd.conf</code>，以下为 <code class="language-plaintext highlighter-rouge">etcd0</code> 上的样例(etcd1、etcd2同理)：</p>
 
 <div class="language-vim highlighter-rouge"><div class="highlight"><pre class="highlight"><code># 编辑配置文件
 <span class="k">vim</span> <span class="sr">/etc/</span>etcd/etcd<span class="p">.</span><span class="k">conf</span>
@@ -278,11 +278,11 @@ ETCD_ADVERTISE_CLIENT_URLS<span class="p">=</span><span class="s2">"http://192.1
 
 <h3 id="24测试">2.4、测试</h3>
 
-<p>集群搭建好后，在任意节点执行 <code class="highlighter-rouge">etcdctl member list</code> 可列所有集群节点信息，如下所示</p>
+<p>集群搭建好后，在任意节点执行 <code class="language-plaintext highlighter-rouge">etcdctl member list</code> 可列所有集群节点信息，如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_etcd_getallnodes.png" alt="hexo_etcd_getallnodes" /></p>
 
-<p>同时可以使用 <code class="highlighter-rouge">etcdctl cluster-health</code> 检查集群健康状态</p>
+<p>同时可以使用 <code class="language-plaintext highlighter-rouge">etcdctl cluster-health</code> 检查集群健康状态</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_etcd_checkhealth.png" alt="hexo_etcd_checkhealth" /></p>
 
@@ -329,7 +329,7 @@ etcd3.mritd.me.         0       IN      A       192.168.1.249
 
 <h3 id="32修改-dns-服务器">3.2、修改 DNS 服务器</h3>
 
-<p>Linux 系统默认从 <code class="highlighter-rouge">/etc/resolv.conf</code> 配置文件读取 DNS 服务器，为了让 Etcd 能够从 dnsmasq 服务器获取自定义域名解析，<strong>要修改3台 Etcd 服务器的 <code class="highlighter-rouge">/etc/resolv.conf</code> 文件</strong></p>
+<p>Linux 系统默认从 <code class="language-plaintext highlighter-rouge">/etc/resolv.conf</code> 配置文件读取 DNS 服务器，为了让 Etcd 能够从 dnsmasq 服务器获取自定义域名解析，<strong>要修改3台 Etcd 服务器的 <code class="language-plaintext highlighter-rouge">/etc/resolv.conf</code> 文件</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 resolv.conf 文件</span>
 vim /etc/resolv.conf
@@ -343,7 +343,7 @@ nameserver 192.168.1.106
 
 <h3 id="33配置-etcd">3.3、配置 Etcd</h3>
 
-<p>接下来修改 Etcd 配置文件，开启 DNS 服务发现，主要是删除掉 <code class="highlighter-rouge">ETCD_INITIAL_CLUSTER</code> 字段(用于静态服务发现)，并指定 DNS SRV 域名(<code class="highlighter-rouge">ETCD_DISCOVERY_SRV</code>)</p>
+<p>接下来修改 Etcd 配置文件，开启 DNS 服务发现，主要是删除掉 <code class="language-plaintext highlighter-rouge">ETCD_INITIAL_CLUSTER</code> 字段(用于静态服务发现)，并指定 DNS SRV 域名(<code class="language-plaintext highlighter-rouge">ETCD_DISCOVERY_SRV</code>)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 etcd 配置文件</span>
 vim /etc/etcd/etcd.conf
@@ -399,7 +399,7 @@ https://discovery.etcd.io/f6a252c5240cc89b91fa00dac95d5732
 
 <h3 id="42修改配置">4.2、修改配置</h3>
 
-<p>依次编辑3个节点的 Etcd 配置文件，主要指定 <code class="highlighter-rouge">ETCD_DISCOVERY</code> 参数为获取的集群标识即可</p>
+<p>依次编辑3个节点的 Etcd 配置文件，主要指定 <code class="language-plaintext highlighter-rouge">ETCD_DISCOVERY</code> 参数为获取的集群标识即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 etcd 配置文件</span>
 vim /etc/etcd/etcd.conf
@@ -536,7 +536,7 @@ vim /etc/etcd/etcd.conf
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -192,7 +192,7 @@
                 <!-- Multi-Lingual -->
                 
 
-                <p>当使用 Weblogic 作为中间件，并且 Web 项目部署方式为 war 包部署时，jsp 页面<code class="highlighter-rouge">request.getContextPath()</code> 将返回 null，此时加入以下代码设置 <code class="highlighter-rouge">webRoot</code> 即可：</p>
+                <p>当使用 Weblogic 作为中间件，并且 Web 项目部署方式为 war 包部署时，jsp 页面<code class="language-plaintext highlighter-rouge">request.getContextPath()</code> 将返回 null，此时加入以下代码设置 <code class="language-plaintext highlighter-rouge">webRoot</code> 即可：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">String</span> <span class="n">webRoot</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getSession</span><span class="o">().</span><span class="na">getServletContext</span><span class="o">().</span><span class="na">getRealPath</span><span class="o">(</span><span class="s">"/"</span><span class="o">);</span>
 <span class="k">if</span><span class="o">(</span><span class="n">webRoot</span> <span class="o">==</span> <span class="kc">null</span><span class="o">){</span>
@@ -303,7 +303,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

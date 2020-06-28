@@ -198,7 +198,7 @@
 
 <h4 id="安装-vnc-server">安装 VNC Server</h4>
 
-<p>VNC Server 软件有很多，这里使用 <code class="highlighter-rouge">tigervnc-server</code></p>
+<p>VNC Server 软件有很多，这里使用 <code class="language-plaintext highlighter-rouge">tigervnc-server</code></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum <span class="nb">install </span>epel-release <span class="nt">-y</span>
 yum makecache
@@ -207,7 +207,7 @@ yum <span class="nb">install </span>tigervnc-server <span class="nt">-y</span>
 
 <h4 id="开机自启动">开机自启动</h4>
 
-<p>这地方踩了很多坑，网上不少帖子都是写的先测试 VNC Server，执行 <code class="highlighter-rouge">vncserver</code> 命令，然后云云；查设置开机自启动也是五花八门，大部分人的路子就是自己写一个 init 脚本，让系统开机时候执行它…… 从职业踩坑经验来看，这东西绝对有更有逼格的 Systemd 的打开方式；果不其然翻了一下 rpm 包 发现了一个 Systemd 模板 Service</p>
+<p>这地方踩了很多坑，网上不少帖子都是写的先测试 VNC Server，执行 <code class="language-plaintext highlighter-rouge">vncserver</code> 命令，然后云云；查设置开机自启动也是五花八门，大部分人的路子就是自己写一个 init 脚本，让系统开机时候执行它…… 从职业踩坑经验来看，这东西绝对有更有逼格的 Systemd 的打开方式；果不其然翻了一下 rpm 包 发现了一个 Systemd 模板 Service</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@mritd ~]# rpm <span class="nt">-ql</span>  tigervnc-server
 /etc/sysconfig/vncservers
@@ -218,7 +218,7 @@ yum <span class="nb">install </span>tigervnc-server <span class="nt">-y</span>
 /usr/share/man/man1/x0vncserver.1.gz
 </code></pre></div></div>
 
-<p>由于好奇心作祟，先 <code class="highlighter-rouge">systemctl enable vncserver@:1.service</code> 了一下，后来发现起不来，所以 vim 看了一下原模板 Service，里面想写描述了如何设置开机启动</p>
+<p>由于好奇心作祟，先 <code class="language-plaintext highlighter-rouge">systemctl enable vncserver@:1.service</code> 了一下，后来发现起不来，所以 vim 看了一下原模板 Service，里面想写描述了如何设置开机启动</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Quick HowTo:</span>
 <span class="c"># 1. Copy this file to /etc/systemd/system/vncserver@.service</span>
@@ -230,7 +230,7 @@ yum <span class="nb">install </span>tigervnc-server <span class="nt">-y</span>
 <span class="c"># 4. Run `systemctl enable vncserver@:&lt;display&gt;.service`</span>
 </code></pre></div></div>
 
-<p>也就是说把这个模板文件 cp 到 <code class="highlighter-rouge">/etc/systemd/system/vncserver@.service</code> 然后替换用户名，执行两条命令，最后执行 <code class="highlighter-rouge">vncserver</code> 用于初始化密码和配置文件就行了</p>
+<p>也就是说把这个模板文件 cp 到 <code class="language-plaintext highlighter-rouge">/etc/systemd/system/vncserver@.service</code> 然后替换用户名，执行两条命令，最后执行 <code class="language-plaintext highlighter-rouge">vncserver</code> 用于初始化密码和配置文件就行了</p>
 
 <p>重装了一天系统，有点烦躁，听首歌安静一下…</p>
 
@@ -339,7 +339,7 @@ yum <span class="nb">install </span>tigervnc-server <span class="nt">-y</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

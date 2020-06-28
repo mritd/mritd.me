@@ -202,11 +202,11 @@
 
 <h2 id="二已废弃修改方式">二、已废弃修改方式</h2>
 
-<p>目前大部份人还是习惯修改 <code class="highlighter-rouge">/etc/resolv.conf</code> 配置文件，这个配置文件上面已经明确标注了不要去修改它；<strong>因为自 Systemd 一统江山以后，系统 DNS 已经被 <code class="highlighter-rouge">systemd-resolved</code> 服务接管；一但修改了 <code class="highlighter-rouge">/etc/resolv.conf</code>，机器重启后就会被恢复；</strong>所以根源解决方案还是需要修改 <code class="highlighter-rouge">systemd-resolved</code> 的配置。</p>
+<p>目前大部份人还是习惯修改 <code class="language-plaintext highlighter-rouge">/etc/resolv.conf</code> 配置文件，这个配置文件上面已经明确标注了不要去修改它；<strong>因为自 Systemd 一统江山以后，系统 DNS 已经被 <code class="language-plaintext highlighter-rouge">systemd-resolved</code> 服务接管；一但修改了 <code class="language-plaintext highlighter-rouge">/etc/resolv.conf</code>，机器重启后就会被恢复；</strong>所以根源解决方案还是需要修改 <code class="language-plaintext highlighter-rouge">systemd-resolved</code> 的配置。</p>
 
 <h2 id="三netplan-的调整">三、netplan 的调整</h2>
 
-<p>在调整完 <code class="highlighter-rouge">systemd-resolved</code> 配置后其实有些地方仍然是不生效的；<strong>原因是 Ubuntu 18 开始网络已经被 netplan 接管，所以问题又回到了如何修改 netplan；</strong>由于云服务器初始化全部是由 cloud-init 完成的，netplan 配置里 IP 全部是由 DHCP 完成；那么直接修改 netplan 为 static IP 理论上可行，但是事实上还是不够优雅；后来研究了一下其实更优雅的方式是覆盖掉 DHCP 的某些配置，比如 DNS 配置；在阿里云上配置如下(<code class="highlighter-rouge">/etc/netplan/99-netcfg.yaml</code>)</p>
+<p>在调整完 <code class="language-plaintext highlighter-rouge">systemd-resolved</code> 配置后其实有些地方仍然是不生效的；<strong>原因是 Ubuntu 18 开始网络已经被 netplan 接管，所以问题又回到了如何修改 netplan；</strong>由于云服务器初始化全部是由 cloud-init 完成的，netplan 配置里 IP 全部是由 DHCP 完成；那么直接修改 netplan 为 static IP 理论上可行，但是事实上还是不够优雅；后来研究了一下其实更优雅的方式是覆盖掉 DHCP 的某些配置，比如 DNS 配置；在阿里云上配置如下(<code class="language-plaintext highlighter-rouge">/etc/netplan/99-netcfg.yaml</code>)</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">network</span><span class="pi">:</span>
   <span class="na">version</span><span class="pi">:</span> <span class="m">2</span>
@@ -223,7 +223,7 @@
         <span class="na">addresses</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">172.17.3.17</span><span class="pi">]</span>
 </code></pre></div></div>
 
-<p>修改完成后执行 <code class="highlighter-rouge">netplan try</code> 等待几秒钟，如果屏幕的读秒倒计时一直在动，说明修改没问题，接着回车既可(尽量不要 <code class="highlighter-rouge">netplan apply</code>，一旦修改错误你就再也连不上了…)</p>
+<p>修改完成后执行 <code class="language-plaintext highlighter-rouge">netplan try</code> 等待几秒钟，如果屏幕的读秒倒计时一直在动，说明修改没问题，接着回车既可(尽量不要 <code class="language-plaintext highlighter-rouge">netplan apply</code>，一旦修改错误你就再也连不上了…)</p>
 
 <h2 id="四dns-分流">四、DNS 分流</h2>
 
@@ -269,7 +269,7 @@
 
 <h2 id="五关于-docker">五、关于 docker</h2>
 
-<p>当 netplan 修改完成后，只需要重启 docker 既可保证 docker 内所有容器 DNS 请求全部发送到自己定义的 DNS 服务器上；<strong>请不要尝试将自己的 CoreDNS 监听到 <code class="highlighter-rouge">127.*</code> 或者 <code class="highlighter-rouge">::1</code> 上，这两个地址会导致 docker 中的 DNS 无效</strong>，因为在 <a href="https://github.com/docker/libnetwork/blob/fec6476dfa21380bf8ee4d74048515d968c1ee63/resolvconf/resolvconf.go#L148">libnetwork</a> 中针对这两个地址做了过滤，并且 <code class="highlighter-rouge">FilterResolvDNS</code> 方法在剔除这两种地址时不会给予任何警告日志</p>
+<p>当 netplan 修改完成后，只需要重启 docker 既可保证 docker 内所有容器 DNS 请求全部发送到自己定义的 DNS 服务器上；<strong>请不要尝试将自己的 CoreDNS 监听到 <code class="language-plaintext highlighter-rouge">127.*</code> 或者 <code class="language-plaintext highlighter-rouge">::1</code> 上，这两个地址会导致 docker 中的 DNS 无效</strong>，因为在 <a href="https://github.com/docker/libnetwork/blob/fec6476dfa21380bf8ee4d74048515d968c1ee63/resolvconf/resolvconf.go#L148">libnetwork</a> 中针对这两个地址做了过滤，并且 <code class="language-plaintext highlighter-rouge">FilterResolvDNS</code> 方法在剔除这两种地址时不会给予任何警告日志</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -374,7 +374,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

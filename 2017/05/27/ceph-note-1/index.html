@@ -238,7 +238,7 @@ ntpdate 0.cn.pool.ntp.org
 
 <h4 id="13创建集群配置">1.3、创建集群配置</h4>
 
-<p>ceph-deploy 工具部署集群前需要创建一些集群配置信息，其保存在 <code class="highlighter-rouge">ceph.conf</code> 文件中，这个文件未来将会被复制到每个节点的 <code class="highlighter-rouge">/etc/ceph/ceph.conf</code></p>
+<p>ceph-deploy 工具部署集群前需要创建一些集群配置信息，其保存在 <code class="language-plaintext highlighter-rouge">ceph.conf</code> 文件中，这个文件未来将会被复制到每个节点的 <code class="language-plaintext highlighter-rouge">/etc/ceph/ceph.conf</code></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建集群配置目录</span>
 <span class="nb">mkdir </span>ceph-cluster <span class="o">&amp;&amp;</span> <span class="nb">cd </span>ceph-cluster
@@ -252,7 +252,7 @@ ceph-deploy new docker1
 
 <p>创建集群使用 ceph-deploy 工具即可</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># 安装 ceph
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># 安装 ceph
 ceph-deploy install docker1 docker2 docker3
 # 初始化 monitor node 和 秘钥文件
 ceph-deploy mon create-initial
@@ -271,7 +271,7 @@ chmod +r /etc/ceph/ceph.client.admin.keyring
 ceph health
 </code></pre></div></div>
 
-<p>执行 <code class="highlighter-rouge">ceph health</code> 命令后应当返回 <code class="highlighter-rouge">HEALTH_OK</code>；如出现 <code class="highlighter-rouge">HEALTH_WARN clock skew detected on mon.docker2; Monitor clock skew detected</code>，说明时钟不同步，手动同步时钟稍等片刻后即可；其他错误可以通过如下命令重置集群重新部署</p>
+<p>执行 <code class="language-plaintext highlighter-rouge">ceph health</code> 命令后应当返回 <code class="language-plaintext highlighter-rouge">HEALTH_OK</code>；如出现 <code class="language-plaintext highlighter-rouge">HEALTH_WARN clock skew detected on mon.docker2; Monitor clock skew detected</code>，说明时钟不同步，手动同步时钟稍等片刻后即可；其他错误可以通过如下命令重置集群重新部署</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ceph-deploy purge <span class="o">{</span>ceph-node<span class="o">}</span> <span class="o">[{</span>ceph-node<span class="o">}]</span>
 ceph-deploy purgedata <span class="o">{</span>ceph-node<span class="o">}</span> <span class="o">[{</span>ceph-node<span class="o">}]</span>
@@ -373,7 +373,7 @@ map foo <span class="nt">--name</span> client.admin
 
 <p><strong>问题原因: 在 Ceph 高版本进行 map image 时，默认 Ceph 在创建 image(上文 data)时会增加许多 features，这些 features 需要内核支持，在 Centos7 的内核上支持有限，所以需要手动关掉一些 features</strong></p>
 
-<p>首先使用 <code class="highlighter-rouge">rbd info data</code> 命令列出创建的 image 的 features</p>
+<p>首先使用 <code class="language-plaintext highlighter-rouge">rbd info data</code> 命令列出创建的 image 的 features</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rbd image <span class="s1">'data'</span>:
         size 10240 MB <span class="k">in </span>2560 objects
@@ -396,7 +396,7 @@ map foo <span class="nt">--name</span> client.admin
   <li>journaling: 支持记录 IO 操作(依赖独占锁）</li>
 </ul>
 
-<p><strong>而实际上 Centos 7 的 3.10 内核只支持 layering… 所以我们要手动关闭一些 features，然后重新 map；如果想要一劳永逸，可以在 ceph.conf 中加入 <code class="highlighter-rouge">rbd_default_features = 1</code> 来设置默认 features(数值仅是 layering 对应的 bit 码所对应的整数值)。</strong></p>
+<p><strong>而实际上 Centos 7 的 3.10 内核只支持 layering… 所以我们要手动关闭一些 features，然后重新 map；如果想要一劳永逸，可以在 ceph.conf 中加入 <code class="language-plaintext highlighter-rouge">rbd_default_features = 1</code> 来设置默认 features(数值仅是 layering 对应的 bit 码所对应的整数值)。</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 关闭不支持特性</span>
 rbd feature disable data exclusive-lock, object-map, fast-diff, deep-flatten
@@ -449,9 +449,9 @@ ceph fs new testfs cephfs_metadata cephfs_data
   <li>单个存储池 PG 数 = (OSD 总数 * 100) / 数据最大副本数 /存储池数</li>
 </ul>
 
-<p><strong>注意，PG 最终结果应当为最接近以上计算公式的 2 的 N 次幂(向上取值)；如我的虚拟机环境每个存储池 PG 数 = <code class="highlighter-rouge">3(OSD) * 100 / 3(副本) / 5(大约 5 个存储池) = 20</code>，向上取 2 的 N 次幂 为 32</strong></p>
+<p><strong>注意，PG 最终结果应当为最接近以上计算公式的 2 的 N 次幂(向上取值)；如我的虚拟机环境每个存储池 PG 数 = <code class="language-plaintext highlighter-rouge">3(OSD) * 100 / 3(副本) / 5(大约 5 个存储池) = 20</code>，向上取 2 的 N 次幂 为 32</strong></p>
 
-<p>挂载 CephFS 一般有两种方式，一种是使用内核驱动挂载，一种是使用 <code class="highlighter-rouge">ceph-fuse</code> 用户空间挂载；内核方式挂载需要提取 Ceph 管理 key，如下</p>
+<p>挂载 CephFS 一般有两种方式，一种是使用内核驱动挂载，一种是使用 <code class="language-plaintext highlighter-rouge">ceph-fuse</code> 用户空间挂载；内核方式挂载需要提取 Ceph 管理 key，如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># key 在 ceph.conf 中</span>
 <span class="nb">echo</span> <span class="s2">"AQB37CZZblBkDRAAUrIrRGsHj/NqdKmVlMQ7ww=="</span> <span class="o">&gt;</span> ceph-key
@@ -465,7 +465,7 @@ mount <span class="nt">-t</span> ceph 192.168.1.11:6789:/ /root/test2 <span clas
 1073741824字节<span class="o">(</span>1.1 GB<span class="o">)</span>已复制，6.83251 秒，157 MB/秒
 </code></pre></div></div>
 
-<p>使用 ceph-fuse 用户空间挂载方式比较简单，但需要先安装 <code class="highlighter-rouge">ceph-fuse</code> 软件包</p>
+<p>使用 ceph-fuse 用户空间挂载方式比较简单，但需要先安装 <code class="language-plaintext highlighter-rouge">ceph-fuse</code> 软件包</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 ceph-fuse</span>
 yum <span class="nb">install</span> <span class="nt">-y</span> ceph-fuse
@@ -481,7 +481,7 @@ ceph-fuse <span class="nt">-m</span> 192.168.1.11:6789 test3
 
 <h4 id="25对象网关测试">2.5、对象网关测试</h4>
 
-<p>对象网关在 <strong>1.5、其他组件创建</strong> 部分已经做了创建(RGW)，此时直接访问 <code class="highlighter-rouge">http://ceph-node-ip:7480</code> 返回如下</p>
+<p>对象网关在 <strong>1.5、其他组件创建</strong> 部分已经做了创建(RGW)，此时直接访问 <code class="language-plaintext highlighter-rouge">http://ceph-node-ip:7480</code> 返回如下</p>
 
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;ListAllMyBucketsResult</span> <span class="na">xmlns=</span><span class="s">"http://s3.amazonaws.com/doc/2006-03-01/"</span><span class="nt">&gt;</span>
     <span class="nt">&lt;Owner&gt;</span>
@@ -599,7 +599,7 @@ ceph-fuse <span class="nt">-m</span> 192.168.1.11:6789 test3
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -204,7 +204,7 @@
 
 <h3 id="11san-证书扩展域名配置">1.1、SAN 证书扩展域名配置</h3>
 
-<p><strong>默认的 OpenSSL 生成的签名请求只适用于生成时填写的域名，即 <code class="highlighter-rouge">Common Name</code> 填的是哪个域名，证书就只能应用于哪个域名，但是一般内网都是以 IP 方式部署，所以需要添加 SAN(Subject Alternative Name) 扩展信息，以支持多域名和IP</strong></p>
+<p><strong>默认的 OpenSSL 生成的签名请求只适用于生成时填写的域名，即 <code class="language-plaintext highlighter-rouge">Common Name</code> 填的是哪个域名，证书就只能应用于哪个域名，但是一般内网都是以 IP 方式部署，所以需要添加 SAN(Subject Alternative Name) 扩展信息，以支持多域名和IP</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先 cp 一份 openssl 配置</span>
 <span class="nb">cp</span> /etc/ssl/openssl.cnf <span class="nb">.</span>
@@ -415,7 +415,7 @@ docker-compose down
 docker-compose up <span class="nt">-d</span>
 </code></pre></div></div>
 
-<p>此时访问 <code class="highlighter-rouge">https://hostname</code> 即可</p>
+<p>此时访问 <code class="language-plaintext highlighter-rouge">https://hostname</code> 即可</p>
 
 <h3 id="22客户端配置">2.2、客户端配置</h3>
 
@@ -434,7 +434,7 @@ service docker restart
 
 <h3 id="23客户端测试">2.3、客户端测试</h3>
 
-<p>客户端直接登录，并 push 即可，<strong>如果原来修改过 <code class="highlighter-rouge">/etc/default/docker</code> 文件的，并加入了 <code class="highlighter-rouge">--insecure-registry</code> 选项的需要将其去除</strong></p>
+<p>客户端直接登录，并 push 即可，<strong>如果原来修改过 <code class="language-plaintext highlighter-rouge">/etc/default/docker</code> 文件的，并加入了 <code class="language-plaintext highlighter-rouge">--insecure-registry</code> 选项的需要将其去除</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 登录 如果登录成功就代表没问题了</span>
 docker login 10.211.55.16
@@ -544,7 +544,7 @@ docker push 10.211.55.16/mritd/nginx:1.9
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

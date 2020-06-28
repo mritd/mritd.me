@@ -464,7 +464,7 @@ tctl <span class="nt">--config</span> /etc/teleport/teleport.yaml <span class="n
 
 <h3 id="四搭建内网-master">四、搭建内网 Master</h3>
 
-<p>内网搭建 Master 和公网类似，只不过为了安全将所有 <code class="highlighter-rouge">0.0.0.0</code> 的地址全部换成内网 IP 即可，以下为内网的配置信息</p>
+<p>内网搭建 Master 和公网类似，只不过为了安全将所有 <code class="language-plaintext highlighter-rouge">0.0.0.0</code> 的地址全部换成内网 IP 即可，以下为内网的配置信息</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># By default, this file should be stored in /etc/teleport.yaml</span>
 
@@ -643,7 +643,7 @@ systemctl start teleport
 
 <h4 id="51公网-master-开启授信集群">5.1、公网 Master 开启授信集群</h4>
 
-<p>在公网 Master 增加 Token 配置，以允许持有该 Token 的其他内网集群连接到此，修改 <code class="highlighter-rouge">/etc/teleport/teleport.yaml</code> 增加一个 token 即可</p>
+<p>在公网 Master 增加 Token 配置，以允许持有该 Token 的其他内网集群连接到此，修改 <code class="language-plaintext highlighter-rouge">/etc/teleport/teleport.yaml</code> 增加一个 token 即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tokens:
     - <span class="s2">"proxy,node:jYektagNTmhjv9Dh"</span>
@@ -685,12 +685,12 @@ systemctl start teleport
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tctl <span class="nt">--config</span> /etc/teleport/teleport.yaml create /etc/teleport/cluster.yaml
 </code></pre></div></div>
 
-<p><strong>注意，如果在启动公网和内网集群时没有指定受信的证书( <code class="highlighter-rouge">https_cert_file</code>、<code class="highlighter-rouge">https_key_file</code> )，那么默认 Teleport 将会生成一个自签名证书，此时在 create 受信集群时将会产生如下错误:</strong></p>
+<p><strong>注意，如果在启动公网和内网集群时没有指定受信的证书( <code class="language-plaintext highlighter-rouge">https_cert_file</code>、<code class="language-plaintext highlighter-rouge">https_key_file</code> )，那么默认 Teleport 将会生成一个自签名证书，此时在 create 受信集群时将会产生如下错误:</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>the trusted cluster uses misconfigured HTTP/TLS certificate
 </code></pre></div></div>
 
-<p>此时需要在 <strong>待添加集群(内网)</strong> 启动时增加 <code class="highlighter-rouge">--insecure</code> 参数，即 Systemd 配置修改如下</p>
+<p>此时需要在 <strong>待添加集群(内网)</strong> 启动时增加 <code class="language-plaintext highlighter-rouge">--insecure</code> 参数，即 Systemd 配置修改如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
 <span class="nv">Description</span><span class="o">=</span>Teleport SSH Service
@@ -711,7 +711,7 @@ systemctl start teleport
 
 <p>两台节点打通后，此时如果有其他机器则可以将其加入到对应集群中，以下以另一台内网机器为例</p>
 
-<p>由于在主节点 <code class="highlighter-rouge">auth_service</code> 中已经预先指定了一个 static Token 用于其他节点加入( <code class="highlighter-rouge">proxy,node:jYektagNTmhjv9Dh</code> )，所以其他节点只需要使用这个 Token 加入即可，在另一台内网主机上修改 Systemd 配置如下，然后启动即可</p>
+<p>由于在主节点 <code class="language-plaintext highlighter-rouge">auth_service</code> 中已经预先指定了一个 static Token 用于其他节点加入( <code class="language-plaintext highlighter-rouge">proxy,node:jYektagNTmhjv9Dh</code> )，所以其他节点只需要使用这个 Token 加入即可，在另一台内网主机上修改 Systemd 配置如下，然后启动即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Unit]
 <span class="nv">Description</span><span class="o">=</span>Teleport SSH Service
@@ -741,7 +741,7 @@ mritd.test1 be9080fb-bdba-4823-9fb6-294e0b0dcce3 172.16.0.80:3022 <span class="n
 
 <h4 id="71web-测试">7.1、Web 测试</h4>
 
-<p>Teleport 支持 Web 页面访问，直接访问 <code class="highlighter-rouge">https://公网IP:3080</code>，然后登陆即可，登陆后如下</p>
+<p>Teleport 支持 Web 页面访问，直接访问 <code class="language-plaintext highlighter-rouge">https://公网IP:3080</code>，然后登陆即可，登陆后如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/9yf6k.png" alt="Web login" /></p>
 
@@ -755,7 +755,7 @@ mritd.test1 be9080fb-bdba-4823-9fb6-294e0b0dcce3 172.16.0.80:3022 <span class="n
 
 <h4 id="72命令行测试">7.2、命令行测试</h4>
 
-<p>类 Uninx 系统下我们还是习惯使用终端登录，终端登录需要借助 Teleport 的命令行工具 <code class="highlighter-rouge">tsh</code>，<code class="highlighter-rouge">tsh</code> 在下载的 release 压缩版中已经有了，具体使用文档请自行 help 和参考官方文档，以下为简单的使用示例</p>
+<p>类 Uninx 系统下我们还是习惯使用终端登录，终端登录需要借助 Teleport 的命令行工具 <code class="language-plaintext highlighter-rouge">tsh</code>，<code class="language-plaintext highlighter-rouge">tsh</code> 在下载的 release 压缩版中已经有了，具体使用文档请自行 help 和参考官方文档，以下为简单的使用示例</p>
 
 <ul>
   <li>登录跳板机: 短时间内只需要登录一次即可，登录时需要输入密码及 OTP 口令</li>
@@ -886,7 +886,7 @@ tsh ssh <span class="nt">--cluster</span> nat root@test2.node
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

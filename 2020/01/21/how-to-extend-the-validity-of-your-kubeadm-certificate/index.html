@@ -205,7 +205,7 @@
   <li>手动定期续期</li>
 </ul>
 
-<p>自动滚动续期类型的证书目前从我所阅读文档和实际测试中目前只有 kubelet 的 client 证书；kubelet client 证书自动滚动涉及到了 <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-tls-bootstrapping/">TLS bootstrapping</a> 部份，<strong>其核心由两个 ClusterRole 完成(<code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code> 和 <code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:selfnodeclient</code>)，针对这两个 ClusterRole kubeadm 在引导期间创建了 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#create-a-bootstrap-token">bootstrap token</a> 来完成引导期间证书签发(该 Token 24h 失效)，后续通过预先创建的 ClusterRoleBinding(<code class="highlighter-rouge">kubeadm:node-autoapprove-bootstrap</code> 和 <code class="highlighter-rouge">kubeadm:node-autoapprove-certificate-rotation</code>) 完成自动的 node 证书续期；</strong>kubelet client 证书续期部份涉及到 TLS bootstrapping 太多了，有兴趣的可以仔细查看(最后还是友情提醒: <strong>用 kubeadm 一定要看看 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details">Implementation details</a></strong>)。</p>
+<p>自动滚动续期类型的证书目前从我所阅读文档和实际测试中目前只有 kubelet 的 client 证书；kubelet client 证书自动滚动涉及到了 <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-tls-bootstrapping/">TLS bootstrapping</a> 部份，<strong>其核心由两个 ClusterRole 完成(<code class="language-plaintext highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code> 和 <code class="language-plaintext highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:selfnodeclient</code>)，针对这两个 ClusterRole kubeadm 在引导期间创建了 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/#create-a-bootstrap-token">bootstrap token</a> 来完成引导期间证书签发(该 Token 24h 失效)，后续通过预先创建的 ClusterRoleBinding(<code class="language-plaintext highlighter-rouge">kubeadm:node-autoapprove-bootstrap</code> 和 <code class="language-plaintext highlighter-rouge">kubeadm:node-autoapprove-certificate-rotation</code>) 完成自动的 node 证书续期；</strong>kubelet client 证书续期部份涉及到 TLS bootstrapping 太多了，有兴趣的可以仔细查看(最后还是友情提醒: <strong>用 kubeadm 一定要看看 <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details">Implementation details</a></strong>)。</p>
 
 <p>手动续期的证书目前需要在到期前使用 kubeadm 命令自行续期，这些证书目前可以通过以下命令列出</p>
 
@@ -229,7 +229,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <h2 id="二证书期限调整">二、证书期限调整</h2>
 
-<p>上面已经提到了，手动管理部份的证书需要自己用命令续签(<code class="highlighter-rouge">kubeadm alpha certs renew all</code>)，而且你会发现续签以后有效期还是 1 年；kubeadm 的初衷是 <strong>“为快速创建 kubernetes 集群的最佳实践”</strong>，当然最佳实践包含确保证书安全性，毕竟 Let’s Encrypt 的证书有效期只有 3 个月的情况下 kubeadm 有效期有 1 年已经很不错了；但是对于最佳实践来说，我们公司的集群安全性并不需要那么高，一年续期一次无疑在增加运维人员心智负担(它并不最佳)，所以我们迫切需要一种 “一劳永逸” 的解决方案；当然我目前能想到的就是找到证书签发时在哪设置的有效期，然后想办法改掉它。</p>
+<p>上面已经提到了，手动管理部份的证书需要自己用命令续签(<code class="language-plaintext highlighter-rouge">kubeadm alpha certs renew all</code>)，而且你会发现续签以后有效期还是 1 年；kubeadm 的初衷是 <strong>“为快速创建 kubernetes 集群的最佳实践”</strong>，当然最佳实践包含确保证书安全性，毕竟 Let’s Encrypt 的证书有效期只有 3 个月的情况下 kubeadm 有效期有 1 年已经很不错了；但是对于最佳实践来说，我们公司的集群安全性并不需要那么高，一年续期一次无疑在增加运维人员心智负担(它并不最佳)，所以我们迫切需要一种 “一劳永逸” 的解决方案；当然我目前能想到的就是找到证书签发时在哪设置的有效期，然后想办法改掉它。</p>
 
 <h3 id="21源码分析">2.1、源码分析</h3>
 
@@ -237,41 +237,41 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <h4 id="211init-阶段">2.1.1、init 阶段</h4>
 
-<p>由于 kubernetes 整个命令行都是通过 cobra 库构建的，那么根据这个库的习惯首先直接从 <code class="highlighter-rouge">cmd</code> 包开始翻，而 kubernetes 源码组织的又比较清晰进而直接定位到 kubeadm 命令包下面；接着打开 <code class="highlighter-rouge">app</code> 目录一眼就看到了 <code class="highlighter-rouge">phases</code>… <code class="highlighter-rouge">phases</code> 顾名思义啊，整个 init 都是通过不同的 <code class="highlighter-rouge">phases</code> 完成的，那么直接去 <code class="highlighter-rouge">phases</code> 包下面找证书阶段的源码既可</p>
+<p>由于 kubernetes 整个命令行都是通过 cobra 库构建的，那么根据这个库的习惯首先直接从 <code class="language-plaintext highlighter-rouge">cmd</code> 包开始翻，而 kubernetes 源码组织的又比较清晰进而直接定位到 kubeadm 命令包下面；接着打开 <code class="language-plaintext highlighter-rouge">app</code> 目录一眼就看到了 <code class="language-plaintext highlighter-rouge">phases</code>… <code class="language-plaintext highlighter-rouge">phases</code> 顾名思义啊，整个 init 都是通过不同的 <code class="language-plaintext highlighter-rouge">phases</code> 完成的，那么直接去 <code class="language-plaintext highlighter-rouge">phases</code> 包下面找证书阶段的源码既可</p>
 
 <p><img src="http://cdn.oss.link/markdown/ssdo7.jpg" alt="init_source" /></p>
 
-<p>进入到这个 <code class="highlighter-rouge">certs.go</code> 里面，直接列出所有方法，go 的规范里只有首字母大写才会被暴露出去，那么我们直接查看这些方法名既可；从名字上很轻松的看到了这个方法…基本上就是它了</p>
+<p>进入到这个 <code class="language-plaintext highlighter-rouge">certs.go</code> 里面，直接列出所有方法，go 的规范里只有首字母大写才会被暴露出去，那么我们直接查看这些方法名既可；从名字上很轻松的看到了这个方法…基本上就是它了</p>
 
 <p><img src="http://cdn.oss.link/markdown/uoqx4.jpg" alt="certs.go" /></p>
 
-<p>通过这个方法的代码会发现最终还是调用了 <code class="highlighter-rouge">certSpec.CreateFromCA(cfg, caCert, caKey)</code>，那么接着看看这个方法</p>
+<p>通过这个方法的代码会发现最终还是调用了 <code class="language-plaintext highlighter-rouge">certSpec.CreateFromCA(cfg, caCert, caKey)</code>，那么接着看看这个方法</p>
 
 <p><img src="http://cdn.oss.link/markdown/psrho.jpg" alt="pkiutil.NewCertAndKey" /></p>
 
-<p>通过这个方法继续往下翻发现调用了 <code class="highlighter-rouge">pkiutil.NewCertAndKey(caCert, caKey, cfg)</code>，这个方法里最终调用了 <code class="highlighter-rouge">NewSignedCert(config, key, caCert, caKey)</code></p>
+<p>通过这个方法继续往下翻发现调用了 <code class="language-plaintext highlighter-rouge">pkiutil.NewCertAndKey(caCert, caKey, cfg)</code>，这个方法里最终调用了 <code class="language-plaintext highlighter-rouge">NewSignedCert(config, key, caCert, caKey)</code></p>
 
 <p><img src="http://cdn.oss.link/markdown/nel5u.jpg" alt="NewSignedCert" /></p>
 
-<p>从 <code class="highlighter-rouge">NewSignedCert</code> 方法里看到证书有效期实际上是个常量，<strong>那也就意味着我改了这个常量 init 阶段的证书有效期八九不离十的就变了，再通过包名看这个是个 <code class="highlighter-rouge">pkiutil</code>… <code class="highlighter-rouge">xxxxxutil</code> 明显是公共的，所以推测改了它 renew 阶段应该也会变</strong></p>
+<p>从 <code class="language-plaintext highlighter-rouge">NewSignedCert</code> 方法里看到证书有效期实际上是个常量，<strong>那也就意味着我改了这个常量 init 阶段的证书有效期八九不离十的就变了，再通过包名看这个是个 <code class="language-plaintext highlighter-rouge">pkiutil</code>… <code class="language-plaintext highlighter-rouge">xxxxxutil</code> 明显是公共的，所以推测改了它 renew 阶段应该也会变</strong></p>
 
 <p><img src="http://cdn.oss.link/markdown/t3amy.jpg" alt="CertificateValidity" /></p>
 
 <h4 id="212renew-阶段">2.1.2、renew 阶段</h4>
 
-<p>renew 阶段也是老套路，不过稳妥点先从 cmd 找起来，所以先看 <code class="highlighter-rouge">alpha</code> 包下的 <code class="highlighter-rouge">certs.go</code>；这时候方法名语义清晰就很有好处，一下就能找到 <code class="highlighter-rouge">newCmdCertsRenewal</code> 方法</p>
+<p>renew 阶段也是老套路，不过稳妥点先从 cmd 找起来，所以先看 <code class="language-plaintext highlighter-rouge">alpha</code> 包下的 <code class="language-plaintext highlighter-rouge">certs.go</code>；这时候方法名语义清晰就很有好处，一下就能找到 <code class="language-plaintext highlighter-rouge">newCmdCertsRenewal</code> 方法</p>
 
 <p><img src="http://cdn.oss.link/markdown/amupo.jpg" alt="alpha_certs.go" /></p>
 
-<p>而这个 <code class="highlighter-rouge">newCmdCertsRenewal</code> 方法实际上没啥实现，所以目测实现是从 <code class="highlighter-rouge">getRenewSubCommands</code> 实现的</p>
+<p>而这个 <code class="language-plaintext highlighter-rouge">newCmdCertsRenewal</code> 方法实际上没啥实现，所以目测实现是从 <code class="language-plaintext highlighter-rouge">getRenewSubCommands</code> 实现的</p>
 
 <p><img src="http://cdn.oss.link/markdown/8c38y.jpg" alt="getRenewSubCommands" /></p>
 
-<p>看了 <code class="highlighter-rouge">getRenewSubCommands</code> 以后发现上面全是命令行库、配置文件参数啥的处理，核心在 <code class="highlighter-rouge">renewCert</code> 上，从这个方法里发现还有意外收获: <strong>renew 时实际上分两种情况处理，一种是使用了 <code class="highlighter-rouge">--use-api</code> 选项，另一种是未使用</strong>；当然根据上面的命令来说我们没使用，那么看 else 部份就行了(没看源码之前我特么居然没看 <code class="highlighter-rouge">--help</code> 不知道有这个选项)</p>
+<p>看了 <code class="language-plaintext highlighter-rouge">getRenewSubCommands</code> 以后发现上面全是命令行库、配置文件参数啥的处理，核心在 <code class="language-plaintext highlighter-rouge">renewCert</code> 上，从这个方法里发现还有意外收获: <strong>renew 时实际上分两种情况处理，一种是使用了 <code class="language-plaintext highlighter-rouge">--use-api</code> 选项，另一种是未使用</strong>；当然根据上面的命令来说我们没使用，那么看 else 部份就行了(没看源码之前我特么居然没看 <code class="language-plaintext highlighter-rouge">--help</code> 不知道有这个选项)</p>
 
 <p><img src="http://cdn.oss.link/markdown/9zsgp.jpg" alt="renewCert" /></p>
 
-<p>else 部份源码最终还是调用了 <code class="highlighter-rouge">RenewUsingLocalCA</code> 方法，这个方法一直往下跟会有一个 <code class="highlighter-rouge">Renew</code> 方法</p>
+<p>else 部份源码最终还是调用了 <code class="language-plaintext highlighter-rouge">RenewUsingLocalCA</code> 方法，这个方法一直往下跟会有一个 <code class="language-plaintext highlighter-rouge">Renew</code> 方法</p>
 
 <p><img src="http://cdn.oss.link/markdown/s3a5c.jpg" alt="Renew" /></p>
 
@@ -281,11 +281,11 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <h4 id="213其他推测">2.1.3、其他推测</h4>
 
-<p>根据刚刚查看代码可以看到在 renew 阶段判断了 <code class="highlighter-rouge">--use-api</code> 选项是否使用，通过跟踪源码发现最终会调用到 <code class="highlighter-rouge">RenewUsingCSRAPI</code> 方法上，<code class="highlighter-rouge">RenewUsingCSRAPI</code> 会调用集群 CSR Api 执行证书签署</p>
+<p>根据刚刚查看代码可以看到在 renew 阶段判断了 <code class="language-plaintext highlighter-rouge">--use-api</code> 选项是否使用，通过跟踪源码发现最终会调用到 <code class="language-plaintext highlighter-rouge">RenewUsingCSRAPI</code> 方法上，<code class="language-plaintext highlighter-rouge">RenewUsingCSRAPI</code> 会调用集群 CSR Api 执行证书签署</p>
 
 <p><img src="http://cdn.oss.link/markdown/xivs9.png" alt="RenewUsingCSRAPI" /></p>
 
-<p>有了这个发现后基本上可以推测出这一步通过集群完成，那么按理说是应该受到 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 影响。</p>
+<p>有了这个发现后基本上可以推测出这一步通过集群完成，那么按理说是应该受到 <code class="language-plaintext highlighter-rouge">kube-controller-manager</code> 组件的 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 影响。</p>
 
 <h3 id="22测试验证">2.2、测试验证</h3>
 
@@ -295,7 +295,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <p><img src="http://cdn.oss.link/markdown/qaavr.png" alt="update_source" /></p>
 
-<p>然后命令行下执行 <code class="highlighter-rouge">make cross</code> 进行跨平台交叉编译(如果过你在 linux amd64 平台下则直接 <code class="highlighter-rouge">make</code> 既可)</p>
+<p>然后命令行下执行 <code class="language-plaintext highlighter-rouge">make cross</code> 进行跨平台交叉编译(如果过你在 linux amd64 平台下则直接 <code class="language-plaintext highlighter-rouge">make</code> 既可)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  kubernetes git:<span class="o">(</span>v1.17.4<span class="o">)</span> ✗ make cross
 <span class="nb">grep</span>: /proc/meminfo: No such file or directory
@@ -327,7 +327,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 <span class="c"># ... 省略编译日志</span>
 </code></pre></div></div>
 
-<p>编译完成后能够在 <code class="highlighter-rouge">_output/local/bin/linux/amd64</code> 下找到刚刚编译成功的 <code class="highlighter-rouge">kubeadm</code> 文件，将编译好的 kubeadm scp 到已经存在集群上执行 renew，然后查看证书时间</p>
+<p>编译完成后能够在 <code class="language-plaintext highlighter-rouge">_output/local/bin/linux/amd64</code> 下找到刚刚编译成功的 <code class="language-plaintext highlighter-rouge">kubeadm</code> 文件，将编译好的 kubeadm scp 到已经存在集群上执行 renew，然后查看证书时间</p>
 
 <p><img src="http://cdn.oss.link/markdown/i3laa.png" alt="kubeadm_renew" /></p>
 
@@ -335,7 +335,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <h4 id="222验证调整-csr-api">2.2.2、验证调整 CSR API</h4>
 
-<p>根据推测当使用 <code class="highlighter-rouge">--use-api</code> 会受到 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 影响，从而从集群中下发证书；所以首先在启动集群时需要将 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 调整为 10 年，然后再进行测试</p>
+<p>根据推测当使用 <code class="language-plaintext highlighter-rouge">--use-api</code> 会受到 <code class="language-plaintext highlighter-rouge">kube-controller-manager</code> 组件的 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 影响，从而从集群中下发证书；所以首先在启动集群时需要将 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 调整为 10 年，然后再进行测试</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">controllerManager</span><span class="pi">:</span>
   <span class="na">extraArgs</span><span class="pi">:</span>
@@ -349,12 +349,12 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
     <span class="na">terminated-pod-gc-threshold</span><span class="pi">:</span> <span class="s2">"</span><span class="s">30"</span>
 </code></pre></div></div>
 
-<p>然后使用 <code class="highlighter-rouge">--use-api</code> 选项进行 renew</p>
+<p>然后使用 <code class="language-plaintext highlighter-rouge">--use-api</code> 选项进行 renew</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm alpha certs renew all <span class="nt">--use-api</span>
 </code></pre></div></div>
 
-<p>此时会发现日志中打印出 <code class="highlighter-rouge">[certs] Certificate request "kubeadm-cert-kubernetes-admin-648w4" created</code> 字样，接下来从 <code class="highlighter-rouge">kube-system</code> 的 namespace 中能够看到相关 csr</p>
+<p>此时会发现日志中打印出 <code class="language-plaintext highlighter-rouge">[certs] Certificate request "kubeadm-cert-kubernetes-admin-648w4" created</code> 字样，接下来从 <code class="language-plaintext highlighter-rouge">kube-system</code> 的 namespace 中能够看到相关 csr</p>
 
 <p><img src="https://cdn.oss.link/markdown/54awl.png" alt="list_csr" /></p>
 
@@ -368,7 +368,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
 
 <h2 id="三总结">三、总结</h2>
 
-<p>总结一下，调整 kubeadm 证书期限有两种方案；第一种直接修改源码，耗时耗力还得会 go，最后还要跑跨平台编译(很耗时)；第二种在启动集群时调整 <code class="highlighter-rouge">kube-controller-manager</code> 组件的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数，集群创建好后手动 renew 一下并批准相关 csr。</p>
+<p>总结一下，调整 kubeadm 证书期限有两种方案；第一种直接修改源码，耗时耗力还得会 go，最后还要跑跨平台编译(很耗时)；第二种在启动集群时调整 <code class="language-plaintext highlighter-rouge">kube-controller-manager</code> 组件的 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 参数，集群创建好后手动 renew 一下并批准相关 csr。</p>
 
 <p>两种方案各有利弊，修改源码方式意味着在 client 端签发处理，不会对集群产生永久性影响，也就是说哪天你想 “反悔了” 你不需要修改集群什么配置，直接用官方 kubeadm renew 一下就会变回一年期限的证书；改集群参数实现的方式意味着你不需要懂 go 代码，只需要常规的集群配置既可实现，同时你也不需要跑几十分钟的交叉编译，不需要为编译过程中的网络问题而烦恼；所以最后使用哪种方案因人因情况而定吧。</p>
 
@@ -475,7 +475,7 @@ front-proxy-ca          Jan 13, 2030 08:45 UTC   9y              no
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

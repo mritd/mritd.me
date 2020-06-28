@@ -193,10 +193,10 @@
                 
 
                 <blockquote>
-  <p>最近自用的 vim 装了不少插件，但是发现 <code class="highlighter-rouge">kubectl edit</code> 或者 <code class="highlighter-rouge">git merge</code> 时，调用 vim 总是会弹出各种错误，记录一下解决方法</p>
+  <p>最近自用的 vim 装了不少插件，但是发现 <code class="language-plaintext highlighter-rouge">kubectl edit</code> 或者 <code class="language-plaintext highlighter-rouge">git merge</code> 时，调用 vim 总是会弹出各种错误，记录一下解决方法</p>
 </blockquote>
 
-<p><strong>出现这个错误一开始以为是 vim 没走 <code class="highlighter-rouge">.vimrc</code> 配置；后来翻了一堆资料，发现 <code class="highlighter-rouge">kubectl edit</code> 或者 <code class="highlighter-rouge">git merge</code> 后并非直接调用 vim，而是调用的 <code class="highlighter-rouge">/usr/bin/view</code>，那么看一下这个文件</strong></p>
+<p><strong>出现这个错误一开始以为是 vim 没走 <code class="language-plaintext highlighter-rouge">.vimrc</code> 配置；后来翻了一堆资料，发现 <code class="language-plaintext highlighter-rouge">kubectl edit</code> 或者 <code class="language-plaintext highlighter-rouge">git merge</code> 后并非直接调用 vim，而是调用的 <code class="language-plaintext highlighter-rouge">/usr/bin/view</code>，那么看一下这个文件</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/9c646.png" alt="view" /></p>
 
@@ -307,7 +307,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

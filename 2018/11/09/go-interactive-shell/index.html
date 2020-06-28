@@ -261,7 +261,7 @@
 <p>以上代码跑起来后，基本上遇到了以下问题:</p>
 
 <ul>
-  <li>执行命令有回显，表现为敲一个 <code class="highlighter-rouge">ls</code> 出现两行</li>
+  <li>执行命令有回显，表现为敲一个 <code class="language-plaintext highlighter-rouge">ls</code> 出现两行</li>
   <li>本地终端大小调整，远端完全无反应，导致显示不全</li>
   <li>Tmux 下终端连接后窗口标题显示的是原始命令，而不是目标机器 shell 环境的目录位置</li>
   <li>首次连接一些刚装完系统的机器可能出现执行命令后回显不换行</li>
@@ -271,7 +271,7 @@
 
 <h3 id="21回显问题">2.1、回显问题</h3>
 
-<p>关于回显问题，实际上解决方案很简单，设置当前终端进入 <code class="highlighter-rouge">raw</code> 模式即可；代码如下:</p>
+<p>关于回显问题，实际上解决方案很简单，设置当前终端进入 <code class="language-plaintext highlighter-rouge">raw</code> 模式即可；代码如下:</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// 拿到当前终端文件描述符</span>
 <span class="n">fd</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">Stdin</span><span class="o">.</span><span class="n">Fd</span><span class="p">())</span>
@@ -281,13 +281,13 @@
 <span class="k">defer</span> <span class="n">terminal</span><span class="o">.</span><span class="n">Restore</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>代码很简单，网上一大堆，But…基本没有文章详细说这个 <code class="highlighter-rouge">raw</code> 模式到底是个啥玩意；好在万能的 StackOverflow 对于不熟悉 Linux 的人给出了一个很清晰的解释: <a href="https://unix.stackexchange.com/questions/21752/what-s-the-difference-between-a-raw-and-a-cooked-device-driver">What’s the difference between a “raw” and a “cooked” device driver?</a></p>
+<p>代码很简单，网上一大堆，But…基本没有文章详细说这个 <code class="language-plaintext highlighter-rouge">raw</code> 模式到底是个啥玩意；好在万能的 StackOverflow 对于不熟悉 Linux 的人给出了一个很清晰的解释: <a href="https://unix.stackexchange.com/questions/21752/what-s-the-difference-between-a-raw-and-a-cooked-device-driver">What’s the difference between a “raw” and a “cooked” device driver?</a></p>
 
-<p>大致意思就是说 <strong>在终端处于 <code class="highlighter-rouge">Cooked</code> 模式时，当你输入一些字符后，默认是被当前终端 cache 住的，在你敲了回车之前这些文本都在 cache 中，这样允许应用程序做一些处理，比如捕获 <code class="highlighter-rouge">Cntl-D</code> 等按键，这时候就会出现敲回车后本地终端帮你打印了一下，导致出现类似回显的效果；当设置终端为 <code class="highlighter-rouge">raw</code> 模式后，所有的输入将不被 cache，而是发送到应用程序，在我们的代码中表现为通过 <code class="highlighter-rouge">io.Copy</code> 直接发送到了远端 shell 程序</strong></p>
+<p>大致意思就是说 <strong>在终端处于 <code class="language-plaintext highlighter-rouge">Cooked</code> 模式时，当你输入一些字符后，默认是被当前终端 cache 住的，在你敲了回车之前这些文本都在 cache 中，这样允许应用程序做一些处理，比如捕获 <code class="language-plaintext highlighter-rouge">Cntl-D</code> 等按键，这时候就会出现敲回车后本地终端帮你打印了一下，导致出现类似回显的效果；当设置终端为 <code class="language-plaintext highlighter-rouge">raw</code> 模式后，所有的输入将不被 cache，而是发送到应用程序，在我们的代码中表现为通过 <code class="language-plaintext highlighter-rouge">io.Copy</code> 直接发送到了远端 shell 程序</strong></p>
 
 <h3 id="22终端大小问题">2.2、终端大小问题</h3>
 
-<p>当本地调整了终端大小后，远程终端毫无反应；后来发现在 <code class="highlighter-rouge">*ssh.Session</code> 上有一个 <code class="highlighter-rouge">WindowChange</code> 方法，用于向远端发送窗口调整事件；解决方案就是启动一个 <code class="highlighter-rouge">goroutine</code> 在后台不断监听窗口改变事件，然后调用 <code class="highlighter-rouge">WindowChange</code> 即可；代码如下:</p>
+<p>当本地调整了终端大小后，远程终端毫无反应；后来发现在 <code class="language-plaintext highlighter-rouge">*ssh.Session</code> 上有一个 <code class="language-plaintext highlighter-rouge">WindowChange</code> 方法，用于向远端发送窗口调整事件；解决方案就是启动一个 <code class="language-plaintext highlighter-rouge">goroutine</code> 在后台不断监听窗口改变事件，然后调用 <code class="language-plaintext highlighter-rouge">WindowChange</code> 即可；代码如下:</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">go</span> <span class="k">func</span><span class="p">()</span> <span class="p">{</span>
 	<span class="c">// 监听窗口变更事件</span>
@@ -329,7 +329,7 @@
 
 <h3 id="23tmux-标题以及回显不换行">2.3、Tmux 标题以及回显不换行</h3>
 
-<p>这两个问题实际上都是由于我们直接对接了 <code class="highlighter-rouge">stderr</code>、<code class="highlighter-rouge">stdout</code> 和 <code class="highlighter-rouge">stdin</code> 造成的，实际上我们应当启动一个异步的管道式复制行为，并且最好带有 buf 的发送；代码如下:</p>
+<p>这两个问题实际上都是由于我们直接对接了 <code class="language-plaintext highlighter-rouge">stderr</code>、<code class="language-plaintext highlighter-rouge">stdout</code> 和 <code class="language-plaintext highlighter-rouge">stdin</code> 造成的，实际上我们应当启动一个异步的管道式复制行为，并且最好带有 buf 的发送；代码如下:</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">stdin</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">session</span><span class="o">.</span><span class="n">StdinPipe</span><span class="p">()</span>
 <span class="n">checkErr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
@@ -627,7 +627,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

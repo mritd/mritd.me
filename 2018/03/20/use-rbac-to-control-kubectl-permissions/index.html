@@ -220,7 +220,7 @@
 
 <p>不论怎样，在进行授权时总要有个地方存放用户信息(DB/文件)，但是在 Kubernetes 里却没找到；后来翻阅文档，找到<a href="https://kubernetes.io/docs/admin/authentication/">这么一段</a></p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Normal users are assumed to be managed by an outside, independent service. An admin distributing private keys, a user store like Keystone or Google Accounts, even a file with a list of usernames and passwords.
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Normal users are assumed to be managed by an outside, independent service. An admin distributing private keys, a user store like Keystone or Google Accounts, even a file with a list of usernames and passwords.
 </code></pre></div></div>
 
 <p><strong>也就是说，Kubernetes 是不负责维护存储用户数据的；对于 Kubernetes 来说，它识别或者说认识一个用户主要就几种方式</strong></p>
@@ -282,7 +282,7 @@
               cfssljson <span class="nt">--bare</span> <span class="nb">readonly</span>
 </code></pre></div></div>
 
-<p>以上命令会生成 <code class="highlighter-rouge">readonly-key.pem</code>、<code class="highlighter-rouge">readonly.pem</code> 两个证书文件以及一个 csr 请求文件</p>
+<p>以上命令会生成 <code class="language-plaintext highlighter-rouge">readonly-key.pem</code>、<code class="language-plaintext highlighter-rouge">readonly.pem</code> 两个证书文件以及一个 csr 请求文件</p>
 
 <h4 id="22创建-kubeconfig">2.2、创建 kubeconfig</h4>
 
@@ -312,7 +312,7 @@ kubectl config set-context default-system <span class="nt">--cluster</span><span
 kubectl config use-context default-system <span class="nt">--kubeconfig</span><span class="o">=</span>readonly.kubeconfig
 </code></pre></div></div>
 
-<p>这条命令会将证书也写入到 readonly.kubeconfig 配置文件中，将该文件放在 <code class="highlighter-rouge">~/.kube/config</code> 位置，kubectl 会自动读取</p>
+<p>这条命令会将证书也写入到 readonly.kubeconfig 配置文件中，将该文件放在 <code class="language-plaintext highlighter-rouge">~/.kube/config</code> 位置，kubectl 会自动读取</p>
 
 <h4 id="23创建-clusterrole">2.3、创建 ClusterRole</h4>
 
@@ -423,7 +423,7 @@ kubectl get clusterrole admin <span class="nt">-o</span> yaml <span class="o">&g
   <span class="pi">-</span> <span class="s">watch</span>
 </code></pre></div></div>
 
-<p>最后执行 <code class="highlighter-rouge">kubectl create -f readonly.yaml</code> 创建即可</p>
+<p>最后执行 <code class="language-plaintext highlighter-rouge">kubectl create -f readonly.yaml</code> 创建即可</p>
 
 <h4 id="24创建-clusterrolebinding">2.4、创建 ClusterRoleBinding</h4>
 
@@ -443,11 +443,11 @@ kubectl get clusterrole admin <span class="nt">-o</span> yaml <span class="o">&g
   <span class="na">name</span><span class="pi">:</span> <span class="s">develop:readonly</span>
 </code></pre></div></div>
 
-<p>将以上保存为 <code class="highlighter-rouge">readonly-bind.yaml</code> 执行 <code class="highlighter-rouge">kubectl create -f readonly-bind.yaml</code> 即可</p>
+<p>将以上保存为 <code class="language-plaintext highlighter-rouge">readonly-bind.yaml</code> 执行 <code class="language-plaintext highlighter-rouge">kubectl create -f readonly-bind.yaml</code> 即可</p>
 
 <h4 id="25测试权限">2.5、测试权限</h4>
 
-<p>将最初创建的 kubeconfig 放到 <code class="highlighter-rouge">~/.kube/config</code> 或者直接使用 <code class="highlighter-rouge">--kubeconfig</code> 选项测试读取、删除 pod 等权限即可，测试后如下所示</p>
+<p>将最初创建的 kubeconfig 放到 <code class="language-plaintext highlighter-rouge">~/.kube/config</code> 或者直接使用 <code class="language-plaintext highlighter-rouge">--kubeconfig</code> 选项测试读取、删除 pod 等权限即可，测试后如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/68ukm.png" alt="test readonly" /></p>
 
@@ -554,7 +554,7 @@ kubectl get clusterrole admin <span class="nt">-o</span> yaml <span class="o">&g
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

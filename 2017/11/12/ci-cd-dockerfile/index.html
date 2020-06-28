@@ -223,7 +223,7 @@
 <p>Dockerfile 类似一堆 shell 命令的堆砌，实际上在构建阶段也可以简单的看做是一个 shell 脚本；但是为了更高效的利用缓存层，通常都会在一个 RUN 命令中连续书写大量的脚本命令，这时候一个良好的书写格式可以使 Dockerfile 看起来更加清晰易懂，也方便以后维护；我个人比较推崇的格式是按照 <a href="https://github.com/nginxinc/docker-nginx/blob/master/mainline/alpine/Dockerfile">nginx-alpine官方 Dockerfile</a> 的样式来书写，这个 Dockerfile 大致包括了以下规则:</p>
 
 <ul>
-  <li>换行以 <code class="highlighter-rouge">&amp;&amp;</code> 开头保持每行对齐，看起来干净又舒服</li>
+  <li>换行以 <code class="language-plaintext highlighter-rouge">&amp;&amp;</code> 开头保持每行对齐，看起来干净又舒服</li>
   <li>安装大量软件包时，每个包一行并添加换行符，虽然会造成很多行，但是看起来很清晰；也可根据实际需要增加每行软件包个数，但是建议不要超过 5 个</li>
   <li>configure 的配置尽量放在统一的变量里，并做好合理换行，方便以后集中化修改</li>
   <li>注释同样和对应命令对齐，并保持单行长度不超出视野，即不能造成拉动滚动条才能看完你的注释</li>
@@ -233,7 +233,7 @@
 <p>除了以上规则，说下我个人的一些小习惯，仅供参考:</p>
 
 <ul>
-  <li>当需要编译时，尽量避免多次 <code class="highlighter-rouge">cd</code> 目录，必须进入目录编译时可以开启子 shell 使其完成后还停留但在当前目录，避免 <code class="highlighter-rouge">cd</code> 进去再 <code class="highlighter-rouge">cd</code> 回来，如</li>
+  <li>当需要编译时，尽量避免多次 <code class="language-plaintext highlighter-rouge">cd</code> 目录，必须进入目录编译时可以开启子 shell 使其完成后还停留但在当前目录，避免 <code class="language-plaintext highlighter-rouge">cd</code> 进去再 <code class="language-plaintext highlighter-rouge">cd</code> 回来，如</li>
 </ul>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>xxxx <span class="se">\</span>
@@ -251,15 +251,15 @@
 </code></pre></div></div>
 
 <ul>
-  <li>同样意义的操作统一放在相邻行处理，比如镜像需要安装两个软件，做两次 <code class="highlighter-rouge">wget</code>，那么没必要安装完一个删除一个安装包，可以在最后统一的进行清理动作，简而言之是 <strong>合并具有相同目的的命令</strong></li>
-  <li>尽量使用网络资源，也就是说尽量不要在当前目录下放置那种二进制文件，然后进行 <code class="highlighter-rouge">ADD</code>/<code class="highlighter-rouge">COPY</code> 操作，因为一般 Dockerfile 都是存放到 git 仓库的，同目录下的二进制变动会给 git 仓库带来很大负担</li>
+  <li>同样意义的操作统一放在相邻行处理，比如镜像需要安装两个软件，做两次 <code class="language-plaintext highlighter-rouge">wget</code>，那么没必要安装完一个删除一个安装包，可以在最后统一的进行清理动作，简而言之是 <strong>合并具有相同目的的命令</strong></li>
+  <li>尽量使用网络资源，也就是说尽量不要在当前目录下放置那种二进制文件，然后进行 <code class="language-plaintext highlighter-rouge">ADD</code>/<code class="language-plaintext highlighter-rouge">COPY</code> 操作，因为一般 Dockerfile 都是存放到 git 仓库的，同目录下的二进制变动会给 git 仓库带来很大负担</li>
   <li>调整好镜像时区，最好内置一下 bash，可能以后临时进入容器会处理一些东西</li>
-  <li><code class="highlighter-rouge">FROM</code> 时指定具体的版本号，防止后续升级或者更换主机 build 造成不可预知的结果</li>
+  <li><code class="language-plaintext highlighter-rouge">FROM</code> 时指定具体的版本号，防止后续升级或者更换主机 build 造成不可预知的结果</li>
 </ul>
 
 <h4 id="22合理利用缓存">2.2、合理利用缓存</h4>
 
-<p>Docker 在 build 或者说是拉取镜像时是以层为单位作为缓存的；通俗的讲，一个 Dockerfile 命令就会形成一个镜像层(不绝对)，尤其是 <code class="highlighter-rouge">RUN</code> 命令形成的镜像层可能会很大；此时应当合理组织 Dockerfile，以便每次拉取或者 build 时高效的利用缓存层</p>
+<p>Docker 在 build 或者说是拉取镜像时是以层为单位作为缓存的；通俗的讲，一个 Dockerfile 命令就会形成一个镜像层(不绝对)，尤其是 <code class="language-plaintext highlighter-rouge">RUN</code> 命令形成的镜像层可能会很大；此时应当合理组织 Dockerfile，以便每次拉取或者 build 时高效的利用缓存层</p>
 
 <ul>
   <li>重复 build 的缓存利用</li>
@@ -276,7 +276,7 @@ RUN apk add openjdk8 <span class="nt">--no-cache</span>
 CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p>假设我们的项目发布物为 <code class="highlighter-rouge">test.jar</code>，那么以上 Dockerfile 放到 CI 里每次 build 都会相当慢，原因就是 <strong>每次更改的发布物为 <code class="highlighter-rouge">test.jar</code>，那么也就是相当于每次 build 失效位置从 <code class="highlighter-rouge">COPY</code> 命令开始，这将导致下面的 <code class="highlighter-rouge">RUN</code> 命令每次都会不走缓存重复执行，当 <code class="highlighter-rouge">RUN</code> 命令涉及网络下载等复杂动作时这会极大拖慢 build 进度</strong>，解决方案很简单，移动一下 <code class="highlighter-rouge">COPY</code> 命令即可</p>
+<p>假设我们的项目发布物为 <code class="language-plaintext highlighter-rouge">test.jar</code>，那么以上 Dockerfile 放到 CI 里每次 build 都会相当慢，原因就是 <strong>每次更改的发布物为 <code class="language-plaintext highlighter-rouge">test.jar</code>，那么也就是相当于每次 build 失效位置从 <code class="language-plaintext highlighter-rouge">COPY</code> 命令开始，这将导致下面的 <code class="language-plaintext highlighter-rouge">RUN</code> 命令每次都会不走缓存重复执行，当 <code class="language-plaintext highlighter-rouge">RUN</code> 命令涉及网络下载等复杂动作时这会极大拖慢 build 进度</strong>，解决方案很简单，移动一下 <code class="language-plaintext highlighter-rouge">COPY</code> 命令即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
 
@@ -287,7 +287,7 @@ COPY test.jar /test.jar
 CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p>此时每次 build 失效位置仍然是 <code class="highlighter-rouge">COPY</code> 命令，但是上面的 <code class="highlighter-rouge">RUN</code> 命令层已经被 build 过，而且无任何改变，那么每次 build 时 <code class="highlighter-rouge">RUN</code> 命令都会命中缓存层从而秒过</p>
+<p>此时每次 build 失效位置仍然是 <code class="language-plaintext highlighter-rouge">COPY</code> 命令，但是上面的 <code class="language-plaintext highlighter-rouge">RUN</code> 命令层已经被 build 过，而且无任何改变，那么每次 build 时 <code class="language-plaintext highlighter-rouge">RUN</code> 命令都会命中缓存层从而秒过</p>
 
 <ul>
   <li>多次拉取的缓存利用</li>
@@ -315,7 +315,7 @@ CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-ja
 
 <h4 id="31用户切换">3.1、用户切换</h4>
 
-<p>当我们不在 Dockerfile 中指定内部用户时，那么默认以 root 用户运行；由于 Linux 系统权限判定是根据 UID、GID 来进行的，也就是说 <strong>容器里面的 root 用户有权限访问宿主机 root 用户的东西；所以一旦挂载错误(比如将 <code class="highlighter-rouge">/root/.ssh</code> 目录挂载进去)，并且里面的用户具有高权限那么就很危险</strong>；通常习惯是遵从最小权限原则，也就是说尽量保证容器里的程序以低权限运行，此时可以在 Dockerfile 中通过 <code class="highlighter-rouge">USER</code> 命令指定后续运行命令所使用的账户，通过 <code class="highlighter-rouge">WORKDIR</code> 指定后续命令在那个目录下执行</p>
+<p>当我们不在 Dockerfile 中指定内部用户时，那么默认以 root 用户运行；由于 Linux 系统权限判定是根据 UID、GID 来进行的，也就是说 <strong>容器里面的 root 用户有权限访问宿主机 root 用户的东西；所以一旦挂载错误(比如将 <code class="language-plaintext highlighter-rouge">/root/.ssh</code> 目录挂载进去)，并且里面的用户具有高权限那么就很危险</strong>；通常习惯是遵从最小权限原则，也就是说尽量保证容器里的程序以低权限运行，此时可以在 Dockerfile 中通过 <code class="language-plaintext highlighter-rouge">USER</code> 命令指定后续运行命令所使用的账户，通过 <code class="language-plaintext highlighter-rouge">WORKDIR</code> 指定后续命令在那个目录下执行</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM alpine:3.6
 
@@ -330,7 +330,7 @@ WORKDIR /tmp
 CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-jar"</span>,<span class="s2">"/test.tar"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p>有时直接使用 <code class="highlighter-rouge">USER</code> 指令来切换用户并不算方便，比如你的镜像需要挂载外部存储，如果外部存储中文件权限被意外修改，你的程序接下来可能就会启动失败；此时可以使用一下两个小工具来动态切换用户，巧妙的做法是 <strong>在正式运行程序之前先使用 root 用户进行权限修复，然后使用以下工具切换到具体用户运行</strong></p>
+<p>有时直接使用 <code class="language-plaintext highlighter-rouge">USER</code> 指令来切换用户并不算方便，比如你的镜像需要挂载外部存储，如果外部存储中文件权限被意外修改，你的程序接下来可能就会启动失败；此时可以使用一下两个小工具来动态切换用户，巧妙的做法是 <strong>在正式运行程序之前先使用 root 用户进行权限修复，然后使用以下工具切换到具体用户运行</strong></p>
 
 <ul>
   <li><a href="https://github.com/tianon/gosu">gosu</a> Golang 实现的一个切换用户身份执行其他程序的小工具</li>
@@ -448,7 +448,7 @@ CMD <span class="o">[</span><span class="s2">"java"</span>,<span class="s2">"-ja
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

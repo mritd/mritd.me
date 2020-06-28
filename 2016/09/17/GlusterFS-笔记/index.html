@@ -407,8 +407,8 @@ gluster volume create gfs_disk replica 2 transport tcp <span class="se">\</span>
 <h3 id="34其他卷">3.4、其他卷</h3>
 
 <ul>
-  <li>条带卷: 条带卷既将文件切分成块，分布存放在各个节点，将 <code class="highlighter-rouge">replica</code> 替换成 <code class="highlighter-rouge">stripe</code> 即可</li>
-  <li>分布式 Hash 条带卷: 同分布式 Hash 复制卷一样，保证节点数量是 <code class="highlighter-rouge">stripe</code> 的整数倍即可</li>
+  <li>条带卷: 条带卷既将文件切分成块，分布存放在各个节点，将 <code class="language-plaintext highlighter-rouge">replica</code> 替换成 <code class="language-plaintext highlighter-rouge">stripe</code> 即可</li>
+  <li>分布式 Hash 条带卷: 同分布式 Hash 复制卷一样，保证节点数量是 <code class="language-plaintext highlighter-rouge">stripe</code> 的整数倍即可</li>
 </ul>
 
 <p>由于条带卷使用并不多，所以不做演示，一般条带卷适用于单个大文件超过磁盘大小时使用</p>
@@ -422,7 +422,7 @@ gluster volume create gfs_disk replica 2 transport tcp <span class="se">\</span>
 
 <h3 id="41glusterfs-卷挂载">4.1、GlusterFS 卷挂载</h3>
 
-<p>卷创建完成后，只需要像正常磁盘一样挂载即可使用，<strong>不同的是文件系统类型指定为 <code class="highlighter-rouge">glusterfs</code> 而已</strong>，操作如下</p>
+<p>卷创建完成后，只需要像正常磁盘一样挂载即可使用，<strong>不同的是文件系统类型指定为 <code class="language-plaintext highlighter-rouge">glusterfs</code> 而已</strong>，操作如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># mount 时指定任意一个节点即可</span>
 mount <span class="nt">-t</span> glusterfs gfs-server1:gfs_disk /mnt/gfs
@@ -549,7 +549,7 @@ mount <span class="nt">-t</span> glusterfs gfs-server1:gfs_disk /mnt/gfs
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

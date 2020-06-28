@@ -236,7 +236,7 @@ vi /etc/vim/vimrc.tiny
 
 <blockquote>
   <ol>
-    <li>执行命令 <code class="highlighter-rouge">apt-get install source-highlight</code></li>
+    <li>执行命令 <code class="language-plaintext highlighter-rouge">apt-get install source-highlight</code></li>
     <li>加入环境变量(更详细参考 <a href="http://leonyoung.sinaapp.com/blog/2013/10/syntax-highlight-in-less/">这里</a>)</li>
   </ol>
 </blockquote>
@@ -251,7 +251,7 @@ vi /etc/vim/vimrc.tiny
 </ul>
 
 <blockquote>
-  <p>一般只有一个无线网卡的话默认为 wlan0，修改 <code class="highlighter-rouge">iface wlan0 inet manual</code> 为 <code class="highlighter-rouge">iface wlan0 inet dhcp</code>，因为考虑到网络环境，频繁切换网络不适合设置静态IP，所以使用 DHCP 分配，样例配置文件如下:</p>
+  <p>一般只有一个无线网卡的话默认为 wlan0，修改 <code class="language-plaintext highlighter-rouge">iface wlan0 inet manual</code> 为 <code class="language-plaintext highlighter-rouge">iface wlan0 inet dhcp</code>，因为考虑到网络环境，频繁切换网络不适合设置静态IP，所以使用 DHCP 分配，样例配置文件如下:</p>
 </blockquote>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Please note that this file is written to be used with dhcpcd.</span>
@@ -302,17 +302,17 @@ wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>其中 network 部分最好使用工具生成，命令如下 <code class="highlighter-rouge">wpa_passphrase SSID PASSWD</code></strong></p>
+<p><strong>其中 network 部分最好使用工具生成，命令如下 <code class="language-plaintext highlighter-rouge">wpa_passphrase SSID PASSWD</code></strong></p>
 
 <ul>
   <li>启用网卡链接</li>
 </ul>
 
 <blockquote>
-  <p>执行 <code class="highlighter-rouge">ifup wlan0</code> 启动 wlan0 并连接，执行 <code class="highlighter-rouge">ifdown wlan0</code> 关闭并断开链接，如下图:
+  <p>执行 <code class="language-plaintext highlighter-rouge">ifup wlan0</code> 启动 wlan0 并连接，执行 <code class="language-plaintext highlighter-rouge">ifdown wlan0</code> 关闭并断开链接，如下图:
 <img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_ifup_wlan0.png" alt="ifup_wlan0" /></p>
 
-  <p>链接成功后可执行 <code class="highlighter-rouge">ifconfig</code> 或 <code class="highlighter-rouge">iwconfig</code>查看网络连接状况，如下图:
+  <p>链接成功后可执行 <code class="language-plaintext highlighter-rouge">ifconfig</code> 或 <code class="language-plaintext highlighter-rouge">iwconfig</code>查看网络连接状况，如下图:
 <img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_iwconfig_wlan0.png" alt="iwconfig" /></p>
 
   <p><img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_ifconfig_wlan0.png" alt="ifconfig" /></p>
@@ -344,7 +344,7 @@ options 8192cu <span class="nv">rtw_power_mgnt</span><span class="o">=</span>0
   <p>Linxu命令提示符由 PS1变量控制，所以更改命令提示符样式也就是更改PS1变量，以下为相关码值:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>\d ：#代表日期，格式为weekday month date，例如："Mon Aug 1"   
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>\d ：#代表日期，格式为weekday month date，例如："Mon Aug 1"   
 \H ：#完整的主机名称。   
 \h ：#仅取主机的第一个名字，如上例，则为fc4，.linux则被省略   
 \t ：#显示时间为24小时格式，如：HH：MM：SS   
@@ -362,7 +362,7 @@ options 8192cu <span class="nv">rtw_power_mgnt</span><span class="o">=</span>0
   <p>颜色及效果控制码值</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 前景    背景     颜色
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 前景    背景     颜色
 ------------------------
   30      40      黑色   
   31      41      红色   
@@ -384,7 +384,7 @@ options 8192cu <span class="nv">rtw_power_mgnt</span><span class="o">=</span>0
 </code></pre></div></div>
 
 <blockquote>
-  <p>设置PS1变量时，<code class="highlighter-rouge">\[\e[F;Bm]</code> 代表颜色开始，F为前景色，B为背景色，<code class="highlighter-rouge">\e[m]</code> 为颜色结束符，不写的话会造成整个命令行都是最后一种颜色，以下为我的PS1样式</p>
+  <p>设置PS1变量时，<code class="language-plaintext highlighter-rouge">\[\e[F;Bm]</code> 代表颜色开始，F为前景色，B为背景色，<code class="language-plaintext highlighter-rouge">\e[m]</code> 为颜色结束符，不写的话会造成整个命令行都是最后一种颜色，以下为我的PS1样式</p>
 </blockquote>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PS1</span><span class="o">=</span><span class="s1">'\[\e[1;32m\][\u@\h\[\e[m\] \[\e[1;34m\]\W\[\e[m\]\[\e[1;32m\]]$\[\e[m\] '</span>
@@ -427,7 +427,7 @@ ntpdate 210.72.145.44
 </ul>
 
 <blockquote>
-  <p>编辑 <code class="highlighter-rouge">/ect/rc.local</code> 文件 执行 <code class="highlighter-rouge">vim /etc/rc.local</code>，加入 <code class="highlighter-rouge">htpdate -t -s 210.72.145.44</code> 这条命令，注意要放在 <code class="highlighter-rouge">exit 0</code> 前面，样例配置如下:</p>
+  <p>编辑 <code class="language-plaintext highlighter-rouge">/ect/rc.local</code> 文件 执行 <code class="language-plaintext highlighter-rouge">vim /etc/rc.local</code>，加入 <code class="language-plaintext highlighter-rouge">htpdate -t -s 210.72.145.44</code> 这条命令，注意要放在 <code class="language-plaintext highlighter-rouge">exit 0</code> 前面，样例配置如下:</p>
 </blockquote>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh -e</span>
@@ -449,12 +449,12 @@ htpdate <span class="nt">-t</span> <span class="nt">-s</span> 210.72.145.44
 <h3 id="合并剩余分区空间">合并剩余分区空间</h3>
 
 <blockquote>
-  <p>默认树莓派安装系统后并不会占用所有SD卡空间，一般只会使用4G左右，对于大内存卡来说剩下的空间属于未分配状态，即未分区无法使用，我们可以使用 <code class="highlighter-rouge">fdisk</code> 来合并后面的分区加以利用</p>
+  <p>默认树莓派安装系统后并不会占用所有SD卡空间，一般只会使用4G左右，对于大内存卡来说剩下的空间属于未分配状态，即未分区无法使用，我们可以使用 <code class="language-plaintext highlighter-rouge">fdisk</code> 来合并后面的分区加以利用</p>
 </blockquote>
 
 <h4 id="使用-raspi-config2016-08-13-更新">使用 raspi-config(2016-08-13 更新)</h4>
 
-<p>推荐直接使用树莓派提供的工具，执行 <code class="highlighter-rouge">raspi-config</code>，然后选择第一项，提示选择 OK ，最终 Finish 即可。</p>
+<p>推荐直接使用树莓派提供的工具，执行 <code class="language-plaintext highlighter-rouge">raspi-config</code>，然后选择第一项，提示选择 OK ，最终 Finish 即可。</p>
 
 <h4 id="使用-分区工具">使用 分区工具</h4>
 
@@ -560,12 +560,12 @@ tmpfs              94812       0     94812   0% /run/user/1000
 <h3 id="安装lrzsz快捷上传下载">安装lrzsz(快捷上传下载)</h3>
 
 <blockquote>
-  <p>操作简单，但大有用处，执行一条命令 <code class="highlighter-rouge">apt-get install lrzsz</code> 就安装成功了；作用就是在使用xShell通过ssh连接到树莓派后，上传文件只需要敲 <code class="highlighter-rouge">rz</code> 命令就会弹出文件选择对话框，选择文件后就直接上传到当前shell显示的目录下了，也可以直接将文件拖向命令行，也会直接将文件上传到当前目录；下载的话直接敲 <code class="highlighter-rouge">sz FILENAME</code> 就会马上弹出下载选择框，选择到哪就会下载到那个目录，奏是这么吊！</p>
+  <p>操作简单，但大有用处，执行一条命令 <code class="language-plaintext highlighter-rouge">apt-get install lrzsz</code> 就安装成功了；作用就是在使用xShell通过ssh连接到树莓派后，上传文件只需要敲 <code class="language-plaintext highlighter-rouge">rz</code> 命令就会弹出文件选择对话框，选择文件后就直接上传到当前shell显示的目录下了，也可以直接将文件拖向命令行，也会直接将文件上传到当前目录；下载的话直接敲 <code class="language-plaintext highlighter-rouge">sz FILENAME</code> 就会马上弹出下载选择框，选择到哪就会下载到那个目录，奏是这么吊！</p>
 </blockquote>
 
 <h3 id="切换国内源">切换国内源</h3>
 
-<p>默认树莓派连接的源是官方源，其服务器在美国，然后你懂得……编辑 <code class="highlighter-rouge">/etc/apt/sources.list</code> 注释掉其他源，从 <a href="http://www.raspbian.org/RaspbianMirrors">树莓派源列表</a> 中选择一个填入，然后 <code class="highlighter-rouge">apt-get update</code> 即可，以下为 <code class="highlighter-rouge">/etc/apt/sources.lis</code> 文件参考(清华大学源)</p>
+<p>默认树莓派连接的源是官方源，其服务器在美国，然后你懂得……编辑 <code class="language-plaintext highlighter-rouge">/etc/apt/sources.list</code> 注释掉其他源，从 <a href="http://www.raspbian.org/RaspbianMirrors">树莓派源列表</a> 中选择一个填入，然后 <code class="language-plaintext highlighter-rouge">apt-get update</code> 即可，以下为 <code class="language-plaintext highlighter-rouge">/etc/apt/sources.lis</code> 文件参考(清华大学源)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#deb http://mirrordirector.raspbian.org/raspbian/ jessie main contrib non-free rpi</span>
 <span class="c"># Uncomment line below then 'apt-get update' to enable 'apt-get source'</span>
@@ -632,7 +632,7 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 
 <blockquote>
   <p>花生壳树莓派版下载地址: <a href="http://hsk.oray.com/download/#type=http|shumeipai">点击下载</a>
-下载后上传到树莓派，执行 <code class="highlighter-rouge">tar -zxvf phddns_raspberry.tgz</code> 解压文件</p>
+下载后上传到树莓派，执行 <code class="language-plaintext highlighter-rouge">tar -zxvf phddns_raspberry.tgz</code> 解压文件</p>
 </blockquote>
 
 <ul>
@@ -640,7 +640,7 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 </ul>
 
 <blockquote>
-  <p>解压后会生成 <code class="highlighter-rouge">phddns2</code> 目录，<code class="highlighter-rouge">cd</code> 进去，执行 <code class="highlighter-rouge">./oraynewph start</code> 命令进行安装，安装完成后屏幕上会显示几行信息，其中一个是 <strong>SN码</strong>，记录下这个 <strong>SN码</strong>，一般是一串复杂的类似于md5的字符串
+  <p>解压后会生成 <code class="language-plaintext highlighter-rouge">phddns2</code> 目录，<code class="language-plaintext highlighter-rouge">cd</code> 进去，执行 <code class="language-plaintext highlighter-rouge">./oraynewph start</code> 命令进行安装，安装完成后屏幕上会显示几行信息，其中一个是 <strong>SN码</strong>，记录下这个 <strong>SN码</strong>，一般是一串复杂的类似于md5的字符串
 然后进入 <a href="http://b.oray.com">b.oray.com</a> ，选择使用 <strong>SN码</strong> 登录，默认密码是admin，<strong><em>注意：此时树莓派必须成功连接外网，否则无法登陆</em></strong>，登录如下图所示:</p>
 </blockquote>
 
@@ -675,7 +675,7 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 </ul>
 
 <blockquote>
-  <p>登录 <a href="http://www.sonatype.org/nexus/go/">Nexus官网</a> 选择 TGZ 格式下载，上传到 树莓派并解压，然后 mv 到你想要放置的目录。配置一个环境变量，样例如下 : <code class="highlighter-rouge">export NEXUS_HOME='/usr/local/java/nexus/nexus-2.11.4-01'</code>，并将 <code class="highlighter-rouge">$NEXUS_HOME/bin</code> 加入到 <code class="highlighter-rouge">PATH</code> 中。</p>
+  <p>登录 <a href="http://www.sonatype.org/nexus/go/">Nexus官网</a> 选择 TGZ 格式下载，上传到 树莓派并解压，然后 mv 到你想要放置的目录。配置一个环境变量，样例如下 : <code class="language-plaintext highlighter-rouge">export NEXUS_HOME='/usr/local/java/nexus/nexus-2.11.4-01'</code>，并将 <code class="language-plaintext highlighter-rouge">$NEXUS_HOME/bin</code> 加入到 <code class="language-plaintext highlighter-rouge">PATH</code> 中。</p>
 </blockquote>
 
 <ul>
@@ -683,11 +683,11 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 </ul>
 
 <blockquote>
-  <p>为何需要下载 <code class="highlighter-rouge">wrapper</code> : <code class="highlighter-rouge">nexus</code> 本身确实自带了 <code class="highlighter-rouge">wrapper</code>，但 <code class="highlighter-rouge">wrapper</code> 这玩意是跟平台结合的，目前 <code class="highlighter-rouge">Nexus</code> 不支持 <code class="highlighter-rouge">arm</code> 平台，所以需要我们手动编译一个替换 <code class="highlighter-rouge">Nexu</code> 中的 <code class="highlighter-rouge">wrapper</code>。
+  <p>为何需要下载 <code class="language-plaintext highlighter-rouge">wrapper</code> : <code class="language-plaintext highlighter-rouge">nexus</code> 本身确实自带了 <code class="language-plaintext highlighter-rouge">wrapper</code>，但 <code class="language-plaintext highlighter-rouge">wrapper</code> 这玩意是跟平台结合的，目前 <code class="language-plaintext highlighter-rouge">Nexus</code> 不支持 <code class="language-plaintext highlighter-rouge">arm</code> 平台，所以需要我们手动编译一个替换 <code class="language-plaintext highlighter-rouge">Nexu</code> 中的 <code class="language-plaintext highlighter-rouge">wrapper</code>。
 <em>**</em></p>
   <ol>
     <li>目前下载的最新版 Nexus-2.11.4-01 依赖的是 wrapper3.2.3，下载地址 <a href="http://wrapper.tanukisoftware.com/download/3.5.9/wrapper_3.5.9_src.tar.gz?mode=html">点这里</a> <strong><em>(注意我们下载的事3.5.9版本)</em></strong>。</li>
-    <li>下载完 src 源码包后上传到树莓派并解压，在开始编译前，需要正确的配置<code class="highlighter-rouge">JAVA_HOME</code> 和 <code class="highlighter-rouge">PATH</code>，这里有个小问题，树莓派2自带了JDK8，但 <code class="highlighter-rouge">JAVA_HOME</code> 啥的没配置，所以会有问题；但直接卸载的话 <code class="highlighter-rouge">apt-get</code> 会自动给你安装 <code class="highlighter-rouge">open-jdk7</code>，可执行 <code class="highlighter-rouge">apt-cache rdepends oracle-java8-jdk</code> 查看依赖 <code class="highlighter-rouge">jdk</code> 的相关软件包，并执行 <code class="highlighter-rouge">apt-get purge xxxxx</code> 卸载他们，基本这些软件包都是教学用的，可以删掉；然后自己下载 <code class="highlighter-rouge">arm</code> 平台的 <code class="highlighter-rouge">jdk7</code> (感觉8太新了怕不稳定) 安装、配置环境。</li>
+    <li>下载完 src 源码包后上传到树莓派并解压，在开始编译前，需要正确的配置<code class="language-plaintext highlighter-rouge">JAVA_HOME</code> 和 <code class="language-plaintext highlighter-rouge">PATH</code>，这里有个小问题，树莓派2自带了JDK8，但 <code class="language-plaintext highlighter-rouge">JAVA_HOME</code> 啥的没配置，所以会有问题；但直接卸载的话 <code class="language-plaintext highlighter-rouge">apt-get</code> 会自动给你安装 <code class="language-plaintext highlighter-rouge">open-jdk7</code>，可执行 <code class="language-plaintext highlighter-rouge">apt-cache rdepends oracle-java8-jdk</code> 查看依赖 <code class="language-plaintext highlighter-rouge">jdk</code> 的相关软件包，并执行 <code class="language-plaintext highlighter-rouge">apt-get purge xxxxx</code> 卸载他们，基本这些软件包都是教学用的，可以删掉；然后自己下载 <code class="language-plaintext highlighter-rouge">arm</code> 平台的 <code class="language-plaintext highlighter-rouge">jdk7</code> (感觉8太新了怕不稳定) 安装、配置环境。</li>
   </ol>
 </blockquote>
 
@@ -697,10 +697,10 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 
 <blockquote>
   <ol>
-    <li>配置完 <code class="highlighter-rouge">JAVA_HOME</code>、<code class="highlighter-rouge">PATH</code> 变量以后还需要下载一个 <code class="highlighter-rouge">Ant</code>，因为 <code class="highlighter-rouge">wrapper</code> 是基于 <code class="highlighter-rouge">Ant</code> 构建的，基本步骤也是。 <a href="http://ant.apache.org/bindownload.cgi">下载Ant</a> 然后解压到指定目录，配置一下 <code class="highlighter-rouge">ANT_HOME</code>，方法自查。</li>
-    <li>在正式编译前需要 <code class="highlighter-rouge">cp src/c/Makefile-linux-x86-32.make</code> to <code class="highlighter-rouge">src/c/Makefile-linux-arm-32.make</code> (老外的原文，说来了就是 <code class="highlighter-rouge">copy</code> 一份到当前目录并重命名一下)。</li>
-    <li>进入到 <code class="highlighter-rouge">wrapper</code> 解压后的目录执行 <code class="highlighter-rouge">./build32.sh</code> 进行编译，如果 <code class="highlighter-rouge">JAVA_HOME</code>、<code class="highlighter-rouge">PATH</code>、<code class="highlighter-rouge">Ant</code>、<code class="highlighter-rouge">.make 文件</code> 没问题的话编译一般不会出错。</li>
-    <li>编译完成后在 <code class="highlighter-rouge">nexus-2.11.4-01/bin/jsw</code> 下新建一个 <code class="highlighter-rouge">linux-armv7l-32</code> 文件夹，复制编译好的 <code class="highlighter-rouge">wrapper_3.5.9_src/bin/wrapper</code> 文件到 刚刚新建的 <code class="highlighter-rouge">linux-armv7l-32</code> 目录下，由于<strong><em>使用了高版本</em></strong> <code class="highlighter-rouge">wrapper</code>，<code class="highlighter-rouge">wrapper.jar</code> 复制过去后需要先删掉原来的 <code class="highlighter-rouge">wrapper-3.2.3.jar</code> 并将 <code class="highlighter-rouge">wrapper.jar</code> 重命名为 <code class="highlighter-rouge">wrapper-3.2.3.jar</code>。</li>
+    <li>配置完 <code class="language-plaintext highlighter-rouge">JAVA_HOME</code>、<code class="language-plaintext highlighter-rouge">PATH</code> 变量以后还需要下载一个 <code class="language-plaintext highlighter-rouge">Ant</code>，因为 <code class="language-plaintext highlighter-rouge">wrapper</code> 是基于 <code class="language-plaintext highlighter-rouge">Ant</code> 构建的，基本步骤也是。 <a href="http://ant.apache.org/bindownload.cgi">下载Ant</a> 然后解压到指定目录，配置一下 <code class="language-plaintext highlighter-rouge">ANT_HOME</code>，方法自查。</li>
+    <li>在正式编译前需要 <code class="language-plaintext highlighter-rouge">cp src/c/Makefile-linux-x86-32.make</code> to <code class="language-plaintext highlighter-rouge">src/c/Makefile-linux-arm-32.make</code> (老外的原文，说来了就是 <code class="language-plaintext highlighter-rouge">copy</code> 一份到当前目录并重命名一下)。</li>
+    <li>进入到 <code class="language-plaintext highlighter-rouge">wrapper</code> 解压后的目录执行 <code class="language-plaintext highlighter-rouge">./build32.sh</code> 进行编译，如果 <code class="language-plaintext highlighter-rouge">JAVA_HOME</code>、<code class="language-plaintext highlighter-rouge">PATH</code>、<code class="language-plaintext highlighter-rouge">Ant</code>、<code class="language-plaintext highlighter-rouge">.make 文件</code> 没问题的话编译一般不会出错。</li>
+    <li>编译完成后在 <code class="language-plaintext highlighter-rouge">nexus-2.11.4-01/bin/jsw</code> 下新建一个 <code class="language-plaintext highlighter-rouge">linux-armv7l-32</code> 文件夹，复制编译好的 <code class="language-plaintext highlighter-rouge">wrapper_3.5.9_src/bin/wrapper</code> 文件到 刚刚新建的 <code class="language-plaintext highlighter-rouge">linux-armv7l-32</code> 目录下，由于<strong><em>使用了高版本</em></strong> <code class="language-plaintext highlighter-rouge">wrapper</code>，<code class="language-plaintext highlighter-rouge">wrapper.jar</code> 复制过去后需要先删掉原来的 <code class="language-plaintext highlighter-rouge">wrapper-3.2.3.jar</code> 并将 <code class="language-plaintext highlighter-rouge">wrapper.jar</code> 重命名为 <code class="language-plaintext highlighter-rouge">wrapper-3.2.3.jar</code>。</li>
   </ol>
 </blockquote>
 
@@ -710,9 +710,9 @@ make <span class="o">&amp;&amp;</span> make <span class="nb">install</span>
 
 <blockquote>
   <ul>
-    <li>新建用户 <code class="highlighter-rouge">nexus</code> : <code class="highlighter-rouge">adduser nexus</code> (别用 <code class="highlighter-rouge">useradd</code> 我一直以为这两个命令一样，但你在树莓派2下可以试试)</li>
-    <li>改密码 : <code class="highlighter-rouge">passwd nexus</code></li>
-    <li>改两个配置文件 : <code class="highlighter-rouge">nexus-2.11.4-01/bin/nexus</code>、<code class="highlighter-rouge">nexus-2.11.4-01/bin/jsw/conf/wrapper.conf</code>，两个配置要改的地方贴出来如下 (更详细的参见 <a href="http://mritd.me/archives/2024">Nexus 2.11 CentOS搭建教程</a>) :</li>
+    <li>新建用户 <code class="language-plaintext highlighter-rouge">nexus</code> : <code class="language-plaintext highlighter-rouge">adduser nexus</code> (别用 <code class="language-plaintext highlighter-rouge">useradd</code> 我一直以为这两个命令一样，但你在树莓派2下可以试试)</li>
+    <li>改密码 : <code class="language-plaintext highlighter-rouge">passwd nexus</code></li>
+    <li>改两个配置文件 : <code class="language-plaintext highlighter-rouge">nexus-2.11.4-01/bin/nexus</code>、<code class="language-plaintext highlighter-rouge">nexus-2.11.4-01/bin/jsw/conf/wrapper.conf</code>，两个配置要改的地方贴出来如下 (更详细的参见 <a href="http://mritd.me/archives/2024">Nexus 2.11 CentOS搭建教程</a>) :</li>
   </ul>
 </blockquote>
 
@@ -737,7 +737,7 @@ wrapper.java.command<span class="o">=</span>/usr/local/java/jdk1.7.0_79/bin/java
 
 <blockquote>
   <ul>
-    <li>先切换到 <code class="highlighter-rouge">nexus</code> 用户，因为官方不推荐以 <code class="highlighter-rouge">root</code> 用户运行，执行 : <code class="highlighter-rouge">su - nexus</code>，然后启动 <code class="highlighter-rouge">nexus</code>，执行 <code class="highlighter-rouge">nexus start</code> 启动，时间比较长，大约2分钟，使用 <code class="highlighter-rouge">tail -f nexus-2.11.4-01/logs/wrapper.log</code> 查看进度，启动成功后访问 <code class="highlighter-rouge">IP:8081/nexus</code> 即可，默认用户 <code class="highlighter-rouge">admin</code>，密码 <code class="highlighter-rouge">admin123</code>；到此结束。</li>
+    <li>先切换到 <code class="language-plaintext highlighter-rouge">nexus</code> 用户，因为官方不推荐以 <code class="language-plaintext highlighter-rouge">root</code> 用户运行，执行 : <code class="language-plaintext highlighter-rouge">su - nexus</code>，然后启动 <code class="language-plaintext highlighter-rouge">nexus</code>，执行 <code class="language-plaintext highlighter-rouge">nexus start</code> 启动，时间比较长，大约2分钟，使用 <code class="language-plaintext highlighter-rouge">tail -f nexus-2.11.4-01/logs/wrapper.log</code> 查看进度，启动成功后访问 <code class="language-plaintext highlighter-rouge">IP:8081/nexus</code> 即可，默认用户 <code class="language-plaintext highlighter-rouge">admin</code>，密码 <code class="language-plaintext highlighter-rouge">admin123</code>；到此结束。</li>
   </ul>
 </blockquote>
 
@@ -748,7 +748,7 @@ wrapper.java.command<span class="o">=</span>/usr/local/java/jdk1.7.0_79/bin/java
 </ul>
 
 <blockquote>
-  <p>执行 <code class="highlighter-rouge">apt-get install screen</code> 安装screen，用于后台运行编译任务，防止断网等原因造成的编译失败。</p>
+  <p>执行 <code class="language-plaintext highlighter-rouge">apt-get install screen</code> 安装screen，用于后台运行编译任务，防止断网等原因造成的编译失败。</p>
 </blockquote>
 
 <ul>
@@ -833,16 +833,16 @@ chkconfig <span class="nt">--add</span> mysql
 
 <blockquote>
   <p>mysql5.6的默认参数设置问题，更改my.cnf，调整以下参数
-<code class="highlighter-rouge">performance_schema_max_table_instances=600</code>
-<code class="highlighter-rouge">table_definition_cache=400</code>
-<code class="highlighter-rouge">table_open_cache=256</code>
+<code class="language-plaintext highlighter-rouge">performance_schema_max_table_instances=600</code>
+<code class="language-plaintext highlighter-rouge">table_definition_cache=400</code>
+<code class="language-plaintext highlighter-rouge">table_open_cache=256</code>
 这时mysql启动后内存就只占用40–60M内存了</p>
 </blockquote>
 
 <h3 id="安装-xrdp远程桌面">安装 xrdp远程桌面</h3>
 
 <blockquote>
-  <p>其实树莓派感觉没必要买显示器，因为直接可以安装远程桌面，执行 <code class="highlighter-rouge">apt-get install xrdp</code> 安装，在 <code class="highlighter-rouge">Windows</code> 下可直接使用远程桌面连接，按 <code class="highlighter-rouge">Win+R</code> 键输入 <code class="highlighter-rouge">mstsc</code>，再输入树莓派地址和用户名密码   就可以，截图如下:
+  <p>其实树莓派感觉没必要买显示器，因为直接可以安装远程桌面，执行 <code class="language-plaintext highlighter-rouge">apt-get install xrdp</code> 安装，在 <code class="language-plaintext highlighter-rouge">Windows</code> 下可直接使用远程桌面连接，按 <code class="language-plaintext highlighter-rouge">Win+R</code> 键输入 <code class="language-plaintext highlighter-rouge">mstsc</code>，再输入树莓派地址和用户名密码   就可以，截图如下:
 <img src="http://7xoixd.com1.z0.glb.clouddn.com/raspberry_xrdp.png" alt="远程桌面" />
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 </blockquote>
@@ -948,7 +948,7 @@ chkconfig <span class="nt">--add</span> mysql
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

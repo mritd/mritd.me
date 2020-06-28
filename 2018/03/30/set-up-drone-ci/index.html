@@ -391,7 +391,7 @@ volumes:
   data:
 </code></pre></div></div>
 
-<p>docker compose 中 <code class="highlighter-rouge">DRONE_GITLAB_CLIENT</code> 为 GitLab 创建 Application 时的 <code class="highlighter-rouge">Application Id</code>，<code class="highlighter-rouge">DRONE_GITLAB_SECRET</code> 为 <code class="highlighter-rouge">Secret</code>；其他环境变量解释如下:</p>
+<p>docker compose 中 <code class="language-plaintext highlighter-rouge">DRONE_GITLAB_CLIENT</code> 为 GitLab 创建 Application 时的 <code class="language-plaintext highlighter-rouge">Application Id</code>，<code class="language-plaintext highlighter-rouge">DRONE_GITLAB_SECRET</code> 为 <code class="language-plaintext highlighter-rouge">Secret</code>；其他环境变量解释如下:</p>
 
 <ul>
   <li>DRONE_OPEN: 是否允许开放注册</li>
@@ -474,7 +474,7 @@ HE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CB
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>然后访问 <code class="highlighter-rouge">https://YOUR_DRONE_SERVER</code> 将会自动跳转到 GitLab Auth2 授权界面，授权登录即可；随后将会返回 Drone CI 界面，界面上会列出相应的项目列表，点击后面的开关按钮来开启对应项目的 Drone CI 服务</p>
+<p>然后访问 <code class="language-plaintext highlighter-rouge">https://YOUR_DRONE_SERVER</code> 将会自动跳转到 GitLab Auth2 授权界面，授权登录即可；随后将会返回 Drone CI 界面，界面上会列出相应的项目列表，点击后面的开关按钮来开启对应项目的 Drone CI 服务</p>
 
 <p><img src="https://cdn.oss.link/markdown/6u4fk.png" alt="drone ci project list" /></p>
 
@@ -488,9 +488,9 @@ HE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CB
 
 <h3 id="33drone-cli">3.3、Drone CLI</h3>
 
-<p>这里不得不说一下官方文档真的很烂，有些东西只能自己摸索，而且各种错误提示也是烂的不能再烂，经常遇到 <code class="highlighter-rouge">Client Error 404:</code> 这种错误，后面任何提示信息也没有；官方文档中介绍了有些操作只能通过 cli 执行，CLI 下载需要到 GitHub 下载页下载，地址 <a href="https://github.com/drone/drone-cli/releases">点这里</a></p>
+<p>这里不得不说一下官方文档真的很烂，有些东西只能自己摸索，而且各种错误提示也是烂的不能再烂，经常遇到 <code class="language-plaintext highlighter-rouge">Client Error 404:</code> 这种错误，后面任何提示信息也没有；官方文档中介绍了有些操作只能通过 cli 执行，CLI 下载需要到 GitHub 下载页下载，地址 <a href="https://github.com/drone/drone-cli/releases">点这里</a></p>
 
-<p>cli 工具下载后需要进行配置，目前只支持读取环境变量，使用前需要 <code class="highlighter-rouge">export</code> 以下两个变量</p>
+<p>cli 工具下载后需要进行配置，目前只支持读取环境变量，使用前需要 <code class="language-plaintext highlighter-rouge">export</code> 以下两个变量</p>
 
 <ul>
   <li>DRONE_SERVER: Drone CI 地址</li>
@@ -505,7 +505,7 @@ HE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CB
 
 <h3 id="34drone-ci-配置文件">3.4、Drone CI 配置文件</h3>
 
-<p>Drone CI 对一个项目进行 CI 构建取决于两个因素，第一必须保证该项目在 Drone 控制面板中开启了构建(构建按钮开启)，第二保证项目根目录下存在 <code class="highlighter-rouge">.drone.yml</code>；满足这两点后每次提交 Drone 就会根据 <code class="highlighter-rouge">.drone.yml</code> 中配置进行按步骤构建；本示例中 <code class="highlighter-rouge">.drone.yml</code> 配置如下</p>
+<p>Drone CI 对一个项目进行 CI 构建取决于两个因素，第一必须保证该项目在 Drone 控制面板中开启了构建(构建按钮开启)，第二保证项目根目录下存在 <code class="language-plaintext highlighter-rouge">.drone.yml</code>；满足这两点后每次提交 Drone 就会根据 <code class="language-plaintext highlighter-rouge">.drone.yml</code> 中配置进行按步骤构建；本示例中 <code class="language-plaintext highlighter-rouge">.drone.yml</code> 配置如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>clone:
   git:
@@ -546,18 +546,18 @@ branches:
   exclude: <span class="o">[</span> develop, <span class="nb">test</span>/<span class="k">*</span> <span class="o">]</span>
 </code></pre></div></div>
 
-<p>Drone CI 配置文件为 docker compose 的超集，<strong>Drone CI 构建思想是使用不同的阶段定义完成对 CI 流程的整体划分，然后每个阶段内定义不同的任务(task)，这些任务所有操作无论是 build、package 等全部由单独的 Docker 镜像完成，同时以 <code class="highlighter-rouge">plugins</code> 开头的 image 被解释为内部插件；其他的插件实际上可以看做为标准的 Docker image</strong></p>
+<p>Drone CI 配置文件为 docker compose 的超集，<strong>Drone CI 构建思想是使用不同的阶段定义完成对 CI 流程的整体划分，然后每个阶段内定义不同的任务(task)，这些任务所有操作无论是 build、package 等全部由单独的 Docker 镜像完成，同时以 <code class="language-plaintext highlighter-rouge">plugins</code> 开头的 image 被解释为内部插件；其他的插件实际上可以看做为标准的 Docker image</strong></p>
 
-<p>第一段 <code class="highlighter-rouge">clone</code> 配置声明了源码版本控制系统拉取方式，具体参见 <a href="http://docs.drone.io/cloning">cloning</a>部分，定义后 Drone CI 将自动拉取源码</p>
+<p>第一段 <code class="language-plaintext highlighter-rouge">clone</code> 配置声明了源码版本控制系统拉取方式，具体参见 <a href="http://docs.drone.io/cloning">cloning</a>部分，定义后 Drone CI 将自动拉取源码</p>
 
-<p>此后的 <code class="highlighter-rouge">pipeline</code> 配置段为定义整个 CI 流程段，该段中可以自定义具体 task，比如后端构建可以取名字为 <code class="highlighter-rouge">backend</code>，前端构建可以叫做 <code class="highlighter-rouge">frontend</code>；中间可以穿插辅助的如打包 docker 镜像等 task；同 GitLab CI 一样，Agent 在使用 Docker 进行构建时必然涉及到拉取私有镜像，Drone CI 想要拉取私有镜像目前仅能通过 cli 命令行进行设置，而且仅针对项目级设置(全局需要企业版…这也行)</p>
+<p>此后的 <code class="language-plaintext highlighter-rouge">pipeline</code> 配置段为定义整个 CI 流程段，该段中可以自定义具体 task，比如后端构建可以取名字为 <code class="language-plaintext highlighter-rouge">backend</code>，前端构建可以叫做 <code class="language-plaintext highlighter-rouge">frontend</code>；中间可以穿插辅助的如打包 docker 镜像等 task；同 GitLab CI 一样，Agent 在使用 Docker 进行构建时必然涉及到拉取私有镜像，Drone CI 想要拉取私有镜像目前仅能通过 cli 命令行进行设置，而且仅针对项目级设置(全局需要企业版…这也行)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>drone registry add <span class="nt">--repository</span> drone/DroneCI-TestProject <span class="nt">--hostname</span> reg.mritd.me <span class="nt">--username</span> gitlab <span class="nt">--password</span> 123456
 </code></pre></div></div>
 
 <p>在构建时需要注意一点，Drone CI 不同的 task 之间共享源码文件，<strong>也就是说如果你在第一个 task 中对源码或者编译后的发布物做了什么更改，在下一个 task 中同样可见，Drone CI 并没有 GitLab CI 在每个 task 中都进行还原的机制</strong></p>
 
-<p>除此之外，某些特殊性的挂载行为默认也是不被允许的，需要在 Drone CI 中对项目做 <code class="highlighter-rouge">Trusted</code> 设置</p>
+<p>除此之外，某些特殊性的挂载行为默认也是不被允许的，需要在 Drone CI 中对项目做 <code class="language-plaintext highlighter-rouge">Trusted</code> 设置</p>
 
 <p><img src="https://cdn.oss.link/markdown/gd60v.png" alt="Drone Project Trusted Setting" /></p>
 
@@ -674,7 +674,7 @@ branches:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -202,11 +202,11 @@
 
 <p><strong>虚拟机：</strong> 模拟某种计算机体系结构，执行特定指令的软件；虚拟机一般分为 <strong>系统虚拟机、进程虚拟机。</strong></p>
 
-<p><strong>系统虚拟机：</strong>如 <code class="highlighter-rouge">Virtual Box</code>、<code class="highlighter-rouge">VMware</code> 等，完整的模拟整个操作系统。</p>
+<p><strong>系统虚拟机：</strong>如 <code class="language-plaintext highlighter-rouge">Virtual Box</code>、<code class="language-plaintext highlighter-rouge">VMware</code> 等，完整的模拟整个操作系统。</p>
 
-<p><strong>进程虚拟机：</strong>如 <code class="highlighter-rouge">JVM</code>、<code class="highlighter-rouge">Adobe Flash Player</code>、<code class="highlighter-rouge">FC模拟器</code> 等，<strong>进程虚拟机不会完整的模拟系统，而只是模拟某个特定指令级的虚拟机。</strong></p>
+<p><strong>进程虚拟机：</strong>如 <code class="language-plaintext highlighter-rouge">JVM</code>、<code class="language-plaintext highlighter-rouge">Adobe Flash Player</code>、<code class="language-plaintext highlighter-rouge">FC模拟器</code> 等，<strong>进程虚拟机不会完整的模拟系统，而只是模拟某个特定指令级的虚拟机。</strong></p>
 
-<p><strong>高级语言虚拟机：</strong>如 <code class="highlighter-rouge">JVM</code>、<code class="highlighter-rouge">.NET CLR</code>、<code class="highlighter-rouge">P-Code</code> 等，高级语言虚拟机属于进程虚拟机的一种，只不过更加细致化，将模拟某个指令级限定为某个高级语言。</p>
+<p><strong>高级语言虚拟机：</strong>如 <code class="language-plaintext highlighter-rouge">JVM</code>、<code class="language-plaintext highlighter-rouge">.NET CLR</code>、<code class="language-plaintext highlighter-rouge">P-Code</code> 等，高级语言虚拟机属于进程虚拟机的一种，只不过更加细致化，将模拟某个指令级限定为某个高级语言。</p>
 
 <!--more-->
 
@@ -215,7 +215,7 @@
 <p><strong>JVM：</strong></p>
 
 <ul>
-  <li>必须通过 <code class="highlighter-rouge">Java TCK</code> (Technology Compatibility Kit) 的兼容性测试才能称之为 JVM。</li>
+  <li>必须通过 <code class="language-plaintext highlighter-rouge">Java TCK</code> (Technology Compatibility Kit) 的兼容性测试才能称之为 JVM。</li>
   <li>JVM 并非一定执行 “Java” 程序，JVM 面对的是 class 字节码；比如 Scala 语言，其生成也是 class ，便可运行在 JVM 上。</li>
   <li>业界三大商用虚拟机：Oracle HotSpot、Oracle JRockit VM、IBM J9 VM</li>
 </ul>
@@ -308,8 +308,8 @@ reference)、返回地址(returnAddress)型的数据(两个 Solat 可以存放 l
 <h3 id="6异常情况">6、异常情况</h3>
 
 <ul>
-  <li>如果线程请求的栈容量超出 Java 虚拟机栈容量，那么将抛出 <code class="highlighter-rouge">StackOverflowError</code> 异常。</li>
-  <li>如果 Java 虚拟机栈可以动态扩展，但尝试扩展的动作无法申请到足够的内存去完成扩展，或者在建立新线程时无法获得足够的内存去创建对应的虚拟机栈，那么将抛出 <code class="highlighter-rouge">OutOfMemoryError</code> 异常。</li>
+  <li>如果线程请求的栈容量超出 Java 虚拟机栈容量，那么将抛出 <code class="language-plaintext highlighter-rouge">StackOverflowError</code> 异常。</li>
+  <li>如果 Java 虚拟机栈可以动态扩展，但尝试扩展的动作无法申请到足够的内存去完成扩展，或者在建立新线程时无法获得足够的内存去创建对应的虚拟机栈，那么将抛出 <code class="language-plaintext highlighter-rouge">OutOfMemoryError</code> 异常。</li>
   <li><strong>JVM 参数：-Xss用于控制 Java 虚拟机栈的栈深度，注意：Oracle HotSpot 虚拟机 Java 虚拟机栈和本地方法栈是一个，所以此参数将控制两个栈的总体栈深度。</strong>
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
 </ul>
@@ -415,7 +415,7 @@ reference)、返回地址(returnAddress)型的数据(两个 Solat 可以存放 l
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

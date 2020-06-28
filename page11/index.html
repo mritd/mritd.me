@@ -177,6 +177,25 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/06/20/Docker-Contianer-%E6%8C%82%E6%8E%89%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6/">
+        <h2 class="post-title">
+            Docker Contianer 挂掉强制修改文件
+        </h2>
+        
+        <div class="post-content-preview">
+            一、扯犊子
+
+
+  起因是为了装逼，想申请一个 StartSSL 证书给博客装下逼…… 目前博客全部采用 Dokcer 部署，前端一个 Nginx 的 Contianer 做反代，后端起了静态博客、WP老博客什么的一些东西；手残党开始肆无忌惮的改前端 Nginx Contianer 中的配置；发现 service nginx reload 没效果，这特么哪行，果断 docker restar...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 20, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/06/19/AspectJ-Hello-World/">
         <h2 class="post-title">
             AspectJ Hello World
@@ -415,34 +434,6 @@ if(webRoot == ...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/">
-        <h2 class="post-title">
-            JDK8 新特性
-        </h2>
-        
-        <div class="post-content-preview">
-            一、接口的默认方法实现
-
-在 JDK8 中，接口允许有默认的实现方法，这些默认的实现方法需要使用 default 关键字修饰即可，同时其实现类可直接调用这些方法；代码示例如下：
-
-1、自定义接口
-
-public interface TestInterface {
-
-    // 接口方法
-    public void test();
-
-    // 接口默认方法1
-    default ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on April 11, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -513,7 +504,7 @@ public interface TestInterface {
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

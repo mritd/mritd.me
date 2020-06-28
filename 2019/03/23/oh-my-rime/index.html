@@ -205,7 +205,7 @@
 
 <h2 id="一安装">一、安装</h2>
 
-<p>安装 Rime 没啥好说的，直接从<a href="https://rime.im">官网</a>下载最新版本的安装包既可；安装完成后配置文件位于 <code class="highlighter-rouge">~/Library/Rime</code> 位置；在进行后续折腾之前我建议还是先 <code class="highlighter-rouge">cp -r ~/Library/Rime ~/Library/Rime.bak</code> 备份一下配置文件，以防制后续折腾挂了还可以还原；安装完成以后按 <code class="highlighter-rouge">⌘ + 反引号(~)</code> 切换到 <code class="highlighter-rouge">朙月拼音-简化字</code> 既可开启简体中文输入</p>
+<p>安装 Rime 没啥好说的，直接从<a href="https://rime.im">官网</a>下载最新版本的安装包既可；安装完成后配置文件位于 <code class="language-plaintext highlighter-rouge">~/Library/Rime</code> 位置；在进行后续折腾之前我建议还是先 <code class="language-plaintext highlighter-rouge">cp -r ~/Library/Rime ~/Library/Rime.bak</code> 备份一下配置文件，以防制后续折腾挂了还可以还原；安装完成以后按 <code class="language-plaintext highlighter-rouge">⌘ + 反引号(~)</code> 切换到 <code class="language-plaintext highlighter-rouge">朙月拼音-简化字</code> 既可开启简体中文输入</p>
 
 <h2 id="二乱码解决">二、乱码解决</h2>
 
@@ -217,11 +217,11 @@
 
 <p>官方并不建议直接修改原始的配置文件，因为输入法更新时会重新覆盖默认配置，可能导致某些自定义配置丢失；推荐作法是创建一系列的 patch 配置，通过类似打补丁替换这种方式来实现无感的增加自定义配置；</p>
 
-<p>由于使用的是 <code class="highlighter-rouge">朙月拼音-简化字</code> 输入方案，所以需要创建 <code class="highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 等配置文件，后面就是查文档 + 各种 Google 一顿魔改了；目前我将我自己用的配置放在了 <a href="https://github.com/mritd/rime">Github</a> 上，有需要的可以直接 clone 下来，用里面的配置文件直接覆盖 <code class="highlighter-rouge">~/Library/Rime</code> 下的文件，然后重新部署既可，关于具体配置细节在下面写</p>
+<p>由于使用的是 <code class="language-plaintext highlighter-rouge">朙月拼音-简化字</code> 输入方案，所以需要创建 <code class="language-plaintext highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 等配置文件，后面就是查文档 + 各种 Google 一顿魔改了；目前我将我自己用的配置放在了 <a href="https://github.com/mritd/rime">Github</a> 上，有需要的可以直接 clone 下来，用里面的配置文件直接覆盖 <code class="language-plaintext highlighter-rouge">~/Library/Rime</code> 下的文件，然后重新部署既可，关于具体配置细节在下面写</p>
 
 <h2 id="四自定义配色">四、自定义配色</h2>
 
-<p>皮肤配色配置方案位于 <code class="highlighter-rouge">squirrel.custom.yaml</code> 配置文件中，我的配置目前是参考搜狗输入法皮肤自己调试的；官方也提供了一些皮肤外观配置，详见 <a href="https://gist.github.com/lotem/2290714">Gist</a>；想要切换皮肤配色只需要修改 <code class="highlighter-rouge">style/color_scheme</code> 为相应的皮肤配色名称既可</p>
+<p>皮肤配色配置方案位于 <code class="language-plaintext highlighter-rouge">squirrel.custom.yaml</code> 配置文件中，我的配置目前是参考搜狗输入法皮肤自己调试的；官方也提供了一些皮肤外观配置，详见 <a href="https://gist.github.com/lotem/2290714">Gist</a>；想要切换皮肤配色只需要修改 <code class="language-plaintext highlighter-rouge">style/color_scheme</code> 为相应的皮肤配色名称既可</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">patch</span><span class="pi">:</span>
   <span class="na">show_notifications_when</span><span class="pi">:</span> <span class="s">appropriate</span>          <span class="c1"># 状态通知，适当，也可设为全开（always）全关（never）</span>
@@ -258,7 +258,7 @@
 
 <h2 id="五增加自定义快捷字符">五、增加自定义快捷字符</h2>
 
-<p>快捷字符例如在中文输入法状态下可以直接输入 <code class="highlighter-rouge">/dn</code> 来调出特殊符号输入；这些配置位于 <code class="highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 的 <code class="highlighter-rouge">punctuator</code> 配置中，我目前自行定义了一些，有需要的可以依葫芦画瓢直接修改</p>
+<p>快捷字符例如在中文输入法状态下可以直接输入 <code class="language-plaintext highlighter-rouge">/dn</code> 来调出特殊符号输入；这些配置位于 <code class="language-plaintext highlighter-rouge">luna_pinyin_simp.custom.yaml</code> 的 <code class="language-plaintext highlighter-rouge">punctuator</code> 配置中，我目前自行定义了一些，有需要的可以依葫芦画瓢直接修改</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">punctuator</span><span class="pi">:</span>
     <span class="na">import_preset</span><span class="pi">:</span> <span class="s">symbols</span>
@@ -277,7 +277,7 @@
 
 <h2 id="六设置输入方案">六、设置输入方案</h2>
 
-<p>在第一次按 <code class="highlighter-rouge">⌘ + 反引号(~)</code> 设置输入法时实际上我们可以看到很多的输入方案，而事实上很多方案我们根本用不上；想要删除和修改方案可以调整 <code class="highlighter-rouge">default.custom.yaml</code> 中的 <code class="highlighter-rouge">schema_list</code> 字段</p>
+<p>在第一次按 <code class="language-plaintext highlighter-rouge">⌘ + 反引号(~)</code> 设置输入法时实际上我们可以看到很多的输入方案，而事实上很多方案我们根本用不上；想要删除和修改方案可以调整 <code class="language-plaintext highlighter-rouge">default.custom.yaml</code> 中的 <code class="language-plaintext highlighter-rouge">schema_list</code> 字段</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">patch</span><span class="pi">:</span>
   <span class="na">menu</span><span class="pi">:</span>
@@ -296,7 +296,7 @@
 
 <h2 id="七调整特殊键行为">七、调整特殊键行为</h2>
 
-<p>在刚安装完以后发现在中文输入法状态下输入英文，按 <code class="highlighter-rouge">shift</code> 键后字符上屏，然后还得回车一下，这就很让我难受…最后找到了这篇 <a href="https://gist.github.com/lotem/2981316">Gist</a>，目前将大写锁定、<code class="highlighter-rouge">shift</code> 键调整为了跟搜狗一致的配置，有需要调整的可以自行编辑 <code class="highlighter-rouge">default.custom.yaml</code> 中的 <code class="highlighter-rouge">ascii_composer/switch_key</code> 部分</p>
+<p>在刚安装完以后发现在中文输入法状态下输入英文，按 <code class="language-plaintext highlighter-rouge">shift</code> 键后字符上屏，然后还得回车一下，这就很让我难受…最后找到了这篇 <a href="https://gist.github.com/lotem/2981316">Gist</a>，目前将大写锁定、<code class="language-plaintext highlighter-rouge">shift</code> 键调整为了跟搜狗一致的配置，有需要调整的可以自行编辑 <code class="language-plaintext highlighter-rouge">default.custom.yaml</code> 中的 <code class="language-plaintext highlighter-rouge">ascii_composer/switch_key</code> 部分</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># capslock 键切换英文并输出大写</span>
 <span class="s">ascii_composer/good_old_caps_lock</span><span class="pi">:</span> <span class="no">true</span>
@@ -314,13 +314,13 @@
 
 <p>Rime 默认的词库稍为有点弱，我们可以下载一些搜狗词库来进行扩展；不过搜狗词库格式默认是无法解析的，好在有人开发了工具可以方便的将搜狗细胞词库转化为 Rime 的格式(工具<a href="https://github.com/studyzy/imewlconverter/releases">点击这里</a>下载)；目前该工具只支持 Windows(也有些别人写的 py 脚本啥的，但是我没用)，所以词库转换这种操作还得需要一个 Windows 虚拟机；</p>
 
-<p>转换过程很简单，先从<a href="https://pinyin.sogou.com/dict/">搜狗词库</a>下载一系列的 <code class="highlighter-rouge">scel</code> 文件，然后批量选中，接着调整一下输入和输出格式点击转换，最后保存成一个 <code class="highlighter-rouge">txt</code> 文本</p>
+<p>转换过程很简单，先从<a href="https://pinyin.sogou.com/dict/">搜狗词库</a>下载一系列的 <code class="language-plaintext highlighter-rouge">scel</code> 文件，然后批量选中，接着调整一下输入和输出格式点击转换，最后保存成一个 <code class="language-plaintext highlighter-rouge">txt</code> 文本</p>
 
 <p><img src="https://cdn.oss.link/markdown/jtv97.png" alt="input-setting" /></p>
 
 <p><img src="https://cdn.oss.link/markdown/p7qha.png" alt="convert" /></p>
 
-<p>光有这个文本还不够，我们要将它塞到词库的 <code class="highlighter-rouge">yaml</code> 配置里，所以新建一个词库配置文件 <code class="highlighter-rouge">luna_pinyin.sougou.dict.yaml</code>，然后写上头部说明(<strong>注意最后三个点后面加一个换行</strong>)</p>
+<p>光有这个文本还不够，我们要将它塞到词库的 <code class="language-plaintext highlighter-rouge">yaml</code> 配置里，所以新建一个词库配置文件 <code class="language-plaintext highlighter-rouge">luna_pinyin.sougou.dict.yaml</code>，然后写上头部说明(<strong>注意最后三个点后面加一个换行</strong>)</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Rime dictionary</span>
 <span class="c1"># encoding: utf-8</span>
@@ -337,12 +337,12 @@
 
 </code></pre></div></div>
 
-<p>接着只需要把生成好的词库 <code class="highlighter-rouge">txt</code> 文件内容粘贴到三个点下面既可；但是词库太多的话你会发现这个文本有好几十 M，一般编辑器打开都会卡死，解决这种情况只需要用命令行 <code class="highlighter-rouge">cat</code> 一下就行</p>
+<p>接着只需要把生成好的词库 <code class="language-plaintext highlighter-rouge">txt</code> 文件内容粘贴到三个点下面既可；但是词库太多的话你会发现这个文本有好几十 M，一般编辑器打开都会卡死，解决这种情况只需要用命令行 <code class="language-plaintext highlighter-rouge">cat</code> 一下就行</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat </span>sougou.txt <span class="o">&gt;&gt;</span> luna_pinyin.sougou.dict.yaml
 </code></pre></div></div>
 
-<p>最后修改 <code class="highlighter-rouge">luna_pinyin.extended.dict.yaml</code> 中的 <code class="highlighter-rouge">import_tables</code> 字段，加入刚刚新建的词库既可</p>
+<p>最后修改 <code class="language-plaintext highlighter-rouge">luna_pinyin.extended.dict.yaml</code> 中的 <code class="language-plaintext highlighter-rouge">import_tables</code> 字段，加入刚刚新建的词库既可</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
 <span class="na">name</span><span class="pi">:</span> <span class="s">luna_pinyin.extended</span>
@@ -363,7 +363,7 @@
 
 <h2 id="九定制特殊单词">九、定制特殊单词</h2>
 
-<p>由于长期撸码，24 小时离不开命令行，偶尔在中文输入法下输入了一些命令导致汉字直接出现在 terminal 上就很尴尬…这时候我们可以在 <code class="highlighter-rouge">luna_pinyin.cn_en.dict.yaml</code> 加入一些我们自己的专属词库，比如这样</p>
+<p>由于长期撸码，24 小时离不开命令行，偶尔在中文输入法下输入了一些命令导致汉字直接出现在 terminal 上就很尴尬…这时候我们可以在 <code class="language-plaintext highlighter-rouge">luna_pinyin.cn_en.dict.yaml</code> 加入一些我们自己的专属词库，比如这样</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
 <span class="na">name</span><span class="pi">:</span> <span class="s">luna_pinyin.cn_en</span>
@@ -496,7 +496,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -215,18 +215,18 @@
 
 <h4 id="21创建文件系统">2.1、创建文件系统</h4>
 
-<p>同传统的 ext 系列文件系统一样，btrfs 文件系统格式化同样采用 <code class="highlighter-rouge">mkfs</code> 系列命令 <code class="highlighter-rouge">mkfs.btrfs</code>，其常用选项如下：</p>
+<p>同传统的 ext 系列文件系统一样，btrfs 文件系统格式化同样采用 <code class="language-plaintext highlighter-rouge">mkfs</code> 系列命令 <code class="language-plaintext highlighter-rouge">mkfs.btrfs</code>，其常用选项如下：</p>
 
 <ul>
-  <li><code class="highlighter-rouge">-L</code> 指定卷标</li>
-  <li><code class="highlighter-rouge">-m</code> 指明元数据存放机制(RAID)</li>
-  <li><code class="highlighter-rouge">-d</code> 指明数据存放机制(RAID)</li>
-  <li><code class="highlighter-rouge">-O</code> 格式化时指定文件系统开启那些特性(不一定所有内核支持)，如果需要查看支持那些特性可使用 <code class="highlighter-rouge">mkfs.btrfs -O list-all</code></li>
+  <li><code class="language-plaintext highlighter-rouge">-L</code> 指定卷标</li>
+  <li><code class="language-plaintext highlighter-rouge">-m</code> 指明元数据存放机制(RAID)</li>
+  <li><code class="language-plaintext highlighter-rouge">-d</code> 指明数据存放机制(RAID)</li>
+  <li><code class="language-plaintext highlighter-rouge">-O</code> 格式化时指定文件系统开启那些特性(不一定所有内核支持)，如果需要查看支持那些特性可使用 <code class="language-plaintext highlighter-rouge">mkfs.btrfs -O list-all</code></li>
 </ul>
 
 <h4 id="22挂载-btrfs">2.2、挂载 btrfs</h4>
 
-<p>同 ext 系列一样，仍然使用 <code class="highlighter-rouge">mount</code> 命令，基本挂载如下：</p>
+<p>同 ext 系列一样，仍然使用 <code class="language-plaintext highlighter-rouge">mount</code> 命令，基本挂载如下：</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mount <span class="nt">-t</span> brtfs DEVICE MOUNT_POINT
 </code></pre></div></div>
@@ -243,23 +243,23 @@
 
 <h4 id="23btrfs-相关命令">2.3、btrfs 相关命令</h4>
 
-<p>管理 btrfs 使用 <code class="highlighter-rouge">btrfs</code> 命令，该命令包含诸多子命令已完成不同的功能管理，常用命令如下</p>
+<p>管理 btrfs 使用 <code class="language-plaintext highlighter-rouge">btrfs</code> 命令，该命令包含诸多子命令已完成不同的功能管理，常用命令如下</p>
 
 <ul>
-  <li><strong>btrfs 文件系统属性查看：</strong> <code class="highlighter-rouge">btrfs filesystem show</code></li>
-  <li><strong>调整文件系统大小：</strong> <code class="highlighter-rouge">btrfs filesystem resize +10g MOUNT_POINT</code></li>
-  <li><strong>添加硬件设备：</strong> <code class="highlighter-rouge">btrfs filesystem add DEVICE MOUNT_POINT</code></li>
-  <li><strong>均衡文件负载：</strong> <code class="highlighter-rouge">btrfs blance status|start|pause|resume|cancel MOUNT_POINT</code></li>
-  <li><strong>移除物理卷(联机、自动移动)：</strong> <code class="highlighter-rouge">btrfs device delete DEVICE MOUNT_POINT</code></li>
-  <li><strong>动态调整数据存放机制：</strong> <code class="highlighter-rouge">btrfs balance start -dconvert=RAID MOUNT_POINT</code></li>
-  <li><strong>动态调整元数据存放机制：</strong> <code class="highlighter-rouge">btrfs balance start -mconvert=RAID MOUNT_POINT</code></li>
-  <li><strong>动态调整文件系统数据数据存放机制：</strong> <code class="highlighter-rouge">btrfs balance start -sconvert=RAID MOUNT_POINT</code></li>
-  <li><strong>创建子卷：</strong> <code class="highlighter-rouge">btrfs subvolume create MOUNT_POINT/DIR</code></li>
-  <li><strong>列出所有子卷：</strong> <code class="highlighter-rouge">btrfs subvolume list MOUNT_POINT</code></li>
-  <li><strong>显示子卷详细信息：</strong> <code class="highlighter-rouge">btrfs subvolume show MOUNT_POINT</code></li>
-  <li><strong>删除子卷：</strong> <code class="highlighter-rouge">btrfs subvolume delete MOUNT_POIN/DIR</code></li>
-  <li><strong>创建子卷快照(子卷快照必须存放与当前子卷的同一父卷中)：</strong> <code class="highlighter-rouge">btrfs subvolume snapshot SUBVOL PARVOL</code></li>
-  <li><strong>删除快照同删除子卷一样：</strong> <code class="highlighter-rouge">btrfs subvolume delete MOUNT_POIN/DIR</code></li>
+  <li><strong>btrfs 文件系统属性查看：</strong> <code class="language-plaintext highlighter-rouge">btrfs filesystem show</code></li>
+  <li><strong>调整文件系统大小：</strong> <code class="language-plaintext highlighter-rouge">btrfs filesystem resize +10g MOUNT_POINT</code></li>
+  <li><strong>添加硬件设备：</strong> <code class="language-plaintext highlighter-rouge">btrfs filesystem add DEVICE MOUNT_POINT</code></li>
+  <li><strong>均衡文件负载：</strong> <code class="language-plaintext highlighter-rouge">btrfs blance status|start|pause|resume|cancel MOUNT_POINT</code></li>
+  <li><strong>移除物理卷(联机、自动移动)：</strong> <code class="language-plaintext highlighter-rouge">btrfs device delete DEVICE MOUNT_POINT</code></li>
+  <li><strong>动态调整数据存放机制：</strong> <code class="language-plaintext highlighter-rouge">btrfs balance start -dconvert=RAID MOUNT_POINT</code></li>
+  <li><strong>动态调整元数据存放机制：</strong> <code class="language-plaintext highlighter-rouge">btrfs balance start -mconvert=RAID MOUNT_POINT</code></li>
+  <li><strong>动态调整文件系统数据数据存放机制：</strong> <code class="language-plaintext highlighter-rouge">btrfs balance start -sconvert=RAID MOUNT_POINT</code></li>
+  <li><strong>创建子卷：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume create MOUNT_POINT/DIR</code></li>
+  <li><strong>列出所有子卷：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume list MOUNT_POINT</code></li>
+  <li><strong>显示子卷详细信息：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume show MOUNT_POINT</code></li>
+  <li><strong>删除子卷：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume delete MOUNT_POIN/DIR</code></li>
+  <li><strong>创建子卷快照(子卷快照必须存放与当前子卷的同一父卷中)：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume snapshot SUBVOL PARVOL</code></li>
+  <li><strong>删除快照同删除子卷一样：</strong> <code class="language-plaintext highlighter-rouge">btrfs subvolume delete MOUNT_POIN/DIR</code></li>
 </ul>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
@@ -365,7 +365,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

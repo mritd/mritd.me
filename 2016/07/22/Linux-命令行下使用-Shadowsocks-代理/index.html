@@ -263,7 +263,7 @@ systemctl status privoxy
 
 <h2 id="三创建快捷代理命令">三、创建快捷代理命令</h2>
 
-<p>完成上两步配置后，即可将需要代理的软件指向 <code class="highlighter-rouge">127.0.0.1:8118</code> 端口即可，但是有些命令行操作并无法设置，只能通过全局代理变量 <code class="highlighter-rouge">http_proxy</code> 等设置，此时设置后全局都受影响，为此可以写一个代理脚本，如下</p>
+<p>完成上两步配置后，即可将需要代理的软件指向 <code class="language-plaintext highlighter-rouge">127.0.0.1:8118</code> 端口即可，但是有些命令行操作并无法设置，只能通过全局代理变量 <code class="language-plaintext highlighter-rouge">http_proxy</code> 等设置，此时设置后全局都受影响，为此可以写一个代理脚本，如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim /usr/local/bin/proxy
 </code></pre></div></div>
@@ -279,7 +279,7 @@ systemctl status privoxy
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">chmod</span> +x /usr/local/bin/proxy
 </code></pre></div></div>
 
-<p><strong>最后，对任何想要走代理的命令，只需要在前面加上 <code class="highlighter-rouge">proxy</code> 即可，样例如下</strong></p>
+<p><strong>最后，对任何想要走代理的命令，只需要在前面加上 <code class="language-plaintext highlighter-rouge">proxy</code> 即可，样例如下</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>proxy gvm <span class="nb">install </span>go1.6.3
 </code></pre></div></div>
@@ -450,7 +450,7 @@ http_proxy=http://127.0.0.1:8118 https_proxy=http://127.0.0.1:8118 </span><span 
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

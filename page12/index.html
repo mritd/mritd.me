@@ -177,6 +177,34 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/">
+        <h2 class="post-title">
+            JDK8 新特性
+        </h2>
+        
+        <div class="post-content-preview">
+            一、接口的默认方法实现
+
+在 JDK8 中，接口允许有默认的实现方法，这些默认的实现方法需要使用 default 关键字修饰即可，同时其实现类可直接调用这些方法；代码示例如下：
+
+1、自定义接口
+
+public interface TestInterface {
+
+    // 接口方法
+    public void test();
+
+    // 接口默认方法1
+    default ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on April 11, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/04/09/JAXB-%E7%AC%94%E8%AE%B0/">
         <h2 class="post-title">
             JAXB 笔记
@@ -414,36 +442,6 @@ SELECT * FROM TABLE WHERE NAME='ZAHNGSAN' OR 1=1 AND AGE=10;...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/14/Java-%E5%86%85%E7%BD%AE%E5%91%BD%E4%BB%A4-jps/">
-        <h2 class="post-title">
-            Java 内置命令-jps
-        </h2>
-        
-        <div class="post-content-preview">
-            jps 命令
-
-
-  本文参考自 HollisChuang’s Blog
-
-
-简介
-
-jps 命令用于查看当前 java 进程及其 pid 等相关信息，同 ps -aux | grep java 这种命令不同的是，jps 并不依赖于应用程序名来搜索进程(比如 grep java )； 这使得它可以显示出没有执行体的 java 进程；该命令 1.5+ 可用。
-
-
-
-原理
-
-在 Java 程序运...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 14, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -514,7 +512,7 @@ jps 命令用于查看当前 java 进程及其 pid 等相关信息，同 ps -aux
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

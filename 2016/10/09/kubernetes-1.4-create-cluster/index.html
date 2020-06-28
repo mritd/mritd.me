@@ -249,7 +249,7 @@ systemctl status docker
 
 <h4 id="12修改主机名">1.2、修改主机名</h4>
 
-<p>由于 3 台虚拟机是从一个基础虚拟机复制而来，为了不影响 <code class="highlighter-rouge">kubectl get nodes</code> 查询，需要更改 3 台虚拟机的主机名，以下为 master 节点示例，其他节点对应修改即可</p>
+<p>由于 3 台虚拟机是从一个基础虚拟机复制而来，为了不影响 <code class="language-plaintext highlighter-rouge">kubectl get nodes</code> 查询，需要更改 3 台虚拟机的主机名，以下为 master 节点示例，其他节点对应修改即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"master"</span> <span class="o">&gt;</span> /etc/hostname
 <span class="c"># 替换一下 hosts 中的 localhost 等</span>
@@ -266,7 +266,7 @@ vim /etc/hosts
 
 <h4 id="21安装基本组件">2.1、安装基本组件</h4>
 
-<p><strong>根据 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档教程</a> 需要先安装 <code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">kubeadm</code>、<code class="highlighter-rouge">kubectl</code>、 <code class="highlighter-rouge">kubernetes-cni</code> 这四个 rpm 包，但是由于 GFW 原因实际上 Google 的 rpm 源无法下载，以下是我通过梯子下载到本地的，rpm 下载方法 可借助 yumdownloader 工具，具体请 Google</strong></p>
+<p><strong>根据 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档教程</a> 需要先安装 <code class="language-plaintext highlighter-rouge">kubelet</code>、<code class="language-plaintext highlighter-rouge">kubeadm</code>、<code class="language-plaintext highlighter-rouge">kubectl</code>、 <code class="language-plaintext highlighter-rouge">kubernetes-cni</code> 这四个 rpm 包，但是由于 GFW 原因实际上 Google 的 rpm 源无法下载，以下是我通过梯子下载到本地的，rpm 下载方法 可借助 yumdownloader 工具，具体请 Google</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先安装 socat</span>
 yum <span class="nb">install</span> <span class="nt">-y</span> socat
@@ -401,7 +401,7 @@ kubeadm <span class="nb">join</span> <span class="nt">--token</span> 42354d.e1fb
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join</span> <span class="nt">--token</span> 42354d.e1fb733ed0c9a932 192.168.1.107
 </code></pre></div></div>
 
-<p>最后稍等片刻在 master 上 get nodes 即可查看，<strong>如果想让 master 也运行 pod，只需在 master 上运行 <code class="highlighter-rouge">kubectl taint nodes --all dedicated-</code> 即可</strong></p>
+<p>最后稍等片刻在 master 上 get nodes 即可查看，<strong>如果想让 master 也运行 pod，只需在 master 上运行 <code class="language-plaintext highlighter-rouge">kubectl taint nodes --all dedicated-</code> 即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ kubectl get nodes                                   
 NAME      STATUS    AGE
@@ -525,7 +525,7 @@ kubectl apply <span class="nt">-f</span> https://git.io/weave-kube
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

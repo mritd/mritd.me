@@ -267,7 +267,7 @@
   <p>Hashes 相关方法如下</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hset(key, field, value)                             向名称为key的hash中添加元素field&lt;—&gt;value
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hset(key, field, value)                             向名称为key的hash中添加元素field&lt;—&gt;value
 hget(key, field)                                    返回名称为key的hash中field对应的value
 hmget(key, field1,...,field N)                      返回名称为key的hash中field i对应的value
 hmset(key, field1, value1,...,field N, value N)     向名称为key的hash中添加元素field i&lt;—&gt;value i
@@ -316,18 +316,18 @@ redis&gt;
 <h4 id="set">SET</h4>
 
 <blockquote>
-  <p>将字符串值 <code class="highlighter-rouge">value</code> 关联到 <code class="highlighter-rouge">key</code> (设置值)。
-如果 key 已经持有其他值，<code class="highlighter-rouge">SET</code> 就覆写旧值，无视类型。
-对于某个原本带有生存时间（TTL）的键来说，当 <code class="highlighter-rouge">SET</code> 命令成功在这个键上执行时，这个键原有的 TTL 将被清除。</p>
+  <p>将字符串值 <code class="language-plaintext highlighter-rouge">value</code> 关联到 <code class="language-plaintext highlighter-rouge">key</code> (设置值)。
+如果 key 已经持有其他值，<code class="language-plaintext highlighter-rouge">SET</code> 就覆写旧值，无视类型。
+对于某个原本带有生存时间（TTL）的键来说，当 <code class="language-plaintext highlighter-rouge">SET</code> 命令成功在这个键上执行时，这个键原有的 TTL 将被清除。</p>
 </blockquote>
 
 <p><strong>可选参数</strong></p>
 
 <ul>
   <li>EX
-格式为 <code class="highlighter-rouge">EX second</code>；设置键的过期时间为 second 秒。 SET key value EX second 效果等同于 SETEX key second value 。</li>
+格式为 <code class="language-plaintext highlighter-rouge">EX second</code>；设置键的过期时间为 second 秒。 SET key value EX second 效果等同于 SETEX key second value 。</li>
   <li>PX
-格式为 <code class="highlighter-rouge">PX millisecond</code>；设置键的过期时间为 millisecond 毫秒。 SET key value PX millisecond 效果等同于 PSETEX key millisecond value 。</li>
+格式为 <code class="language-plaintext highlighter-rouge">PX millisecond</code>；设置键的过期时间为 millisecond 毫秒。 SET key value PX millisecond 效果等同于 PSETEX key millisecond value 。</li>
   <li>NX
 只在键不存在时，才对键进行设置操作。 SET key value NX 效果等同于 SETNX key value 。</li>
   <li>XX
@@ -351,9 +351,9 @@ SET a 10 XX          <span class="c"># 仅当 a 存在时进行设置</span>
 <h4 id="get">GET</h4>
 
 <blockquote>
-  <p>返回 <code class="highlighter-rouge">key</code> 所关联的字符串值。(获取值)
-如果 <code class="highlighter-rouge">key</code> 不存在那么返回特殊值 <code class="highlighter-rouge">nil</code>。
-假如 <code class="highlighter-rouge">key</code> 储存的值不是字符串类型，返回一个错误，因为 <code class="highlighter-rouge">GET</code> 只能用于处理字符串值。</p>
+  <p>返回 <code class="language-plaintext highlighter-rouge">key</code> 所关联的字符串值。(获取值)
+如果 <code class="language-plaintext highlighter-rouge">key</code> 不存在那么返回特殊值 <code class="language-plaintext highlighter-rouge">nil</code>。
+假如 <code class="language-plaintext highlighter-rouge">key</code> 储存的值不是字符串类型，返回一个错误，因为 <code class="language-plaintext highlighter-rouge">GET</code> 只能用于处理字符串值。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -371,9 +371,9 @@ GET b            <span class="c"># 尝试获取一个不存在的值时 返回ni
 <h4 id="mset">MSET</h4>
 
 <blockquote>
-  <p>同时设置一个或多个 <code class="highlighter-rouge">key-value</code> 对。
-如果某个给定 <code class="highlighter-rouge">key</code> 已经存在，那么 <code class="highlighter-rouge">MSET</code> 会用新值覆盖原来的旧值，如果这不是你所希望的效果，请考虑使用 <code class="highlighter-rouge">MSETNX</code> 命令：它只会在所有给定 <code class="highlighter-rouge">key</code> 都不存在的情况下进行设置操作。
-<strong><code class="highlighter-rouge">MSET</code> 是一个原子性(atomic)操作，所有给定 <code class="highlighter-rouge">key</code> 都会在同一时间内被设置，某些给定 <code class="highlighter-rouge">key</code> 被更新而另一些给定 <code class="highlighter-rouge">key</code> 没有改变的情况，不可能发生。</strong></p>
+  <p>同时设置一个或多个 <code class="language-plaintext highlighter-rouge">key-value</code> 对。
+如果某个给定 <code class="language-plaintext highlighter-rouge">key</code> 已经存在，那么 <code class="language-plaintext highlighter-rouge">MSET</code> 会用新值覆盖原来的旧值，如果这不是你所希望的效果，请考虑使用 <code class="language-plaintext highlighter-rouge">MSETNX</code> 命令：它只会在所有给定 <code class="language-plaintext highlighter-rouge">key</code> 都不存在的情况下进行设置操作。
+<strong><code class="language-plaintext highlighter-rouge">MSET</code> 是一个原子性(atomic)操作，所有给定 <code class="language-plaintext highlighter-rouge">key</code> 都会在同一时间内被设置，某些给定 <code class="language-plaintext highlighter-rouge">key</code> 被更新而另一些给定 <code class="language-plaintext highlighter-rouge">key</code> 没有改变的情况，不可能发生。</strong></p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -389,8 +389,8 @@ GET b            <span class="c"># 尝试获取一个不存在的值时 返回ni
 <h4 id="mget">MGET</h4>
 
 <blockquote>
-  <p>返回所有(一个或多个)给定 <code class="highlighter-rouge">key</code> 的值。
-如果给定的 <code class="highlighter-rouge">key</code> 里面，<strong>有某个 <code class="highlighter-rouge">key</code> 不存在，那么这个 <code class="highlighter-rouge">key</code> 返回特殊值 <code class="highlighter-rouge">nil</code></strong>。因此，该命令永不失败。</p>
+  <p>返回所有(一个或多个)给定 <code class="language-plaintext highlighter-rouge">key</code> 的值。
+如果给定的 <code class="language-plaintext highlighter-rouge">key</code> 里面，<strong>有某个 <code class="language-plaintext highlighter-rouge">key</code> 不存在，那么这个 <code class="language-plaintext highlighter-rouge">key</code> 返回特殊值 <code class="language-plaintext highlighter-rouge">nil</code></strong>。因此，该命令永不失败。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -413,8 +413,8 @@ localhost:6379&gt;
 <h4 id="setrange">SETRANGE</h4>
 
 <blockquote>
-  <p>用 <code class="highlighter-rouge">value</code> 参数覆写(overwrite)给定 <code class="highlighter-rouge">key</code> 所储存的字符串值，从偏移量 <code class="highlighter-rouge">offset</code> 开始。不存在的 <code class="highlighter-rouge">key</code> 当作空白字符串处理。<strong>可以理解为对指定位置字符串覆盖</strong>
-<code class="highlighter-rouge">SETRANGE</code> 命令会确保字符串足够长以便将 <code class="highlighter-rouge">value</code> 设置在指定的偏移量上，<strong>如果给定 <code class="highlighter-rouge">key</code> 原来储存的字符串长度比偏移量小(比如字符串只有5个字符长，但你设置的 <code class="highlighter-rouge">offset</code> 是10)，那么原字符和偏移量之间的空白将用零字节<code class="highlighter-rouge">(zerobytes,"\x00")</code>来填充。</strong>
+  <p>用 <code class="language-plaintext highlighter-rouge">value</code> 参数覆写(overwrite)给定 <code class="language-plaintext highlighter-rouge">key</code> 所储存的字符串值，从偏移量 <code class="language-plaintext highlighter-rouge">offset</code> 开始。不存在的 <code class="language-plaintext highlighter-rouge">key</code> 当作空白字符串处理。<strong>可以理解为对指定位置字符串覆盖</strong>
+<code class="language-plaintext highlighter-rouge">SETRANGE</code> 命令会确保字符串足够长以便将 <code class="language-plaintext highlighter-rouge">value</code> 设置在指定的偏移量上，<strong>如果给定 <code class="language-plaintext highlighter-rouge">key</code> 原来储存的字符串长度比偏移量小(比如字符串只有5个字符长，但你设置的 <code class="language-plaintext highlighter-rouge">offset</code> 是10)，那么原字符和偏移量之间的空白将用零字节<code class="language-plaintext highlighter-rouge">(zerobytes,"\x00")</code>来填充。</strong>
 注意你能使用的最大偏移量是 2^29-1(536870911) ，因为 Redis 字符串的大小被限制在 512 兆(megabytes)以内。如果你需要使用比这更大的空间，你可以使用多个 key 。</p>
 
   <p>当生成一个很长的字符串时，Redis 需要分配内存空间，该操作有时候可能会造成服务器阻塞(block)。在2010年的Macbook Pro上，设置偏移量为 536870911(512MB 内存分配)，耗费约 300 毫秒，设置偏移量为 134217728(128MB 内存分配)，耗费约 80 毫秒，设置偏移量 33554432(32MB 内存分配)，耗费约 30 毫秒，设置偏移量为 8388608(8MB 内存分配)，耗费约 8 毫秒。<strong>注意若首次内存分配成功之后，再对同一个 key 调用 SETRANGE 操作，无须再重新内存。</strong></p>
@@ -446,7 +446,7 @@ localhost:6379&gt; GET a
 <h4 id="getrange">GETRANGE</h4>
 
 <blockquote>
-  <p>返回 <code class="highlighter-rouge">key</code> 中字符串值的子字符串，字符串的截取范围由 <code class="highlighter-rouge">start</code> 和 <code class="highlighter-rouge">end</code> 两个偏移量决定(包括 start 和 end 在内)。负数偏移量表示从字符串最后开始计数， -1 表示最后一个字符， -2 表示倒数第二个，以此类推。<code class="highlighter-rouge">GETRANGE</code> 通过保证子字符串的值域(range)不超过实际字符串的值域来处理超出范围的值域请求。</p>
+  <p>返回 <code class="language-plaintext highlighter-rouge">key</code> 中字符串值的子字符串，字符串的截取范围由 <code class="language-plaintext highlighter-rouge">start</code> 和 <code class="language-plaintext highlighter-rouge">end</code> 两个偏移量决定(包括 start 和 end 在内)。负数偏移量表示从字符串最后开始计数， -1 表示最后一个字符， -2 表示倒数第二个，以此类推。<code class="language-plaintext highlighter-rouge">GETRANGE</code> 通过保证子字符串的值域(range)不超过实际字符串的值域来处理超出范围的值域请求。</p>
 
   <p><strong>在 &lt;= 2.0 的版本里，GETRANGE 被叫作 SUBSTR。</strong></p>
 </blockquote>
@@ -476,7 +476,7 @@ localhost:6379&gt;
 <h4 id="append">APPEND</h4>
 
 <blockquote>
-  <p>如果 <code class="highlighter-rouge">key</code> 已经存在并且是一个字符串， <code class="highlighter-rouge">APPEND</code> 命令将 <code class="highlighter-rouge">value</code> 追加到 <code class="highlighter-rouge">key</code> 原来的值的末尾。<strong>如果 <code class="highlighter-rouge">key</code> 不存在，<code class="highlighter-rouge">APPEND</code> 就简单地将给定 key 设为 <code class="highlighter-rouge">value</code> ，就像执行 <code class="highlighter-rouge">SET key value</code> 一样。</strong></p>
+  <p>如果 <code class="language-plaintext highlighter-rouge">key</code> 已经存在并且是一个字符串， <code class="language-plaintext highlighter-rouge">APPEND</code> 命令将 <code class="language-plaintext highlighter-rouge">value</code> 追加到 <code class="language-plaintext highlighter-rouge">key</code> 原来的值的末尾。<strong>如果 <code class="language-plaintext highlighter-rouge">key</code> 不存在，<code class="language-plaintext highlighter-rouge">APPEND</code> 就简单地将给定 key 设为 <code class="language-plaintext highlighter-rouge">value</code> ，就像执行 <code class="language-plaintext highlighter-rouge">SET key value</code> 一样。</strong></p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -510,7 +510,7 @@ localhost:6379&gt;
 <h4 id="rpushlpush">RPUSH/LPUSH</h4>
 
 <blockquote>
-  <p>将一个或多个值放入 <code class="highlighter-rouge">List</code>中，<code class="highlighter-rouge">RPUSH</code> 新加入的元素将放在 <code class="highlighter-rouge">List</code> 链表尾部(右)，<code class="highlighter-rouge">LPUSH</code> 同理放在左边，<strong>如果对应的 <code class="highlighter-rouge">List</code> 的 <code class="highlighter-rouge">key</code> 不存在，将自动创建一个 <code class="highlighter-rouge">List</code>，并将值放入 <code class="highlighter-rouge">List</code> 中</strong>；<strong>当 <code class="highlighter-rouge">key</code> 存在，且不是 <code class="highlighter-rouge">List</code> 类型时，将返回错误</strong>。</p>
+  <p>将一个或多个值放入 <code class="language-plaintext highlighter-rouge">List</code>中，<code class="language-plaintext highlighter-rouge">RPUSH</code> 新加入的元素将放在 <code class="language-plaintext highlighter-rouge">List</code> 链表尾部(右)，<code class="language-plaintext highlighter-rouge">LPUSH</code> 同理放在左边，<strong>如果对应的 <code class="language-plaintext highlighter-rouge">List</code> 的 <code class="language-plaintext highlighter-rouge">key</code> 不存在，将自动创建一个 <code class="language-plaintext highlighter-rouge">List</code>，并将值放入 <code class="language-plaintext highlighter-rouge">List</code> 中</strong>；<strong>当 <code class="language-plaintext highlighter-rouge">key</code> 存在，且不是 <code class="language-plaintext highlighter-rouge">List</code> 类型时，将返回错误</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -534,7 +534,7 @@ localhost:6379&gt;
 <h4 id="llen">LLEN</h4>
 
 <blockquote>
-  <p>返回指定 <code class="highlighter-rouge">List</code> 的长度，<strong>如果给定的 <code class="highlighter-rouge">KEY</code> 不存在则返回0，如果给定的 <code class="highlighter-rouge">KEY</code> 不是 <code class="highlighter-rouge">List</code> 类型将返回错误</strong>。</p>
+  <p>返回指定 <code class="language-plaintext highlighter-rouge">List</code> 的长度，<strong>如果给定的 <code class="language-plaintext highlighter-rouge">KEY</code> 不存在则返回0，如果给定的 <code class="language-plaintext highlighter-rouge">KEY</code> 不是 <code class="language-plaintext highlighter-rouge">List</code> 类型将返回错误</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -554,7 +554,7 @@ localhost:6379&gt;
 <h4 id="lrange">LRANGE</h4>
 
 <blockquote>
-  <p>返回指定返回的 <code class="highlighter-rouge">List</code> 的值，<strong>如果开始值大于 <code class="highlighter-rouge">List</code> 的长度，那么将返回空列表，如果结束值大于 <code class="highlighter-rouge">List</code> 长度，那么将示结束值为 <code class="highlighter-rouge">List</code> 最大长度</strong>。</p>
+  <p>返回指定返回的 <code class="language-plaintext highlighter-rouge">List</code> 的值，<strong>如果开始值大于 <code class="language-plaintext highlighter-rouge">List</code> 的长度，那么将返回空列表，如果结束值大于 <code class="language-plaintext highlighter-rouge">List</code> 长度，那么将示结束值为 <code class="language-plaintext highlighter-rouge">List</code> 最大长度</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -581,7 +581,7 @@ localhost:6379&gt; LRANGE list1 0 1000
 <h4 id="ltrim">LTRIM</h4>
 
 <blockquote>
-  <p>截取列表指定位置的元素，<strong>当Start值大于 <code class="highlighter-rouge">List</code> 长度时，将返回空列表；当End值大于 <code class="highlighter-rouge">List</code> 长度时，示End值为 <code class="highlighter-rouge">List</code> 长度</strong>。</p>
+  <p>截取列表指定位置的元素，<strong>当Start值大于 <code class="language-plaintext highlighter-rouge">List</code> 长度时，将返回空列表；当End值大于 <code class="language-plaintext highlighter-rouge">List</code> 长度时，示End值为 <code class="language-plaintext highlighter-rouge">List</code> 长度</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -622,7 +622,7 @@ localhost:6379&gt;
 <h4 id="lindex">LINDEX</h4>
 
 <blockquote>
-  <p>获取指定位置的值，<strong>超出位置(不在 <code class="highlighter-rouge">List</code> 范围内)返回nil</strong>。</p>
+  <p>获取指定位置的值，<strong>超出位置(不在 <code class="language-plaintext highlighter-rouge">List</code> 范围内)返回nil</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -742,7 +742,7 @@ localhost:6379&gt;
 <h4 id="lset">LSET</h4>
 
 <blockquote>
-  <p>向指定位置设置值，<strong>列表 <code class="highlighter-rouge">KEY</code> 不存在将返回错误，坐标不对返回对应错误信息</strong>。</p>
+  <p>向指定位置设置值，<strong>列表 <code class="language-plaintext highlighter-rouge">KEY</code> 不存在将返回错误，坐标不对返回对应错误信息</strong>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -778,13 +778,13 @@ localhost:6379&gt;
 <h3 id="set类型">SET类型</h3>
 
 <blockquote>
-  <p><code class="highlighter-rouge">SET</code> 是一个无序的字符串合集，可以以O(1) 的时间复杂度完成 添加，删除以及测试元素是否存在的操作；<code class="highlighter-rouge">SET</code> 中不允许相同成员存在，<strong>向集合中多次添加同一元素，在集合中最终只会存在一个此元素。</strong>它支持一些服务端的命令进行集合运算。 我们可以在很短的时间内完成合并(<code class="highlighter-rouge">union</code>),求交(<code class="highlighter-rouge">intersection</code>)， 找出不同元素的操作。</p>
+  <p><code class="language-plaintext highlighter-rouge">SET</code> 是一个无序的字符串合集，可以以O(1) 的时间复杂度完成 添加，删除以及测试元素是否存在的操作；<code class="language-plaintext highlighter-rouge">SET</code> 中不允许相同成员存在，<strong>向集合中多次添加同一元素，在集合中最终只会存在一个此元素。</strong>它支持一些服务端的命令进行集合运算。 我们可以在很短的时间内完成合并(<code class="language-plaintext highlighter-rouge">union</code>),求交(<code class="language-plaintext highlighter-rouge">intersection</code>)， 找出不同元素的操作。</p>
 </blockquote>
 
 <h4 id="sadd">SADD</h4>
 
 <blockquote>
-  <p>将一个或多个 <code class="highlighter-rouge">member(value)</code> 元素加入到集合 <code class="highlighter-rouge">key</code> 当中，已经存在于集合的 <code class="highlighter-rouge">member</code> 元素将被忽略。假如 <code class="highlighter-rouge">key</code> 不存在，则创建一个只包含 <code class="highlighter-rouge">member</code> 元素作成员的集合。当 <code class="highlighter-rouge">key</code> 不是集合类型时，返回一个错误。</p>
+  <p>将一个或多个 <code class="language-plaintext highlighter-rouge">member(value)</code> 元素加入到集合 <code class="language-plaintext highlighter-rouge">key</code> 当中，已经存在于集合的 <code class="language-plaintext highlighter-rouge">member</code> 元素将被忽略。假如 <code class="language-plaintext highlighter-rouge">key</code> 不存在，则创建一个只包含 <code class="language-plaintext highlighter-rouge">member</code> 元素作成员的集合。当 <code class="language-plaintext highlighter-rouge">key</code> 不是集合类型时，返回一个错误。</p>
 
   <p><strong>在Redis2.4版本以前， SADD 只接受单个 member 值。</strong></p>
 </blockquote>
@@ -809,7 +809,7 @@ localhost:6379&gt;
 <h4 id="srem">SREM</h4>
 
 <blockquote>
-  <p>移除集合 <code class="highlighter-rouge">key</code> 中的一个或多个 <code class="highlighter-rouge">member</code> 元素，不存在的 <code class="highlighter-rouge">member</code> 元素会被忽略。当 <code class="highlighter-rouge">key</code> 不是集合类型，返回一个错误。</p>
+  <p>移除集合 <code class="language-plaintext highlighter-rouge">key</code> 中的一个或多个 <code class="language-plaintext highlighter-rouge">member</code> 元素，不存在的 <code class="language-plaintext highlighter-rouge">member</code> 元素会被忽略。当 <code class="language-plaintext highlighter-rouge">key</code> 不是集合类型，返回一个错误。</p>
 
   <p><strong>在 Redis 2.4 版本以前， SREM 只接受单个 member 值。</strong></p>
 </blockquote>
@@ -832,7 +832,7 @@ localhost:6379&gt;
 <h4 id="spop">SPOP</h4>
 
 <blockquote>
-  <p><strong>移除并返回集合中的一个随机元素。</strong>如果只想获取一个随机元素，但不想该元素从集合中被移除的话，可以使用 <code class="highlighter-rouge">SRANDMEMBER</code> 命令。被移除的随机元素当 <code class="highlighter-rouge">key</code> 不存在或 <code class="highlighter-rouge">key</code> 是空集时，返回 <code class="highlighter-rouge">nil</code> 。</p>
+  <p><strong>移除并返回集合中的一个随机元素。</strong>如果只想获取一个随机元素，但不想该元素从集合中被移除的话，可以使用 <code class="language-plaintext highlighter-rouge">SRANDMEMBER</code> 命令。被移除的随机元素当 <code class="language-plaintext highlighter-rouge">key</code> 不存在或 <code class="language-plaintext highlighter-rouge">key</code> 是空集时，返回 <code class="language-plaintext highlighter-rouge">nil</code> 。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -854,8 +854,8 @@ localhost:6379&gt;
 <h4 id="smove">SMOVE</h4>
 
 <blockquote>
-  <p>将 <code class="highlighter-rouge">member</code> 元素从 <code class="highlighter-rouge">source</code> 集合移动到 <code class="highlighter-rouge">destination</code> 集合；<strong><code class="highlighter-rouge">SMOVE</code> 是原子性操作。</strong>
-如果 <code class="highlighter-rouge">source</code> 集合不存在或不包含指定的 <code class="highlighter-rouge">member</code> 元素，则 <code class="highlighter-rouge">SMOVE</code> 命令不执行任何操作，仅返回 0 。否则， <code class="highlighter-rouge">member</code> 元素从 <code class="highlighter-rouge">source</code> 集合中被移除，并添加到 <code class="highlighter-rouge">destination</code> 集合中去。当 <code class="highlighter-rouge">destination</code> 集合已经包含 <code class="highlighter-rouge">member</code> 元素时， <code class="highlighter-rouge">SMOVE</code> 命令只是简单地将 <code class="highlighter-rouge">source</code> 集合中的 <code class="highlighter-rouge">member</code> 元素删除。当 <code class="highlighter-rouge">source</code> 或 <code class="highlighter-rouge">destination</code> 不是集合类型时，返回一个错误。</p>
+  <p>将 <code class="language-plaintext highlighter-rouge">member</code> 元素从 <code class="language-plaintext highlighter-rouge">source</code> 集合移动到 <code class="language-plaintext highlighter-rouge">destination</code> 集合；<strong><code class="language-plaintext highlighter-rouge">SMOVE</code> 是原子性操作。</strong>
+如果 <code class="language-plaintext highlighter-rouge">source</code> 集合不存在或不包含指定的 <code class="language-plaintext highlighter-rouge">member</code> 元素，则 <code class="language-plaintext highlighter-rouge">SMOVE</code> 命令不执行任何操作，仅返回 0 。否则， <code class="language-plaintext highlighter-rouge">member</code> 元素从 <code class="language-plaintext highlighter-rouge">source</code> 集合中被移除，并添加到 <code class="language-plaintext highlighter-rouge">destination</code> 集合中去。当 <code class="language-plaintext highlighter-rouge">destination</code> 集合已经包含 <code class="language-plaintext highlighter-rouge">member</code> 元素时， <code class="language-plaintext highlighter-rouge">SMOVE</code> 命令只是简单地将 <code class="language-plaintext highlighter-rouge">source</code> 集合中的 <code class="language-plaintext highlighter-rouge">member</code> 元素删除。当 <code class="language-plaintext highlighter-rouge">source</code> 或 <code class="language-plaintext highlighter-rouge">destination</code> 不是集合类型时，返回一个错误。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -905,7 +905,7 @@ localhost:6379&gt;
 <h4 id="sismember">SISMEMBER</h4>
 
 <blockquote>
-  <p>判断指定元素是否存在与集合中；如果 <code class="highlighter-rouge">member</code> 元素是集合的成员，返回 1 。如果 <code class="highlighter-rouge">member</code> 元素不是集合的成员，或 <code class="highlighter-rouge">key</code> 不存在，返回 0 。</p>
+  <p>判断指定元素是否存在与集合中；如果 <code class="language-plaintext highlighter-rouge">member</code> 元素是集合的成员，返回 1 。如果 <code class="language-plaintext highlighter-rouge">member</code> 元素不是集合的成员，或 <code class="language-plaintext highlighter-rouge">key</code> 不存在，返回 0 。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -955,7 +955,7 @@ localhost:6379&gt;
 <h4 id="sinterstore">SINTERSTORE</h4>
 
 <blockquote>
-  <p>基本同上，但是 <code class="highlighter-rouge">SINTERSTORE</code>可以将取出的交集保存到指定集合中。</p>
+  <p>基本同上，但是 <code class="language-plaintext highlighter-rouge">SINTERSTORE</code>可以将取出的交集保存到指定集合中。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1009,13 +1009,13 @@ localhost:6379&gt;
 <h4 id="sunionstore">SUNIONSTORE</h4>
 
 <blockquote>
-  <p>同 <code class="highlighter-rouge">SINTERSTORE</code>；不做阐述</p>
+  <p>同 <code class="language-plaintext highlighter-rouge">SINTERSTORE</code>；不做阐述</p>
 </blockquote>
 
 <h4 id="sdiff">SDIFF</h4>
 
 <blockquote>
-  <p>取指定集合的差集，同 <code class="highlighter-rouge">SINTER</code>、<code class="highlighter-rouge">SUNION</code></p>
+  <p>取指定集合的差集，同 <code class="language-plaintext highlighter-rouge">SINTER</code>、<code class="language-plaintext highlighter-rouge">SUNION</code></p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1037,7 +1037,7 @@ localhost:6379&gt;
 </code></pre></div></div>
 
 <blockquote>
-  <p><strong>对于集合的 合集、差集、并集操作，中文API的解释是 <code class="highlighter-rouge">返回一个集合的全部成员</code>，我的理解是，以第一个集合为准，返回的总是这个结合依次与后续集合运算的结果，并忽略后面集合的元素；具体还是不算太理解……以后研究</strong></p>
+  <p><strong>对于集合的 合集、差集、并集操作，中文API的解释是 <code class="language-plaintext highlighter-rouge">返回一个集合的全部成员</code>，我的理解是，以第一个集合为准，返回的总是这个结合依次与后续集合运算的结果，并忽略后面集合的元素；具体还是不算太理解……以后研究</strong></p>
 </blockquote>
 
 <h3 id="zset">ZSET</h3>
@@ -1050,7 +1050,7 @@ localhost:6379&gt;
 <h4 id="zadd">ZADD</h4>
 
 <blockquote>
-  <p>将一个或多个 <code class="highlighter-rouge">member</code> 元素及其 <code class="highlighter-rouge">score</code> 值加入到有序集 key 当中。如果某个 <code class="highlighter-rouge">member</code> 已经是有序集的成员，那么更新这个 <code class="highlighter-rouge">member</code> 的 <code class="highlighter-rouge">score</code> 值，并通过重新插入这个 <code class="highlighter-rouge">member</code> 元素，来保证该 <code class="highlighter-rouge">member</code> 在正确的位置上，<strong>同时返回0</strong>。<code class="highlighter-rouge">score</code> 值可以是整数值或双精度浮点数。如果 <code class="highlighter-rouge">key</code> 不存在，则创建一个空的有序集并执行 <code class="highlighter-rouge">ZADD</code> 操作。当 <code class="highlighter-rouge">key</code> 存在但不是有序集类型时，返回一个错误。</p>
+  <p>将一个或多个 <code class="language-plaintext highlighter-rouge">member</code> 元素及其 <code class="language-plaintext highlighter-rouge">score</code> 值加入到有序集 key 当中。如果某个 <code class="language-plaintext highlighter-rouge">member</code> 已经是有序集的成员，那么更新这个 <code class="language-plaintext highlighter-rouge">member</code> 的 <code class="language-plaintext highlighter-rouge">score</code> 值，并通过重新插入这个 <code class="language-plaintext highlighter-rouge">member</code> 元素，来保证该 <code class="language-plaintext highlighter-rouge">member</code> 在正确的位置上，<strong>同时返回0</strong>。<code class="language-plaintext highlighter-rouge">score</code> 值可以是整数值或双精度浮点数。如果 <code class="language-plaintext highlighter-rouge">key</code> 不存在，则创建一个空的有序集并执行 <code class="language-plaintext highlighter-rouge">ZADD</code> 操作。当 <code class="language-plaintext highlighter-rouge">key</code> 存在但不是有序集类型时，返回一个错误。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1099,7 +1099,7 @@ localhost:6379&gt;
 <h4 id="zcount">ZCOUNT</h4>
 
 <blockquote>
-  <p>返回指定 <code class="highlighter-rouge">SCORE</code> 之间的元素数量</p>
+  <p>返回指定 <code class="language-plaintext highlighter-rouge">SCORE</code> 之间的元素数量</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1117,7 +1117,7 @@ localhost:6379&gt;
 <h4 id="zscore">ZSCORE</h4>
 
 <blockquote>
-  <p>查看指定成员的 <code class="highlighter-rouge">SCORE</code></p>
+  <p>查看指定成员的 <code class="language-plaintext highlighter-rouge">SCORE</code></p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1135,7 +1135,7 @@ localhost:6379&gt;
 <h4 id="zincrby">ZINCRBY</h4>
 
 <blockquote>
-  <p>对集合中指定 <code class="highlighter-rouge">VALUE</code> 的 <code class="highlighter-rouge">SROCE</code> 加上指定值；当集合 <code class="highlighter-rouge">KEY</code> 不存在时，相当于 <code class="highlighter-rouge">ZADD</code>。</p>
+  <p>对集合中指定 <code class="language-plaintext highlighter-rouge">VALUE</code> 的 <code class="language-plaintext highlighter-rouge">SROCE</code> 加上指定值；当集合 <code class="language-plaintext highlighter-rouge">KEY</code> 不存在时，相当于 <code class="language-plaintext highlighter-rouge">ZADD</code>。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1155,7 +1155,7 @@ localhost:6379&gt;
 <h4 id="zrange">ZRANGE</h4>
 
 <blockquote>
-  <p>返回集合内指定区间的元素，其中成员的位置按 score 值递增(从小到大)来排序。具有相同 <code class="highlighter-rouge">score</code> 值的成员按字典序( <code class="highlighter-rouge">lexicographical order</code> )来排列。如果需要成员按 <code class="highlighter-rouge">score</code> 值递减(从大到小)来排列，请使用 <code class="highlighter-rouge">ZREVRANGE</code> 命令。</p>
+  <p>返回集合内指定区间的元素，其中成员的位置按 score 值递增(从小到大)来排序。具有相同 <code class="language-plaintext highlighter-rouge">score</code> 值的成员按字典序( <code class="language-plaintext highlighter-rouge">lexicographical order</code> )来排列。如果需要成员按 <code class="language-plaintext highlighter-rouge">score</code> 值递减(从大到小)来排列，请使用 <code class="language-plaintext highlighter-rouge">ZREVRANGE</code> 命令。</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1178,14 +1178,14 @@ localhost:6379&gt;
 <h4 id="zrevrange">ZREVRANGE</h4>
 
 <blockquote>
-  <p>同 <code class="highlighter-rouge">ZRANGE</code> 只不过 <code class="highlighter-rouge">SCORE</code> 从大到小排列，略过</p>
+  <p>同 <code class="language-plaintext highlighter-rouge">ZRANGE</code> 只不过 <code class="language-plaintext highlighter-rouge">SCORE</code> 从大到小排列，略过</p>
 </blockquote>
 
 <h4 id="zrangebyscore">ZRANGEBYSCORE</h4>
 <blockquote>
-  <p>基本同 <code class="highlighter-rouge">ZRANGE</code> 一样，但是返回分数在 <code class="highlighter-rouge">min</code> 和 <code class="highlighter-rouge">max</code> 之间的所有成员满足表达式 <code class="highlighter-rouge">min &lt;= score &lt;= max</code> 的成员，其中返回的成员是按照其分数从低到高的顺序返回，<strong>如果成员具有相同的分数，则按成员的字典顺序返回。</strong></p>
+  <p>基本同 <code class="language-plaintext highlighter-rouge">ZRANGE</code> 一样，但是返回分数在 <code class="language-plaintext highlighter-rouge">min</code> 和 <code class="language-plaintext highlighter-rouge">max</code> 之间的所有成员满足表达式 <code class="language-plaintext highlighter-rouge">min &lt;= score &lt;= max</code> 的成员，其中返回的成员是按照其分数从低到高的顺序返回，<strong>如果成员具有相同的分数，则按成员的字典顺序返回。</strong></p>
 
-  <p><code class="highlighter-rouge">(</code> 表示小于，默认 包含 <code class="highlighter-rouge">min</code> 和 <code class="highlighter-rouge">max</code>；极限 <code class="highlighter-rouge">min</code> 和 <code class="highlighter-rouge">max</code> 可以用 <code class="highlighter-rouge">-inf</code> 和 <code class="highlighter-rouge">+inf</code> 表示</p>
+  <p><code class="language-plaintext highlighter-rouge">(</code> 表示小于，默认 包含 <code class="language-plaintext highlighter-rouge">min</code> 和 <code class="language-plaintext highlighter-rouge">max</code>；极限 <code class="language-plaintext highlighter-rouge">min</code> 和 <code class="language-plaintext highlighter-rouge">max</code> 可以用 <code class="language-plaintext highlighter-rouge">-inf</code> 和 <code class="language-plaintext highlighter-rouge">+inf</code> 表示</p>
 </blockquote>
 
 <p><strong>可接受的语法</strong></p>
@@ -1284,25 +1284,25 @@ localhost:6379&gt;
 <h4 id="zrevrangebyscore">ZREVRANGEBYSCORE</h4>
 
 <blockquote>
-  <p>除了排序方式是基于从高到低的分数排序之外，其它功能和参数含义均与 <code class="highlighter-rouge">ZRANGEBYSCORE</code> 相同。</p>
+  <p>除了排序方式是基于从高到低的分数排序之外，其它功能和参数含义均与 <code class="language-plaintext highlighter-rouge">ZRANGEBYSCORE</code> 相同。</p>
 </blockquote>
 
 <h4 id="zremrangebyrank">ZREMRANGEBYRANK</h4>
 
 <blockquote>
-  <p>删除索引位置位于 <code class="highlighter-rouge">start</code> 和 <code class="highlighter-rouge">stop</code> 之间的成员，<code class="highlighter-rouge">start</code> 和 <code class="highlighter-rouge">stop</code> 都是 <code class="highlighter-rouge">0-based</code>，即 <code class="highlighter-rouge">0</code> 表示分数最低的成员，<code class="highlighter-rouge">-1</code> 表示最后一个成员，即分数最高的成员。</p>
+  <p>删除索引位置位于 <code class="language-plaintext highlighter-rouge">start</code> 和 <code class="language-plaintext highlighter-rouge">stop</code> 之间的成员，<code class="language-plaintext highlighter-rouge">start</code> 和 <code class="language-plaintext highlighter-rouge">stop</code> 都是 <code class="language-plaintext highlighter-rouge">0-based</code>，即 <code class="language-plaintext highlighter-rouge">0</code> 表示分数最低的成员，<code class="language-plaintext highlighter-rouge">-1</code> 表示最后一个成员，即分数最高的成员。</p>
 </blockquote>
 
 <h4 id="zremrangebyscore">ZREMRANGEBYSCORE</h4>
 
 <blockquote>
-  <p>删除分数在 <code class="highlighter-rouge">min</code> 和 <code class="highlighter-rouge">max</code> 之间的所有成员，即满足表达式 <code class="highlighter-rouge">min &lt;= score &lt;= max</code> 的所有成员。</p>
+  <p>删除分数在 <code class="language-plaintext highlighter-rouge">min</code> 和 <code class="language-plaintext highlighter-rouge">max</code> 之间的所有成员，即满足表达式 <code class="language-plaintext highlighter-rouge">min &lt;= score &lt;= max</code> 的所有成员。</p>
 </blockquote>
 
 <h3 id="hashes类型">Hashes类型</h3>
 
 <blockquote>
-  <p>可以将 <code class="highlighter-rouge">Redis</code> 中的 <code class="highlighter-rouge">Hashes</code> 类型看成具有 <code class="highlighter-rouge">String Key</code> 和 <code class="highlighter-rouge">String Value</code> 的 <code class="highlighter-rouge">map</code> 容器。所以该类型非常适合于存储值对象的信息。如 <code class="highlighter-rouge">Username</code>、<code class="highlighter-rouge">Password</code> 和 <code class="highlighter-rouge">Age</code> 等。如果 <code class="highlighter-rouge">Hash</code> 中包含很少的字段，那么该类型的数据也将仅占用很少的磁盘空间。每一个 <code class="highlighter-rouge">Hash</code> 可以存储 <code class="highlighter-rouge">4294967295</code> 个键值对。</p>
+  <p>可以将 <code class="language-plaintext highlighter-rouge">Redis</code> 中的 <code class="language-plaintext highlighter-rouge">Hashes</code> 类型看成具有 <code class="language-plaintext highlighter-rouge">String Key</code> 和 <code class="language-plaintext highlighter-rouge">String Value</code> 的 <code class="language-plaintext highlighter-rouge">map</code> 容器。所以该类型非常适合于存储值对象的信息。如 <code class="language-plaintext highlighter-rouge">Username</code>、<code class="language-plaintext highlighter-rouge">Password</code> 和 <code class="language-plaintext highlighter-rouge">Age</code> 等。如果 <code class="language-plaintext highlighter-rouge">Hash</code> 中包含很少的字段，那么该类型的数据也将仅占用很少的磁盘空间。每一个 <code class="language-plaintext highlighter-rouge">Hash</code> 可以存储 <code class="language-plaintext highlighter-rouge">4294967295</code> 个键值对。</p>
 </blockquote>
 
 <h4 id="hset">HSET</h4>
@@ -1630,7 +1630,7 @@ localhost:6379&gt;
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/06/28/how-to-modify-filebeat-source-code-to-processing-logs/">
+        <h2 class="post-title">
+            如何在 Filebeat 端进行日志处理
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  本文主要介绍在 ELK 日志系统中，日志切割处理直接在 filebeat 端实现的一些方式；其中包括 filebeat processor 的扩展以及 module 扩展等。
+
+
+一、起因
+
+目前某项目组日志需要做切割处理，针对日志信息进行分割并提取 k/v 放入 es 中方便查询。这种需求在传统 ELK 中应当由 logstash 组件完成，通过 gork 等操作对日志进行过滤、切割...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 28, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2020/03/31/how-to-download-docker-image-without-docker/">
         <h2 class="post-title">
             如何不通过 docker 下载 docker image
@@ -400,26 +422,6 @@ import (
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/06/18/calico-3.6-forward-network-traffic/">
-        <h2 class="post-title">
-            Calico 3.6 转发外部流量到集群 Pod
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  由于开发有部份服务使用 GRPC 进行通讯，同时采用 Consul 进行服务发现；在微服务架构下可能会导致一些访问问题，目前解决方案就是打通开发环境网络与测试环境 Kubernetes 内部 Pod 网络；翻了好多资料发现都是 2.x 的，而目前测试集群 Calico 版本为 3.6.3，很多文档都不适用只能自己折腾，目前折腾完了这里记录一下
-
-
-本文默认为读者已经存在一个运行正常的 ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on June 18, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -486,7 +488,7 @@ import (
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

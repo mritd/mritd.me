@@ -220,7 +220,7 @@
 
 <h4 id="21kubelet-server">2.1、kubelet server</h4>
 
-<p>在官方 TLS bootstrapping 文档中多次提到过 <code class="highlighter-rouge">kubelet server</code> 这个东西；在经过翻阅大量文档以及 TLS bootstrapping 设计文档后得出，<strong><code class="highlighter-rouge">kubelet server</code> 指的应该是 kubelet 的 10250 端口；</strong></p>
+<p>在官方 TLS bootstrapping 文档中多次提到过 <code class="language-plaintext highlighter-rouge">kubelet server</code> 这个东西；在经过翻阅大量文档以及 TLS bootstrapping 设计文档后得出，<strong><code class="language-plaintext highlighter-rouge">kubelet server</code> 指的应该是 kubelet 的 10250 端口；</strong></p>
 
 <p><strong>kubelet 组件在工作时，采用主动的查询机制，即定期请求 apiserver 获取自己所应当处理的任务，如哪些 pod 分配到了自己身上，从而去处理这些任务；同时 kubelet 自己还会暴露出两个本身 api 的端口，用于将自己本身的私有 api 暴露出去，这两个端口分别是 10250 与 10255；对于 10250 端口，kubelet 会在其上采用 TLS 加密以提供适当的鉴权功能；对于 10255 端口，kubelet 会以只读形式暴露组件本身的私有 api，并且不做鉴权处理</strong></p>
 
@@ -231,7 +231,7 @@
 <p>kubelet 发起的 CSR 请求都是由 controller manager 来做实际签署的，对于 controller manager 来说，TLS bootstrapping 下 kubelet 发起的 CSR 请求大致分为以下三种</p>
 
 <ul>
-  <li>nodeclient: kubelet 以 <code class="highlighter-rouge">O=system:nodes</code> 和 <code class="highlighter-rouge">CN=system:node:(node name)</code> 形式发起的 CSR 请求</li>
+  <li>nodeclient: kubelet 以 <code class="language-plaintext highlighter-rouge">O=system:nodes</code> 和 <code class="language-plaintext highlighter-rouge">CN=system:node:(node name)</code> 形式发起的 CSR 请求</li>
   <li>selfnodeclient: kubelet client renew 自己的证书发起的 CSR 请求(与上一个证书就有相同的 O 和 CN)</li>
   <li>selfnodeserver: kubelet server renew 自己的证书发起的 CSR 请求</li>
 </ul>
@@ -262,11 +262,11 @@
 
 <p>看完上面的介绍，不知道有没有人想过，既然 TLS bootstrapping 功能是让 kubelet 组件去 apiserver 申请证书，然后用于连接 apiserver；<strong>那么第一次启动时没有证书如何连接 apiserver ?</strong></p>
 
-<p>这个问题实际上可以去查看一下 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 和 <code class="highlighter-rouge">token.csv</code> 得到答案: <strong>在 apiserver 配置中指定了一个 <code class="highlighter-rouge">token.csv</code> 文件，该文件中是一个预设的用户配置；同时该用户的 Token 和 apiserver 的 CA 证书被写入了 kubelet 所使用的 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 配置文件中；这样在首次请求时，kubelet 使用 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的 apiserver CA 证书来与 apiserver 建立 TLS 通讯，使用 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 来向 apiserver 声明自己的 RBAC 授权身份</strong>，如下图所示</p>
+<p>这个问题实际上可以去查看一下 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 和 <code class="language-plaintext highlighter-rouge">token.csv</code> 得到答案: <strong>在 apiserver 配置中指定了一个 <code class="language-plaintext highlighter-rouge">token.csv</code> 文件，该文件中是一个预设的用户配置；同时该用户的 Token 和 apiserver 的 CA 证书被写入了 kubelet 所使用的 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 配置文件中；这样在首次请求时，kubelet 使用 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 中的 apiserver CA 证书来与 apiserver 建立 TLS 通讯，使用 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 来向 apiserver 声明自己的 RBAC 授权身份</strong>，如下图所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/ji5ug.png" alt="first_request" /></p>
 
-<p>在有些用户首次启动时，可能与遇到 kubelet 报 401 无权访问 apiserver 的错误；<strong>这是因为在默认情况下，kubelet 通过 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的预设用户 Token 声明了自己的身份，然后创建 CSR 请求；但是不要忘记这个用户在我们不处理的情况下他没任何权限的，包括创建 CSR 请求；所以需要如下命令创建一个 ClusterRoleBinding，将预设用户 <code class="highlighter-rouge">kubelet-bootstrap</code> 与内置的 ClusterRole <code class="highlighter-rouge">system:node-bootstrapper</code> 绑定到一起，使其能够发起 CSR 请求</strong></p>
+<p>在有些用户首次启动时，可能与遇到 kubelet 报 401 无权访问 apiserver 的错误；<strong>这是因为在默认情况下，kubelet 通过 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 中的预设用户 Token 声明了自己的身份，然后创建 CSR 请求；但是不要忘记这个用户在我们不处理的情况下他没任何权限的，包括创建 CSR 请求；所以需要如下命令创建一个 ClusterRoleBinding，将预设用户 <code class="language-plaintext highlighter-rouge">kubelet-bootstrap</code> 与内置的 ClusterRole <code class="language-plaintext highlighter-rouge">system:node-bootstrapper</code> 绑定到一起，使其能够发起 CSR 请求</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create clusterrolebinding kubelet-bootstrap <span class="se">\</span>
   <span class="nt">--clusterrole</span><span class="o">=</span>system:node-bootstrapper <span class="se">\</span>
@@ -283,11 +283,11 @@
 
 <p><img src="https://cdn.oss.link/markdown/5ssf8.png" alt="bootstrap_approve_crt" /></p>
 
-<p><strong>当成功签发证书后，目标节点的 kubelet 会将证书写入到 <code class="highlighter-rouge">--cert-dir=</code> 选项指定的目录中；注意此时如果不做其他设置应当生成四个文件</strong></p>
+<p><strong>当成功签发证书后，目标节点的 kubelet 会将证书写入到 <code class="language-plaintext highlighter-rouge">--cert-dir=</code> 选项指定的目录中；注意此时如果不做其他设置应当生成四个文件</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/a25ip.png" alt="bootstrap_crt" /></p>
 
-<p><strong>而 kubelet 与 apiserver 通讯所使用的证书为 <code class="highlighter-rouge">kubelet-client.crt</code>，剩下的 <code class="highlighter-rouge">kubelet.crt</code> 将会被用于 <code class="highlighter-rouge">kubelet server</code>(10250) 做鉴权使用；注意，此时 <code class="highlighter-rouge">kubelet.crt</code> 这个证书是个独立于 apiserver CA 的自签 CA，并且删除后 kubelet 组件会重新生成它</strong></p>
+<p><strong>而 kubelet 与 apiserver 通讯所使用的证书为 <code class="language-plaintext highlighter-rouge">kubelet-client.crt</code>，剩下的 <code class="language-plaintext highlighter-rouge">kubelet.crt</code> 将会被用于 <code class="language-plaintext highlighter-rouge">kubelet server</code>(10250) 做鉴权使用；注意，此时 <code class="language-plaintext highlighter-rouge">kubelet.crt</code> 这个证书是个独立于 apiserver CA 的自签 CA，并且删除后 kubelet 组件会重新生成它</strong></p>
 
 <h3 id="四tls-bootstrapping-证书自动续期">四、TLS bootstrapping 证书自动续期</h3>
 
@@ -380,25 +380,25 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
 
 <h4 id="43开启自动续期">4.3、开启自动续期</h4>
 
-<p>在 1.7 后，kubelet 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 选项，则 kubelet 在证书即将到期时会自动发起一个 renew 自己证书的 CSR 请求；同时 controller manager 需要在启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，再配合上面创建好的 ClusterRoleBinding，kubelet client 和 kubelet server 证才书会被自动签署；</p>
+<p>在 1.7 后，kubelet 启动时增加 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 选项，则 kubelet 在证书即将到期时会自动发起一个 renew 自己证书的 CSR 请求；同时 controller manager 需要在启动时增加 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，再配合上面创建好的 ClusterRoleBinding，kubelet client 和 kubelet server 证才书会被自动签署；</p>
 
-<p><strong>注意，1.7 版本设置自动续期参数后，新的 renew 请求不会立即开始，而是在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间时发起；而且经测试 1.7 版本即使自动签发了证书，kubelet 在不重启的情况下不会重新应用新证书；在 1.8 后 kubelet 组件在增加一个 <code class="highlighter-rouge">--rotate-certificates</code> 参数后，kubelet 才会自动重载新证书</strong></p>
+<p><strong>注意，1.7 版本设置自动续期参数后，新的 renew 请求不会立即开始，而是在证书总有效期的 <code class="language-plaintext highlighter-rouge">70%~90%</code> 的时间时发起；而且经测试 1.7 版本即使自动签发了证书，kubelet 在不重启的情况下不会重新应用新证书；在 1.8 后 kubelet 组件在增加一个 <code class="language-plaintext highlighter-rouge">--rotate-certificates</code> 参数后，kubelet 才会自动重载新证书</strong></p>
 
 <h4 id="43证书过期问题">4.3、证书过期问题</h4>
 
-<p>需要重复强调一个问题是: <strong>TLS bootstrapping 时的证书实际是由 kube-controller-manager 组件来签署的，也就是说证书有效期是 kube-controller-manager 组件控制的</strong>；所以在 1.7 版本以后(我查文档发现的从1.7开始有) kube-controller-manager 组件提供了一个 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数来设置签署的证书有效时间；默认为 <code class="highlighter-rouge">8760h0m0s</code>，将其改为 <code class="highlighter-rouge">87600h0m0s</code> 即 10 年后再进行 TLS bootstrapping 签署证书即可。</p>
+<p>需要重复强调一个问题是: <strong>TLS bootstrapping 时的证书实际是由 kube-controller-manager 组件来签署的，也就是说证书有效期是 kube-controller-manager 组件控制的</strong>；所以在 1.7 版本以后(我查文档发现的从1.7开始有) kube-controller-manager 组件提供了一个 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 参数来设置签署的证书有效时间；默认为 <code class="language-plaintext highlighter-rouge">8760h0m0s</code>，将其改为 <code class="language-plaintext highlighter-rouge">87600h0m0s</code> 即 10 年后再进行 TLS bootstrapping 签署证书即可。</p>
 
 <h3 id="五tls-bootstrapping-总结以及详细操作">五、TLS bootstrapping 总结以及详细操作</h3>
 
 <h4 id="51主要流程细节">5.1、主要流程细节</h4>
 
-<p>kubelet 首次启动通过加载 <code class="highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 和 apiserver CA 证书发起首次 CSR 请求，这个 Token 被预先内置在 apiserver 节点的 token.csv 中，其身份为 <code class="highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="highlighter-rouge">system:bootstrappers</code> 用户组；想要首次 CSR 请求能成功(成功指的是不会被 apiserver 401 拒绝)，则需要先将 <code class="highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="highlighter-rouge">system:node-bootstrapper</code> 内置 ClusterRole 绑定；</p>
+<p>kubelet 首次启动通过加载 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> 中的用户 Token 和 apiserver CA 证书发起首次 CSR 请求，这个 Token 被预先内置在 apiserver 节点的 token.csv 中，其身份为 <code class="language-plaintext highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="language-plaintext highlighter-rouge">system:bootstrappers</code> 用户组；想要首次 CSR 请求能成功(成功指的是不会被 apiserver 401 拒绝)，则需要先将 <code class="language-plaintext highlighter-rouge">kubelet-bootstrap</code> 用户和 <code class="language-plaintext highlighter-rouge">system:node-bootstrapper</code> 内置 ClusterRole 绑定；</p>
 
-<p>对于首次 CSR 请求可以手动批准，也可以将 <code class="highlighter-rouge">system:bootstrappers</code> 用户组与 <code class="highlighter-rouge">approve-node-client-csr</code> ClusterRole 绑定实现自动批准(1.8 之前这个 ClusterRole 需要手动创建，1.8 后 apiserver 自动创建，并更名为 <code class="highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code>)</p>
+<p>对于首次 CSR 请求可以手动批准，也可以将 <code class="language-plaintext highlighter-rouge">system:bootstrappers</code> 用户组与 <code class="language-plaintext highlighter-rouge">approve-node-client-csr</code> ClusterRole 绑定实现自动批准(1.8 之前这个 ClusterRole 需要手动创建，1.8 后 apiserver 自动创建，并更名为 <code class="language-plaintext highlighter-rouge">system:certificates.k8s.io:certificatesigningrequests:nodeclient</code>)</p>
 
-<p>默认签署的的证书只有 1 年有效期，如果想要调整证书有效期可以通过设置 kube-controller-manager 的 <code class="highlighter-rouge">--experimental-cluster-signing-duration</code> 参数实现，该参数默认值为 <code class="highlighter-rouge">8760h0m0s</code></p>
+<p>默认签署的的证书只有 1 年有效期，如果想要调整证书有效期可以通过设置 kube-controller-manager 的 <code class="language-plaintext highlighter-rouge">--experimental-cluster-signing-duration</code> 参数实现，该参数默认值为 <code class="language-plaintext highlighter-rouge">8760h0m0s</code></p>
 
-<p>对于证书自动续签，需要通过协调两个方面实现；第一，想要 kubelet 在证书到期后自动发起续期请求，则需要在 kubelet 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 来实现；第二，想要让 controller manager 自动批准续签的 CSR 请求需要在 controller manager 启动时增加 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，并绑定对应的 RBAC 规则；<strong>同时需要注意的是 1.7 版本的 kubelet 自动续签后需要手动重启 kubelet 以使其重新加载新证书，而 1.8 后只需要在 kublet 启动时附带 <code class="highlighter-rouge">--rotate-certificates</code> 选项就会自动重新加载新证书</strong></p>
+<p>对于证书自动续签，需要通过协调两个方面实现；第一，想要 kubelet 在证书到期后自动发起续期请求，则需要在 kubelet 启动时增加 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true,RotateKubeletServerCertificate=true</code> 来实现；第二，想要让 controller manager 自动批准续签的 CSR 请求需要在 controller manager 启动时增加 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，并绑定对应的 RBAC 规则；<strong>同时需要注意的是 1.7 版本的 kubelet 自动续签后需要手动重启 kubelet 以使其重新加载新证书，而 1.8 后只需要在 kublet 启动时附带 <code class="language-plaintext highlighter-rouge">--rotate-certificates</code> 选项就会自动重新加载新证书</strong></p>
 
 <h4 id="52证书及配置文件作用">5.2、证书及配置文件作用</h4>
 
@@ -406,7 +406,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
   <li>token.csv</li>
 </ul>
 
-<p>该文件为一个用户的描述文件，基本格式为 <code class="highlighter-rouge">Token,用户名,UID,用户组</code>；这个文件在 apiserver 启动时被 apiserver 加载，然后就相当于在集群内创建了一个这个用户；接下来就可以用 RBAC 给他授权；持有这个用户 Token 的组件访问 apiserver 的时候，apiserver 根据 RBAC 定义的该用户应当具有的权限来处理相应请求</p>
+<p>该文件为一个用户的描述文件，基本格式为 <code class="language-plaintext highlighter-rouge">Token,用户名,UID,用户组</code>；这个文件在 apiserver 启动时被 apiserver 加载，然后就相当于在集群内创建了一个这个用户；接下来就可以用 RBAC 给他授权；持有这个用户 Token 的组件访问 apiserver 的时候，apiserver 根据 RBAC 定义的该用户应当具有的权限来处理相应请求</p>
 
 <ul>
   <li>bootstarp.kubeconfig</li>
@@ -424,25 +424,25 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
   <li>kubelet.crt</li>
 </ul>
 
-<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>没有配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该文件为一个独立于 apiserver CA 的自签 CA 证书，有效期为 1 年；被用作 kubelet 10250 api 端口</p>
+<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>没有配置 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该文件为一个独立于 apiserver CA 的自签 CA 证书，有效期为 1 年；被用作 kubelet 10250 api 端口</p>
 
 <ul>
   <li>kubelet-server.crt</li>
 </ul>
 
-<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该证书由 apiserver CA 签署，默认有效期同样是 1 年，被用作 kubelet 10250 api 端口鉴权</p>
+<p>该文件在 kubelet 完成 TLS bootstrapping 后并且<strong>配置了 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 时才会生成</strong>；这种情况下该证书由 apiserver CA 签署，默认有效期同样是 1 年，被用作 kubelet 10250 api 端口鉴权</p>
 
 <ul>
   <li>kubelet-client-current.pem</li>
 </ul>
 
-<p>这是一个软连接文件，当 kubelet 配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true</code> 选项后，会在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="highlighter-rouge">kubelet-client-时间戳.pem</code>；<code class="highlighter-rouge">kubelet-client-current.pem</code> 文件则始终软连接到最新的真实证书文件，除首次启动外，kubelet 一直会使用这个证书同  apiserver 通讯</p>
+<p>这是一个软连接文件，当 kubelet 配置了 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletClientCertificate=true</code> 选项后，会在证书总有效期的 <code class="language-plaintext highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="language-plaintext highlighter-rouge">kubelet-client-时间戳.pem</code>；<code class="language-plaintext highlighter-rouge">kubelet-client-current.pem</code> 文件则始终软连接到最新的真实证书文件，除首次启动外，kubelet 一直会使用这个证书同  apiserver 通讯</p>
 
 <ul>
   <li>kubelet-server-current.pem</li>
 </ul>
 
-<p>同样是一个软连接文件，当 kubelet 配置了 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 选项后，会在证书总有效期的 <code class="highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="highlighter-rouge">kubelet-server-时间戳.pem</code>；<code class="highlighter-rouge">kubelet-server-current.pem</code> 文件则始终软连接到最新的真实证书文件，该文件将会一直被用于 kubelet 10250 api 端口鉴权</p>
+<p>同样是一个软连接文件，当 kubelet 配置了 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 选项后，会在证书总有效期的 <code class="language-plaintext highlighter-rouge">70%~90%</code> 的时间内发起续期请求，请求被批准后会生成一个 <code class="language-plaintext highlighter-rouge">kubelet-server-时间戳.pem</code>；<code class="language-plaintext highlighter-rouge">kubelet-server-current.pem</code> 文件则始终软连接到最新的真实证书文件，该文件将会一直被用于 kubelet 10250 api 端口鉴权</p>
 
 <h4 id="5317-tls-bootstrapping-配置">5.3、1.7 TLS bootstrapping 配置</h4>
 
@@ -474,7 +474,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
               --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"</span>
 </code></pre></div></div>
 
-<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
+<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"--address=0.0.0.0 </span><span class="se">\</span><span class="s2">
                               --service-cluster-ip-range=10.254.0.0/16 </span><span class="se">\</span><span class="s2">
@@ -554,7 +554,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
   <span class="nt">--user</span><span class="o">=</span>kubelet-bootstrap
 </code></pre></div></div>
 
-<p>配置 kubelet 自动续期，<strong>RotateKubeletClientCertificate 用于自动续期 kubelet 连接 apiserver 所用的证书(kubelet-client-xxxx.pem)，RotateKubeletServerCertificate 用于自动续期 kubelet 10250 api 端口所使用的证书(kubelet-server-xxxx.pem)，<code class="highlighter-rouge">--rotate-certificates</code> 选项使得 kubelet 能够自动重载新证书</strong></p>
+<p>配置 kubelet 自动续期，<strong>RotateKubeletClientCertificate 用于自动续期 kubelet 连接 apiserver 所用的证书(kubelet-client-xxxx.pem)，RotateKubeletServerCertificate 用于自动续期 kubelet 10250 api 端口所使用的证书(kubelet-server-xxxx.pem)，<code class="language-plaintext highlighter-rouge">--rotate-certificates</code> 选项使得 kubelet 能够自动重载新证书</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--cgroup-driver=cgroupfs </span><span class="se">\</span><span class="s2">
               --cluster-dns=10.254.0.2 </span><span class="se">\</span><span class="s2">
@@ -571,7 +571,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
               --pod-infra-container-image=gcr.io/google_containers/pause-amd64:3.0"</span>
 </code></pre></div></div>
 
-<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
+<p>配置 controller manager 自动批准相关 CSR 请求，<strong>如果不配置 <code class="language-plaintext highlighter-rouge">--feature-gates=RotateKubeletServerCertificate=true</code> 参数，则即使配置了相关的 RBAC 规则，也只会自动批准 kubelet client 的 renew 请求</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KUBE_CONTROLLER_MANAGER_ARGS</span><span class="o">=</span><span class="s2">"--address=0.0.0.0 </span><span class="se">\</span><span class="s2">
                               --service-cluster-ip-range=10.254.0.0/16 </span><span class="se">\</span><span class="s2">
@@ -721,7 +721,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="nt">--
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

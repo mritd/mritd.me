@@ -224,7 +224,7 @@
 
 <h4 id="31cni-配置">3.1、CNI 配置</h4>
 
-<p>首先保证集群在不开启 CNI 插件的情况下所有 Node Ready 状态，然后修改 <code class="highlighter-rouge">/etc/kubernetes/kubelet</code> 配置文件，加入 CNI 支持( <code class="highlighter-rouge">--network-plugin</code> )，配置如下</p>
+<p>首先保证集群在不开启 CNI 插件的情况下所有 Node Ready 状态，然后修改 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/kubelet</code> 配置文件，加入 CNI 支持( <code class="language-plaintext highlighter-rouge">--network-plugin</code> )，配置如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># kubernetes kubelet (minion) config</span>
 
@@ -257,7 +257,7 @@
 
 <h4 id="32cluster-cidr-配置">3.2、Cluster CIDR 配置</h4>
 
-<p><strong>在开启 CNI 时使用 Flannel，要设置 <code class="highlighter-rouge">--allocate-node-cidrs</code> 和 <code class="highlighter-rouge">--cluster-cidr</code> 以保证 Flannel 能正确进行 IP 分配，这两个配置需要加入到 <code class="highlighter-rouge">/etc/kubernetes/controller-manager</code> 配置中，完整配置如下</strong></p>
+<p><strong>在开启 CNI 时使用 Flannel，要设置 <code class="language-plaintext highlighter-rouge">--allocate-node-cidrs</code> 和 <code class="language-plaintext highlighter-rouge">--cluster-cidr</code> 以保证 Flannel 能正确进行 IP 分配，这两个配置需要加入到 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/controller-manager</code> 配置中，完整配置如下</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># The following values are used to configure the kubernetes controller-manager</span>
@@ -282,7 +282,7 @@
 
 <h4 id="33cni-插件配置">3.3、CNI 插件配置</h4>
 
-<p>开启 CNI 后，kubelet 创建的 POD 则需要 CNI 插件支持，这里让我感觉奇怪的是 Flannel 的 yaml 中对于 <code class="highlighter-rouge">install-cni</code> 这个容器只进行了配置复制，没有做插件复制；所以我们需要手动安装 CNI 插件，CNI 插件最新版本请留意 <a href="https://github.com/containernetworking/plugins/releases">Github</a>；安装过程如下:</p>
+<p>开启 CNI 后，kubelet 创建的 POD 则需要 CNI 插件支持，这里让我感觉奇怪的是 Flannel 的 yaml 中对于 <code class="language-plaintext highlighter-rouge">install-cni</code> 这个容器只进行了配置复制，没有做插件复制；所以我们需要手动安装 CNI 插件，CNI 插件最新版本请留意 <a href="https://github.com/containernetworking/plugins/releases">Github</a>；安装过程如下:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建 CNI 目录</span>
 <span class="nb">mkdir</span> <span class="nt">-p</span> /opt/cni/bin
@@ -412,7 +412,7 @@ kubectl apply <span class="nt">-f</span> https://raw.githubusercontent.com/coreo
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

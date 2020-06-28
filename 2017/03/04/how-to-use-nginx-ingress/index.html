@@ -245,7 +245,7 @@ deployment <span class="s2">"default-http-backend"</span> created
 service <span class="s2">"default-http-backend"</span> created
 </code></pre></div></div>
 
-<p>这个 <code class="highlighter-rouge">default-backend.yaml</code> 文件可以在 <a href="https://github.com/kubernetes/ingress/blob/master/examples/deployment/nginx/default-backend.yaml">官方 Ingress 仓库</a> 找到，由于篇幅限制这里不贴了，仓库位置如下</p>
+<p>这个 <code class="language-plaintext highlighter-rouge">default-backend.yaml</code> 文件可以在 <a href="https://github.com/kubernetes/ingress/blob/master/examples/deployment/nginx/default-backend.yaml">官方 Ingress 仓库</a> 找到，由于篇幅限制这里不贴了，仓库位置如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/1ct6w.jpg" alt="default-backend" /></p>
 
@@ -257,7 +257,7 @@ service <span class="s2">"default-http-backend"</span> created
 daemonset <span class="s2">"nginx-ingress-lb"</span> created
 </code></pre></div></div>
 
-<p><strong>注意：官方的 Ingress Controller 有个坑，至少我看了 DaemonSet 方式部署的有这个问题：没有绑定到宿主机 80 端口，也就是说前端 Nginx 没有监听宿主机 80 端口(这还玩个卵啊)；所以需要把配置搞下来自己加一下 <code class="highlighter-rouge">hostNetwork</code></strong>，截图如下</p>
+<p><strong>注意：官方的 Ingress Controller 有个坑，至少我看了 DaemonSet 方式部署的有这个问题：没有绑定到宿主机 80 端口，也就是说前端 Nginx 没有监听宿主机 80 端口(这还玩个卵啊)；所以需要把配置搞下来自己加一下 <code class="language-plaintext highlighter-rouge">hostNetwork</code></strong>，截图如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/n1fsc.jpg" alt="add hostNetwork" /></p>
 
@@ -404,9 +404,9 @@ spec:
           servicePort: 5601
 </code></pre></div></div>
 
-<p><strong>注意：一个 Ingress 只能使用一个 secret(secretName 段只能有一个)，也就是说只能用一个证书，更直白的说就是如果你在一个 Ingress 中配置了多个域名，那么使用 TLS 的话必须保证证书支持该 Ingress 下所有域名；并且这个 <code class="highlighter-rouge">secretName</code> 一定要放在上面域名列表最后位置，否则会报错 <code class="highlighter-rouge">did not find expected key</code> 无法创建；同时上面的 <code class="highlighter-rouge">hosts</code> 段下域名必须跟下面的 <code class="highlighter-rouge">rules</code> 中完全匹配</strong></p>
+<p><strong>注意：一个 Ingress 只能使用一个 secret(secretName 段只能有一个)，也就是说只能用一个证书，更直白的说就是如果你在一个 Ingress 中配置了多个域名，那么使用 TLS 的话必须保证证书支持该 Ingress 下所有域名；并且这个 <code class="language-plaintext highlighter-rouge">secretName</code> 一定要放在上面域名列表最后位置，否则会报错 <code class="language-plaintext highlighter-rouge">did not find expected key</code> 无法创建；同时上面的 <code class="language-plaintext highlighter-rouge">hosts</code> 段下域名必须跟下面的 <code class="language-plaintext highlighter-rouge">rules</code> 中完全匹配</strong></p>
 
-<p><strong>更需要注意一点：之所以这里单独开一段就是因为有大坑；Kubernetes Ingress 默认情况下，当你不配置证书时，会默认给你一个 TLS 证书的，也就是说你 Ingress 中配置错了，比如写了2个 <code class="highlighter-rouge">secretName</code>、或者 <code class="highlighter-rouge">hosts</code> 段中缺了某个域名，那么对于写了多个 <code class="highlighter-rouge">secretName</code> 的情况，所有域名全会走默认证书；对于 <code class="highlighter-rouge">hosts</code> 缺了某个域名的情况，缺失的域名将会走默认证书，部署时一定要验证一下证书，不能 “有了就行”；更新 Ingress 证书可能需要等一段时间才会生效</strong></p>
+<p><strong>更需要注意一点：之所以这里单独开一段就是因为有大坑；Kubernetes Ingress 默认情况下，当你不配置证书时，会默认给你一个 TLS 证书的，也就是说你 Ingress 中配置错了，比如写了2个 <code class="language-plaintext highlighter-rouge">secretName</code>、或者 <code class="language-plaintext highlighter-rouge">hosts</code> 段中缺了某个域名，那么对于写了多个 <code class="language-plaintext highlighter-rouge">secretName</code> 的情况，所有域名全会走默认证书；对于 <code class="language-plaintext highlighter-rouge">hosts</code> 缺了某个域名的情况，缺失的域名将会走默认证书，部署时一定要验证一下证书，不能 “有了就行”；更新 Ingress 证书可能需要等一段时间才会生效</strong></p>
 
 <p>最后重新部署一下即可</p>
 
@@ -527,7 +527,7 @@ ingress <span class="s2">"dashboard-kibana-ingress"</span> created
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -225,7 +225,7 @@
 <h2 id="gradle-hello-world">Gradle Hello World</h2>
 
 <blockquote>
-  <p>我们可以通过 <code class="highlighter-rouge">gradle</code> 命令来完成一次构建，<strong><code class="highlighter-rouge">gradle</code> 命令会在当前目录查找一个叫 <code class="highlighter-rouge">build.gradle</code> 的描述文件来完成构建</strong>。严格来说它是一个构建脚本，类似于 Maven 的 <code class="highlighter-rouge">POM.xml</code> 文件；用来描述整个构建过程；以下是一个 <code class="highlighter-rouge">Hello World</code> 示例。</p>
+  <p>我们可以通过 <code class="language-plaintext highlighter-rouge">gradle</code> 命令来完成一次构建，<strong><code class="language-plaintext highlighter-rouge">gradle</code> 命令会在当前目录查找一个叫 <code class="language-plaintext highlighter-rouge">build.gradle</code> 的描述文件来完成构建</strong>。严格来说它是一个构建脚本，类似于 Maven 的 <code class="language-plaintext highlighter-rouge">POM.xml</code> 文件；用来描述整个构建过程；以下是一个 <code class="language-plaintext highlighter-rouge">Hello World</code> 示例。</p>
 </blockquote>
 
 <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">{</span>
@@ -236,12 +236,12 @@
 
 </code></pre></div></div>
 
-<p>将以上脚本保存为 <code class="highlighter-rouge">build.gradle</code>；并在当前目录执行 <code class="highlighter-rouge">gradle -q helloWorld</code> 尝试运行该 task。
-<strong>注意：<code class="highlighter-rouge">-q</code> 代表 quite 模式，不显示 Gradle 的日志信息。</strong></p>
+<p>将以上脚本保存为 <code class="language-plaintext highlighter-rouge">build.gradle</code>；并在当前目录执行 <code class="language-plaintext highlighter-rouge">gradle -q helloWorld</code> 尝试运行该 task。
+<strong>注意：<code class="language-plaintext highlighter-rouge">-q</code> 代表 quite 模式，不显示 Gradle 的日志信息。</strong></p>
 
 <h2 id="快捷定义任务">快捷定义任务</h2>
 
-<p>以上代码，<code class="highlighter-rouge">doLast</code> 作为 <code class="highlighter-rouge">helloWorld</code> 的一个 Action，此时可以通过如下方式快捷定义：</p>
+<p>以上代码，<code class="language-plaintext highlighter-rouge">doLast</code> 作为 <code class="language-plaintext highlighter-rouge">helloWorld</code> 的一个 Action，此时可以通过如下方式快捷定义：</p>
 
 <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">task</span> <span class="n">helloWorld</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
     <span class="n">println</span> <span class="s1">'Hello World!'</span>
@@ -275,7 +275,7 @@ task test1(dependsOn: testDepends) &lt;&lt; {
 
 </code></pre>
 
-<p>执行 <code class="highlighter-rouge">gradle -q test1</code> 命令运行 task1 任务，此时由于 task1 任务依赖于 testDepends 任务，所以会先执行 testDepends 任务，在执行 test1 任务。</p>
+<p>执行 <code class="language-plaintext highlighter-rouge">gradle -q test1</code> 命令运行 task1 任务，此时由于 task1 任务依赖于 testDepends 任务，所以会先执行 testDepends 任务，在执行 test1 任务。</p>
 
 <p><strong>注意：build.gradle 脚本中，任务依赖时没有顺序区分，也就是说可以先声明一个任务依赖于另一个任务，而后定义另一个任务，总结来说就是 task 书写顺序不会影响 任务间依赖关系。</strong></p>
 
@@ -332,11 +332,11 @@ task test1(dependsOn: testDepends) &lt;&lt; {
 
 </code></pre></div></div>
 
-<p><strong>注意：上面一直使用的 <code class="highlighter-rouge">&lt;&lt;</code> 实际是 doLast 的简写形式。</strong></p>
+<p><strong>注意：上面一直使用的 <code class="language-plaintext highlighter-rouge">&lt;&lt;</code> 实际是 doLast 的简写形式。</strong></p>
 
 <h2 id="任务引用短标记语法">任务引用(短标记语法)</h2>
 
-<p>Gradle 可以通过 <code class="highlighter-rouge">$</code> 符号引用另一个任务，可以是另一个任务的执行结果；也可以是其属性，比如 <code class="highlighter-rouge">task.name</code> 将返回某个任务的名字，样例如下：</p>
+<p>Gradle 可以通过 <code class="language-plaintext highlighter-rouge">$</code> 符号引用另一个任务，可以是另一个任务的执行结果；也可以是其属性，比如 <code class="language-plaintext highlighter-rouge">task.name</code> 将返回某个任务的名字，样例如下：</p>
 
 <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义一个任务</span>
 <span class="n">task</span> <span class="n">test1</span> <span class="o">&lt;&lt;</span> <span class="o">{</span>
@@ -351,7 +351,7 @@ task test1(dependsOn: testDepends) &lt;&lt; {
 
 <h2 id="自定义任务属性">自定义任务属性</h2>
 
-<p>在 Gradle 中我们可以自定义任务的属性，然后再恰当的时候加以引用，在设置某个任务属性时 <strong>采用 <code class="highlighter-rouge">ext</code> 关键字定义该属性</strong>；个人理解类似 java 的 this 关键字；样例如下：</p>
+<p>在 Gradle 中我们可以自定义任务的属性，然后再恰当的时候加以引用，在设置某个任务属性时 <strong>采用 <code class="language-plaintext highlighter-rouge">ext</code> 关键字定义该属性</strong>；个人理解类似 java 的 this 关键字；样例如下：</p>
 
 <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 testTask1 的两个属性</span>
 <span class="n">task</span> <span class="n">testTask1</span> <span class="o">{</span>
@@ -421,7 +421,7 @@ task test1(dependsOn: testDepends) &lt;&lt; {
   <p>终于没有 Ant 了……</p>
 </blockquote>
 
-<p>Gradle 允许在一个构建脚本(<code class="highlighter-rouge">build.gradle</code>) 中定义默认需要执行的任务，只需要使用 <code class="highlighter-rouge">defaultTasks</code> 关键字即可，此时可直接在构建脚本目录执行 <code class="highlighter-rouge">gradle [-q]</code> 来执行构建过程，样例如下</p>
+<p>Gradle 允许在一个构建脚本(<code class="language-plaintext highlighter-rouge">build.gradle</code>) 中定义默认需要执行的任务，只需要使用 <code class="language-plaintext highlighter-rouge">defaultTasks</code> 关键字即可，此时可直接在构建脚本目录执行 <code class="language-plaintext highlighter-rouge">gradle [-q]</code> 来执行构建过程，样例如下</p>
 
 <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 定义 默认的任务</span>
 <span class="n">defaultTasks</span> <span class="s2">"testTask1"</span><span class="o">,</span><span class="s2">"testTask2"</span>
@@ -563,7 +563,7 @@ task test1(dependsOn: testDepends) &lt;&lt; {
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

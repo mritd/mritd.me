@@ -193,7 +193,7 @@
                 
 
                 <blockquote>
-  <p>写这篇文章的目的是为了继续上篇 <a href="https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/">Kubernetes 1.12 新的插件机制</a> 中最后部分对 <code class="highlighter-rouge">Golang 的插件辅助库</code> 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 <strong>sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例</strong></p>
+  <p>写这篇文章的目的是为了继续上篇 <a href="https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/">Kubernetes 1.12 新的插件机制</a> 中最后部分对 <code class="language-plaintext highlighter-rouge">Golang 的插件辅助库</code> 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 <strong>sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例</strong></p>
 </blockquote>
 
 <h2 id="一基础准备">一、基础准备</h2>
@@ -231,39 +231,39 @@ to quickly create a Cobra application.`</span><span class="p">,</span>
 
 <h3 id="12vendor-依赖">1.2、vendor 依赖</h3>
 
-<p>vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目采用 <a href="https://github.com/tools/godep">godep</a> 工具管理依赖；依赖配置信息被保存在 <code class="highlighter-rouge">Godeps/Godeps.json</code> 中，<strong>一般项目不会上传 vendor 目录，因为它的依赖信息已经在 Godeps.json 中存在，只需要在项目下使用 <code class="highlighter-rouge">godep restore</code> 命令恢复就可自动重新下载</strong>；这里上传了 vendor 目录的原因应该是为了方便开发者直接使用 <code class="highlighter-rouge">go get</code> 命令安装；顺边说一下在 Golang 新版本已经开始转换到 <code class="highlighter-rouge">go mod</code> 依赖管理工具，标志就是项目下会有 <code class="highlighter-rouge">go.mod</code> 文件</p>
+<p>vendor 目录用于存放 Golang 的依赖库，sample-cli-plugin 这个项目采用 <a href="https://github.com/tools/godep">godep</a> 工具管理依赖；依赖配置信息被保存在 <code class="language-plaintext highlighter-rouge">Godeps/Godeps.json</code> 中，<strong>一般项目不会上传 vendor 目录，因为它的依赖信息已经在 Godeps.json 中存在，只需要在项目下使用 <code class="language-plaintext highlighter-rouge">godep restore</code> 命令恢复就可自动重新下载</strong>；这里上传了 vendor 目录的原因应该是为了方便开发者直接使用 <code class="language-plaintext highlighter-rouge">go get</code> 命令安装；顺边说一下在 Golang 新版本已经开始转换到 <code class="language-plaintext highlighter-rouge">go mod</code> 依赖管理工具，标志就是项目下会有 <code class="language-plaintext highlighter-rouge">go.mod</code> 文件</p>
 
 <h2 id="二源码分析">二、源码分析</h2>
 
 <h3 id="21环境搭建">2.1、环境搭建</h3>
 
-<p>这里准备一笔带过了，基本就是 clone 源码到 <code class="highlighter-rouge">$GOPATH/src/k8s.io/sample-cli-plugin</code> 目录，然后在 GoLand 中打开；目前我使用的 Go 版本为最新的 1.11.4；以下时导入源码后的截图</p>
+<p>这里准备一笔带过了，基本就是 clone 源码到 <code class="language-plaintext highlighter-rouge">$GOPATH/src/k8s.io/sample-cli-plugin</code> 目录，然后在 GoLand 中打开；目前我使用的 Go 版本为最新的 1.11.4；以下时导入源码后的截图</p>
 
 <p><img src="https://cdn.oss.link/markdown/sn8o8.png" alt="GoLand" /></p>
 
 <h3 id="22定位核心运行方法">2.2、定位核心运行方法</h3>
 
-<p>熟悉过 Cobra 库以后，再从整个项目包名上分析，首先想到的启动入口应该在 <code class="highlighter-rouge">cmd</code> 包下(一般 <code class="highlighter-rouge">cmd</code> 包下的文件都会编译成最终可执行文件名，Kubernetes 也是一样)</p>
+<p>熟悉过 Cobra 库以后，再从整个项目包名上分析，首先想到的启动入口应该在 <code class="language-plaintext highlighter-rouge">cmd</code> 包下(一般 <code class="language-plaintext highlighter-rouge">cmd</code> 包下的文件都会编译成最终可执行文件名，Kubernetes 也是一样)</p>
 
 <p><img src="https://cdn.oss.link/markdown/rafeq.png" alt="main" /></p>
 
-<p>从以上截图中可以看出，首先通过 <code class="highlighter-rouge">cmd.NewCmdNamespace</code> 方法创建了一个 Command 对象 <code class="highlighter-rouge">root</code>，然后调用了 <code class="highlighter-rouge">root.Execute</code> 就结束了；那么也就说明 <code class="highlighter-rouge">root</code> 这个 Command 是唯一的核心命令对象，整个插件实现都在这个 <code class="highlighter-rouge">root</code> 里；所以我们需要查看一下这个 <code class="highlighter-rouge">cmd.NewCmdNamespace</code> 是如何对它初始化的，找到 Cobra 中的 <code class="highlighter-rouge">Run</code> 或者 <code class="highlighter-rouge">RunE</code> 设置</p>
+<p>从以上截图中可以看出，首先通过 <code class="language-plaintext highlighter-rouge">cmd.NewCmdNamespace</code> 方法创建了一个 Command 对象 <code class="language-plaintext highlighter-rouge">root</code>，然后调用了 <code class="language-plaintext highlighter-rouge">root.Execute</code> 就结束了；那么也就说明 <code class="language-plaintext highlighter-rouge">root</code> 这个 Command 是唯一的核心命令对象，整个插件实现都在这个 <code class="language-plaintext highlighter-rouge">root</code> 里；所以我们需要查看一下这个 <code class="language-plaintext highlighter-rouge">cmd.NewCmdNamespace</code> 是如何对它初始化的，找到 Cobra 中的 <code class="language-plaintext highlighter-rouge">Run</code> 或者 <code class="language-plaintext highlighter-rouge">RunE</code> 设置</p>
 
 <p><img src="https://cdn.oss.link/markdown/77krg.png" alt="NewCmdNamespace" /></p>
 
-<p>定位到 <code class="highlighter-rouge">NewCmdNamespace</code> 方法以后，基本上就是标准的 Cobra 库的使用方式了；<strong>从截图上可以看到，<code class="highlighter-rouge">RunE</code> 设置的函数总共运行了 3 个动作: <code class="highlighter-rouge">o.Complete</code>、<code class="highlighter-rouge">o.Validate</code>、<code class="highlighter-rouge">o.Run</code></strong>；所以接下来我们主要分析这三个方法就行了</p>
+<p>定位到 <code class="language-plaintext highlighter-rouge">NewCmdNamespace</code> 方法以后，基本上就是标准的 Cobra 库的使用方式了；<strong>从截图上可以看到，<code class="language-plaintext highlighter-rouge">RunE</code> 设置的函数总共运行了 3 个动作: <code class="language-plaintext highlighter-rouge">o.Complete</code>、<code class="language-plaintext highlighter-rouge">o.Validate</code>、<code class="language-plaintext highlighter-rouge">o.Run</code></strong>；所以接下来我们主要分析这三个方法就行了</p>
 
 <h3 id="23namespaceoptions-结构体">2.3、NamespaceOptions 结构体</h3>
 
-<p>在分析上面说的这三个方法之前，我们还应当了解一下这个 <code class="highlighter-rouge">o</code> 是什么玩意</p>
+<p>在分析上面说的这三个方法之前，我们还应当了解一下这个 <code class="language-plaintext highlighter-rouge">o</code> 是什么玩意</p>
 
 <p><img src="https://cdn.oss.link/markdown/4b3cc.png" alt="NamespaceOptions" /></p>
 
-<p>从源码中可以看到，<code class="highlighter-rouge">o</code> 这个对象由 <code class="highlighter-rouge">NewNamespaceOptions</code> 创建，而 <code class="highlighter-rouge">NewNamespaceOptions</code> 方法返回的实际上是一个 <code class="highlighter-rouge">NamespaceOptions</code> 结构体；接下来我们需要研究一下这个结构体都是由什么组成的，换句话说要基本大致上整明白结构体的基本结构，比如里面的属性都是干啥的</p>
+<p>从源码中可以看到，<code class="language-plaintext highlighter-rouge">o</code> 这个对象由 <code class="language-plaintext highlighter-rouge">NewNamespaceOptions</code> 创建，而 <code class="language-plaintext highlighter-rouge">NewNamespaceOptions</code> 方法返回的实际上是一个 <code class="language-plaintext highlighter-rouge">NamespaceOptions</code> 结构体；接下来我们需要研究一下这个结构体都是由什么组成的，换句话说要基本大致上整明白结构体的基本结构，比如里面的属性都是干啥的</p>
 
 <h4 id="231genericclioptionsconfigflags">2.3.1、*genericclioptions.ConfigFlags</h4>
 
-<p>首先看下第一个属性 <code class="highlighter-rouge">configFlags</code>，它的实际类型是 <code class="highlighter-rouge">*genericclioptions.ConfigFlags</code>，点击查看以后如下</p>
+<p>首先看下第一个属性 <code class="language-plaintext highlighter-rouge">configFlags</code>，它的实际类型是 <code class="language-plaintext highlighter-rouge">*genericclioptions.ConfigFlags</code>，点击查看以后如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/li6s4.png" alt="genericclioptions.ConfigFlags" /></p>
 
@@ -271,7 +271,7 @@ to quickly create a Cobra application.`</span><span class="p">,</span>
 
 <h4 id="232apicontext">2.3.2、*api.Context</h4>
 
-<p>下面这两个 <code class="highlighter-rouge">resultingContext</code>、<code class="highlighter-rouge">resultingContextName</code> 就很好理解了，从名字上看就可以知道它们应该是用来存储结果集的 Context 信息的；当然这个 <code class="highlighter-rouge">*api.Context</code> 就是 Kubernetes 配置文件中 Context 的 Go 结构体</p>
+<p>下面这两个 <code class="language-plaintext highlighter-rouge">resultingContext</code>、<code class="language-plaintext highlighter-rouge">resultingContextName</code> 就很好理解了，从名字上看就可以知道它们应该是用来存储结果集的 Context 信息的；当然这个 <code class="language-plaintext highlighter-rouge">*api.Context</code> 就是 Kubernetes 配置文件中 Context 的 Go 结构体</p>
 
 <h4 id="233userspecified">2.3.3、userSpecified*</h4>
 
@@ -279,11 +279,11 @@ to quickly create a Cobra application.`</span><span class="p">,</span>
 
 <h4 id="234rawconfig">2.3.4、rawConfig</h4>
 
-<p>rawConfig 这个变量名字有点子奇怪，不过它实际上是个 <code class="highlighter-rouge">api.Config</code>；里面保存了与 API Server 通讯的配置信息；<strong>至于为什么要有这玩意，是因为配置信息输入源有两个: cli 命令行选项(eg: <code class="highlighter-rouge">--namespace</code>)和用户配置文件(eg: <code class="highlighter-rouge">~/.kube/config</code>)；最终这两个地方的配置合并后会存储在这个 rawConfig 里</strong></p>
+<p>rawConfig 这个变量名字有点子奇怪，不过它实际上是个 <code class="language-plaintext highlighter-rouge">api.Config</code>；里面保存了与 API Server 通讯的配置信息；<strong>至于为什么要有这玩意，是因为配置信息输入源有两个: cli 命令行选项(eg: <code class="language-plaintext highlighter-rouge">--namespace</code>)和用户配置文件(eg: <code class="language-plaintext highlighter-rouge">~/.kube/config</code>)；最终这两个地方的配置合并后会存储在这个 rawConfig 里</strong></p>
 
 <h4 id="235listnamespaces">2.3.5、listNamespaces</h4>
 
-<p>这个变量实际上相当于一个 flag，用于存储插件是否使用了 <code class="highlighter-rouge">--list</code> 选项；在分析结构体这里没法看出来；不过只要稍稍的多看一眼代码就能看在 <code class="highlighter-rouge">NewCmdNamespace</code> 方法中有这么一行代码</p>
+<p>这个变量实际上相当于一个 flag，用于存储插件是否使用了 <code class="language-plaintext highlighter-rouge">--list</code> 选项；在分析结构体这里没法看出来；不过只要稍稍的多看一眼代码就能看在 <code class="language-plaintext highlighter-rouge">NewCmdNamespace</code> 方法中有这么一行代码</p>
 
 <p><img src="https://cdn.oss.link/markdown/f07l3.png" alt="listNamespaces" /></p>
 
@@ -299,44 +299,44 @@ to quickly create a Cobra application.`</span><span class="p">,</span>
 
 <p><img src="https://cdn.oss.link/markdown/qqf0f.png" alt="NamespaceOptions.Complete" /></p>
 
-<p>从截图上可以看到，首先弄出了 <code class="highlighter-rouge">rawConfig</code> 这个玩意，<code class="highlighter-rouge">rawConfig</code> 上面也提到了，它就是终端选项和用户配置文件的最终合并，至于为什么可以查看 <code class="highlighter-rouge">ToRawKubeConfigLoader().RawConfig()</code> 这两个方法的注释和实现即可；</p>
+<p>从截图上可以看到，首先弄出了 <code class="language-plaintext highlighter-rouge">rawConfig</code> 这个玩意，<code class="language-plaintext highlighter-rouge">rawConfig</code> 上面也提到了，它就是终端选项和用户配置文件的最终合并，至于为什么可以查看 <code class="language-plaintext highlighter-rouge">ToRawKubeConfigLoader().RawConfig()</code> 这两个方法的注释和实现即可；</p>
 
-<p>接下来就是各种获取插件执行所需要的变量信息，比如获取用户指定的 <code class="highlighter-rouge">Namespace</code>、<code class="highlighter-rouge">Cluster</code>、<code class="highlighter-rouge">Context</code> 等，其中还包含了一些必要的校验；比如不允许使用 <code class="highlighter-rouge">kubectl ns NS_NAME1 --namespace NS_NAME2</code> 这种操作(因为这么干很让人难以理解 “你到底是要切换到 <code class="highlighter-rouge">NS_NAME1</code> 还是 <code class="highlighter-rouge">NS_NAME2</code>”)</p>
+<p>接下来就是各种获取插件执行所需要的变量信息，比如获取用户指定的 <code class="language-plaintext highlighter-rouge">Namespace</code>、<code class="language-plaintext highlighter-rouge">Cluster</code>、<code class="language-plaintext highlighter-rouge">Context</code> 等，其中还包含了一些必要的校验；比如不允许使用 <code class="language-plaintext highlighter-rouge">kubectl ns NS_NAME1 --namespace NS_NAME2</code> 这种操作(因为这么干很让人难以理解 “你到底是要切换到 <code class="language-plaintext highlighter-rouge">NS_NAME1</code> 还是 <code class="language-plaintext highlighter-rouge">NS_NAME2</code>”)</p>
 
-<p>最后从 <code class="highlighter-rouge">153</code> 行 <code class="highlighter-rouge">o.resultingContext = api.NewContext()</code> 开始就是创建最终的 <code class="highlighter-rouge">resultingContext</code> 对象，把获取到的用户指定的 <code class="highlighter-rouge">Namespace</code> 等各种信息赋值好，为下一步将其持久化到配置文件中做准备</p>
+<p>最后从 <code class="language-plaintext highlighter-rouge">153</code> 行 <code class="language-plaintext highlighter-rouge">o.resultingContext = api.NewContext()</code> 开始就是创建最终的 <code class="language-plaintext highlighter-rouge">resultingContext</code> 对象，把获取到的用户指定的 <code class="language-plaintext highlighter-rouge">Namespace</code> 等各种信息赋值好，为下一步将其持久化到配置文件中做准备</p>
 
 <h4 id="242namespaceoptionsvalidate">2.4.2、*NamespaceOptions.Validate</h4>
 
-<p>这个方法看名字就知道，里面全是对最终结果的校验；比如检查一下 <code class="highlighter-rouge">rawConfig</code> 中的 <code class="highlighter-rouge">CurrentContext</code> 是否获取到了，看看命令行参数是否正确，确保你不会瞎鸡儿输入 <code class="highlighter-rouge">kubectl ns NS_NAME1 NS_NAME2</code> 这种命令</p>
+<p>这个方法看名字就知道，里面全是对最终结果的校验；比如检查一下 <code class="language-plaintext highlighter-rouge">rawConfig</code> 中的 <code class="language-plaintext highlighter-rouge">CurrentContext</code> 是否获取到了，看看命令行参数是否正确，确保你不会瞎鸡儿输入 <code class="language-plaintext highlighter-rouge">kubectl ns NS_NAME1 NS_NAME2</code> 这种命令</p>
 
 <p><img src="https://cdn.oss.link/markdown/frqpb.png" alt="NamespaceOptions.Validate" /></p>
 
 <h4 id="243namespaceoptionsrun">2.4.3、*NamespaceOptions.Run</h4>
 
-<p>第一步合并配置信息并获取到用户设置(输入)的配置，第二部做参数校验；可以说前面的两步操作都是为这一步做准备，<code class="highlighter-rouge">Run</code> 方法真正的做了配置文件写入、终端返回结果打印操作</p>
+<p>第一步合并配置信息并获取到用户设置(输入)的配置，第二部做参数校验；可以说前面的两步操作都是为这一步做准备，<code class="language-plaintext highlighter-rouge">Run</code> 方法真正的做了配置文件写入、终端返回结果打印操作</p>
 
 <p><img src="https://cdn.oss.link/markdown/6tkjz.png" alt="NamespaceOptions.Run" /></p>
 
-<p>可以看到，<code class="highlighter-rouge">Run</code> 方法第一步就是更加谨慎的检查了一下参数是否正常，然后调用了 <code class="highlighter-rouge">o.setNamespace</code>；这个方法截图如下</p>
+<p>可以看到，<code class="language-plaintext highlighter-rouge">Run</code> 方法第一步就是更加谨慎的检查了一下参数是否正常，然后调用了 <code class="language-plaintext highlighter-rouge">o.setNamespace</code>；这个方法截图如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/1jc3k.png" alt="NamespaceOptions.setNamespace" /></p>
 
-<p>这个 <code class="highlighter-rouge">setNamespace</code>是真正的做了配置文件写入动作的，实际写入方法就是 <code class="highlighter-rouge">clientcmd.ModifyConfig</code>；这个是 <code class="highlighter-rouge">Kubernetes</code> <code class="highlighter-rouge">client-go</code> 提供的方法，这些库的作用就是提供给我们非常方便的 API 操作；比如修改配置文件，你不需要关心配置文件在哪，你更不需要关系文件句柄是否被释放</p>
+<p>这个 <code class="language-plaintext highlighter-rouge">setNamespace</code>是真正的做了配置文件写入动作的，实际写入方法就是 <code class="language-plaintext highlighter-rouge">clientcmd.ModifyConfig</code>；这个是 <code class="language-plaintext highlighter-rouge">Kubernetes</code> <code class="language-plaintext highlighter-rouge">client-go</code> 提供的方法，这些库的作用就是提供给我们非常方便的 API 操作；比如修改配置文件，你不需要关心配置文件在哪，你更不需要关系文件句柄是否被释放</p>
 
-<p>从 <code class="highlighter-rouge">o.setNamespace</code> 方法以后其实就没什么看头了，毕竟插件的核心功能就是快速修改 <code class="highlighter-rouge">Namespace</code>；下面的各种 <code class="highlighter-rouge">for</code> 循环遍历其实就是在做打印输出；比如当你没有设置 <code class="highlighter-rouge">Namespace</code> 而使用了 <code class="highlighter-rouge">--list</code> 选项，插件就通过这里帮你打印设置过那些 <code class="highlighter-rouge">Namespace</code></p>
+<p>从 <code class="language-plaintext highlighter-rouge">o.setNamespace</code> 方法以后其实就没什么看头了，毕竟插件的核心功能就是快速修改 <code class="language-plaintext highlighter-rouge">Namespace</code>；下面的各种 <code class="language-plaintext highlighter-rouge">for</code> 循环遍历其实就是在做打印输出；比如当你没有设置 <code class="language-plaintext highlighter-rouge">Namespace</code> 而使用了 <code class="language-plaintext highlighter-rouge">--list</code> 选项，插件就通过这里帮你打印设置过那些 <code class="language-plaintext highlighter-rouge">Namespace</code></p>
 
 <h2 id="三插件总结">三、插件总结</h2>
 
 <p>分析完了这个官方的插件，然后想一下自己以后写插件可能的需求，最后对比一下，可以为以后写插件做个总结:</p>
 
 <ul>
-  <li>我们最好也弄个 <code class="highlighter-rouge">xxxOptions</code> 这种结构体存存一些配置</li>
-  <li>结构体内至少我们应当存储 <code class="highlighter-rouge">configFlags</code>、<code class="highlighter-rouge">rawConfig</code> 这两个基础配置信息</li>
+  <li>我们最好也弄个 <code class="language-plaintext highlighter-rouge">xxxOptions</code> 这种结构体存存一些配置</li>
+  <li>结构体内至少我们应当存储 <code class="language-plaintext highlighter-rouge">configFlags</code>、<code class="language-plaintext highlighter-rouge">rawConfig</code> 这两个基础配置信息</li>
   <li>结构体内其它参数都应当是跟自己实际业务有关的</li>
   <li>最后在在结构体上增加适当的方法完成自己的业务逻辑并保持好适当的校验</li>
 </ul>
 
-<p>转载请注明出n，本文采用 [CC4.0](http://c 1.12 新的插件机制](https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/) 中最后部分对 <code class="highlighter-rouge">Golang 的插件辅助库</code> 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 <strong>sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例</strong></p>
+<p>转载请注明出n，本文采用 [CC4.0](http://c 1.12 新的插件机制](https://mritd.me/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/) 中最后部分对 <code class="language-plaintext highlighter-rouge">Golang 的插件辅助库</code> 说明；以及为后续使用 Golang 编写自己的 Kubernetes 插件做一个基础铺垫；顺边说一下 <strong>sample-cli-plugin 这个项目是官方为 Golang 开发者编写的一个用于快速切换配置文件中 Namespace 的一个插件样例</strong></p>
 
 
 
@@ -440,7 +440,7 @@ to quickly create a Cobra application.`</span><span class="p">,</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

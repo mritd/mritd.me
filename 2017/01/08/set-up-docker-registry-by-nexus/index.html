@@ -239,7 +239,7 @@ OpenJDK 64-Bit Server VM <span class="o">(</span>build 25.111-b15, mixed mode<sp
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adduser <span class="nt">-r</span> <span class="nt">-s</span> /sbin/nologin <span class="nt">-d</span> /data/nexus-data nexus
 </code></pre></div></div>
 
-<p><strong>默认 nexus 运行后会在同级目录下创建一个 <code class="highlighter-rouge">sonatype-work</code> 工作目录，并将其数据保存在此目录中，所以为了数据持久化先手动创建并设置其数据存储位置</strong></p>
+<p><strong>默认 nexus 运行后会在同级目录下创建一个 <code class="language-plaintext highlighter-rouge">sonatype-work</code> 工作目录，并将其数据保存在此目录中，所以为了数据持久化先手动创建并设置其数据存储位置</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建基本目录结构</span>
 <span class="nb">mkdir</span> <span class="nt">-p</span> /usr/local/sonatype-work
@@ -260,13 +260,13 @@ OpenJDK 64-Bit Server VM <span class="o">(</span>build 25.111-b15, mixed mode<sp
 <span class="nb">sudo</span> <span class="nt">-u</span> nexus /usr/local/nexus-3.2.0-01/bin/nexus start
 </code></pre></div></div>
 
-<p>默认账户 <code class="highlighter-rouge">admin</code> 密码 <code class="highlighter-rouge">admin123</code>，登录如下</p>
+<p>默认账户 <code class="language-plaintext highlighter-rouge">admin</code> 密码 <code class="language-plaintext highlighter-rouge">admin123</code>，登录如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/sb9dw.jpg" alt="nexus_homepage" /></p>
 
 <h3 id="三创建-docker-仓库">三、创建 docker 仓库</h3>
 
-<p>在设置 <code class="highlighter-rouge">Repositories</code> 选项卡中中选择 <code class="highlighter-rouge">Create repository</code></p>
+<p>在设置 <code class="language-plaintext highlighter-rouge">Repositories</code> 选项卡中中选择 <code class="language-plaintext highlighter-rouge">Create repository</code></p>
 
 <p><img src="https://cdn.oss.link/markdown/m7m53.jpg" alt="Create repository" /></p>
 
@@ -282,7 +282,7 @@ OpenJDK 64-Bit Server VM <span class="o">(</span>build 25.111-b15, mixed mode<sp
 
 <h4 id="31创建一个私服">3.1、创建一个私服</h4>
 
-<p>选择 <code class="highlighter-rouge">hosted</code> 类型仓库，然后输入一个仓库名，<strong>并勾选 HTTP 选项，端口任意即可(下面截图失误，不补了)</strong></p>
+<p>选择 <code class="language-plaintext highlighter-rouge">hosted</code> 类型仓库，然后输入一个仓库名，<strong>并勾选 HTTP 选项，端口任意即可(下面截图失误，不补了)</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/972cl.jpg" alt="create hosted repository" /></p>
 
@@ -335,7 +335,7 @@ Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpi
   <p>Just to recap, in order to configure a proxy for Docker Hub you configure the Remote Storage URL to https://registry-1.docker.io, enable Docker V1 API support and for the choice of Docker Index select the Use Docker Hub option.</p>
 </blockquote>
 
-<p>创建仓库类型选择 <code class="highlighter-rouge">proxy</code>，Remote storage 填写 <code class="highlighter-rouge">https://registry-1.docker.io</code>，Docker index 选择 <code class="highlighter-rouge">Use Docker Hub</code>，然后从 代理仓库地址 pull 就可以，但是本人百试不成功，截图如下</p>
+<p>创建仓库类型选择 <code class="language-plaintext highlighter-rouge">proxy</code>，Remote storage 填写 <code class="language-plaintext highlighter-rouge">https://registry-1.docker.io</code>，Docker index 选择 <code class="language-plaintext highlighter-rouge">Use Docker Hub</code>，然后从 代理仓库地址 pull 就可以，但是本人百试不成功，截图如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/q350r.jpg" alt="proxy registry" /></p>
 
@@ -452,7 +452,7 @@ Status: Downloaded newer image <span class="k">for </span>registry.com:8800/alpi
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

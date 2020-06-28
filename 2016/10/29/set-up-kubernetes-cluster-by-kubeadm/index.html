@@ -233,9 +233,9 @@
 
 <h4 id="21安装包从哪来">2.1、安装包从哪来</h4>
 
-<p>官方的文档页面更新并不及时，同时他的 yum 源更新也很慢，再者…那他妈可是 Google 的服务器，能特么连上吗？以前总是在国外服务器使用 <code class="highlighter-rouge">yumdownloader</code> 下载，然后 <code class="highlighter-rouge">scp</code> 到本地，虽然能解决问题，但是蛋碎一地…最后找到了源头，如下</p>
+<p>官方的文档页面更新并不及时，同时他的 yum 源更新也很慢，再者…那他妈可是 Google 的服务器，能特么连上吗？以前总是在国外服务器使用 <code class="language-plaintext highlighter-rouge">yumdownloader</code> 下载，然后 <code class="language-plaintext highlighter-rouge">scp</code> 到本地，虽然能解决问题，但是蛋碎一地…最后找到了源头，如下</p>
 
-<p><strong>Kubernetes 编译的各种发行版安装包来源于 Github 上的另一个叫 release 的项目，地址 <a href="https://github.com/kubernetes/release">点这里</a>，把这个项目 <code class="highlighter-rouge">clone</code> 下来，由于本人是 Centos 用户，所以进入 rpm 目录，在安装好 docker 的机器上执行那个 <code class="highlighter-rouge">docker-build.sh</code> 脚本即可编译 rpm 包，最后会生成到当前目录的 <code class="highlighter-rouge">output</code> 目录下,截图如下</strong></p>
+<p><strong>Kubernetes 编译的各种发行版安装包来源于 Github 上的另一个叫 release 的项目，地址 <a href="https://github.com/kubernetes/release">点这里</a>，把这个项目 <code class="language-plaintext highlighter-rouge">clone</code> 下来，由于本人是 Centos 用户，所以进入 rpm 目录，在安装好 docker 的机器上执行那个 <code class="language-plaintext highlighter-rouge">docker-build.sh</code> 脚本即可编译 rpm 包，最后会生成到当前目录的 <code class="language-plaintext highlighter-rouge">output</code> 目录下,截图如下</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/3zs7u.jpg" alt="release" /></p>
 
@@ -243,7 +243,7 @@
 
 <h4 id="22镜像从哪来">2.2、镜像从哪来</h4>
 
-<p>对的，没错，gcr.io 就是 Google 的域名，服务器更不用提，所以在进行 <code class="highlighter-rouge">kubeadm init</code> 操作时如果不先把这些镜像 load 进去绝对会卡死不动，以下列出了所需镜像，但是版本号根据 rpm 版本不同可能略有不同，具体怎么看下面介绍</p>
+<p>对的，没错，gcr.io 就是 Google 的域名，服务器更不用提，所以在进行 <code class="language-plaintext highlighter-rouge">kubeadm init</code> 操作时如果不先把这些镜像 load 进去绝对会卡死不动，以下列出了所需镜像，但是版本号根据 rpm 版本不同可能略有不同，具体怎么看下面介绍</p>
 
 <table>
   <thead>
@@ -296,13 +296,13 @@
   </tbody>
 </table>
 
-<p><strong>这些镜像有两种办法可以获取，第一种是利用一台国外的服务器，在上面 pull 下来，然后再 save 成 tar 文件，最后 scp 到本地 load 进去；相对于第一种方式比较坑的是取决于服务器速度，每次搞起来也很蛋疼，第二种方式就是利用 docker hub 做中转，简单的说就是利用 docker hub 的自动构建功能，在 Github 中创建一个 Dockerfile，里面只需要 <code class="highlighter-rouge">FROM xxxx</code> 这些 gcr.io 的镜像即可，最后 pull 到本地，然后再 tag 一下</strong></p>
+<p><strong>这些镜像有两种办法可以获取，第一种是利用一台国外的服务器，在上面 pull 下来，然后再 save 成 tar 文件，最后 scp 到本地 load 进去；相对于第一种方式比较坑的是取决于服务器速度，每次搞起来也很蛋疼，第二种方式就是利用 docker hub 做中转，简单的说就是利用 docker hub 的自动构建功能，在 Github 中创建一个 Dockerfile，里面只需要 <code class="language-plaintext highlighter-rouge">FROM xxxx</code> 这些 gcr.io 的镜像即可，最后 pull 到本地，然后再 tag 一下</strong></p>
 
 <p><strong>首先创建一个 github 项目，可以直接 fork 我的即可</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/2eo34.jpg" alt="docker-libray" /></p>
 
-<p>其中每个 Dockerfile 只需要 <code class="highlighter-rouge">FROM</code> 一下即可</p>
+<p>其中每个 Dockerfile 只需要 <code class="language-plaintext highlighter-rouge">FROM</code> 一下即可</p>
 
 <p><img src="https://cdn.oss.link/markdown/cxva2.jpg" alt="Dockerfile" /></p>
 
@@ -326,21 +326,21 @@
 
 <h4 id="23镜像版本怎么整">2.3、镜像版本怎么整</h4>
 
-<p>上面已经解决了镜像获取问题，但是一大心病就是 “我特么怎么知道是哪个版本的”，为了发扬 “刨根问底” 的精神，<strong>先进行一遍 <code class="highlighter-rouge">kubeadm init</code>，这时候绝对卡死，此时进入 <code class="highlighter-rouge">/etc/kubernetes/manifests</code> 可以看到许多 json 文件，这些文件中定义了需要哪些基础镜像</strong></p>
+<p>上面已经解决了镜像获取问题，但是一大心病就是 “我特么怎么知道是哪个版本的”，为了发扬 “刨根问底” 的精神，<strong>先进行一遍 <code class="language-plaintext highlighter-rouge">kubeadm init</code>，这时候绝对卡死，此时进入 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/manifests</code> 可以看到许多 json 文件，这些文件中定义了需要哪些基础镜像</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/3ovg8.jpg" alt="all json" /></p>
 
 <p><img src="https://cdn.oss.link/markdown/uitnd.jpg" alt="image version" /></p>
 
-<p>从上图中基本可以看到 <code class="highlighter-rouge">kubeadm init</code> 的时候会拉取哪些基础镜像了，<strong>但是还有一些镜像，仍然无法找到，比如<code class="highlighter-rouge">kubedns</code>、<code class="highlighter-rouge">pause</code> 等，至于其他的镜像版本，可以从源码中找到，源码位置是 <code class="highlighter-rouge">kubernetes/cmd/kubeadm/app/images/images.go</code> 这个文件中，如下所示:</strong></p>
+<p>从上图中基本可以看到 <code class="language-plaintext highlighter-rouge">kubeadm init</code> 的时候会拉取哪些基础镜像了，<strong>但是还有一些镜像，仍然无法找到，比如<code class="language-plaintext highlighter-rouge">kubedns</code>、<code class="language-plaintext highlighter-rouge">pause</code> 等，至于其他的镜像版本，可以从源码中找到，源码位置是 <code class="language-plaintext highlighter-rouge">kubernetes/cmd/kubeadm/app/images/images.go</code> 这个文件中，如下所示:</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/ocgu4.jpg" alt="image version" /></p>
 
-<p>剩余的一些镜像，比如 <code class="highlighter-rouge">kube-proxy-amd64</code>、<code class="highlighter-rouge">kube-discovery-amd64</code> 两个镜像，其中 <code class="highlighter-rouge">kube-discovery-amd64</code> 现在一直是 1.0 版本，源码如下所示</p>
+<p>剩余的一些镜像，比如 <code class="language-plaintext highlighter-rouge">kube-proxy-amd64</code>、<code class="language-plaintext highlighter-rouge">kube-discovery-amd64</code> 两个镜像，其中 <code class="language-plaintext highlighter-rouge">kube-discovery-amd64</code> 现在一直是 1.0 版本，源码如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/mp3qo.jpg" alt="discovery version" /></p>
 
-<p><code class="highlighter-rouge">kube-proxy-amd64</code> 则是一直跟随基础组件的主版本，也就是说如果从 <code class="highlighter-rouge">manifests</code> 中看到 controller 等版本是 <code class="highlighter-rouge">v.1.4.4</code>，那么 <code class="highlighter-rouge">kube-proxy-amd64</code> 也是这个版本，源码如下</p>
+<p><code class="language-plaintext highlighter-rouge">kube-proxy-amd64</code> 则是一直跟随基础组件的主版本，也就是说如果从 <code class="language-plaintext highlighter-rouge">manifests</code> 中看到 controller 等版本是 <code class="language-plaintext highlighter-rouge">v.1.4.4</code>，那么 <code class="language-plaintext highlighter-rouge">kube-proxy-amd64</code> 也是这个版本，源码如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/tienu.jpg" alt="proxy version" /></p>
 
@@ -350,7 +350,7 @@
 
 <h4 id="31主机名处理">3.1、主机名处理</h4>
 
-<p><strong>经过亲测，节点主机名最好为 <code class="highlighter-rouge">xxx.xxx</code> 这种域名格式，否则在某些情况下，POD 中跑的程序使用域名解析时可能出现问题，所以先要处理一下主机名</strong></p>
+<p><strong>经过亲测，节点主机名最好为 <code class="language-plaintext highlighter-rouge">xxx.xxx</code> 这种域名格式，否则在某些情况下，POD 中跑的程序使用域名解析时可能出现问题，所以先要处理一下主机名</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 写入 hostname(node 节点后缀改成 .node)</span>
 <span class="nb">echo</span> <span class="s2">"192-168-1-167.master"</span> <span class="o">&gt;</span> /etc/hostname 
@@ -396,7 +396,7 @@ yum <span class="nb">install</span> <span class="nt">-y</span> kubelet kubectl k
 
 <h4 id="34初始化-master">3.4、初始化 master</h4>
 
-<p><strong>等会有个坑，kubeadm 等相关 rpm 安装后会生成 <code class="highlighter-rouge">/etc/kubernetes</code> 目录，而 kubeadm init 时候又会检测这些目录是否存在，如果存在则停止初始化，所以要先清理一下，以下清理脚本来源于 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档 Tear down 部分</a>，该脚本同样适用于初始化失败进行重置</strong></p>
+<p><strong>等会有个坑，kubeadm 等相关 rpm 安装后会生成 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code> 目录，而 kubeadm init 时候又会检测这些目录是否存在，如果存在则停止初始化，所以要先清理一下，以下清理脚本来源于 <a href="http://kubernetes.io/docs/getting-started-guides/kubeadm/">官方文档 Tear down 部分</a>，该脚本同样适用于初始化失败进行重置</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl stop kubelet<span class="p">;</span>
 <span class="c"># 注意: 下面这条命令会干掉所有正在运行的 docker 容器，</span>
@@ -407,13 +407,13 @@ find /var/lib/kubelet | xargs <span class="nt">-n</span> 1 findmnt <span class="
 <span class="nb">rm</span> <span class="nt">-r</span> <span class="nt">-f</span> /etc/kubernetes /var/lib/kubelet /var/lib/etcd<span class="p">;</span>
 </code></pre></div></div>
 
-<p><strong>还有个坑，初始化以前记得一定要启动 kubelet，虽然你 <code class="highlighter-rouge">systemctl status kubelet</code> 看着他是启动失败，但是也得启动，否则绝壁卡死</strong></p>
+<p><strong>还有个坑，初始化以前记得一定要启动 kubelet，虽然你 <code class="language-plaintext highlighter-rouge">systemctl status kubelet</code> 看着他是启动失败，但是也得启动，否则绝壁卡死</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>kubelet
 systemctl start kubelet
 </code></pre></div></div>
 
-<p><strong>等会等会，还有坑，新版本直接 init 会提示 <code class="highlighter-rouge">ebtables not found in system path</code> 错误，所以还得先安装一下这个包在初始化</strong></p>
+<p><strong>等会等会，还有坑，新版本直接 init 会提示 <code class="language-plaintext highlighter-rouge">ebtables not found in system path</code> 错误，所以还得先安装一下这个包在初始化</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 ebtables</span>
 yum <span class="nb">install</span> <span class="nt">-y</span> ebtables
@@ -429,7 +429,7 @@ kubeadm init <span class="nt">--api-advertise-addresses</span> 192.168.1.167
 
 <p><img src="https://cdn.oss.link/markdown/rs2mw.jpg" alt="init master" /></p>
 
-<p><strong>这里再爆料一个坑，底下的 <code class="highlighter-rouge">kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167</code> 这条命令一定保存好，因为后期没法重现的，你们老大再让你添加机器的时候如果没这个你会哭的</strong></p>
+<p><strong>这里再爆料一个坑，底下的 <code class="language-plaintext highlighter-rouge">kubeadm join --token=b17964.5d8a3c14e99cf6aa 192.168.1.167</code> 这条命令一定保存好，因为后期没法重现的，你们老大再让你添加机器的时候如果没这个你会哭的</strong></p>
 
 <h4 id="35加入-node">3.5、加入 node</h4>
 
@@ -488,7 +488,7 @@ kubeadm <span class="nb">join</span> <span class="nt">--token</span><span class=
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://git.io/weave-kube <span class="nt">-O</span> weave-kube.yaml
 </code></pre></div></div>
 
-<p>然后同样的套路，打开看一下镜像，利用 Docker Hub 做中转，搞下来再 load 进去，然后 <code class="highlighter-rouge">create -f</code> 就行了</p>
+<p>然后同样的套路，打开看一下镜像，利用 Docker Hub 做中转，搞下来再 load 进去，然后 <code class="language-plaintext highlighter-rouge">create -f</code> 就行了</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull mritd/weave-kube:1.7.2
 docker tag mritd/weave-kube:1.7.2 weaveworks/weave-kube:1.7.2
@@ -502,12 +502,12 @@ kubectl create <span class="nt">-f</span> weave-kube.yaml
 
 <h4 id="37部署-dashboard">3.7、部署 dashboard</h4>
 
-<p><strong>dashboard 的命令也跟 weave 的一样，不过有个大坑，默认的 yaml 文件中对于 image 拉取策略的定义是 无论何时都会去拉取镜像，导致即使你 load 进去也无卵用，所以还得先把 yaml 搞下来然后改一下镜像拉取策略，最后再 <code class="highlighter-rouge">create -f</code> 即可</strong></p>
+<p><strong>dashboard 的命令也跟 weave 的一样，不过有个大坑，默认的 yaml 文件中对于 image 拉取策略的定义是 无论何时都会去拉取镜像，导致即使你 load 进去也无卵用，所以还得先把 yaml 搞下来然后改一下镜像拉取策略，最后再 <code class="language-plaintext highlighter-rouge">create -f</code> 即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml <span class="nt">-O</span> kubernetes-dashboard.yaml
 </code></pre></div></div>
 
-<p><strong>编辑 yaml 改一下 <code class="highlighter-rouge">imagePullPolicy</code>，把 <code class="highlighter-rouge">Always</code> 改成 <code class="highlighter-rouge">IfNotPresent</code>(本地没有再去拉取) 或者 <code class="highlighter-rouge">Never</code>(从不去拉取) 即可</strong></p>
+<p><strong>编辑 yaml 改一下 <code class="language-plaintext highlighter-rouge">imagePullPolicy</code>，把 <code class="language-plaintext highlighter-rouge">Always</code> 改成 <code class="language-plaintext highlighter-rouge">IfNotPresent</code>(本地没有再去拉取) 或者 <code class="language-plaintext highlighter-rouge">Never</code>(从不去拉取) 即可</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/lqvh1.jpg" alt="IfNotPresent" /></p>
 
@@ -520,7 +520,7 @@ kubectl create <span class="nt">-f</span> weave-kube.yaml
 
 <p><img src="https://cdn.oss.link/markdown/xsn9u.jpg" alt="create dashboard" /></p>
 
-<p><strong>通过 describe 命令我们可以查看其暴露出的 <code class="highlighter-rouge">NodePoint</code>,然后便可访问</strong></p>
+<p><strong>通过 describe 命令我们可以查看其暴露出的 <code class="language-plaintext highlighter-rouge">NodePoint</code>,然后便可访问</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/5a94q.jpg" alt="describe dashboard" /></p>
 
@@ -528,7 +528,7 @@ kubectl create <span class="nt">-f</span> weave-kube.yaml
 
 <h3 id="四其他的一些坑">四、其他的一些坑</h3>
 
-<p>还有一些其他的坑等着大家去摸索，其中有一个是 DNS 解析错误，表现形式为 <strong>POD 内的程序通过域名访问解析不了，cat 一下容器的 <code class="highlighter-rouge">/etc/resolv.conf</code>发现指向的 dns 服务器与 <code class="highlighter-rouge">kubectl get svc --namespace=kube-system</code> 中的 kube-dsn 地址不符</strong>；解决办法就是 <strong>编辑节点的 <code class="highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 文件，更改 <code class="highlighter-rouge">KUBELET_DNS_ARGS</code> 地址为 <code class="highlighter-rouge">get svc</code> 中的 kube-dns 地址，然后重启 kubelet 服务，重新杀掉 POD 让 kubernetes 重建即可</strong></p>
+<p>还有一些其他的坑等着大家去摸索，其中有一个是 DNS 解析错误，表现形式为 <strong>POD 内的程序通过域名访问解析不了，cat 一下容器的 <code class="language-plaintext highlighter-rouge">/etc/resolv.conf</code>发现指向的 dns 服务器与 <code class="language-plaintext highlighter-rouge">kubectl get svc --namespace=kube-system</code> 中的 kube-dsn 地址不符</strong>；解决办法就是 <strong>编辑节点的 <code class="language-plaintext highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 文件，更改 <code class="language-plaintext highlighter-rouge">KUBELET_DNS_ARGS</code> 地址为 <code class="language-plaintext highlighter-rouge">get svc</code> 中的 kube-dns 地址，然后重启 kubelet 服务，重新杀掉 POD 让 kubernetes 重建即可</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/hhozt.jpg" alt="modify kube-dns" /></p>
 
@@ -637,7 +637,7 @@ kubectl create <span class="nt">-f</span> weave-kube.yaml
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

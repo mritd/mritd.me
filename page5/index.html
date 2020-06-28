@@ -177,6 +177,38 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/">
+        <h2 class="post-title">
+            Alpine 3.6 OpenJDK 8 Bug
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近切换项目基础镜像踩到一个大坑，由于 alpine 基础镜像和 OpenJDK8 Bug 导致鼓捣了2天才解决，故记录一下这个问题
+
+
+一、问题环境
+
+出现问题的基本环境如下
+
+
+  OpneJDK 8u131
+  Alpine 3.6
+  Kaptcha (Java 验证码库)
+
+
+二、问题描述
+
+出现问题表象为 Spring Boot 项目启动后，访问注册页(有验证码)时，验证码...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on September 27, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/09/21/set-up-ha-consul-cluster/">
         <h2 class="post-title">
             Consul 集群搭建
@@ -376,31 +408,6 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/05/27/ceph-note-1/">
-        <h2 class="post-title">
-            Ceph 笔记(一)
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  Ceph 是一个符合POSIX、开源的分布式存储系统；其具备了极好的可靠性、统一性、鲁棒性；经过近几年的发展，Ceph 开辟了一个全新的数据存储途径。Ceph 具备了企业级存储的分布式、可大规模扩展、没有单点故障等特点，越来越受到人们青睐；以下记录了 Ceph 的相关学习笔记。
-
-
-一、 Ceph Quick Start
-
-1.1、安装前准备
-
-
-  本文以 Centos 7 3.10...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on May 27, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -471,7 +478,7 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

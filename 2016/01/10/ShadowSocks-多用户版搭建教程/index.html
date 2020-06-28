@@ -208,10 +208,10 @@
 
 <h2 id="二相关工具准备">二、相关工具准备</h2>
 <p>1、 VPS安装CentOS系统，建议6版本(略过)
-2、 获取 <code class="highlighter-rouge">ShadowSocks</code> 后端源码( <strong>需要git，没有的话自行安装</strong> )</p>
+2、 获取 <code class="language-plaintext highlighter-rouge">ShadowSocks</code> 后端源码( <strong>需要git，没有的话自行安装</strong> )</p>
 
 <blockquote>
-  <p>克隆(拉取) <code class="highlighter-rouge">ShadowSocks</code> 源码到本地
+  <p>克隆(拉取) <code class="language-plaintext highlighter-rouge">ShadowSocks</code> 源码到本地
 ssh 连接VPS，执行如下命令</p>
 </blockquote>
 
@@ -219,7 +219,7 @@ ssh 连接VPS，执行如下命令</p>
 git clone <span class="nt">-b</span> manyuser https://github.com/mengskysama/shadowsocks-rm.git
 </code></pre></div></div>
 
-<p>3、 下载前端代码( <strong>需要wget <code class="highlighter-rouge">yum install wget</code> 安装</strong> )</p>
+<p>3、 下载前端代码( <strong>需要wget <code class="language-plaintext highlighter-rouge">yum install wget</code> 安装</strong> )</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/orvice/ss-panel/archive/v2.4.7.tar.gz
 </code></pre></div></div>
@@ -232,12 +232,12 @@ git clone <span class="nt">-b</span> manyuser https://github.com/mengskysama/sha
 <ol>
   <li>LNMP一键安装脚本地址 <a href="http://lnmp.org/install.html">点这里</a></li>
   <li>根据教程安装好LNMP环境</li>
-  <li>创建一个域名映射(站点目录)，执行 <code class="highlighter-rouge">lnmp vhost add</code> ，然后根据提示操作即可</li>
-  <li>完成后可在 <code class="highlighter-rouge">/home/wwwroot/</code> 下找到对应的域名目录</li>
+  <li>创建一个域名映射(站点目录)，执行 <code class="language-plaintext highlighter-rouge">lnmp vhost add</code> ，然后根据提示操作即可</li>
+  <li>完成后可在 <code class="language-plaintext highlighter-rouge">/home/wwwroot/</code> 下找到对应的域名目录</li>
 </ol>
 
 <h2 id="四安装-shadowsocks-后端">四、安装 ShadowSocks 后端</h2>
-<p>1、移动后端源码到任意目录，一般习惯 <code class="highlighter-rouge">/usr/local/</code></p>
+<p>1、移动后端源码到任意目录，一般习惯 <code class="language-plaintext highlighter-rouge">/usr/local/</code></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>shadowsocks-rm/shadowsocks/ /usr/local/
 </code></pre></div></div>
@@ -296,7 +296,7 @@ vim /usr/local/shadowsocks/config.py
 </code></pre></div></div>
 
 <blockquote>
-  <p>样例配置文件如下，其中 <strong>使用 <code class="highlighter-rouge">aes-256-cfb</code> 加密需要安装其他组件，自行Google</strong></p>
+  <p>样例配置文件如下，其中 <strong>使用 <code class="language-plaintext highlighter-rouge">aes-256-cfb</code> 加密需要安装其他组件，自行Google</strong></p>
 </blockquote>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import logging
@@ -333,7 +333,7 @@ LOG_FILE <span class="o">=</span> <span class="s1">'./shadowsocks.log'</span>
 </code></pre></div></div>
 
 <h2 id="五安装-shadowsocks-前端">五、安装 ShadowSocks 前端</h2>
-<p>1、复制 <code class="highlighter-rouge">ss-panel</code> 文件到网站根目录</p>
+<p>1、复制 <code class="language-plaintext highlighter-rouge">ss-panel</code> 文件到网站根目录</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mv </span>ss-panel-2.4.7/<span class="k">*</span> /home/wwwroot/网站名称/
 </code></pre></div></div>
@@ -410,7 +410,7 @@ update user <span class="nb">set </span><span class="nv">user_name</span><span c
 <p>5、登录后台，测试ss连接</p>
 
 <blockquote>
-  <p>管理后台默认是 <code class="highlighter-rouge">http://域名/admin</code>，可用刚刚创建的管理员登录测试，关于具体使用过程不再详细叙述，如遇到网站可访问，但ss无法连接的情况，请查看防火墙相关设置和ss日志。本人使用的 <strong>ConoHa VPS</strong> 目前速度不错，这个VPS 还需要在控制面板中设置入站端口，否则关了防火墙也没用。</p>
+  <p>管理后台默认是 <code class="language-plaintext highlighter-rouge">http://域名/admin</code>，可用刚刚创建的管理员登录测试，关于具体使用过程不再详细叙述，如遇到网站可访问，但ss无法连接的情况，请查看防火墙相关设置和ss日志。本人使用的 <strong>ConoHa VPS</strong> 目前速度不错，这个VPS 还需要在控制面板中设置入站端口，否则关了防火墙也没用。</p>
 </blockquote>
 
 <blockquote>
@@ -527,7 +527,7 @@ update user <span class="nb">set </span><span class="nv">user_name</span><span c
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

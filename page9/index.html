@@ -177,6 +177,41 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/10/18/set-up-vpn-with-strongswan/">
+        <h2 class="post-title">
+            StrongSwan 搭建 VPN
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  由于工作需要，记录一下使用 StrongSwan 搭建 VPN 的过程，支持 L2TP、IKEv2 PSK/CERT、IPsec 连接，基本上兼容大部分设备
+
+
+一、环境准备
+
+基本环境如下
+
+
+  CentOS 7 X64
+  StrongSwan 5.5
+
+
+二、搭建 VPN
+
+2.1、安装依赖
+
+以下采用源码编译安装，需要安装编译依赖环境
+
+yum install -y gmp-...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 18, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/10/14/arukas-docker-fq/">
         <h2 class="post-title">
             樱花 Docker 免费高速翻墙教程
@@ -410,28 +445,6 @@ kubernetes 提供了多种安全认证机制，其中对于集群通讯间可采
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/09/07/Kubernetes-%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
-        <h2 class="post-title">
-            Kubernetes 集群搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            一、简介
-
-kubernetes 是 Google 内部使用的 Borg 容器调度框架的开源实现，其凝聚了 Google 十几年容器经验的最佳实践，其支持 Dokcer 和 Rkt 容器的编排功能，以下记录一下 Kubernetes 集群搭建过程。
-
-二、环境准备
-
-kubernetes 搭建集群环境推荐至少3个节点，1个 master 和2个 slave 节点，所以至少三台服务器(虚拟机)...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on September 7, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -502,7 +515,7 @@ kubernetes 搭建集群环境推荐至少3个节点，1个 master 和2个 slave 
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -224,27 +224,27 @@
 <ul>
   <li>自反性
     <blockquote>
-      <p>对于对象 x ，<code class="highlighter-rouge">x.equals(x)</code> 应当始终返回 true。</p>
+      <p>对于对象 x ，<code class="language-plaintext highlighter-rouge">x.equals(x)</code> 应当始终返回 true。</p>
     </blockquote>
   </li>
   <li>对称性
     <blockquote>
-      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么 <code class="highlighter-rouge">y.equals(x)</code> 也必须返回 true。</p>
+      <p>对于对象 x、y，如果 <code class="language-plaintext highlighter-rouge">x.equals(y)</code> 返回 true，那么 <code class="language-plaintext highlighter-rouge">y.equals(x)</code> 也必须返回 true。</p>
     </blockquote>
   </li>
   <li>传递性
     <blockquote>
-      <p>对于对象 x、y、z，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，<code class="highlighter-rouge">y.equals(z)</code> 返回 true；那么 <code class="highlighter-rouge">x.equals(z)</code> 也必须返回 true。</p>
+      <p>对于对象 x、y、z，如果 <code class="language-plaintext highlighter-rouge">x.equals(y)</code> 返回 true，<code class="language-plaintext highlighter-rouge">y.equals(z)</code> 返回 true；那么 <code class="language-plaintext highlighter-rouge">x.equals(z)</code> 也必须返回 true。</p>
     </blockquote>
   </li>
   <li>一致性
     <blockquote>
-      <p>对于对象 x、y，如果 <code class="highlighter-rouge">x.equals(y)</code> 返回 true，那么反复调用的结果应当一直为 true。</p>
+      <p>对于对象 x、y，如果 <code class="language-plaintext highlighter-rouge">x.equals(y)</code> 返回 true，那么反复调用的结果应当一直为 true。</p>
     </blockquote>
   </li>
   <li>空值不行等性
     <blockquote>
-      <p>对于任意非空对象 x，<code class="highlighter-rouge">x.equals(null)</code> 应当永远返回 false。</p>
+      <p>对于任意非空对象 x，<code class="language-plaintext highlighter-rouge">x.equals(null)</code> 应当永远返回 false。</p>
     </blockquote>
   </li>
 </ul>
@@ -257,11 +257,11 @@
   <li>对象属性的冲突</li>
 </ul>
 
-<p>假设我们将对象内的属性看作是对象内容，在实际业务场景，可能一个 汽车 Car 对象 和一个人 pserson 对象具有相同的名字，比如 <code class="highlighter-rouge">特斯拉</code>；此时如果我们重写 equals 时仅仅比较对象内容的话，很可能误判为 <strong>一辆汽车和一个人相等</strong>；是的，这很滑稽。</p>
+<p>假设我们将对象内的属性看作是对象内容，在实际业务场景，可能一个 汽车 Car 对象 和一个人 pserson 对象具有相同的名字，比如 <code class="language-plaintext highlighter-rouge">特斯拉</code>；此时如果我们重写 equals 时仅仅比较对象内容的话，很可能误判为 <strong>一辆汽车和一个人相等</strong>；是的，这很滑稽。</p>
 
 <h3 id="getclass-的使用">getClass 的使用</h3>
 
-<p>在上面列举的情况来看，我们似乎再重写 equals 时还需要考虑对象的类型；在 java 里，对象类型我们 采用 Class 描述。那么此时 我们在重写的 equals 方法里应当 增加 <code class="highlighter-rouge">car.getClass()==pserson.getClass()</code> 的检测，这样能有效避免上述情况的发生；伪代码如下</p>
+<p>在上面列举的情况来看，我们似乎再重写 equals 时还需要考虑对象的类型；在 java 里，对象类型我们 采用 Class 描述。那么此时 我们在重写的 equals 方法里应当 增加 <code class="language-plaintext highlighter-rouge">car.getClass()==pserson.getClass()</code> 的检测，这样能有效避免上述情况的发生；伪代码如下</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="nc">Object</span> <span class="n">obj</span><span class="o">){</span>
     <span class="c1">// 进行完全匹配检测(引用)</span>
@@ -291,9 +291,9 @@
 
 <h3 id="getclass-与-instaceof-的取舍">getClass 与 instaceof 的取舍</h3>
 
-<p>或许从上两个例子中我们感觉使用 instaceof 更 “靠谱一些”；但其实我们注意到，<strong>采用 instaceof 检测实际上违反了 <code class="highlighter-rouge">对称性</code> 原则；</strong> 因为 <code class="highlighter-rouge">pserson instaceof Student</code> 返回 false，反之返回 true。</p>
+<p>或许从上两个例子中我们感觉使用 instaceof 更 “靠谱一些”；但其实我们注意到，<strong>采用 instaceof 检测实际上违反了 <code class="language-plaintext highlighter-rouge">对称性</code> 原则；</strong> 因为 <code class="language-plaintext highlighter-rouge">pserson instaceof Student</code> 返回 false，反之返回 true。</p>
 
-<p>所以对于 <code class="highlighter-rouge">instanceof</code> 有时候并不那么完美；就连 JDK的开发者也遇到了这个问题；在 <code class="highlighter-rouge">Timestamp</code> 类中，由于继承自 <code class="highlighter-rouge">java.util.Date</code>；而不幸的是 Date 类的 equals 采用的是 instanceof，这就导致对称性出了问题。从上可知，我们根据实际业务进行取舍，取舍原则如下：</p>
+<p>所以对于 <code class="language-plaintext highlighter-rouge">instanceof</code> 有时候并不那么完美；就连 JDK的开发者也遇到了这个问题；在 <code class="language-plaintext highlighter-rouge">Timestamp</code> 类中，由于继承自 <code class="language-plaintext highlighter-rouge">java.util.Date</code>；而不幸的是 Date 类的 equals 采用的是 instanceof，这就导致对称性出了问题。从上可知，我们根据实际业务进行取舍，取舍原则如下：</p>
 
 <ul>
   <li>如果子类拥有自己的相等性概念，则对称性强制要求采用 getClass 方式检测。</li>
@@ -324,7 +324,7 @@
 </code></pre></div></div>
 
 <ul>
-  <li>最后将 otherObject强制转换为 当前类型，并进行属性值检测；注意：<strong>如果在子类中重写的equals，则需要在重写时首先进行 <code class="highlighter-rouge">super.equals(other)</code> 判断</strong></li>
+  <li>最后将 otherObject强制转换为 当前类型，并进行属性值检测；注意：<strong>如果在子类中重写的equals，则需要在重写时首先进行 <code class="language-plaintext highlighter-rouge">super.equals(other)</code> 判断</strong></li>
 </ul>
 
 <h2 id="hashcode-方法">hashcode 方法</h2>
@@ -566,7 +566,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

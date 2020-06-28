@@ -619,7 +619,7 @@ wget ftp://195.220.108.108/linux/fedora/linux/development/rawhide/Everything/x86
 
 <h4 id="33修改配置">3.3、修改配置</h4>
 
-<p>rpm 安装好以后直接修改 <code class="highlighter-rouge">/etc/etcd/etcd.conf</code> 配置文件即可，其中单个节点配置如下(其他节点只是名字和 IP 不同)</p>
+<p>rpm 安装好以后直接修改 <code class="language-plaintext highlighter-rouge">/etc/etcd/etcd.conf</code> 配置文件即可，其中单个节点配置如下(其他节点只是名字和 IP 不同)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># [member]</span>
 <span class="nv">ETCD_NAME</span><span class="o">=</span>etcd1
@@ -737,7 +737,7 @@ etcdctl <span class="nt">--cacert</span><span class="o">=</span>/etc/etcd/ssl/et
 
 <h4 id="43修改-master-配置">4.3、修改 master 配置</h4>
 
-<p>rpm 安装好以后，默认会生成 <code class="highlighter-rouge">/etc/kubernetes</code> 目录，并且该目录中会有很多配置，其中 config 配置文件为通用配置，具体文件如下</p>
+<p>rpm 安装好以后，默认会生成 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code> 目录，并且该目录中会有很多配置，其中 config 配置文件为通用配置，具体文件如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  kubernetes tree
 <span class="nb">.</span>
@@ -751,7 +751,7 @@ etcdctl <span class="nt">--cacert</span><span class="o">=</span>/etc/etcd/ssl/et
 0 directories, 6 files
 </code></pre></div></div>
 
-<p><strong>master 需要编辑 <code class="highlighter-rouge">config</code>、<code class="highlighter-rouge">apiserver</code>、<code class="highlighter-rouge">controller-manager</code>、<code class="highlighter-rouge">scheduler</code>这四个文件，具体修改如下</strong></p>
+<p><strong>master 需要编辑 <code class="language-plaintext highlighter-rouge">config</code>、<code class="language-plaintext highlighter-rouge">apiserver</code>、<code class="language-plaintext highlighter-rouge">controller-manager</code>、<code class="language-plaintext highlighter-rouge">scheduler</code>这四个文件，具体修改如下</strong></p>
 
 <ul>
   <li>config 通用配置</li>
@@ -883,7 +883,7 @@ systemctl <span class="nb">enable </span>kube-controller-manager
 systemctl <span class="nb">enable </span>kube-scheduler
 </code></pre></div></div>
 
-<p>各个节点启动成功后，验证组件状态(kubectl 在不做任何配置的情况下默认链接本地 8080 端口)如下，<strong>其中 etcd 全部为 Unhealthy 状态，并且提示 <code class="highlighter-rouge">remote error: tls: bad certificate</code> 这是个 bug，不影响实际使用，具体可参考 <a href="https://github.com/kubernetes/kubernetes/issues/29330">issue</a></strong></p>
+<p>各个节点启动成功后，验证组件状态(kubectl 在不做任何配置的情况下默认链接本地 8080 端口)如下，<strong>其中 etcd 全部为 Unhealthy 状态，并且提示 <code class="language-plaintext highlighter-rouge">remote error: tls: bad certificate</code> 这是个 bug，不影响实际使用，具体可参考 <a href="https://github.com/kubernetes/kubernetes/issues/29330">issue</a></strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/0j7k2.jpg" alt="api status" /></p>
 
@@ -911,13 +911,13 @@ systemctl <span class="nb">enable </span>kube-scheduler
 
 <h4 id="52修改-node-配置">5.2、修改 node 配置</h4>
 
-<p>node 节点上配置文件同样位于 <code class="highlighter-rouge">/etc/kubernetes</code> 目录，node 节点只需要修改 <code class="highlighter-rouge">config</code>、<code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">proxy</code> 这三个配置文件，修改如下</p>
+<p>node 节点上配置文件同样位于 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code> 目录，node 节点只需要修改 <code class="language-plaintext highlighter-rouge">config</code>、<code class="language-plaintext highlighter-rouge">kubelet</code>、<code class="language-plaintext highlighter-rouge">proxy</code> 这三个配置文件，修改如下</p>
 
 <ul>
   <li>config 通用配置</li>
 </ul>
 
-<p><strong>注意: config 配置文件(包括下面的 kubelet、proxy)中全部未 定义 API Server 地址，因为 kubelet 和 kube-proxy 组件启动时使用了 <code class="highlighter-rouge">--require-kubeconfig</code> 选项，该选项会使其从 <code class="highlighter-rouge">*.kubeconfig</code> 中读取 API Server 地址，而忽略配置文件中设置的；所以配置文件中设置的地址其实是无效的</strong></p>
+<p><strong>注意: config 配置文件(包括下面的 kubelet、proxy)中全部未 定义 API Server 地址，因为 kubelet 和 kube-proxy 组件启动时使用了 <code class="language-plaintext highlighter-rouge">--require-kubeconfig</code> 选项，该选项会使其从 <code class="language-plaintext highlighter-rouge">*.kubeconfig</code> 中读取 API Server 地址，而忽略配置文件中设置的；所以配置文件中设置的地址其实是无效的</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes system config</span>
@@ -994,7 +994,7 @@ systemctl <span class="nb">enable </span>kube-scheduler
 
 <h4 id="53创建-clusterrolebinding">5.3、创建 ClusterRoleBinding</h4>
 
-<p>由于 kubelet 采用了 <a href="https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/">TLS Bootstrapping</a>，所有根绝 RBAC 控制策略，kubelet 使用的用户 <code class="highlighter-rouge">kubelet-bootstrap</code> 是不具备任何访问 API 权限的，这是需要预先在集群内创建 ClusterRoleBinding 授予其 <code class="highlighter-rouge">system:node-bootstrapper</code> Role</p>
+<p>由于 kubelet 采用了 <a href="https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/">TLS Bootstrapping</a>，所有根绝 RBAC 控制策略，kubelet 使用的用户 <code class="language-plaintext highlighter-rouge">kubelet-bootstrap</code> 是不具备任何访问 API 权限的，这是需要预先在集群内创建 ClusterRoleBinding 授予其 <code class="language-plaintext highlighter-rouge">system:node-bootstrapper</code> Role</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 在任意 master 执行即可</span>
 kubectl create clusterrolebinding kubelet-bootstrap <span class="se">\</span>
@@ -1125,11 +1125,11 @@ systemctl <span class="nb">enable </span>kube-proxy
 
 <h4 id="56master-开启-pod-负载">5.6、Master 开启 Pod 负载</h4>
 
-<p>Master 上部署 Node 与单独 Node 部署大致相同，<strong>只需要修改 <code class="highlighter-rouge">bootstrap.kubeconfig</code>、<code class="highlighter-rouge">kube-proxy.kubeconfig</code> 中的 API Server 地址即可</strong></p>
+<p>Master 上部署 Node 与单独 Node 部署大致相同，<strong>只需要修改 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code>、<code class="language-plaintext highlighter-rouge">kube-proxy.kubeconfig</code> 中的 API Server 地址即可</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/2gkyj.jpg" alt="modify api server" /></p>
 
-<p>然后修改 <code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">proxy</code> 配置启动即可</p>
+<p>然后修改 <code class="language-plaintext highlighter-rouge">kubelet</code>、<code class="language-plaintext highlighter-rouge">proxy</code> 配置启动即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
 systemctl start kubelet
@@ -1151,7 +1151,7 @@ systemctl <span class="nb">enable </span>kube-proxy
 
 <p>网路组件这里采用 Calico，Calico 目前部署也相对比较简单，只需要创建一下 yml 文件即可，具体可参考 <a href="http://docs.projectcalico.org/v2.3/getting-started/kubernetes/">Calico 官方文档</a></p>
 
-<p><strong>Cliaco 官方文档要求 kubelet 启动时要配置使用 cni 插件 <code class="highlighter-rouge">--network-plugin=cni</code>，同时 kube-proxy 不能使用 <code class="highlighter-rouge">--masquerade-all</code> 启动(会与 Calico policy 冲突)，所以需要修改所有 kubelet 和 proxy 配置文件，以下默认为这两项已经调整完毕，这里不做演示</strong></p>
+<p><strong>Cliaco 官方文档要求 kubelet 启动时要配置使用 cni 插件 <code class="language-plaintext highlighter-rouge">--network-plugin=cni</code>，同时 kube-proxy 不能使用 <code class="language-plaintext highlighter-rouge">--masquerade-all</code> 启动(会与 Calico policy 冲突)，所以需要修改所有 kubelet 和 proxy 配置文件，以下默认为这两项已经调整完毕，这里不做演示</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 获取相关 Cliaco.yml</span>
 wget http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/hosted/calico.yaml
@@ -1252,7 +1252,7 @@ kubectl create <span class="nt">-f</span> ../dns
 wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
 </code></pre></div></div>
 
-<p>然后直接 <code class="highlighter-rouge">kubectl create -f </code> 即可，<strong>DNS 自动扩容计算公式为 <code class="highlighter-rouge">replicas = max( ceil( cores * 1/coresPerReplica ) , ceil( nodes * 1/nodesPerReplica ) )</code>，如果想调整 DNS 数量(负载因子)，只需要调整 ConfigMap 中对应参数即可，具体计算细节参考上面的官方文档</strong></p>
+<p>然后直接 <code class="language-plaintext highlighter-rouge">kubectl create -f </code> 即可，<strong>DNS 自动扩容计算公式为 <code class="language-plaintext highlighter-rouge">replicas = max( ceil( cores * 1/coresPerReplica ) , ceil( nodes * 1/nodesPerReplica ) )</code>，如果想调整 DNS 数量(负载因子)，只需要调整 ConfigMap 中对应参数即可，具体计算细节参考上面的官方文档</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 编辑 Config Map</span>
 kubectl edit cm kube-dns-autoscaler <span class="nt">--namespace</span><span class="o">=</span>kube-system
@@ -1361,7 +1361,7 @@ kubectl edit cm kube-dns-autoscaler <span class="nt">--namespace</span><span cla
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

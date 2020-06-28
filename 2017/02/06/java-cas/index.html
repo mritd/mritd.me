@@ -198,15 +198,15 @@
 
 <h3 id="一cas-简述">一、CAS 简述</h3>
 
-<p>从最基础的 Java 中的 <code class="highlighter-rouge">i++</code> 操作来说，<code class="highlighter-rouge">i++</code> 并非原子操作，实质上相当于先读取 i 值，然后在内存中创建缓存变量保存 ++ 后结果，最后写会变量 i；而在这期间 i 变量都可能被其他线程读或写，从而造成线程安全性问题</p>
+<p>从最基础的 Java 中的 <code class="language-plaintext highlighter-rouge">i++</code> 操作来说，<code class="language-plaintext highlighter-rouge">i++</code> 并非原子操作，实质上相当于先读取 i 值，然后在内存中创建缓存变量保存 ++ 后结果，最后写会变量 i；而在这期间 i 变量都可能被其他线程读或写，从而造成线程安全性问题</p>
 
-<p>CAS 算法大致原理是：在对变量进行计算之前(如 ++ 操作)，首先读取原变量值，称为 <code class="highlighter-rouge">旧的预期值 A</code>，然后在更新之前再获取当前内存中的值，称为 <code class="highlighter-rouge">当前内存值 V</code>，如果 <code class="highlighter-rouge">A==V</code> 则说明变量从未被其他线程修改过，此时将会写入新值 B，如果 <code class="highlighter-rouge">A!=V</code> 则说明变量已经被其他线程修改过，当前线程应当什么也不做；</p>
+<p>CAS 算法大致原理是：在对变量进行计算之前(如 ++ 操作)，首先读取原变量值，称为 <code class="language-plaintext highlighter-rouge">旧的预期值 A</code>，然后在更新之前再获取当前内存中的值，称为 <code class="language-plaintext highlighter-rouge">当前内存值 V</code>，如果 <code class="language-plaintext highlighter-rouge">A==V</code> 则说明变量从未被其他线程修改过，此时将会写入新值 B，如果 <code class="language-plaintext highlighter-rouge">A!=V</code> 则说明变量已经被其他线程修改过，当前线程应当什么也不做；</p>
 
 <h3 id="二-cas-原理">二、 CAS 原理</h3>
 
 <h4 id="21openjdk-中-cas-实现">2.1、openjdk 中 CAS 实现</h4>
 
-<p>翻了一下 AtomicInteger 的源码，发现其实质上都会调用到 Unsafe 类中的方法，而 Unsafe 中大部分方法是 native 的，也就是说实质使用 JNI 上调用了 C 来沟通底层硬件完成 CAS；具体调用源码(openjdk)为 <code class="highlighter-rouge">unsafe.cpp</code>、<code class="highlighter-rouge">atomic.cpp</code>、<code class="highlighter-rouge">atomicwindowsx86.inline.hpp</code>；以下是一部分代码片段(不懂 C…)</p>
+<p>翻了一下 AtomicInteger 的源码，发现其实质上都会调用到 Unsafe 类中的方法，而 Unsafe 中大部分方法是 native 的，也就是说实质使用 JNI 上调用了 C 来沟通底层硬件完成 CAS；具体调用源码(openjdk)为 <code class="language-plaintext highlighter-rouge">unsafe.cpp</code>、<code class="language-plaintext highlighter-rouge">atomic.cpp</code>、<code class="language-plaintext highlighter-rouge">atomicwindowsx86.inline.hpp</code>；以下是一部分代码片段(不懂 C…)</p>
 
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Adding a lock prefix to an instruction on MP machine</span>
 <span class="c1">// VC++ doesn't like the lock prefix to be on a single line</span>
@@ -305,34 +305,34 @@
   <li>同时，配合以 volatile 的读/写和 CAS 所具有的 volatile 读和写的内存语义来实现线程之间的通信。</li>
 </ul>
 
-<p>AQS，非阻塞数据结构和原子变量类 ( <code class="highlighter-rouge">java.util.concurrent.atomic</code> 包中的类)，这些 concurrent 包中的基础类都是使用这种模式来实现的，而 concurrent 包中的高层类又是依赖于这些基础类来实现的。从整体来看，concurrent 包的实现示意图如下：</p>
+<p>AQS，非阻塞数据结构和原子变量类 ( <code class="language-plaintext highlighter-rouge">java.util.concurrent.atomic</code> 包中的类)，这些 concurrent 包中的基础类都是使用这种模式来实现的，而 concurrent 包中的高层类又是依赖于这些基础类来实现的。从整体来看，concurrent 包的实现示意图如下：</p>
 
 <p><img src="https://cdn.oss.link/markdown/l72qr.jpg" alt="concurrent" /></p>
 
 <h3 id="五jdk9-改变">五、JDK9 改变</h3>
 
-<p>随着 JDK9 即将发布，CAS 相关主要类 <code class="highlighter-rouge">Unsafe</code> 有些变动，以下变动主要由 <code class="highlighter-rouge">Mikael Vidstedt</code> 提交，更新内容如下</p>
+<p>随着 JDK9 即将发布，CAS 相关主要类 <code class="language-plaintext highlighter-rouge">Unsafe</code> 有些变动，以下变动主要由 <code class="language-plaintext highlighter-rouge">Mikael Vidstedt</code> 提交，更新内容如下</p>
 
 <ul>
-  <li>避免代码重复，<code class="highlighter-rouge">sun.misc.Unsafe</code> 将全部实现委托给 <code class="highlighter-rouge">jdk.internal.misc.Unsafe</code>，这意味着java虚拟机(特别是 <code class="highlighter-rouge">unsafe.cpp</code> ）不再需要关心s.m.Unsafe的实现。</li>
-  <li><code class="highlighter-rouge">s.m.Unsafe</code> 的委托方法通常会被内联，但是为了避免性能下降的风险，仍然添加了 <code class="highlighter-rouge">@ForceInline</code> 注解</li>
+  <li>避免代码重复，<code class="language-plaintext highlighter-rouge">sun.misc.Unsafe</code> 将全部实现委托给 <code class="language-plaintext highlighter-rouge">jdk.internal.misc.Unsafe</code>，这意味着java虚拟机(特别是 <code class="language-plaintext highlighter-rouge">unsafe.cpp</code> ）不再需要关心s.m.Unsafe的实现。</li>
+  <li><code class="language-plaintext highlighter-rouge">s.m.Unsafe</code> 的委托方法通常会被内联，但是为了避免性能下降的风险，仍然添加了 <code class="language-plaintext highlighter-rouge">@ForceInline</code> 注解</li>
   <li>更新文档，指明用户应该确保Unsafe类的参数正确</li>
   <li>参数检查从Unsage.cpp移入java，简化本地代码以及允许JIT进一步优化</li>
-  <li>放松了特定参数的检查，比方说最近引入的 <code class="highlighter-rouge">U.copySwapMemory</code> 没有检查空指针。具体原因可以参考 <code class="highlighter-rouge">j.i.m.U.checkPointer</code> 的文档。除了 <code class="highlighter-rouge">U.copySwapMemory</code>，现在Unsafe类方法也都没有对参数执行NULL检查</li>
-  <li>在 <code class="highlighter-rouge">U.copySwapMemory</code> 类的基础上，对 <code class="highlighter-rouge">j.i.m.U.copyMemory</code> 增加了一个测试案例。请随时提醒我合并过来（本该如此）</li>
+  <li>放松了特定参数的检查，比方说最近引入的 <code class="language-plaintext highlighter-rouge">U.copySwapMemory</code> 没有检查空指针。具体原因可以参考 <code class="language-plaintext highlighter-rouge">j.i.m.U.checkPointer</code> 的文档。除了 <code class="language-plaintext highlighter-rouge">U.copySwapMemory</code>，现在Unsafe类方法也都没有对参数执行NULL检查</li>
+  <li>在 <code class="language-plaintext highlighter-rouge">U.copySwapMemory</code> 类的基础上，对 <code class="language-plaintext highlighter-rouge">j.i.m.U.copyMemory</code> 增加了一个测试案例。请随时提醒我合并过来（本该如此）</li>
 </ul>
 
 <p>在 Mikael Vidstedt 看来，Usage 类的清理算是 “相当激进” 了，值得注意的地方有：</p>
 
 <ul>
-  <li>Unsafe_方法以及 <code class="highlighter-rouge">unsafe.cpp</code> 中的其他本地方法被申明为静态方法</li>
-  <li>新增 <code class="highlighter-rouge">unsafe.hpp</code> 代码文件，文件中移入VM其他组件的一些方法。移除部分 <code class="highlighter-rouge">extern</code> 函数声明（不要过度使用extern）</li>
+  <li>Unsafe_方法以及 <code class="language-plaintext highlighter-rouge">unsafe.cpp</code> 中的其他本地方法被申明为静态方法</li>
+  <li>新增 <code class="language-plaintext highlighter-rouge">unsafe.hpp</code> 代码文件，文件中移入VM其他组件的一些方法。移除部分 <code class="language-plaintext highlighter-rouge">extern</code> 函数声明（不要过度使用extern）</li>
   <li>对于不怎么用到的UNSAFE_LEAF，移除警告性质的注释（没有必要，只是个VM_LEAF）</li>
   <li>一些简单的leaf方法使用UNSAFE_LEAF</li>
   <li>UNSAFE_ENTRY/UNSAFE_END代码块新增大括号，帮助自动缩进</li>
   <li>移除未使用的Unsafe_&lt;…&gt;##140形式的函数和宏</li>
   <li>更新宏参数，与unsafe.cpp的宏定义保持一致</li>
-  <li>更换带断言的参数检查，正如前面提及，这些检查移入了 <code class="highlighter-rouge">j.i.m.Unsafe</code>，移除所有 <code class="highlighter-rouge">s.m.Unsafe</code> 相关的代码</li>
+  <li>更换带断言的参数检查，正如前面提及，这些检查移入了 <code class="language-plaintext highlighter-rouge">j.i.m.Unsafe</code>，移除所有 <code class="language-plaintext highlighter-rouge">s.m.Unsafe</code> 相关的代码</li>
 </ul>
 
 <p>本文参考自 <a href="http://zl198751.iteye.com/blog/1848575">JAVA CAS原理深度分析</a>、<a href="http://zkread.com/article/780437.html">Java 9发布在即，Oracle OpenJDK着手优化Unsafe类</a></p>
@@ -440,7 +440,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

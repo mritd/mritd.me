@@ -209,20 +209,20 @@
 
 <h3 id="windows-下激活">Windows 下激活</h3>
 
-<p>复制解压后的 <code class="highlighter-rouge">windows</code> 文件夹到任意目录，以管理员身份运行 CMD 执行以下命令(文件位置自己改)：</p>
+<p>复制解压后的 <code class="language-plaintext highlighter-rouge">windows</code> 文件夹到任意目录，以管理员身份运行 CMD 执行以下命令(文件位置自己改)：</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sc create idea_license_server <span class="nv">binPath</span><span class="o">=</span><span class="s2">"D:</span><span class="se">\W</span><span class="s2">ork</span><span class="se">\w</span><span class="s2">indows</span><span class="se">\j</span><span class="s2">etbrains_license_server</span><span class="se">\j</span><span class="s2">etbrains_license_server.exe runserver localhost:9123"</span> <span class="nv">start</span><span class="o">=</span>auto
 </code></pre></div></div>
 
-<p>此时在系统服务列表中应该存在名称为 <code class="highlighter-rouge">idea_license_server</code> 的服务；然后重启电脑。</p>
+<p>此时在系统服务列表中应该存在名称为 <code class="language-plaintext highlighter-rouge">idea_license_server</code> 的服务；然后重启电脑。</p>
 
-<p>最后激活时选择服务器激活，地址填写 <code class="highlighter-rouge">http://127.0.0.1:9123</code>，到此激活完成。</p>
+<p>最后激活时选择服务器激活，地址填写 <code class="language-plaintext highlighter-rouge">http://127.0.0.1:9123</code>，到此激活完成。</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_idea_license_server_win.png" alt="hexo_idea_license_server_win" /></p>
 
 <h3 id="linuxmac-下激活">Linux/Mac 下激活</h3>
 
-<p>复制解压后的 <code class="highlighter-rouge">linux-mac</code> 文件夹到任意目录，执行以下命令(<strong>系统需要安装 Python</strong>)：</p>
+<p>复制解压后的 <code class="language-plaintext highlighter-rouge">linux-mac</code> 文件夹到任意目录，执行以下命令(<strong>系统需要安装 Python</strong>)：</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>linux-mac
 <span class="c"># 木有pip 的自己安装</span>
@@ -242,7 +242,7 @@ python ./jetbrains_license_server/manage.py runserver localhost:9123
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">nohup </span>python ./jetbrains_license_server/manage.py runserver localhost:9123 &amp;
 </code></pre></div></div>
 
-<p><strong>这时可以保持激活服务器后台一直运行，但无法开机启动，设置开机启动的办法有很多，最简单的就是将这条命令写到 <code class="highlighter-rouge">~/.bashrc</code> 等配置文件中，路子多的是，也很野…..自己找吧，我比较穷，买不起Mac……</strong>
+<p><strong>这时可以保持激活服务器后台一直运行，但无法开机启动，设置开机启动的办法有很多，最简单的就是将这条命令写到 <code class="language-plaintext highlighter-rouge">~/.bashrc</code> 等配置文件中，路子多的是，也很野…..自己找吧，我比较穷，买不起Mac……</strong>
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
 
@@ -346,7 +346,7 @@ python ./jetbrains_license_server/manage.py runserver localhost:9123
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

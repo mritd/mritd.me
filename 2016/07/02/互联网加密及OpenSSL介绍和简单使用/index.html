@@ -216,15 +216,15 @@
 
 <h3 id="22对称加密">2.2、对称加密</h3>
 
-<p>对称加密也称作双向加密，即 <strong>加密与解密使用同一密码</strong>，对明文使用密码加密后，对方可以通过同一密码进行反向解密，<strong>加密安全性完全依赖于加密密码。</strong>常见的加密算法有 <code class="highlighter-rouge">DES(56bits)</code>、<code class="highlighter-rouge">3DES</code>、<code class="highlighter-rouge">AES(128bits)</code>、<code class="highlighter-rouge">Blowfish</code>、<code class="highlighter-rouge">Twofish</code>、<code class="highlighter-rouge">IDEA</code>、<code class="highlighter-rouge">RC6</code>、<code class="highlighter-rouge">CAST5</code>、<code class="highlighter-rouge">Serpent</code>等等；此种方式加密容易遭受 <strong>字典攻击</strong>，同时解密方需要得到加密密码，中间可能涉及密码传输泄露问题；此种加密一般都是 <strong>将原文分割成固定大小的数据块，对这些块进行加密(ECB，CBC)。</strong></p>
+<p>对称加密也称作双向加密，即 <strong>加密与解密使用同一密码</strong>，对明文使用密码加密后，对方可以通过同一密码进行反向解密，<strong>加密安全性完全依赖于加密密码。</strong>常见的加密算法有 <code class="language-plaintext highlighter-rouge">DES(56bits)</code>、<code class="language-plaintext highlighter-rouge">3DES</code>、<code class="language-plaintext highlighter-rouge">AES(128bits)</code>、<code class="language-plaintext highlighter-rouge">Blowfish</code>、<code class="language-plaintext highlighter-rouge">Twofish</code>、<code class="language-plaintext highlighter-rouge">IDEA</code>、<code class="language-plaintext highlighter-rouge">RC6</code>、<code class="language-plaintext highlighter-rouge">CAST5</code>、<code class="language-plaintext highlighter-rouge">Serpent</code>等等；此种方式加密容易遭受 <strong>字典攻击</strong>，同时解密方需要得到加密密码，中间可能涉及密码传输泄露问题；此种加密一般都是 <strong>将原文分割成固定大小的数据块，对这些块进行加密(ECB，CBC)。</strong></p>
 
 <h3 id="23非对称加密">2.3、非对称加密</h3>
 
-<p>非对称加密与对称加密相反，其加密解密可使用不同的密码，常见的如 <code class="highlighter-rouge">RSA</code>、<code class="highlighter-rouge">EIGmal</code>、<code class="highlighter-rouge">DSA</code> 等。</p>
+<p>非对称加密与对称加密相反，其加密解密可使用不同的密码，常见的如 <code class="language-plaintext highlighter-rouge">RSA</code>、<code class="language-plaintext highlighter-rouge">EIGmal</code>、<code class="language-plaintext highlighter-rouge">DSA</code> 等。</p>
 
 <h4 id="231单向加密">2.3.1、单向加密</h4>
 
-<p>在非对称加密中，有一种比较特殊的加密叫做单向加密，<strong>单向机密也称消息摘要算法，其主要目的是提取消息特征码，加密后的密文不可逆。</strong>常见的单向加密算法有 : <code class="highlighter-rouge">MD5</code>、<code class="highlighter-rouge">SHA1</code>、<code class="highlighter-rouge">SHA512</code>、<code class="highlighter-rouge">CRC-32(循环冗余校验码)</code> 等；单向加密有两个重要的特性 : <strong>定长输出、雪崩效应；</strong>定长输出可以理解为 <strong>无论消息体多大，最终输出加密后结果长度一致，雪崩效应顾名思义，即消息体的微小变化，会导致加密结果的巨大变化。</strong></p>
+<p>在非对称加密中，有一种比较特殊的加密叫做单向加密，<strong>单向机密也称消息摘要算法，其主要目的是提取消息特征码，加密后的密文不可逆。</strong>常见的单向加密算法有 : <code class="language-plaintext highlighter-rouge">MD5</code>、<code class="language-plaintext highlighter-rouge">SHA1</code>、<code class="language-plaintext highlighter-rouge">SHA512</code>、<code class="language-plaintext highlighter-rouge">CRC-32(循环冗余校验码)</code> 等；单向加密有两个重要的特性 : <strong>定长输出、雪崩效应；</strong>定长输出可以理解为 <strong>无论消息体多大，最终输出加密后结果长度一致，雪崩效应顾名思义，即消息体的微小变化，会导致加密结果的巨大变化。</strong></p>
 
 <h3 id="24公钥加密">2.4、公钥加密</h3>
 
@@ -256,10 +256,10 @@
   <li>首先两台计算机互相通讯，并约定选取一个大素数 g</li>
   <li>然后两台计算机再协商一个计算数 p</li>
   <li>接下来每台计算机随机选定一个随机数，此随机数并不会发给对方(x、y)</li>
-  <li>通讯时，A 计算机计算 <code class="highlighter-rouge">g^x % p</code> 发给 B 计算机</li>
-  <li>接下来同样 B 计算机计算 <code class="highlighter-rouge">g^y % p</code> 发给 A 计算机</li>
-  <li>B 计算机拿到 <code class="highlighter-rouge">g^x % p</code> 后再进行 <code class="highlighter-rouge">(g^x % p)^y</code> 即最终结果为 <code class="highlighter-rouge">g^xy % p</code></li>
-  <li>同样 A 计算机拿到 <code class="highlighter-rouge">g^y % p</code> 后再进行 <code class="highlighter-rouge">(g^y % p)^x</code> 即最终结果为 <code class="highlighter-rouge">g^xy % p</code></li>
+  <li>通讯时，A 计算机计算 <code class="language-plaintext highlighter-rouge">g^x % p</code> 发给 B 计算机</li>
+  <li>接下来同样 B 计算机计算 <code class="language-plaintext highlighter-rouge">g^y % p</code> 发给 A 计算机</li>
+  <li>B 计算机拿到 <code class="language-plaintext highlighter-rouge">g^x % p</code> 后再进行 <code class="language-plaintext highlighter-rouge">(g^x % p)^y</code> 即最终结果为 <code class="language-plaintext highlighter-rouge">g^xy % p</code></li>
+  <li>同样 A 计算机拿到 <code class="language-plaintext highlighter-rouge">g^y % p</code> 后再进行 <code class="language-plaintext highlighter-rouge">(g^y % p)^x</code> 即最终结果为 <code class="language-plaintext highlighter-rouge">g^xy % p</code></li>
   <li>此时两台计算机结果将一致，接下来传送的数据便以此结果为密码进行加密即可</li>
 </ul>
 
@@ -281,9 +281,9 @@
 
 <h3 id="41openssl-简介">4.1、OpenSSL 简介</h3>
 
-<p>OpenSSL 是一组加密套件，其提供了功能强大的加密解密功能，以及证书相关的操作工具，OpenSSL 分为三大部分 : <code class="highlighter-rouge">libcrypto</code> 通用功能的加密库、<code class="highlighter-rouge">libssl</code> 用于实现TLS/SSL的功能 和 <code class="highlighter-rouge">openssl</code> 多功能命令工具；而一般 OpenSSL 使用指的就是多功能命令行工具的使用。</p>
+<p>OpenSSL 是一组加密套件，其提供了功能强大的加密解密功能，以及证书相关的操作工具，OpenSSL 分为三大部分 : <code class="language-plaintext highlighter-rouge">libcrypto</code> 通用功能的加密库、<code class="language-plaintext highlighter-rouge">libssl</code> 用于实现TLS/SSL的功能 和 <code class="language-plaintext highlighter-rouge">openssl</code> 多功能命令工具；而一般 OpenSSL 使用指的就是多功能命令行工具的使用。</p>
 
-<p>OpenSSL 有许多子命令，可通过 <code class="highlighter-rouge">openssl ?</code> 查看其支持子命令和加密算法等信息</p>
+<p>OpenSSL 有许多子命令，可通过 <code class="language-plaintext highlighter-rouge">openssl ?</code> 查看其支持子命令和加密算法等信息</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Standard commands
 asn1parse         ca                ciphers           cms
@@ -324,7 +324,7 @@ seed-ofb
 
 <h4 id="421加密操作">4.2.1、加密操作</h4>
 
-<p>OpenSSL 使用子命令 <code class="highlighter-rouge">enc</code> 实现加密，命令格式如下</p>
+<p>OpenSSL 使用子命令 <code class="language-plaintext highlighter-rouge">enc</code> 实现加密，命令格式如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc -算法 <span class="nt">-salt</span> <span class="nt">-a</span> <span class="nt">-salt</span> <span class="nt">-in</span> 输入文件 <span class="nt">-out</span> 输出文件 <span class="nt">-k</span> passwd
 </code></pre></div></div>
@@ -334,7 +334,7 @@ seed-ofb
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc <span class="nt">-aes-256-ecb</span>  <span class="nt">-a</span> <span class="nt">-salt</span> <span class="nt">-in</span> /etc/profile <span class="nt">-out</span> ~/test <span class="nt">-k</span> test123
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">-a</code> 选项用于将加密后内容以 base64 格式输出，加密后内容如下</p>
+<p><code class="language-plaintext highlighter-rouge">-a</code> 选项用于将加密后内容以 base64 格式输出，加密后内容如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>U2FsdGVkX1/tVWQ7cGR5rTLU9Phnx7csis12ukuGpZTWx7sDiJ8Qdb4Jn8hvShnW
 7gPouyOwJlKufoDHXT2hqOnw/i8Rf5QisLc+EOXgUWDFun3AqHte6YmNbelDFchu
@@ -355,7 +355,7 @@ l3EUVrqnY0M8u+0LBgAcrA<span class="o">==</span>
 
 <h4 id="422解密操作">4.2.2、解密操作</h4>
 
-<p>解密操作与加密基本相同，只不过需要加上 <code class="highlighter-rouge">-d</code> 选项，代表解密，命令格式如下</p>
+<p>解密操作与加密基本相同，只不过需要加上 <code class="language-plaintext highlighter-rouge">-d</code> 选项，代表解密，命令格式如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc -算法 <span class="nt">-salt</span> <span class="nt">-d</span> <span class="nt">-a</span> <span class="nt">-in</span> 输入文件 <span class="nt">-out</span> 输出文件 <span class="nt">-k</span> passwd
 </code></pre></div></div>
@@ -365,7 +365,7 @@ l3EUVrqnY0M8u+0LBgAcrA<span class="o">==</span>
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl enc <span class="nt">-aes-256-ecb</span> <span class="nt">-salt</span> <span class="nt">-d</span> <span class="nt">-a</span> <span class="nt">-in</span> <span class="nb">test</span> <span class="nt">-out</span> test1 <span class="nt">-k</span> test123
 </code></pre></div></div>
 
-<p>解密后文件即为原来的 <code class="highlighter-rouge">/etc/profile</code> 文件内容</p>
+<p>解密后文件即为原来的 <code class="language-plaintext highlighter-rouge">/etc/profile</code> 文件内容</p>
 
 <h3 id="43openssl-创建-ca">4.3、OpenSSL 创建 CA</h3>
 
@@ -373,7 +373,7 @@ l3EUVrqnY0M8u+0LBgAcrA<span class="o">==</span>
 
 <h4 id="431openssl-ca-相关配置">4.3.1、OpenSSL CA 相关配置</h4>
 
-<p>默认的 Ubuntu 下 OpenSSL 的配置文件位于 <code class="highlighter-rouge">/etc/ssl/openssl.cnf</code>，CentOS 位于 <code class="highlighter-rouge">/etc/pki/tls/openssl.cnf</code>，我们只需要关注如下部分，关于具体配置含义 Google 之。</p>
+<p>默认的 Ubuntu 下 OpenSSL 的配置文件位于 <code class="language-plaintext highlighter-rouge">/etc/ssl/openssl.cnf</code>，CentOS 位于 <code class="language-plaintext highlighter-rouge">/etc/pki/tls/openssl.cnf</code>，我们只需要关注如下部分，关于具体配置含义 Google 之。</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">####################################################################</span>
 <span class="o">[</span> ca <span class="o">]</span>
@@ -435,7 +435,7 @@ emailAddress            <span class="o">=</span> optional
 
 <h4 id="432生成密钥对">4.3.2、生成密钥对</h4>
 
-<p>由配置文件可知，OpenSSL 默认的工作目录在 <code class="highlighter-rouge">./demoCA</code> 下，所以需要先创建 CA 所需相关目录，执行 <code class="highlighter-rouge">mkdir -p demoCA/{private,certs,crl,newcerts}</code>，目录结构如下</p>
+<p>由配置文件可知，OpenSSL 默认的工作目录在 <code class="language-plaintext highlighter-rouge">./demoCA</code> 下，所以需要先创建 CA 所需相关目录，执行 <code class="language-plaintext highlighter-rouge">mkdir -p demoCA/{private,certs,crl,newcerts}</code>，目录结构如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_openssl_dirtree.png" alt="hexo_openssl_dirtree" /></p>
 
@@ -454,11 +454,11 @@ openssl rsa <span class="nt">-in</span> demoCA/private/cakey.pem <span class="nt
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="nt">-new</span> <span class="nt">-x509</span> <span class="nt">-key</span> demoCA/private/cakey.pem <span class="nt">-days</span> 3655 <span class="nt">-out</span> demoCA/cacert.pem
 </code></pre></div></div>
 
-<p>然后输入相关信息，注意不要乱输入，其中 <code class="highlighter-rouge">Common Name</code> 一般为使用者域名，这里暂时填写的是 IP，截图如下</p>
+<p>然后输入相关信息，注意不要乱输入，其中 <code class="language-plaintext highlighter-rouge">Common Name</code> 一般为使用者域名，这里暂时填写的是 IP，截图如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_openssl_createcapb.png" alt="hexo_openssl_createcapb" /></p>
 
-<p><strong>最后要创建用于签名证书的相关文件，</strong>执行 <code class="highlighter-rouge">touch demoCA/{index.txt,serial,crlnumber}</code> 创建所需文件，执行 <code class="highlighter-rouge">echo "01" &gt; demoCA/serial</code> 初始化序列号，最终文件目录结构如下</p>
+<p><strong>最后要创建用于签名证书的相关文件，</strong>执行 <code class="language-plaintext highlighter-rouge">touch demoCA/{index.txt,serial,crlnumber}</code> 创建所需文件，执行 <code class="language-plaintext highlighter-rouge">echo "01" &gt; demoCA/serial</code> 初始化序列号，最终文件目录结构如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_openssl_createcafiledirtree.png" alt="hexo_openssl_createcafiledirtree" /></p>
 
@@ -483,7 +483,7 @@ openssl rsa <span class="nt">-in</span> mritd.key <span class="nt">-pubout</span
 
 <p><img src="https://cdn.oss.link/markdown/hexo_openssl_createprivatekey.png" alt="hexo_openssl_createprivatekey" /></p>
 
-<p>最后使用 CA 进行签署即可(注意，要回到 <code class="highlighter-rouge">demoCA</code> 上一级目录)，提示是否确认全部 y 即可</p>
+<p>最后使用 CA 进行签署即可(注意，要回到 <code class="language-plaintext highlighter-rouge">demoCA</code> 上一级目录)，提示是否确认全部 y 即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl ca <span class="nt">-in</span> mycrt/mritd.csr <span class="nt">-out</span> mycrt/mritd.crt <span class="nt">-days</span> 3655
 </code></pre></div></div>
@@ -492,7 +492,7 @@ openssl rsa <span class="nt">-in</span> mritd.key <span class="nt">-pubout</span
 
 <p><img src="https://cdn.oss.link/markdown/hexo_openssl_signedcrt.png" alt="hexo_openssl_signedcrt" /></p>
 
-<p><strong>最终生成的  <code class="highlighter-rouge">mritd.crt</code> 即为可用的证书</strong>
+<p><strong>最终生成的  <code class="language-plaintext highlighter-rouge">mritd.crt</code> 即为可用的证书</strong>
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
 
@@ -596,7 +596,7 @@ openssl rsa <span class="nt">-in</span> mritd.key <span class="nt">-pubout</span
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

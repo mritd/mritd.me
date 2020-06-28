@@ -198,7 +198,7 @@
 
 <h2 id="一环境准备">一、环境准备</h2>
 
-<p>搭建环境为 5 台虚拟机，每台虚拟机配置为 4 核心 8G 内存，虚拟机 IP 范围为 <code class="highlighter-rouge">172.16.10.21~25</code>，其他软件配置如下</p>
+<p>搭建环境为 5 台虚拟机，每台虚拟机配置为 4 核心 8G 内存，虚拟机 IP 范围为 <code class="language-plaintext highlighter-rouge">172.16.10.21~25</code>，其他软件配置如下</p>
 
 <ul>
   <li>os version: ubuntu 18.04</li>
@@ -236,7 +236,7 @@
 <ul>
   <li><strong>docker 的 cgroup driver 调整为 systemd，具体参考 <a href="https://github.com/mritd/config/blob/master/docker/docker.service">docker.service</a></strong></li>
   <li><strong>docker 一定要限制 conatiner 日志大小，防止 apiserver 等日志大量输出导致磁盘占用过大</strong></li>
-  <li><strong>安装 <code class="highlighter-rouge">conntrack</code> 和 <code class="highlighter-rouge">ipvsadm</code>，后面可能需要借助其排查问题</strong></li>
+  <li><strong>安装 <code class="language-plaintext highlighter-rouge">conntrack</code> 和 <code class="language-plaintext highlighter-rouge">ipvsadm</code>，后面可能需要借助其排查问题</strong></li>
 </ul>
 
 <h3 id="32配置-ipvs">3.2、配置 ipvs</h3>
@@ -268,7 +268,7 @@ ip_vs_ftp
 </span><span class="no">EOF
 </span></code></pre></div></div>
 
-<p><strong>配置完成后切记需要重启，重启完成后使用 <code class="highlighter-rouge">lsmod | grep ip_vs</code> 验证相关 ipvs 模块加载是否正常，本文将主要使用 <code class="highlighter-rouge">ip_vs_wrr</code>，所以目前只关注这个模块既可。</strong></p>
+<p><strong>配置完成后切记需要重启，重启完成后使用 <code class="language-plaintext highlighter-rouge">lsmod | grep ip_vs</code> 验证相关 ipvs 模块加载是否正常，本文将主要使用 <code class="language-plaintext highlighter-rouge">ip_vs_wrr</code>，所以目前只关注这个模块既可。</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/4irz1.png" alt="ipvs_mode" /></p>
 
@@ -279,11 +279,11 @@ ip_vs_ftp
 <p>官方对于集群 HA 给出了两种有关于 Etcd 的部署方案:</p>
 
 <ul>
-  <li>一种是深度耦合到 <code class="highlighter-rouge">control plane</code> 上，即每个 <code class="highlighter-rouge">control plane</code> 一个 etcd</li>
+  <li>一种是深度耦合到 <code class="language-plaintext highlighter-rouge">control plane</code> 上，即每个 <code class="language-plaintext highlighter-rouge">control plane</code> 一个 etcd</li>
   <li>另一种是使用外部的 Etcd 集群，通过在配置中指定外部集群让 apiserver 等组件连接</li>
 </ul>
 
-<p>在测试深度耦合 <code class="highlighter-rouge">control plane</code> 方案后，发现一些比较恶心的问题；比如说开始创建第二个 <code class="highlighter-rouge">control plane</code> 时配置写错了需要重建，此时你一旦删除第二个 <code class="highlighter-rouge">control plane</code> 会导致第一个 <code class="highlighter-rouge">control plane</code> 也会失败，原因是<strong>创建第二个 <code class="highlighter-rouge">control plane</code> 时 kubeadm 已经自动完成了 etcd 的集群模式，当删除第二个 <code class="highlighter-rouge">control plane</code> 的时候由于集群可用原因会导致第一个 <code class="highlighter-rouge">control plane</code> 下的 etcd 发现节点失联从而也不提供服务；</strong>所以综合考虑到后续迁移、灾备等因素，这里选择了将 etcd 放置在外部集群中；同样也方便我以后各种折腾应对一些极端情况啥的。</p>
+<p>在测试深度耦合 <code class="language-plaintext highlighter-rouge">control plane</code> 方案后，发现一些比较恶心的问题；比如说开始创建第二个 <code class="language-plaintext highlighter-rouge">control plane</code> 时配置写错了需要重建，此时你一旦删除第二个 <code class="language-plaintext highlighter-rouge">control plane</code> 会导致第一个 <code class="language-plaintext highlighter-rouge">control plane</code> 也会失败，原因是<strong>创建第二个 <code class="language-plaintext highlighter-rouge">control plane</code> 时 kubeadm 已经自动完成了 etcd 的集群模式，当删除第二个 <code class="language-plaintext highlighter-rouge">control plane</code> 的时候由于集群可用原因会导致第一个 <code class="language-plaintext highlighter-rouge">control plane</code> 下的 etcd 发现节点失联从而也不提供服务；</strong>所以综合考虑到后续迁移、灾备等因素，这里选择了将 etcd 放置在外部集群中；同样也方便我以后各种折腾应对一些极端情况啥的。</p>
 
 <h3 id="42部署-etcd">4.2、部署 Etcd</h3>
 
@@ -296,7 +296,7 @@ wget https://github.com/mritd/etcd-deb/releases/download/v3.3.18/cfssl_1.4.1_amd
 dpkg <span class="nt">-i</span> etcd_3.3.18_amd64.deb cfssl_1.4.1_amd64.deb
 </code></pre></div></div>
 
-<p><strong>既然自己部署 etcd，那么证书签署啥的还得自己来了，证书签署这里借助 cfssl 工具，cfssl 目前提供了 deb 的 make target，但是没找到 deb 包，所以也自己 build 了(担心安全性的可自行去官方下载)；</strong>接着编辑一下 <code class="highlighter-rouge">/etc/etcd/cfssl/etcd-csr.json</code> 文件，用 <code class="highlighter-rouge">/etc/etcd/cfssl/create.sh</code> 脚本创建证书，并将证书复制到指定目录</p>
+<p><strong>既然自己部署 etcd，那么证书签署啥的还得自己来了，证书签署这里借助 cfssl 工具，cfssl 目前提供了 deb 的 make target，但是没找到 deb 包，所以也自己 build 了(担心安全性的可自行去官方下载)；</strong>接着编辑一下 <code class="language-plaintext highlighter-rouge">/etc/etcd/cfssl/etcd-csr.json</code> 文件，用 <code class="language-plaintext highlighter-rouge">/etc/etcd/cfssl/create.sh</code> 脚本创建证书，并将证书复制到指定目录</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建证书</span>
 <span class="nb">cd</span> /etc/etcd/cfssl <span class="o">&amp;&amp;</span> ./create.sh
@@ -364,7 +364,7 @@ dpkg <span class="nt">-i</span> etcd_3.3.18_amd64.deb cfssl_1.4.1_amd64.deb
 <span class="nv">ETCD_AUTO_COMPACTION_RETENTION</span><span class="o">=</span><span class="s2">"3"</span>
 </code></pre></div></div>
 
-<p><strong>注意: 其他两台节点请调整 <code class="highlighter-rouge">ETCD_NAME</code> 为不重复的其他名称，调整 <code class="highlighter-rouge">ETCD_LISTEN_PEER_URLS</code>、<code class="highlighter-rouge">ETCD_LISTEN_CLIENT_URLS</code>、<code class="highlighter-rouge">ETCD_INITIAL_ADVERTISE_PEER_URLS</code>、<code class="highlighter-rouge">ETCD_ADVERTISE_CLIENT_URLS</code> 为其他节点对应的 IP；同时生产环境请将 <code class="highlighter-rouge">ETCD_INITIAL_CLUSTER_TOKEN</code> 替换为复杂的 token</strong></p>
+<p><strong>注意: 其他两台节点请调整 <code class="language-plaintext highlighter-rouge">ETCD_NAME</code> 为不重复的其他名称，调整 <code class="language-plaintext highlighter-rouge">ETCD_LISTEN_PEER_URLS</code>、<code class="language-plaintext highlighter-rouge">ETCD_LISTEN_CLIENT_URLS</code>、<code class="language-plaintext highlighter-rouge">ETCD_INITIAL_ADVERTISE_PEER_URLS</code>、<code class="language-plaintext highlighter-rouge">ETCD_ADVERTISE_CLIENT_URLS</code> 为其他节点对应的 IP；同时生产环境请将 <code class="language-plaintext highlighter-rouge">ETCD_INITIAL_CLUSTER_TOKEN</code> 替换为复杂的 token</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 同步证书</span>
 scp <span class="nt">-r</span> /etc/etcd/ssl 172.16.10.22:/etc/etcd/ssl
@@ -620,7 +620,7 @@ systemctl <span class="nb">enable </span>kube-apiserver-proxy.service <span clas
 
 <p><strong>关于这个配置配置文件的文档还是很不完善，对于不懂 golang 的人来说很难知道具体怎么配置，以下做一下简要说明(请确保你已经拉取了 kubernetes 源码和安装了 Goland)</strong></p>
 
-<p><strong>kubeadm 配置中每个配置段都会有个 <code class="highlighter-rouge">kind</code> 字段，<code class="highlighter-rouge">kind</code> 实际上对应了 go 代码中的 <code class="highlighter-rouge">struct</code> 结构体；同时从 <code class="highlighter-rouge">apiVersion</code> 字段中能够看到具体的版本，比如 <code class="highlighter-rouge">v1alpha1</code> 等；有了这两个信息事实上你就可以直接在源码中去找到对应的结构体</strong></p>
+<p><strong>kubeadm 配置中每个配置段都会有个 <code class="language-plaintext highlighter-rouge">kind</code> 字段，<code class="language-plaintext highlighter-rouge">kind</code> 实际上对应了 go 代码中的 <code class="language-plaintext highlighter-rouge">struct</code> 结构体；同时从 <code class="language-plaintext highlighter-rouge">apiVersion</code> 字段中能够看到具体的版本，比如 <code class="language-plaintext highlighter-rouge">v1alpha1</code> 等；有了这两个信息事实上你就可以直接在源码中去找到对应的结构体</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/dwo5h.png" alt="struct_search" /></p>
 
@@ -628,7 +628,7 @@ systemctl <span class="nb">enable </span>kube-apiserver-proxy.service <span clas
 
 <p><img src="https://cdn.oss.link/markdown/0jc9b.png" alt="struct_detail" /></p>
 
-<p>关于数据类型，如果是 <code class="highlighter-rouge">string</code> 的类型，那么意味着你要在 yaml 里写 <code class="highlighter-rouge">"xxxx"</code> 带引号这种，当然有些时候不写能兼容，有些时候不行比如 <code class="highlighter-rouge">extraArgs</code> 字段是一个 <code class="highlighter-rouge">map[string]string</code> 如果 value 不带引号就报错；<strong>如果数据类型为 <code class="highlighter-rouge">metav1.Duration</code>(实际上就是 <code class="highlighter-rouge">time.Duration</code>)，那么你看着它是个 <code class="highlighter-rouge">int64</code> 但实际上你要写 <code class="highlighter-rouge">1h2m3s</code> 这种人类可读的格式，这是 go 的特色…</strong></p>
+<p>关于数据类型，如果是 <code class="language-plaintext highlighter-rouge">string</code> 的类型，那么意味着你要在 yaml 里写 <code class="language-plaintext highlighter-rouge">"xxxx"</code> 带引号这种，当然有些时候不写能兼容，有些时候不行比如 <code class="language-plaintext highlighter-rouge">extraArgs</code> 字段是一个 <code class="language-plaintext highlighter-rouge">map[string]string</code> 如果 value 不带引号就报错；<strong>如果数据类型为 <code class="language-plaintext highlighter-rouge">metav1.Duration</code>(实际上就是 <code class="language-plaintext highlighter-rouge">time.Duration</code>)，那么你看着它是个 <code class="language-plaintext highlighter-rouge">int64</code> 但实际上你要写 <code class="language-plaintext highlighter-rouge">1h2m3s</code> 这种人类可读的格式，这是 go 的特色…</strong></p>
 
 <p><strong>audit-policy.yaml</strong></p>
 
@@ -639,11 +639,11 @@ systemctl <span class="nb">enable </span>kube-apiserver-proxy.service <span clas
 <span class="pi">-</span> <span class="na">level</span><span class="pi">:</span> <span class="s">Metadata</span>
 </code></pre></div></div>
 
-<p>可能 <code class="highlighter-rouge">Metadata</code> 级别的审计日志比较多，想自行调整审计日志级别的可以参考<a href="https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy">官方文档</a></p>
+<p>可能 <code class="language-plaintext highlighter-rouge">Metadata</code> 级别的审计日志比较多，想自行调整审计日志级别的可以参考<a href="https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy">官方文档</a></p>
 
 <h4 id="533拉起-control-plane">5.3.3、拉起 control plane</h4>
 
-<p>有了完整的 <code class="highlighter-rouge">kubeadm.yaml</code> 和 <code class="highlighter-rouge">audit-policy.yaml</code> 配置后，直接一条命令拉起 control plane 既可</p>
+<p>有了完整的 <code class="language-plaintext highlighter-rouge">kubeadm.yaml</code> 和 <code class="language-plaintext highlighter-rouge">audit-policy.yaml</code> 配置后，直接一条命令拉起 control plane 既可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 先将审计配置放到目标位置(3 台 master 都要执行)</span>
 <span class="nb">cp </span>audit-policy.yaml /etc/kubernetes
@@ -690,9 +690,9 @@ kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</sp
 
 <h3 id="54部署-cni">5.4、部署 CNI</h3>
 
-<p>关于网络插件的选择，以前一直喜欢 Calico，因为其性能确实好；到后来 flannel 出了 <code class="highlighter-rouge">host-gw</code> 以后现在两者性能也差不多了；但是 <strong>flannel 好处是一个工具通吃所有环境(云环境+裸机2层直通)，坏处是 flannel 缺乏比较好的策略管理(当然可以使用两者结合的 Canal)；</strong>后来思来想去其实我们生产倒是很少需要策略管理，所以这回怂回到 flannel 了(逃…)</p>
+<p>关于网络插件的选择，以前一直喜欢 Calico，因为其性能确实好；到后来 flannel 出了 <code class="language-plaintext highlighter-rouge">host-gw</code> 以后现在两者性能也差不多了；但是 <strong>flannel 好处是一个工具通吃所有环境(云环境+裸机2层直通)，坏处是 flannel 缺乏比较好的策略管理(当然可以使用两者结合的 Canal)；</strong>后来思来想去其实我们生产倒是很少需要策略管理，所以这回怂回到 flannel 了(逃…)</p>
 
-<p>Flannel 部署非常简单，根据官方文档下载配置，根据情况调整 <code class="highlighter-rouge">backend</code> 和 pod 的 CIDR，然后 apply 一下既可</p>
+<p>Flannel 部署非常简单，根据官方文档下载配置，根据情况调整 <code class="language-plaintext highlighter-rouge">backend</code> 和 pod 的 CIDR，然后 apply 一下既可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 下载配置文件</span>
 wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
@@ -742,14 +742,14 @@ kubectl apply <span class="nt">-f</span> kube-flannel.yml
 
 <h3 id="55启动其他-control-plane">5.5、启动其他 control plane</h3>
 
-<p>为了保证 HA 架构，还需要在另外两台 master 上启动 control plane；<strong>在启动之前请确保另外两台 master 节点节点上 <code class="highlighter-rouge">/etc/kubernetes/audit-policy.yaml</code> 审计配置已经分发完成，确保 <code class="highlighter-rouge">127.0.0.1:6443</code> 上监听的 4 层 LB 工作正常(可尝试使用 <code class="highlighter-rouge">curl -k https://127.0.0.1:6443</code> 测试)；</strong>根据第一个 control plane 终端输出，其他 control plane 加入命令如下</p>
+<p>为了保证 HA 架构，还需要在另外两台 master 上启动 control plane；<strong>在启动之前请确保另外两台 master 节点节点上 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/audit-policy.yaml</code> 审计配置已经分发完成，确保 <code class="language-plaintext highlighter-rouge">127.0.0.1:6443</code> 上监听的 4 层 LB 工作正常(可尝试使用 <code class="language-plaintext highlighter-rouge">curl -k https://127.0.0.1:6443</code> 测试)；</strong>根据第一个 control plane 终端输出，其他 control plane 加入命令如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
     <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
     <span class="nt">--control-plane</span> <span class="nt">--certificate-key</span> 7373f829c733b46fb78f0069f90185e0f00254381641d8d5a7c5984b2cf17cd3
 </code></pre></div></div>
 
-<p><strong>由于在使用 <code class="highlighter-rouge">kubeadm join</code> 时相关选项(<code class="highlighter-rouge">--discovery-token-ca-cert-hash</code>、<code class="highlighter-rouge">--control-plane</code>)无法与 <code class="highlighter-rouge">--config</code> 一起使用，这也就意味着我们必须增加一些附加指令来提供 <code class="highlighter-rouge">kubeadm.yaml</code> 配置文件中的一些属性</strong>；最终完整的 control plane 加入命令如下，在其他 master 直接执行既可(<strong><code class="highlighter-rouge">--apiserver-advertise-address</code> 的 IP 地址是目标 master 的 IP</strong>)</p>
+<p><strong>由于在使用 <code class="language-plaintext highlighter-rouge">kubeadm join</code> 时相关选项(<code class="language-plaintext highlighter-rouge">--discovery-token-ca-cert-hash</code>、<code class="language-plaintext highlighter-rouge">--control-plane</code>)无法与 <code class="language-plaintext highlighter-rouge">--config</code> 一起使用，这也就意味着我们必须增加一些附加指令来提供 <code class="language-plaintext highlighter-rouge">kubeadm.yaml</code> 配置文件中的一些属性</strong>；最终完整的 control plane 加入命令如下，在其他 master 直接执行既可(<strong><code class="language-plaintext highlighter-rouge">--apiserver-advertise-address</code> 的 IP 地址是目标 master 的 IP</strong>)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
     <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
@@ -759,7 +759,7 @@ kubectl apply <span class="nt">-f</span> kube-flannel.yml
     <span class="nt">--ignore-preflight-errors</span><span class="o">=</span>Swap 
 </code></pre></div></div>
 
-<p><strong>所有 control plane 启动完成后应当通过在每个节点上运行 <code class="highlighter-rouge">kubectl get cs</code> 验证各个组件运行状态</strong></p>
+<p><strong>所有 control plane 启动完成后应当通过在每个节点上运行 <code class="language-plaintext highlighter-rouge">kubectl get cs</code> 验证各个组件运行状态</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k2.node ➜ kubectl get cs
 NAME                 STATUS    MESSAGE             ERROR
@@ -778,7 +778,7 @@ k3.node   Ready    master   3m    v1.17.0   172.16.10.23   &lt;none&gt;        U
 
 <h3 id="56启动-node">5.6、启动 Node</h3>
 
-<p>node 节点的启动相较于 master 来说要简单得多，只需要增加一个防止 <code class="highlighter-rouge">swap</code> 开启拒绝启动的参数既可</p>
+<p>node 节点的启动相较于 master 来说要简单得多，只需要增加一个防止 <code class="language-plaintext highlighter-rouge">swap</code> 开启拒绝启动的参数既可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm <span class="nb">join </span>127.0.0.1:6443 <span class="nt">--token</span> r4t3l3.14mmuivm7xbtaeoj <span class="se">\</span>
     <span class="nt">--discovery-token-ca-cert-hash</span> sha256:06f49f1f29d08b797fbf04d87b9b0fd6095a4693e9b1d59c429745cfa082b31d <span class="se">\</span>
@@ -863,11 +863,11 @@ taint <span class="s2">"node-role.kubernetes.io/master"</span> not found
 
 <h3 id="62master-配置修改">6.2、Master 配置修改</h3>
 
-<p>如果需要修改 conrol plane 上 apiserver、scheduler 等配置，直接修改 <code class="highlighter-rouge">kubeadm.yaml</code> 配置文件(<strong>所以集群搭建好后务必保存好</strong>)，然后执行 <code class="highlighter-rouge">kubeadm upgrade apply --config kubeadm.yaml</code> 升级集群既可，升级前一定作好相关备份工作；我只在测试环境测试这个命令工作还可以，生产环境还是需要谨慎</p>
+<p>如果需要修改 conrol plane 上 apiserver、scheduler 等配置，直接修改 <code class="language-plaintext highlighter-rouge">kubeadm.yaml</code> 配置文件(<strong>所以集群搭建好后务必保存好</strong>)，然后执行 <code class="language-plaintext highlighter-rouge">kubeadm upgrade apply --config kubeadm.yaml</code> 升级集群既可，升级前一定作好相关备份工作；我只在测试环境测试这个命令工作还可以，生产环境还是需要谨慎</p>
 
 <h3 id="63证书续期">6.3、证书续期</h3>
 
-<p>目前根据我测试的结果，controller manager 的 <strong>experimental-cluster-signing-duration</strong> 参数在 init 的签发证书阶段似乎并未生效；<strong>目前根据文档描述 <code class="highlighter-rouge">kubelet</code> client 的证书会自动滚动，其他证书默认 1 年有效期，需要自己使用命令续签；</strong>续签命令如下</p>
+<p>目前根据我测试的结果，controller manager 的 <strong>experimental-cluster-signing-duration</strong> 参数在 init 的签发证书阶段似乎并未生效；<strong>目前根据文档描述 <code class="language-plaintext highlighter-rouge">kubelet</code> client 的证书会自动滚动，其他证书默认 1 年有效期，需要自己使用命令续签；</strong>续签命令如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看证书过期时间</span>
 k1.node ➜ kubeadm alpha certs check-expiration
@@ -928,7 +928,7 @@ W0112 19:23:06.466778   28637 validation.go:28] Cannot validate kube-proxy confi
 
 <h3 id="65调整-kubelet">6.5、调整 kubelet</h3>
 
-<p>node 节点一旦启动完成后，kubelet 配置便不可再修改；如果想要修改 kubelet 配置，可以通过调整 <code class="highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 配置文件完成</p>
+<p>node 节点一旦启动完成后，kubelet 配置便不可再修改；如果想要修改 kubelet 配置，可以通过调整 <code class="language-plaintext highlighter-rouge">/etc/systemd/system/kubelet.service.d/10-kubeadm.conf</code> 配置文件完成</p>
 
 <h2 id="七其他">七、其他</h2>
 
@@ -1047,7 +1047,7 @@ W0112 19:23:06.466778   28637 validation.go:28] Cannot validate kube-proxy confi
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

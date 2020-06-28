@@ -219,13 +219,13 @@
 <p><img src="https://cdn.oss.link/markdown/maven-unzip.png" alt="maven-unzip" /></p>
 
 <blockquote>
-  <p>2、新建环境变量 <code class="highlighter-rouge">M2_HOME</code>，值为 <strong><em>Maven主目录</em></strong></p>
+  <p>2、新建环境变量 <code class="language-plaintext highlighter-rouge">M2_HOME</code>，值为 <strong><em>Maven主目录</em></strong></p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-M2_HOME.png" alt="Maven-M2_HOME" /></p>
 
 <blockquote>
-  <p>3、在 <code class="highlighter-rouge">Path</code> 变量中添加 Maven的bin目录</p>
+  <p>3、在 <code class="language-plaintext highlighter-rouge">Path</code> 变量中添加 Maven的bin目录</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-Path.png" alt="Maven-Path" /></p>
@@ -257,13 +257,13 @@
 <p><img src="https://cdn.oss.link/markdown/Maven-Eclipse-Setting1.png" alt="Maven-Eclipse-Setting1" /></p>
 
 <blockquote>
-  <p>然后勾选新添加的 Mavne 并应用设置 在选择 <code class="highlighter-rouge">User Setting</code> 设置 配置文件</p>
+  <p>然后勾选新添加的 Mavne 并应用设置 在选择 <code class="language-plaintext highlighter-rouge">User Setting</code> 设置 配置文件</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-Eclipse-Setting2.png" alt="Maven-Eclipse-Setting2" /></p>
 
 <blockquote>
-  <p>第一个 <code class="highlighter-rouge">Global Setting</code> 为全局设置，一般选择 <code class="highlighter-rouge">M2_HOME/conf/setting.xml</code>；<code class="highlighter-rouge">User Setting</code> 是用户设置，一般copy 一份 <code class="highlighter-rouge">setting.xml</code> 到任意位置，然后根据自己需要改变一些内容；Maven的配置文件同样遵循”就近原则”；也就是说 <code class="highlighter-rouge">User Setting</code> 可以覆盖 <code class="highlighter-rouge">Global Setting</code>；如果仅仅自己使用的话，也可以懒一点 两个都选择 M2_HOME/conf/setting.xml，然后只更改 一个配置文件就行了。</p>
+  <p>第一个 <code class="language-plaintext highlighter-rouge">Global Setting</code> 为全局设置，一般选择 <code class="language-plaintext highlighter-rouge">M2_HOME/conf/setting.xml</code>；<code class="language-plaintext highlighter-rouge">User Setting</code> 是用户设置，一般copy 一份 <code class="language-plaintext highlighter-rouge">setting.xml</code> 到任意位置，然后根据自己需要改变一些内容；Maven的配置文件同样遵循”就近原则”；也就是说 <code class="language-plaintext highlighter-rouge">User Setting</code> 可以覆盖 <code class="language-plaintext highlighter-rouge">Global Setting</code>；如果仅仅自己使用的话，也可以懒一点 两个都选择 M2_HOME/conf/setting.xml，然后只更改 一个配置文件就行了。</p>
 </blockquote>
 
 <h3 id="三maven的使用">三、Maven的使用</h3>
@@ -273,7 +273,7 @@
 </ul>
 
 <blockquote>
-  <p>首先 New 一个 <code class="highlighter-rouge">Maven Project</code></p>
+  <p>首先 New 一个 <code class="language-plaintext highlighter-rouge">Maven Project</code></p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-create-project.png" alt="Maven-create-project" /></p>
@@ -285,7 +285,7 @@
 <p><img src="https://cdn.oss.link/markdown/Maven-create-project1.png" alt="Maven-create-project1" /></p>
 
 <blockquote>
-  <p>选择骨架类型，一般常用的 是 <code class="highlighter-rouge">quickstart</code> 和 <code class="highlighter-rouge">web app</code>；骨架的意思是项目的目录结构，maven采用约定优于配置的理念，项目结构已经约定好了，有兴趣可以自己打开工作空间看一下。</p>
+  <p>选择骨架类型，一般常用的 是 <code class="language-plaintext highlighter-rouge">quickstart</code> 和 <code class="language-plaintext highlighter-rouge">web app</code>；骨架的意思是项目的目录结构，maven采用约定优于配置的理念，项目结构已经约定好了，有兴趣可以自己打开工作空间看一下。</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-create-project2.png" alt="Maven-create-project2" /></p>
@@ -301,7 +301,7 @@
 </ul>
 
 <blockquote>
-  <p>Maven可以很好的为我们管理jar 包中的依赖关系，而我们不必进行像以前一样去下载 jar包，然后添加 <code class="highlighter-rouge">class path</code> 这种繁琐的操作，使用Maven后只要我们得知了该jar的仓库坐标，在 <code class="highlighter-rouge">POM文件</code> 中添加其坐标后，Maven将自动下载并将其加入 <code class="highlighter-rouge">class path</code> 中。假设现在我们需要使用 <code class="highlighter-rouge">SpringMVC</code>，首先到 <a href="http://mvnrepository.com/">maven仓库</a> 搜索其坐标。</p>
+  <p>Maven可以很好的为我们管理jar 包中的依赖关系，而我们不必进行像以前一样去下载 jar包，然后添加 <code class="language-plaintext highlighter-rouge">class path</code> 这种繁琐的操作，使用Maven后只要我们得知了该jar的仓库坐标，在 <code class="language-plaintext highlighter-rouge">POM文件</code> 中添加其坐标后，Maven将自动下载并将其加入 <code class="language-plaintext highlighter-rouge">class path</code> 中。假设现在我们需要使用 <code class="language-plaintext highlighter-rouge">SpringMVC</code>，首先到 <a href="http://mvnrepository.com/">maven仓库</a> 搜索其坐标。</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-repository-search.png" alt="Maven-repository-search" /></p>
@@ -321,13 +321,13 @@
 <p><img src="https://cdn.oss.link/markdown/Maven-repository-search4.png" alt="Maven-repository-search4" /></p>
 
 <blockquote>
-  <p>将其坐标加入到 <code class="highlighter-rouge">POM文件</code> 中</p>
+  <p>将其坐标加入到 <code class="language-plaintext highlighter-rouge">POM文件</code> 中</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-repository-search5.png" alt="Maven-repository-search5" /></p>
 
 <blockquote>
-  <p>稍等片刻，Maven自动下载jar包并加入 <code class="highlighter-rouge">classpath</code> 中</p>
+  <p>稍等片刻，Maven自动下载jar包并加入 <code class="language-plaintext highlighter-rouge">classpath</code> 中</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-repository-search6.png" alt="Maven-repository-search6" /></p>
@@ -368,7 +368,7 @@ mvn archetype:generate
 </code></pre></div></div>
 
 <blockquote>
-  <p>在 Eclipse 中可右键项目或 <code class="highlighter-rouge">POM文件</code>，选择 <code class="highlighter-rouge">Run AS</code> 中的 <code class="highlighter-rouge">Maven build…</code> 选项手动输入多个命令，Maven将依次执行，截图如下</p>
+  <p>在 Eclipse 中可右键项目或 <code class="language-plaintext highlighter-rouge">POM文件</code>，选择 <code class="language-plaintext highlighter-rouge">Run AS</code> 中的 <code class="language-plaintext highlighter-rouge">Maven build…</code> 选项手动输入多个命令，Maven将依次执行，截图如下</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-RunAs1.png" alt="Maven-RunAs1" /></p>
@@ -380,7 +380,7 @@ mvn archetype:generate
 </ul>
 
 <blockquote>
-  <p>在实际开发中，通常我们将项目分为N多模块进行开发，我们可以使用Maven建立多个项目，然后如果项目模块关联时，比如A模块要调用B模块的方法，我们只需在B项目上运行 <code class="highlighter-rouge">mvn clean</code> 、<code class="highlighter-rouge">mvn install</code> 命令，将其发布到本地仓库，其他模块可根据其坐标直接引入即可。</p>
+  <p>在实际开发中，通常我们将项目分为N多模块进行开发，我们可以使用Maven建立多个项目，然后如果项目模块关联时，比如A模块要调用B模块的方法，我们只需在B项目上运行 <code class="language-plaintext highlighter-rouge">mvn clean</code> 、<code class="language-plaintext highlighter-rouge">mvn install</code> 命令，将其发布到本地仓库，其他模块可根据其坐标直接引入即可。</p>
 </blockquote>
 
 <ul>
@@ -392,7 +392,7 @@ mvn archetype:generate
 </blockquote>
 
 <blockquote>
-  <p>Maven提供了三个隐式的变量可以用来访问 <code class="highlighter-rouge">环境变量</code>、 <code class="highlighter-rouge">POM信息</code> 和 <code class="highlighter-rouge">Maven Settings</code>：</p>
+  <p>Maven提供了三个隐式的变量可以用来访问 <code class="language-plaintext highlighter-rouge">环境变量</code>、 <code class="language-plaintext highlighter-rouge">POM信息</code> 和 <code class="language-plaintext highlighter-rouge">Maven Settings</code>：</p>
 </blockquote>
 
 <blockquote>
@@ -438,7 +438,7 @@ mvn archetype:generate
 <h3 id="四maven的依赖">四、Maven的依赖</h3>
 
 <blockquote>
-  <p>每个项目都有其classpath，在Maven管理下的项目实际上有3个classpath(<code class="highlighter-rouge">编译classpath</code>、<code class="highlighter-rouge">测试classpath</code>、<code class="highlighter-rouge">运行classpath</code> );每个被maven管理的jar包在这三种 <code class="highlighter-rouge">classpath</code> 是否生效及如何选择称之为maven的依赖管理，Maven依赖管理可通过 <code class="highlighter-rouge">&lt;dependency&gt;</code> 下的 <code class="highlighter-rouge">&lt;scope&gt;</code> 标签设置，其值含义如下</p>
+  <p>每个项目都有其classpath，在Maven管理下的项目实际上有3个classpath(<code class="language-plaintext highlighter-rouge">编译classpath</code>、<code class="language-plaintext highlighter-rouge">测试classpath</code>、<code class="language-plaintext highlighter-rouge">运行classpath</code> );每个被maven管理的jar包在这三种 <code class="language-plaintext highlighter-rouge">classpath</code> 是否生效及如何选择称之为maven的依赖管理，Maven依赖管理可通过 <code class="language-plaintext highlighter-rouge">&lt;dependency&gt;</code> 下的 <code class="language-plaintext highlighter-rouge">&lt;scope&gt;</code> 标签设置，其值含义如下</p>
 </blockquote>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>compile: 编译依赖范围。如果没有指定，就会默认使用该依赖范围。使用此依赖范围的Maven依赖，对于编译、测试、运行三种classpath都有效。
@@ -465,7 +465,7 @@ import<span class="o">(</span>Maven 2.0.9及以上<span class="o">)</span>: 导�
 </ul>
 
 <blockquote>
-  <p>当A项目依赖某一jar包，比如log4j 时，将其发布到本地仓库后，B项目进行引用时，则同样会依赖log4j；这种情况称之为 <code class="highlighter-rouge">Maven的依赖传递</code> ，当 <code class="highlighter-rouge">scope</code> 设置为 <code class="highlighter-rouge">test</code> 时，则依赖不会被传递。</p>
+  <p>当A项目依赖某一jar包，比如log4j 时，将其发布到本地仓库后，B项目进行引用时，则同样会依赖log4j；这种情况称之为 <code class="language-plaintext highlighter-rouge">Maven的依赖传递</code> ，当 <code class="language-plaintext highlighter-rouge">scope</code> 设置为 <code class="language-plaintext highlighter-rouge">test</code> 时，则依赖不会被传递。</p>
 </blockquote>
 
 <ul>
@@ -536,7 +536,7 @@ import<span class="o">(</span>Maven 2.0.9及以上<span class="o">)</span>: 导�
 <p><img src="https://cdn.oss.link/markdown/Maven-juhe5.png" alt="Maven-juhe5" /></p>
 
 <blockquote>
-  <p>4、此时对聚合项目执行一下 <code class="highlighter-rouge">clean compile</code> 测试一下，控制台打印如下，可以看出，Maven依次对3个项目执行了相关操作</p>
+  <p>4、此时对聚合项目执行一下 <code class="language-plaintext highlighter-rouge">clean compile</code> 测试一下，控制台打印如下，可以看出，Maven依次对3个项目执行了相关操作</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-juhe6.png" alt="Maven-juhe6" /></p>
@@ -564,7 +564,7 @@ import<span class="o">(</span>Maven 2.0.9及以上<span class="o">)</span>: 导�
 <p><img src="https://cdn.oss.link/markdown/Maven-extends.png" alt="Maven-extends" /></p>
 
 <blockquote>
-  <p>3、然后我们提取其他子模块pom文件中的共有部分放入父pom文件中(以下为父pom文件)，包括共有的定义以及每个项目的依赖jar包(依赖的jar包需要使用 <code class="highlighter-rouge">&lt;dependencyManagement&gt;</code> 标签来管理)</p>
+  <p>3、然后我们提取其他子模块pom文件中的共有部分放入父pom文件中(以下为父pom文件)，包括共有的定义以及每个项目的依赖jar包(依赖的jar包需要使用 <code class="language-plaintext highlighter-rouge">&lt;dependencyManagement&gt;</code> 标签来管理)</p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-extends1.png" alt="Maven-extends1" /></p>
@@ -574,7 +574,7 @@ import<span class="o">(</span>Maven 2.0.9及以上<span class="o">)</span>: 导�
 </blockquote>
 
 <blockquote>
-  <p><strong><em>注意：聚合 <code class="highlighter-rouge">&lt;module&gt;</code> 标签指定的是相对的项目，而继承指定的则是相对的pom文件</em></strong></p>
+  <p><strong><em>注意：聚合 <code class="language-plaintext highlighter-rouge">&lt;module&gt;</code> 标签指定的是相对的项目，而继承指定的则是相对的pom文件</em></strong></p>
 </blockquote>
 
 <p><img src="https://cdn.oss.link/markdown/Maven-extends2.png" alt="Maven-extends2" /></p>
@@ -730,7 +730,7 @@ import<span class="o">(</span>Maven 2.0.9及以上<span class="o">)</span>: 导�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

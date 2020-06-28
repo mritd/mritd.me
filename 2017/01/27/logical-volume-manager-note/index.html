@@ -201,11 +201,11 @@
 <p>LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存储设备存储空间，在上层抽象出可扩展的逻辑分区；LVM 主要术语(磁盘术语)如下</p>
 
 <ul>
-  <li><code class="highlighter-rouge">PV</code> : 底层物理存储设备，如 <code class="highlighter-rouge">/dev/sda</code></li>
-  <li><code class="highlighter-rouge">VG</code> : 卷组，意将多个 <code class="highlighter-rouge">PV</code> 组合后的抽象存储介质统称</li>
-  <li><code class="highlighter-rouge">PE</code> : <code class="highlighter-rouge">VG</code> 将 <code class="highlighter-rouge">PV</code> 聚合后，需向上层提供存储能力，而 <code class="highlighter-rouge">PE</code> 即为 <code class="highlighter-rouge">VG</code> 中最小的存储单位，<strong>一般默认为 4MB</strong></li>
-  <li><code class="highlighter-rouge">LV</code> : 在 <code class="highlighter-rouge">VG</code> 之上划分一定量的存储空间，形成逻辑分区，即为 <code class="highlighter-rouge">LV</code></li>
-  <li><code class="highlighter-rouge">LE</code> : <code class="highlighter-rouge">LV</code> 从 <code class="highlighter-rouge">VG</code> 之上划分，即 <code class="highlighter-rouge">LV</code> 实质上有 <code class="highlighter-rouge">VG</code> 上最小存储单位 <code class="highlighter-rouge">PE</code> 构成；但是 <code class="highlighter-rouge">PE</code> 构成 <code class="highlighter-rouge">LV</code> 之后，又称作 <code class="highlighter-rouge">LE</code></li>
+  <li><code class="language-plaintext highlighter-rouge">PV</code> : 底层物理存储设备，如 <code class="language-plaintext highlighter-rouge">/dev/sda</code></li>
+  <li><code class="language-plaintext highlighter-rouge">VG</code> : 卷组，意将多个 <code class="language-plaintext highlighter-rouge">PV</code> 组合后的抽象存储介质统称</li>
+  <li><code class="language-plaintext highlighter-rouge">PE</code> : <code class="language-plaintext highlighter-rouge">VG</code> 将 <code class="language-plaintext highlighter-rouge">PV</code> 聚合后，需向上层提供存储能力，而 <code class="language-plaintext highlighter-rouge">PE</code> 即为 <code class="language-plaintext highlighter-rouge">VG</code> 中最小的存储单位，<strong>一般默认为 4MB</strong></li>
+  <li><code class="language-plaintext highlighter-rouge">LV</code> : 在 <code class="language-plaintext highlighter-rouge">VG</code> 之上划分一定量的存储空间，形成逻辑分区，即为 <code class="language-plaintext highlighter-rouge">LV</code></li>
+  <li><code class="language-plaintext highlighter-rouge">LE</code> : <code class="language-plaintext highlighter-rouge">LV</code> 从 <code class="language-plaintext highlighter-rouge">VG</code> 之上划分，即 <code class="language-plaintext highlighter-rouge">LV</code> 实质上有 <code class="language-plaintext highlighter-rouge">VG</code> 上最小存储单位 <code class="language-plaintext highlighter-rouge">PE</code> 构成；但是 <code class="language-plaintext highlighter-rouge">PE</code> 构成 <code class="language-plaintext highlighter-rouge">LV</code> 之后，又称作 <code class="language-plaintext highlighter-rouge">LE</code></li>
 </ul>
 
 <p><strong>以上各术语(定义)之间关系如下图所示</strong></p>
@@ -264,7 +264,7 @@
       <tbody>
         <tr>
           <td>-L</td>
-          <td>–size : 指定要创建的 lv 大小，采用 <code class="highlighter-rouge">+5G</code> 这种方式</td>
+          <td>–size : 指定要创建的 lv 大小，采用 <code class="language-plaintext highlighter-rouge">+5G</code> 这种方式</td>
         </tr>
       </tbody>
     </table>
@@ -301,7 +301,7 @@
 
 <p><strong>注意 -L 选项后 + 可以省略，但是省略后代表总容量，如当前 LV 2G，需扩展 3G，则不写 + 需要输入 5G</strong></p>
 
-<p><strong>lv 扩展后并不能立即体现在 df 等命令上，因为虽然逻辑卷已经扩展，但是文件系统尚未扩展，对于 ext 系列的文件系统可采用 <code class="highlighter-rouge">resize2fs /dev/VG_NAME/LV_NAME</code> 的方式刷新文件系统，其他分区格式需采用其他工具</strong></p>
+<p><strong>lv 扩展后并不能立即体现在 df 等命令上，因为虽然逻辑卷已经扩展，但是文件系统尚未扩展，对于 ext 系列的文件系统可采用 <code class="language-plaintext highlighter-rouge">resize2fs /dev/VG_NAME/LV_NAME</code> 的方式刷新文件系统，其他分区格式需采用其他工具</strong></p>
 
 <h5 id="233lvreduce">2.3.3、lvreduce</h5>
 
@@ -418,7 +418,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

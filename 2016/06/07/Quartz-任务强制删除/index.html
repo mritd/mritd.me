@@ -227,7 +227,7 @@
 
 <h3 id="4启动测试">4、启动测试</h3>
 
-<p>再次启动发现报错信息已经没有了，但是悲剧的发现无法创建任何任务，其报错信息大致的意思还是 <code class="highlighter-rouge">class no found</code>，后排查发现 Job 相关的表中仍有残留的记录，所以同样需要清除</p>
+<p>再次启动发现报错信息已经没有了，但是悲剧的发现无法创建任何任务，其报错信息大致的意思还是 <code class="language-plaintext highlighter-rouge">class no found</code>，后排查发现 Job 相关的表中仍有残留的记录，所以同样需要清除</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DELETE</span>  <span class="k">FROM</span> <span class="n">QRTZ_JOB_DETAILS</span> <span class="n">T1</span> <span class="k">WHERE</span> <span class="n">T1</span><span class="p">.</span><span class="n">JOB_CLASS_NAME</span><span class="o">=</span><span class="s1">'com.xxxxx.xxxx.task.ContAutoCancelToStatuJob'</span><span class="p">;</span>
 </code></pre></div></div>
@@ -353,7 +353,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

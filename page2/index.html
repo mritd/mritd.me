@@ -177,6 +177,26 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2019/06/18/calico-3.6-forward-network-traffic/">
+        <h2 class="post-title">
+            Calico 3.6 转发外部流量到集群 Pod
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  由于开发有部份服务使用 GRPC 进行通讯，同时采用 Consul 进行服务发现；在微服务架构下可能会导致一些访问问题，目前解决方案就是打通开发环境网络与测试环境 Kubernetes 内部 Pod 网络；翻了好多资料发现都是 2.x 的，而目前测试集群 Calico 版本为 3.6.3，很多文档都不适用只能自己折腾，目前折腾完了这里记录一下
+
+
+本文默认为读者已经存在一个运行正常的 ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 18, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2019/05/13/dockerfile-extended-syntax/">
         <h2 class="post-title">
             Dockerfile 目前可扩展的语法
@@ -418,32 +438,6 @@ Usage: hey [o...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2018/11/09/go-interactive-shell/">
-        <h2 class="post-title">
-            Go ssh 交互式执行命令
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近在写一个跳板机登录的小工具，其中涉及到了用 Go 来进行交互式执行命令，简单地说就是弄个终端出来；一开始随便 Google 了一下，copy 下来基本上就是能跑了…但是后来发现了一些各种各样的小问题，强迫症的我实在受不了，最后翻了一下 Teleport 的源码，从中学到了不少有用的知识，这里记录一下
-
-
-一、原始版本
-
-
-  不想看太多可以直接跳转到 第三部分 拿代码
-
-
-1.1、...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on November 9, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -514,7 +508,7 @@ Usage: hey [o...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -204,12 +204,12 @@
 
 <h3 id="一确定要反代的仓库">一、确定要反代的仓库</h3>
 
-<p>首先确定你要反代的墙外仓库，目前仓库支持 <code class="highlighter-rouge">https://gcr.io</code>、<code class="highlighter-rouge">https://quay.io</code>、<code class="highlighter-rouge">https://registry-1.docker.io(Docker Hub)</code>；以 <code class="highlighter-rouge">gcr.io</code> 为例，启动本地私服并设置需要反代的仓库地址，如下：</p>
+<p>首先确定你要反代的墙外仓库，目前仓库支持 <code class="language-plaintext highlighter-rouge">https://gcr.io</code>、<code class="language-plaintext highlighter-rouge">https://quay.io</code>、<code class="language-plaintext highlighter-rouge">https://registry-1.docker.io(Docker Hub)</code>；以 <code class="language-plaintext highlighter-rouge">gcr.io</code> 为例，启动本地私服并设置需要反代的仓库地址，如下：</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-dt</span> <span class="nt">--privileged</span> <span class="nt">--restart</span> always <span class="nt">--name</span> registry-mirror <span class="nt">-p</span> 5000:5000 mritd/registry-mirror https://gcr.io
 </code></pre></div></div>
 
-<p><strong>此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 <code class="highlighter-rouge">https://gcr.io</code>；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)；默认镜像已经上传了 Docker Hub，如果无法下载请访问 <a href="https://pan.baidu.com/s/1o7Wye8M">百度云</a></strong></p>
+<p><strong>此命令执行后将在本地启动一个带有梯子的 registry，并且私服默认设置的反代地址为 <code class="language-plaintext highlighter-rouge">https://gcr.io</code>；启动成功日志如下，如出现错误可能由于网络原因，请重新尝试几次(几率很小)；默认镜像已经上传了 Docker Hub，如果无法下载请访问 <a href="https://pan.baidu.com/s/1o7Wye8M">百度云</a></strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/gwfeo.jpg" alt="start up" /></p>
 
@@ -232,7 +232,7 @@ systemctl restart docker
 
 <h3 id="三使用反代私服下载镜像">三、使用反代私服下载镜像</h3>
 
-<p>重启后就可以通过该私服下载 gcr.io 相关镜像，以下以下载 <code class="highlighter-rouge">gcr.io/google_containers/kube-apiserver-amd64:v1.5.4</code> 镜像为例</p>
+<p>重启后就可以通过该私服下载 gcr.io 相关镜像，以下以下载 <code class="language-plaintext highlighter-rouge">gcr.io/google_containers/kube-apiserver-amd64:v1.5.4</code> 镜像为例</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~ docker pull 192.168.1.110:5000/google_containers/kube-apiserver-amd64:v1.5.4
 v1.5.4: Pulling from google_containers/kube-apiserver-amd64
@@ -254,7 +254,7 @@ gcr.io/google_containers/kube-apiserver-amd64               v1.5.4              
 
 <h3 id="四其他说明重要">四、其他说明(重要)</h3>
 
-<p><strong>由于 docker 在 1.13 版本做了一些变动(没去看)，经测试使用 1.13 以上版本通过该仓库下载 <code class="highlighter-rouge">gcr.io</code> 镜像会出现多层镜像只能下载一层的问题；所以要使用本仓库必须使用 docker 1.13 以下版本，如 1.12.6；此篇文章发布时，将会弃用原本维护的专用于反代 <code class="highlighter-rouge">gcr.io</code> 的私服( <code class="highlighter-rouge">mritd/gcr-registry</code> )；本仓库由个人维护，内置梯子走的是我个人的服务器，所以流量有限(500GB/月)，所以请大家珍惜使用，不要大批量部署时拿来开怼；由于不确定因素太多，所以不承诺永久维护。</strong></p>
+<p><strong>由于 docker 在 1.13 版本做了一些变动(没去看)，经测试使用 1.13 以上版本通过该仓库下载 <code class="language-plaintext highlighter-rouge">gcr.io</code> 镜像会出现多层镜像只能下载一层的问题；所以要使用本仓库必须使用 docker 1.13 以下版本，如 1.12.6；此篇文章发布时，将会弃用原本维护的专用于反代 <code class="language-plaintext highlighter-rouge">gcr.io</code> 的私服( <code class="language-plaintext highlighter-rouge">mritd/gcr-registry</code> )；本仓库由个人维护，内置梯子走的是我个人的服务器，所以流量有限(500GB/月)，所以请大家珍惜使用，不要大批量部署时拿来开怼；由于不确定因素太多，所以不承诺永久维护。</strong></p>
 
 <hr />
 
@@ -365,7 +365,7 @@ gcr.io/google_containers/kube-apiserver-amd64               v1.5.4              
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

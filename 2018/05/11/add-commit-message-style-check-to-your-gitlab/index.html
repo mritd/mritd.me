@@ -198,11 +198,11 @@
 
 <h2 id="一相关文章资料">一、相关文章资料</h2>
 
-<p>最开始用 Google 搜索到的方案是使用 GitLab 的 Push Rules 功能，具体文档见 <a href="https://docs.gitlab.com/ee/push_rules/push_rules.html">这里</a>，看完了我才发现这是企业版独有的，作为比较有逼格(qiong)的我们是不可能接受这种 “没技术含量” 的方式的；后来找了好多资料，发现还得借助 Git Hook 功能，文档见 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html">Custom Git Hooks</a>；简单地说 Git Hook 就是在 git 操作的不同阶段执行的预定义脚本，<strong>GitLab 目前仅支持 <code class="highlighter-rouge">pre-receive</code> 这个钩子，当然他可以链式调用</strong>；所以一切操作就得从这里入手</p>
+<p>最开始用 Google 搜索到的方案是使用 GitLab 的 Push Rules 功能，具体文档见 <a href="https://docs.gitlab.com/ee/push_rules/push_rules.html">这里</a>，看完了我才发现这是企业版独有的，作为比较有逼格(qiong)的我们是不可能接受这种 “没技术含量” 的方式的；后来找了好多资料，发现还得借助 Git Hook 功能，文档见 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html">Custom Git Hooks</a>；简单地说 Git Hook 就是在 git 操作的不同阶段执行的预定义脚本，<strong>GitLab 目前仅支持 <code class="language-plaintext highlighter-rouge">pre-receive</code> 这个钩子，当然他可以链式调用</strong>；所以一切操作就得从这里入手</p>
 
 <h2 id="二pre-receive-实现">二、pre-receive 实现</h2>
 
-<p>查阅了相关资料得出，在进行 push 时，GitLab 会调用这个钩子文件，这个钩子文件必须放在 <code class="highlighter-rouge">/var/opt/gitlab/git-data/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code> 目录中，当然具体路径也可能是 <code class="highlighter-rouge">/home/git/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code>；<code class="highlighter-rouge">custom_hooks</code> 目录需要自己创建，具体可以参阅文档的 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html#setup">Setup</a>；</p>
+<p>查阅了相关资料得出，在进行 push 时，GitLab 会调用这个钩子文件，这个钩子文件必须放在 <code class="language-plaintext highlighter-rouge">/var/opt/gitlab/git-data/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code> 目录中，当然具体路径也可能是 <code class="language-plaintext highlighter-rouge">/home/git/repositories/&lt;group&gt;/&lt;project&gt;.git/custom_hooks</code>；<code class="language-plaintext highlighter-rouge">custom_hooks</code> 目录需要自己创建，具体可以参阅文档的 <a href="https://docs.gitlab.com/ee/administration/custom_hooks.html#setup">Setup</a>；</p>
 
 <p><strong>在进行 push 操作时，GitLab 会调用这个钩子文件，并且从 stdin 输入三个参数，分别为 之前的版本 commit ID、push 的版本 commit ID 和 push 的分支；根据 commit ID 我们就可以很轻松的获取到提交信息，从而实现进一步检测动作；根据 GitLab 的文档说明，当这个 hook 执行后以非 0 状态退出则认为执行失败，从而拒绝 push；同时会将 stderr 信息返回给 client 端；</strong>说了这么多，下面就可以直接上代码了，为了方便我就直接用 go 造了一个 <a href="https://github.com/mritd/pre-receive">pre-receive</a>，官方文档说明了不限制语言</p>
 
@@ -312,7 +312,7 @@
 
 <h2 id="三安装-pre-receive">三、安装 pre-receive</h2>
 
-<p>把以上代码编译后生成的 <code class="highlighter-rouge">pre-receive</code> 文件复制到对应项目的钩子目录即可；<strong>要注意的是文件名必须为 <code class="highlighter-rouge">pre-receive</code>，同时 <code class="highlighter-rouge">custom_hooks</code> 目录需要自建；<code class="highlighter-rouge">custom_hooks</code> 目录以及 <code class="highlighter-rouge">pre-receive</code> 文件用户组必须为 <code class="highlighter-rouge">git:git</code>；在删除分支时 commit ID 为 <code class="highlighter-rouge">0000000000000000000000000000000000000000</code>，此时不需要检测提交信息，否则可能导致无法删除分支/tag</strong>；最后效果如下所示</p>
+<p>把以上代码编译后生成的 <code class="language-plaintext highlighter-rouge">pre-receive</code> 文件复制到对应项目的钩子目录即可；<strong>要注意的是文件名必须为 <code class="language-plaintext highlighter-rouge">pre-receive</code>，同时 <code class="language-plaintext highlighter-rouge">custom_hooks</code> 目录需要自建；<code class="language-plaintext highlighter-rouge">custom_hooks</code> 目录以及 <code class="language-plaintext highlighter-rouge">pre-receive</code> 文件用户组必须为 <code class="language-plaintext highlighter-rouge">git:git</code>；在删除分支时 commit ID 为 <code class="language-plaintext highlighter-rouge">0000000000000000000000000000000000000000</code>，此时不需要检测提交信息，否则可能导致无法删除分支/tag</strong>；最后效果如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/hs9c2.png" alt="commit msg check" /></p>
 
@@ -419,7 +419,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

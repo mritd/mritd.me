@@ -202,7 +202,7 @@
 
 <h3 id="一集群扩展">一、集群扩展</h3>
 
-<p>如果已经有了一个 kargo 搭建的集群，那么扩展其极其容易；只需要修改集群 <code class="highlighter-rouge">inventory</code> 配置，加入新节点重新运行命令价格参数即可，如下新增一个 node6 节点</p>
+<p>如果已经有了一个 kargo 搭建的集群，那么扩展其极其容易；只需要修改集群 <code class="language-plaintext highlighter-rouge">inventory</code> 配置，加入新节点重新运行命令价格参数即可，如下新增一个 node6 节点</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim inventory/inventory.cfg
 
@@ -241,12 +241,12 @@ kube-master
 <span class="o">[</span>calico-rr]
 </code></pre></div></div>
 
-<p><strong>然后重新运行集群命令，注意增加 <code class="highlighter-rouge">--limit</code> 参数</strong></p>
+<p><strong>然后重新运行集群命令，注意增加 <code class="language-plaintext highlighter-rouge">--limit</code> 参数</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ansible-playbook <span class="nt">-i</span> inventory/inventory.cfg cluster.yml <span class="nt">-b</span> <span class="nt">-v</span> <span class="nt">--private-key</span><span class="o">=</span>~/.ssh/id_rsa <span class="nt">--limit</span> node6
 </code></pre></div></div>
 
-<p><strong>稍等片刻 node6 节点便加入现有集群，如果有多个节点加入，只需要以逗号分隔即可，如 <code class="highlighter-rouge">--limit node5,node6</code>；在此过程中只会操作新增的 node 节点，不会影响现有集群，可以实现动态集群扩容(master 也可以扩展)</strong></p>
+<p><strong>稍等片刻 node6 节点便加入现有集群，如果有多个节点加入，只需要以逗号分隔即可，如 <code class="language-plaintext highlighter-rouge">--limit node5,node6</code>；在此过程中只会操作新增的 node 节点，不会影响现有集群，可以实现动态集群扩容(master 也可以扩展)</strong></p>
 
 <h3 id="二kargo-细粒度控制">二、kargo 细粒度控制</h3>
 
@@ -256,7 +256,7 @@ kube-master
 
 <p><img src="https://cdn.oss.link/markdown/jmy7o.jpg" alt="roles" /></p>
 
-<p>如果需要更改某些默认配置，那么只需要更改对应目录下的 role 即可，<strong>每个 role 子目录都是一个组件的配置过程(动作)，动作实际上就是不同的 task，所有的 task 定义在 <code class="highlighter-rouge">tasks/main.yml</code> 中，如果我们注释(删掉)了相关 task，那么也就关闭了 kargo 对应的处理；如下禁用了 kargo 安装 docker，但是允许 kargo 覆盖 docker service 文件</strong></p>
+<p>如果需要更改某些默认配置，那么只需要更改对应目录下的 role 即可，<strong>每个 role 子目录都是一个组件的配置过程(动作)，动作实际上就是不同的 task，所有的 task 定义在 <code class="language-plaintext highlighter-rouge">tasks/main.yml</code> 中，如果我们注释(删掉)了相关 task，那么也就关闭了 kargo 对应的处理；如下禁用了 kargo 安装 docker，但是允许 kargo 覆盖 docker service 文件</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/vv2px.jpg" alt="docker task" /></p>
 
@@ -363,7 +363,7 @@ kube-master
     - docker
 </code></pre></div></div>
 
-<p><strong>kargo 在进行各种任务(task)时可能会释放一些配置文件，比如 docker service 配置文件、kubernetes 配置文件等；这些文件一般位于 <code class="highlighter-rouge">roles/组件/templates</code> 目录，比如 docker 的 service 配置位于如下位置；我们可以更改，甚至直接换一个，把里面写死变成我们自己的</strong></p>
+<p><strong>kargo 在进行各种任务(task)时可能会释放一些配置文件，比如 docker service 配置文件、kubernetes 配置文件等；这些文件一般位于 <code class="language-plaintext highlighter-rouge">roles/组件/templates</code> 目录，比如 docker 的 service 配置位于如下位置；我们可以更改，甚至直接换一个，把里面写死变成我们自己的</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/f1f9g.jpg" alt="docker service template" /></p>
 
@@ -474,7 +474,7 @@ kube-master
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

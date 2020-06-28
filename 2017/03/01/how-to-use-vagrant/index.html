@@ -235,24 +235,24 @@ rpm <span class="nt">-ivh</span> vagrant_1.9.2_x86_64.rpm
 <p>该页面罗列出了使用不同虚拟机时应当使用扥添加明令；当然执行这些命令后 vagrant 将会从网络下载这个 box 文件并添加到本地 box 仓库；<strong>不过众所周知的原因，这个下载速度会让你怀疑人生，所有简单的办法是执行以下这条命令，然后会显示 box 的实际下载地址；拿到地址以后用梯子先把文件下载下来，然后使用 vagrant 导入也可以(centos7 本地已经有了一下以 ubuntu 为例)</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/p36th.jpg" alt="box download url" />
-下载后使用 <code class="highlighter-rouge">vagrant box add xxxx.box</code> 即可将 box 导入到本地仓库</p>
+下载后使用 <code class="language-plaintext highlighter-rouge">vagrant box add xxxx.box</code> 即可将 box 导入到本地仓库</p>
 
 <h4 id="23启动一个虚拟机">2.3、启动一个虚拟机</h4>
 
-<p>万事俱备只差东风，在上一步执行 <code class="highlighter-rouge">vagrant init ubuntu/trusty64; vagrant up --provider virtualbox</code> 命令获取 box 下载地址时，已经在当前目录下生成了一个 Vagrantfile 文件，这个文件其实就是虚拟机配置文件，具体下面再说；box 导入以后先启动一下再说，执行 <code class="highlighter-rouge">vagrnat up</code> 即可</p>
+<p>万事俱备只差东风，在上一步执行 <code class="language-plaintext highlighter-rouge">vagrant init ubuntu/trusty64; vagrant up --provider virtualbox</code> 命令获取 box 下载地址时，已经在当前目录下生成了一个 Vagrantfile 文件，这个文件其实就是虚拟机配置文件，具体下面再说；box 导入以后先启动一下再说，执行 <code class="language-plaintext highlighter-rouge">vagrnat up</code> 即可</p>
 
 <p>其他几个常用命令如下</p>
 
 <ul>
-  <li><code class="highlighter-rouge">vagrant box [list|add|remove]</code> 查看添加删除 box 等</li>
-  <li><code class="highlighter-rouge">vagrant up</code> 启动虚拟机</li>
-  <li><code class="highlighter-rouge">vagrant halt</code> 关闭虚拟机</li>
-  <li><code class="highlighter-rouge">vagrant init</code> 初始化一个指定系统的 Vagrantfile 文件</li>
-  <li><code class="highlighter-rouge">vagrant destroy</code> 删除虚拟机</li>
-  <li><code class="highlighter-rouge">vagrant ssh</code> ssh 到虚拟机里</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant box [list|add|remove]</code> 查看添加删除 box 等</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant up</code> 启动虚拟机</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant halt</code> 关闭虚拟机</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant init</code> 初始化一个指定系统的 Vagrantfile 文件</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant destroy</code> 删除虚拟机</li>
+  <li><code class="language-plaintext highlighter-rouge">vagrant ssh</code> ssh 到虚拟机里</li>
 </ul>
 
-<p><strong>特别说明一下 ssh 这个命令，一般默认的规范是 <code class="highlighter-rouge">vagrant ssh VM_NAME</code> 后，会以 vagrant 用户身份登录到目标虚拟机，如果当前目录的 Vagrantfile 中只有一个虚拟机那么无需指定虚拟机名称(init 后默认就是)；虚拟机内(box 封装时)vagrant这个用户拥有全局免密码 sudo 权限；root 用户一般密码为 vagrant</strong></p>
+<p><strong>特别说明一下 ssh 这个命令，一般默认的规范是 <code class="language-plaintext highlighter-rouge">vagrant ssh VM_NAME</code> 后，会以 vagrant 用户身份登录到目标虚拟机，如果当前目录的 Vagrantfile 中只有一个虚拟机那么无需指定虚拟机名称(init 后默认就是)；虚拟机内(box 封装时)vagrant这个用户拥有全局免密码 sudo 权限；root 用户一般密码为 vagrant</strong></p>
 
 <h3 id="三vagrantfile">三、Vagrantfile</h3>
 
@@ -260,7 +260,7 @@ rpm <span class="nt">-ivh</span> vagrant_1.9.2_x86_64.rpm
   <p>我发现基本国内所有的 Vagrant 教程都是简单的提了一嘴那几个常用命令；包括我上面也写了点，估计可能到这已经被喷了(“妈的那几个命令老子 help 一下就出来了，一看一猜就知道啥意思 用得着你讲？”)；个人觉得 Vagrant 最复杂的是这个配置文件，以下直接上一个目前仓库里的做示例，仓库地址 <a href="https://github.com/mritd/config/tree/master/vagrant">戳这里</a></p>
 </blockquote>
 
-<p><strong>直接贴 Vagrantfile，以下配置在进行 <code class="highlighter-rouge">vagrant up</code> 之前可能需要使用 <code class="highlighter-rouge">vagrant plugin install vagrant-host</code> 插件，以支持自动在各节点之间添加 host</strong></p>
+<p><strong>直接贴 Vagrantfile，以下配置在进行 <code class="language-plaintext highlighter-rouge">vagrant up</code> 之前可能需要使用 <code class="language-plaintext highlighter-rouge">vagrant plugin install vagrant-host</code> 插件，以支持自动在各节点之间添加 host</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Vagrant.configure<span class="o">(</span><span class="s2">"2"</span><span class="o">)</span> <span class="k">do</span> |config|
     <span class="c"># 定义虚拟机数量</span>
@@ -356,7 +356,7 @@ rpm <span class="nt">-ivh</span> vagrant_1.9.2_x86_64.rpm
 end
 </code></pre></div></div>
 
-<p>以上基本都加了注释，所以大致应该很清晰，至于第一行那个 <code class="highlighter-rouge">Vagrant.configure("2")</code> 代表调用第二版 API，不能改动，其他的可参考注释同时综合仓库中的其他配置文件即可</p>
+<p>以上基本都加了注释，所以大致应该很清晰，至于第一行那个 <code class="language-plaintext highlighter-rouge">Vagrant.configure("2")</code> 代表调用第二版 API，不能改动，其他的可参考注释同时综合仓库中的其他配置文件即可</p>
 
 <p><strong>Vagrantfile 实质上就是一个 ruby 文件，可以自己在里面定义变量等，可以在里面按照 ruby 的语法进行各种复杂的操作；具体 ruby 语法可以参考相关文档学习一下</strong></p>
 
@@ -463,7 +463,7 @@ end
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

@@ -216,11 +216,11 @@
 
 <p><img src="https://cdn.oss.link/markdown/hexo_harbor_install_scripts.png" alt="hexo_harbor_install_scripts" /></p>
 
-<p>其中最外层有一个 <code class="highlighter-rouge">install.sh</code> 脚本，用于安装 Harbor，config 目录存放了一些配置信息，如 registry 和 ui 目录中存放了相关证书用于组件间加密通讯，<code class="highlighter-rouge">harbor.cfg</code> 是全局配置文件，里面主要包含了一些常用设置，比如是否启用 https 等，<code class="highlighter-rouge">prepare</code> 是一个 python 写的预处理脚本，主要负责初始化一些 <code class="highlighter-rouge">harbor.cfg</code> 的相关配置，<code class="highlighter-rouge">docker-compose.yml</code> 顾名思义，里面顶一个各个组件的依赖关系以及配置挂载、数据持久化等设置。</p>
+<p>其中最外层有一个 <code class="language-plaintext highlighter-rouge">install.sh</code> 脚本，用于安装 Harbor，config 目录存放了一些配置信息，如 registry 和 ui 目录中存放了相关证书用于组件间加密通讯，<code class="language-plaintext highlighter-rouge">harbor.cfg</code> 是全局配置文件，里面主要包含了一些常用设置，比如是否启用 https 等，<code class="language-plaintext highlighter-rouge">prepare</code> 是一个 python 写的预处理脚本，主要负责初始化一些 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 的相关配置，<code class="language-plaintext highlighter-rouge">docker-compose.yml</code> 顾名思义，里面顶一个各个组件的依赖关系以及配置挂载、数据持久化等设置。</p>
 
 <h3 id="22基础配置">2.2、基础配置</h3>
 
-<p>修改配置直接编辑 <code class="highlighter-rouge">harbor.cfg</code> 即可</p>
+<p>修改配置直接编辑 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim harbor.cfg
 <span class="c"># 其配置信息如下</span>
@@ -435,7 +435,7 @@ docker up <span class="nt">-d</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

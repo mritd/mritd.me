@@ -212,21 +212,21 @@
 
 <p>关于 Nvidia 驱动和 CUDA 请自行查找安装方法，如果这两部都搞不定，那么不用继续了</p>
 
-<p><strong>还有一点需要注意: <code class="highlighter-rouge">/var/lib</code> 这个目录不能处于单独分区中，具体原因下面阐述</strong></p>
+<p><strong>还有一点需要注意: <code class="language-plaintext highlighter-rouge">/var/lib</code> 这个目录不能处于单独分区中，具体原因下面阐述</strong></p>
 
 <h3 id="二nvidia-docker-安装">二、Nvidia Docker 安装</h3>
 
-<p>在安装 Nvidia Docker 之前，请确保 Nvidia 驱动以及 CUDA 安装成功，并且 <code class="highlighter-rouge">nvidia-smi</code> 能正确显示，如下图所示(来源于网络)</p>
+<p>在安装 Nvidia Docker 之前，请确保 Nvidia 驱动以及 CUDA 安装成功，并且 <code class="language-plaintext highlighter-rouge">nvidia-smi</code> 能正确显示，如下图所示(来源于网络)</p>
 
 <p><img src="https://cdn.oss.link/markdown/tdpbk.jpg" alt="nvidia-smi" /></p>
 
 <p>Nvidia Docker 安装极其简单，具体可参考 <a href="https://github.com/NVIDIA/nvidia-docker">官方文档</a>，安装完成后请自行按照官方文档描述进行测试，这一步一般不会出现问题</p>
 
-<p>如果测试成功后，<strong>请查看 <code class="highlighter-rouge">/var/lib/nvidia-docker/volumes</code></strong> 目录下是否有文件，<strong>如果没有，那就意味着 Nvidia Docker 并未生成相关的驱动文件成功，需要单独执行 <code class="highlighter-rouge">docker volume create --driver=nvidia-docker --name=nvidia_driver_$(modinfo -F version nvidia)</code> 以生成该文件；该命令生成的方式是将已经安装到系统的相关文件硬链接至此，所以要求 <code class="highlighter-rouge">/var/lib</code> 目录不能在单独的分区</strong>；驱动生成完成后应该会产生类似 <code class="highlighter-rouge">/var/lib/nvidia-docker/volumes/nvidia_driver/375.66</code> 的目录结构</p>
+<p>如果测试成功后，<strong>请查看 <code class="language-plaintext highlighter-rouge">/var/lib/nvidia-docker/volumes</code></strong> 目录下是否有文件，<strong>如果没有，那就意味着 Nvidia Docker 并未生成相关的驱动文件成功，需要单独执行 <code class="language-plaintext highlighter-rouge">docker volume create --driver=nvidia-docker --name=nvidia_driver_$(modinfo -F version nvidia)</code> 以生成该文件；该命令生成的方式是将已经安装到系统的相关文件硬链接至此，所以要求 <code class="language-plaintext highlighter-rouge">/var/lib</code> 目录不能在单独的分区</strong>；驱动生成完成后应该会产生类似 <code class="language-plaintext highlighter-rouge">/var/lib/nvidia-docker/volumes/nvidia_driver/375.66</code> 的目录结构</p>
 
 <h3 id="三kubernetes-配置">三、Kubernetes 配置</h3>
 
-<p>当所有基础环境就绪后，最后需要开启 Kubernetes 对 GPU 支持；Kubernetes GPU 文档可以参考 <a href="https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus">这里</a>，实际主要就是在 kubelet 启动时增加 <code class="highlighter-rouge">--feature-gates="Accelerators=true"</code> 参数，如下所示</p>
+<p>当所有基础环境就绪后，最后需要开启 Kubernetes 对 GPU 支持；Kubernetes GPU 文档可以参考 <a href="https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus">这里</a>，实际主要就是在 kubelet 启动时增加 <code class="language-plaintext highlighter-rouge">--feature-gates="Accelerators=true"</code> 参数，如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/gifs3.jpg" alt="Accelerators" /></p>
 
@@ -294,12 +294,12 @@ spec:
 <p>Pod 运行成功后可执行以下代码测试 GPU 调用</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
-<span class="n">hello</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="s">'Hello, TensorFlow!'</span><span class="p">)</span>
-<span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">hello</span><span class="p">))</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">))</span>
+<span class="n">hello</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">constant</span><span class="p">(</span><span class="s">'Hello, TensorFlow!'</span><span class="p">)</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">Session</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sess</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">hello</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sess</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">))</span>
 </code></pre></div></div>
 
 <p>成功后截图如下</p>
@@ -409,7 +409,7 @@ spec:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

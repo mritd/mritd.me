@@ -262,21 +262,21 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">ipvsadm</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ipvsadm</code></td>
       <td>LVS 主程序，负责 RS 天剑、删除和修改</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">ipvsadm-save</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ipvsadm-save</code></td>
       <td>备份 LVS 配置</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">ipvsadm-restore</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ipvsadm-restore</code></td>
       <td>恢复 LVS 配置</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong><code class="highlighter-rouge">ipvsadm</code> 常用参数如下</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">ipvsadm</code> 常用参数如下</strong></p>
 
 <table>
   <thead>
@@ -287,131 +287,131 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">-A</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-A</code></td>
       <td>在内核虚拟服务器列表中添加一条新的虚拟服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-E</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-E</code></td>
       <td>编辑在内核虚拟服务器列表中的一条虚拟服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-D</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-D</code></td>
       <td>删除内和虚拟服务器列表中的一条虚拟服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-C</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-C</code></td>
       <td>清除内核虚拟服务器列表所有记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-R</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-R</code></td>
       <td>恢复虚拟服务器规则</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-S</code></td>
-      <td>保存虚拟服务器规则，输出为 <code class="highlighter-rouge">-R</code> 可读的格式</td>
+      <td><code class="language-plaintext highlighter-rouge">-S</code></td>
+      <td>保存虚拟服务器规则，输出为 <code class="language-plaintext highlighter-rouge">-R</code> 可读的格式</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-a</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-a</code></td>
       <td>在内核虚拟服务器列表中添加一条真实服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-e</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-e</code></td>
       <td>编辑内核虚拟服务器中一条真实服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-d</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-d</code></td>
       <td>删除内核虚拟服务器列表中一条真实服务器记录</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-L</code>、<code class="highlighter-rouge">-l</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-L</code>、<code class="language-plaintext highlighter-rouge">-l</code></td>
       <td>显示内核虚拟服务器列表</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-Z</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-Z</code></td>
       <td>内核虚拟服务器列表计数器清零(清除链接数量等)</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-set</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-set</code></td>
       <td>- tcp tcpfin udp 设置连接超时值</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--start-daemon</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--start-daemon</code></td>
       <td>启动同步守护进程</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--stop-daemon</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--stop-daemon</code></td>
       <td>停止同步守护进程</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-daemon</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-daemon</code></td>
       <td>显示同步守护进程状态</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-h</code></td>
       <td>帮助信息</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-t</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-t</code></td>
       <td>声明该虚拟服务器提供的是 TCP 服务(用于添加时)</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-u</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-u</code></td>
       <td>声明该虚拟服务器提供的是 UDP 服务(用于添加时)</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-f</code></td>
-      <td>声明是经过 <code class="highlighter-rouge">iptables</code> 标记过的服务类型</td>
+      <td><code class="language-plaintext highlighter-rouge">-f</code></td>
+      <td>声明是经过 <code class="language-plaintext highlighter-rouge">iptables</code> 标记过的服务类型</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-s</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-s</code></td>
       <td>使用的负载均衡调度算法(rr、wrr、lc、wlc、lblc、lblcr、dh、sh、sed、nq)</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-p</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-p</code></td>
       <td>声明提供持久服务</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-r</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-r</code></td>
       <td>声明是一台真是的服务器</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-g</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-g</code></td>
       <td>指定 LVS 工作模式为直接路由模式</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-i</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-i</code></td>
       <td>指定 LVS 工作模式为隧道模式</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-m</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-m</code></td>
       <td>指定 LVS 工作模式为 NAT 模式</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-w</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-w</code></td>
       <td>设置真实服务器的权重值</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-c</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-c</code></td>
       <td>显示 LVS 目前的连接数</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-timeout</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-timeout</code></td>
       <td>显示 tcp tcpfin udp 的超时时间</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--stats</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--stats</code></td>
       <td>显示统计信息</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--rate</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--rate</code></td>
       <td>显示速率信息</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--sort</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--sort</code></td>
       <td>对虚拟服务器和真实服务器排序输出</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">-n</code></td>
+      <td><code class="language-plaintext highlighter-rouge">-n</code></td>
       <td>输出 IP 地址和端口的数字形式</td>
     </tr>
   </tbody>
@@ -509,7 +509,7 @@ ipvsadm <span class="nt">-a</span> <span class="nt">-t</span> 192.168.1.150:80 <
 
 <h4 id="34基于-tun-模式">3.4、基于 TUN 模式</h4>
 
-<p><strong>从上面两个配置可以看到，不同模式实际上只是修改前端负载均衡器创建后端真实服务器的命令参数不通而已(<code class="highlighter-rouge">-m</code>、<code class="highlighter-rouge">-g</code>、<code class="highlighter-rouge">-i</code>)；唯一要注意的是不同模式对后端服务器要求可能不通，比如 DR 要求前端负载均衡器与后端真实服务器在同一网段，TUN 要求后端真实服务器支持 IP 隧道协议等，所以 TUN 模式在此也不在演示；关于上面修改内核参数的做法最好在 <code class="highlighter-rouge">sysctl.conf</code> 中修改保证永久生效</strong></p>
+<p><strong>从上面两个配置可以看到，不同模式实际上只是修改前端负载均衡器创建后端真实服务器的命令参数不通而已(<code class="language-plaintext highlighter-rouge">-m</code>、<code class="language-plaintext highlighter-rouge">-g</code>、<code class="language-plaintext highlighter-rouge">-i</code>)；唯一要注意的是不同模式对后端服务器要求可能不通，比如 DR 要求前端负载均衡器与后端真实服务器在同一网段，TUN 要求后端真实服务器支持 IP 隧道协议等，所以 TUN 模式在此也不在演示；关于上面修改内核参数的做法最好在 <code class="language-plaintext highlighter-rouge">sysctl.conf</code> 中修改保证永久生效</strong></p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -614,7 +614,7 @@ ipvsadm <span class="nt">-a</span> <span class="nt">-t</span> 192.168.1.150:80 <
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

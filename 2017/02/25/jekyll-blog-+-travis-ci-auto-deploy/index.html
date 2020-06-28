@@ -215,15 +215,15 @@
 
 <h4 id="12存在问题">1.2、存在问题</h4>
 
-<p>按照以前的方式其实存在一个很大问题就是部署不及时，每次写完文章实际上都是自己 ssh 到服务器手动 pull 一下，感觉很繁琐；另一个大问题(这也不能算 bug) jekyll 的 rss 插件默认生成的 rss 引用地址为 <code class="highlighter-rouge">jekyll server -H x.x.x.x</code> 的监听地址，而容器化启动 jekyll 监听地址必然是 <code class="highlighter-rouge">0.0.0.0</code>；后果就是 feed.xml 无法访问，如下所示(这里监听的是 localhost)</p>
+<p>按照以前的方式其实存在一个很大问题就是部署不及时，每次写完文章实际上都是自己 ssh 到服务器手动 pull 一下，感觉很繁琐；另一个大问题(这也不能算 bug) jekyll 的 rss 插件默认生成的 rss 引用地址为 <code class="language-plaintext highlighter-rouge">jekyll server -H x.x.x.x</code> 的监听地址，而容器化启动 jekyll 监听地址必然是 <code class="language-plaintext highlighter-rouge">0.0.0.0</code>；后果就是 feed.xml 无法访问，如下所示(这里监听的是 localhost)</p>
 
 <p><img src="https://cdn.oss.link/markdown/fq9im.jpg" alt="feed error" /></p>
 
 <h4 id="13新部署思路">1.3、新部署思路</h4>
 
-<p>从问题角度上来说，每次手动 pull 虽然有点烦，但是并不是大问题；而 rss 订阅由于网友反馈，再加个人强迫症感觉确实是个大毛病；随着试验发现，<strong>在进行 <code class="highlighter-rouge">jekyll build</code> 时生成的 feed.xml 中的引用地址会正确读取 _config.yml 中的网址</strong>；而 <code class="highlighter-rouge">jekyll server</code> 命令实际上也是先 build，然后生成静态文件到 <code class="highlighter-rouge">_site</code> 目录，最后搞个 http 服务器发布出去</p>
+<p>从问题角度上来说，每次手动 pull 虽然有点烦，但是并不是大问题；而 rss 订阅由于网友反馈，再加个人强迫症感觉确实是个大毛病；随着试验发现，<strong>在进行 <code class="language-plaintext highlighter-rouge">jekyll build</code> 时生成的 feed.xml 中的引用地址会正确读取 _config.yml 中的网址</strong>；而 <code class="language-plaintext highlighter-rouge">jekyll server</code> 命令实际上也是先 build，然后生成静态文件到 <code class="language-plaintext highlighter-rouge">_site</code> 目录，最后搞个 http 服务器发布出去</p>
 
-<p>基于以上试验可以得到一个简单的解决方案：不使用 <code class="highlighter-rouge">jekyll server</code> 启动，先 build 生成正确的 feed.xml 等静态文件，然后自己搞个 nginx 把它发布出去</p>
+<p>基于以上试验可以得到一个简单的解决方案：不使用 <code class="language-plaintext highlighter-rouge">jekyll server</code> 启动，先 build 生成正确的 feed.xml 等静态文件，然后自己搞个 nginx 把它发布出去</p>
 
 <h3 id="二travis-ci-自动化部署">二、Travis CI 自动化部署</h3>
 
@@ -242,7 +242,7 @@
 
 <p>对于自动 build，好在 Travis CI 对于开源项目完全免费，并且能自动感知到 Github 的 commit；所以自动 build 生成 静态文件这个过程就由 Travis CI 完成，以下为配置过程</p>
 
-<p>首先注册好 Travis CI 账号，然后点击最左侧 <code class="highlighter-rouge">+</code> 按钮添加项目</p>
+<p>首先注册好 Travis CI 账号，然后点击最左侧 <code class="language-plaintext highlighter-rouge">+</code> 按钮添加项目</p>
 
 <p><img src="https://cdn.oss.link/markdown/7axvx.jpg" alt="add repo" /></p>
 
@@ -256,7 +256,7 @@
 
 <h5 id="222travisyml-配置">2.2.2、.travis.yml 配置</h5>
 
-<p>当项目内存在 <code class="highlighter-rouge">.travis.yml</code> 文件时，Travis CI 会按照其定义完成自动 build 过程，所以开启了上述配置以后还要在项目下创建 <code class="highlighter-rouge">.travis.yml</code> 配置文件，配置文件定义如下</p>
+<p>当项目内存在 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 文件时，Travis CI 会按照其定义完成自动 build 过程，所以开启了上述配置以后还要在项目下创建 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 配置文件，配置文件定义如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>language: ruby
 rvm:
@@ -286,17 +286,17 @@ branches:
   - <span class="nv">NOKOGIRI_USE_SYSTEM_LIBRARIES</span><span class="o">=</span><span class="nb">true</span>
 </code></pre></div></div>
 
-<p>其中 <code class="highlighter-rouge">language</code>声明使用的语言，<code class="highlighter-rouge">rvm</code> 是 ruby 的管理工具，并定义了 ruby 版本；<code class="highlighter-rouge">before_install</code> 定义了执行前的预处理动作，上面增加了一个密钥用于远程登录服务器；<code class="highlighter-rouge">script</code> 段真正定义了编译过程的命令，<code class="highlighter-rouge">after_success</code> 定义了如何 build 后如何处理发布物，<code class="highlighter-rouge">branches</code> 指定有哪些分支变动后触发 CI build，env 是一些环境变量，上面添加了一个变量(根据 jekyll 官方文档)用于加速 jekyll 编译(有些配置不理解往下看)</p>
+<p>其中 <code class="language-plaintext highlighter-rouge">language</code>声明使用的语言，<code class="language-plaintext highlighter-rouge">rvm</code> 是 ruby 的管理工具，并定义了 ruby 版本；<code class="language-plaintext highlighter-rouge">before_install</code> 定义了执行前的预处理动作，上面增加了一个密钥用于远程登录服务器；<code class="language-plaintext highlighter-rouge">script</code> 段真正定义了编译过程的命令，<code class="language-plaintext highlighter-rouge">after_success</code> 定义了如何 build 后如何处理发布物，<code class="language-plaintext highlighter-rouge">branches</code> 指定有哪些分支变动后触发 CI build，env 是一些环境变量，上面添加了一个变量(根据 jekyll 官方文档)用于加速 jekyll 编译(有些配置不理解往下看)</p>
 
-<p><strong>具体 <code class="highlighter-rouge">.travis.yml</code> 配置请参考 <a href="https://docs.travis-ci.com/">官方文档</a></strong></p>
+<p><strong>具体 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 配置请参考 <a href="https://docs.travis-ci.com/">官方文档</a></strong></p>
 
 <h4 id="23静态文件的自动更新">2.3、静态文件的自动更新</h4>
 
-<p>Travis CI 在完成 build 后会在 <code class="highlighter-rouge">_site</code> 目录生成博客的静态文件，而如如何将这些静态文件发送到服务器完成更新是个待解决的问题</p>
+<p>Travis CI 在完成 build 后会在 <code class="language-plaintext highlighter-rouge">_site</code> 目录生成博客的静态文件，而如如何将这些静态文件发送到服务器完成更新是个待解决的问题</p>
 
 <h5 id="231解决思路">2.3.1、解决思路</h5>
 
-<p>将 Travis CI 生成的静态文件推送到 Github，博客仍然 docker 化部署，采用 <code class="highlighter-rouge">nginx</code> + <code class="highlighter-rouge">静态文件</code> 方式；每次容器启动后都要从 Github pull 最新的静态文件，流程如下</p>
+<p>将 Travis CI 生成的静态文件推送到 Github，博客仍然 docker 化部署，采用 <code class="language-plaintext highlighter-rouge">nginx</code> + <code class="language-plaintext highlighter-rouge">静态文件</code> 方式；每次容器启动后都要从 Github pull 最新的静态文件，流程如下</p>
 
 <ul>
   <li>本地提交博客 Markdown 文件 到 Github</li>
@@ -327,17 +327,17 @@ branches:
   - git push <span class="nt">--force</span> https://<span class="nv">$DEPLOY_TOKEN</span>@github.com/mritd/mritd.me.git master
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">$DEPLOY_TOKEN</code> 是从 Github 授权得到的，然后给于相应权限即可</p>
+<p><code class="language-plaintext highlighter-rouge">$DEPLOY_TOKEN</code> 是从 Github 授权得到的，然后给于相应权限即可</p>
 
 <p><img src="https://cdn.oss.link/markdown/pco7k.jpg" alt="Github token" /></p>
 
-<p><strong>关于代码中 <code class="highlighter-rouge">$DEPLOY_TOKEN</code> 这种重要的密码类变量，Travis CI 在每个项目下提供了设置环境变量功能，如下图</strong></p>
+<p><strong>关于代码中 <code class="language-plaintext highlighter-rouge">$DEPLOY_TOKEN</code> 这种重要的密码类变量，Travis CI 在每个项目下提供了设置环境变量功能，如下图</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/7zmj2.jpg" alt="setting" /></p>
 
 <p><img src="https://cdn.oss.link/markdown/0b91x.jpg" alt="add env" /></p>
 
-<p><strong>设置后可在 <code class="highlighter-rouge">.travis.yml</code> 中直接引用，不过注意一定要关闭 <code class="highlighter-rouge">Display value in build log</code> 功能，否则 CI log 中会显示 <code class="highlighter-rouge">export XXXX=XXXX</code> 这种 log 从而暴露重要密码(公有项目的 log 别人可以查看的)；如果开启了那么尽快找到相应 build 并删除 log 日志，如下</strong></p>
+<p><strong>设置后可在 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 中直接引用，不过注意一定要关闭 <code class="language-plaintext highlighter-rouge">Display value in build log</code> 功能，否则 CI log 中会显示 <code class="language-plaintext highlighter-rouge">export XXXX=XXXX</code> 这种 log 从而暴露重要密码(公有项目的 log 别人可以查看的)；如果开启了那么尽快找到相应 build 并删除 log 日志，如下</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/kal69.jpg" alt="delete log" /></p>
 
@@ -350,8 +350,8 @@ branches:
 <ul>
   <li>先安装 ruby 环境，然后用 gem 装 travis (gem install travis)</li>
   <li>然后登陆 travis (travis login)</li>
-  <li>登陆后加密文件 (travis encrypt-file xxxx)，注意要在 <code class="highlighter-rouge">.travis.yml</code> 同级目录下执行，待加密文件可在任意位置</li>
-  <li>travis 会在 <code class="highlighter-rouge">.travis.yml</code> 写入 <code class="highlighter-rouge">before_install</code> 段解密还原回该文件，如果是 ssh 密钥的话参考上面的配置再改一下权限即可</li>
+  <li>登陆后加密文件 (travis encrypt-file xxxx)，注意要在 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 同级目录下执行，待加密文件可在任意位置</li>
+  <li>travis 会在 <code class="language-plaintext highlighter-rouge">.travis.yml</code> 写入 <code class="language-plaintext highlighter-rouge">before_install</code> 段解密还原回该文件，如果是 ssh 密钥的话参考上面的配置再改一下权限即可</li>
 </ul>
 
 <p>最后一个小问题是可能会有主机信任问题，因为 CI 服务器第一次连接我的服务器会出现 ssh 主机验证，官方给出的做法是添加 addons 配置</p>
@@ -467,7 +467,7 @@ branches:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

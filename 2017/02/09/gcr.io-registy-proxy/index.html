@@ -228,7 +228,7 @@ systemctl restart docker
 
 <h4 id="13拉取镜像">1.3、拉取镜像</h4>
 
-<p>此时直接对私服拉取镜像即可，<strong>注意要加 <code class="highlighter-rouge">google_containers</code> 前缀</strong></p>
+<p>此时直接对私服拉取镜像即可，<strong>注意要加 <code class="language-plaintext highlighter-rouge">google_containers</code> 前缀</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull 192.168.1.120:5000/google_containers/etcd-amd64:3.0.14-kubeadm
 </code></pre></div></div>
@@ -275,7 +275,7 @@ proxy:
   remoteurl: https://gcr.io
 </code></pre></div></div>
 
-<p>由于 registry 位于国外服务器，所以不受 GFW 影响，此时本地 docker 直接向国外服务器 pull 即可，<strong>注意 pull 时 镜像增加 <code class="highlighter-rouge">google_containers</code> 前缀</strong></p>
+<p>由于 registry 位于国外服务器，所以不受 GFW 影响，此时本地 docker 直接向国外服务器 pull 即可，<strong>注意 pull 时 镜像增加 <code class="language-plaintext highlighter-rouge">google_containers</code> 前缀</strong></p>
 
 <h4 id="22国内服务器反代">2.2、国内服务器反代</h4>
 
@@ -284,10 +284,10 @@ proxy:
 <ul>
   <li>获取官方 registry 仓库 Dockerfile 相关文件(<a href="https://github.com/docker/distribution-library-image">地址点这里</a>)</li>
   <li>想办法在本地搞一个 http/https 代理</li>
-  <li>在 <code class="highlighter-rouge">registry serve</code> 命令启动前声明代理</li>
+  <li>在 <code class="language-plaintext highlighter-rouge">registry serve</code> 命令启动前声明代理</li>
 </ul>
 
-<p>再直白一点做法就是 <code class="highlighter-rouge">https_proxy=http://xxxxx registry serve</code>，剩下的各位自己探索吧</p>
+<p>再直白一点做法就是 <code class="language-plaintext highlighter-rouge">https_proxy=http://xxxxx registry serve</code>，剩下的各位自己探索吧</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -392,7 +392,7 @@ proxy:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

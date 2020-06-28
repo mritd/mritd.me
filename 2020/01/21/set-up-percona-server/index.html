@@ -206,13 +206,13 @@
 
 <h3 id="21下载安装包">2.1、下载安装包</h3>
 
-<p>安装包下载地址为 <a href="https://www.percona.com/downloads/Percona-Server-5.7/LATEST/">https://www.percona.com/downloads/Percona-Server-5.7/LATEST/</a>，下载时选择 <code class="highlighter-rouge">Download All Packages Together</code>，下载后是所有组件全量的压缩 tar 包。</p>
+<p>安装包下载地址为 <a href="https://www.percona.com/downloads/Percona-Server-5.7/LATEST/">https://www.percona.com/downloads/Percona-Server-5.7/LATEST/</a>，下载时选择 <code class="language-plaintext highlighter-rouge">Download All Packages Together</code>，下载后是所有组件全量的压缩 tar 包。</p>
 
 <h3 id="22安装前准备">2.2、安装前准备</h3>
 
-<p>针对 CentOS 7 系统，安装前升级所有系统组件库，执行 <code class="highlighter-rouge">yum update</code> 既可；大部份 <strong>CentOS 7 安装后可能会附带 <code class="highlighter-rouge">mariadb-libs</code> 包，这个包会默认创建一些配置文件，导致后面的 Percona Server 无法覆盖它(例如 <code class="highlighter-rouge">/etc/my.cnf</code>)，所以安装 Percona Server 之前需要卸载它 <code class="highlighter-rouge">yum remove mariadb-libs</code></strong></p>
+<p>针对 CentOS 7 系统，安装前升级所有系统组件库，执行 <code class="language-plaintext highlighter-rouge">yum update</code> 既可；大部份 <strong>CentOS 7 安装后可能会附带 <code class="language-plaintext highlighter-rouge">mariadb-libs</code> 包，这个包会默认创建一些配置文件，导致后面的 Percona Server 无法覆盖它(例如 <code class="language-plaintext highlighter-rouge">/etc/my.cnf</code>)，所以安装 Percona Server 之前需要卸载它 <code class="language-plaintext highlighter-rouge">yum remove mariadb-libs</code></strong></p>
 
-<p>针对于数据存储硬盘，目前统一为 SSD 硬盘，挂载点为 <code class="highlighter-rouge">/data</code>，挂载方式可以采用 <code class="highlighter-rouge">fstab</code>、<code class="highlighter-rouge">systemd-mount</code>，分区格式目前采用 <code class="highlighter-rouge">xfs</code> 格式。</p>
+<p>针对于数据存储硬盘，目前统一为 SSD 硬盘，挂载点为 <code class="language-plaintext highlighter-rouge">/data</code>，挂载方式可以采用 <code class="language-plaintext highlighter-rouge">fstab</code>、<code class="language-plaintext highlighter-rouge">systemd-mount</code>，分区格式目前采用 <code class="language-plaintext highlighter-rouge">xfs</code> 格式。</p>
 
 <p><strong>SSD 优化有待补充…</strong></p>
 
@@ -227,7 +227,7 @@
 
 <h4 id="241硬盘调整">2.4.1、硬盘调整</h4>
 
-<p>目前 MySQL 数据会统一存放到 <code class="highlighter-rouge">/data</code> 目录下，所以需要将单独的数据盘挂载到 <code class="highlighter-rouge">/data</code> 目录；<strong>如果是 SSD 硬盘还需要调整系统 I/O 调度器等其他优化。</strong></p>
+<p>目前 MySQL 数据会统一存放到 <code class="language-plaintext highlighter-rouge">/data</code> 目录下，所以需要将单独的数据盘挂载到 <code class="language-plaintext highlighter-rouge">/data</code> 目录；<strong>如果是 SSD 硬盘还需要调整系统 I/O 调度器等其他优化。</strong></p>
 
 <h4 id="242目录预创建">2.4.2、目录预创建</h4>
 
@@ -237,7 +237,7 @@
 <span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /var/log/mysql /data/mysql_tmp
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">/var/log/mysql</code> 目录用来存放 MySQL 相关的日志(不包括 binlog)，<code class="highlighter-rouge">/data/mysql_tmp</code> 用来存放 MySQL 运行时产生的缓存文件。</p>
+<p><code class="language-plaintext highlighter-rouge">/var/log/mysql</code> 目录用来存放 MySQL 相关的日志(不包括 binlog)，<code class="language-plaintext highlighter-rouge">/data/mysql_tmp</code> 用来存放 MySQL 运行时产生的缓存文件。</p>
 
 <h4 id="243文件描述符调整">2.4.3、文件描述符调整</h4>
 
@@ -252,11 +252,11 @@ LimitNOFILE <span class="o">=</span> infinity
 LimitNPROC <span class="o">=</span> infinity
 </code></pre></div></div>
 
-<p>然后执行 <code class="highlighter-rouge">systemctl daemon-reload</code> 重载既可。</p>
+<p>然后执行 <code class="language-plaintext highlighter-rouge">systemctl daemon-reload</code> 重载既可。</p>
 
 <h4 id="244配置文件调整">2.4.4、配置文件调整</h4>
 
-<p>Percona Server 安装完成后也会生成 <code class="highlighter-rouge">/etc/my.cnf</code> 配置文件，不过不建议直接修改该文件；修改配置文件需要进入到 <code class="highlighter-rouge">/etc/percona-server.conf.d/</code> 目录调整相应配置；以下为配置样例(<strong>生产环境 mysqld 配置需要优化调整</strong>)</p>
+<p>Percona Server 安装完成后也会生成 <code class="language-plaintext highlighter-rouge">/etc/my.cnf</code> 配置文件，不过不建议直接修改该文件；修改配置文件需要进入到 <code class="language-plaintext highlighter-rouge">/etc/percona-server.conf.d/</code> 目录调整相应配置；以下为配置样例(<strong>生产环境 mysqld 配置需要优化调整</strong>)</p>
 
 <p><strong>mysql.cnf</strong></p>
 
@@ -496,7 +496,7 @@ LimitNPROC <span class="o">=</span> infinity
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl start mysqld
 </code></pre></div></div>
 
-<p>启动完成后默认 root 密码会自动生成，通过 <code class="highlighter-rouge">grep 'temporary password' /var/log/mysql/*</code> 查看默认密码；获得默认密码后可以通过 <code class="highlighter-rouge">mysqladmin -S /data/mysql/mysql.sock -u root -p password</code> 修改 root 密码。</p>
+<p>启动完成后默认 root 密码会自动生成，通过 <code class="language-plaintext highlighter-rouge">grep 'temporary password' /var/log/mysql/*</code> 查看默认密码；获得默认密码后可以通过 <code class="language-plaintext highlighter-rouge">mysqladmin -S /data/mysql/mysql.sock -u root -p password</code> 修改 root 密码。</p>
 
 <h2 id="三percona-monitoring-and-management">三、Percona Monitoring and Management</h2>
 
@@ -541,13 +541,13 @@ LimitNPROC <span class="o">=</span> infinity
 └── dhparam.pem
 </code></pre></div></div>
 
-<p><strong>pmm server 启动后访问 <code class="highlighter-rouge">http(s)://IP_ADDRESS</code> 既可进入 granafa 面板，默认账户名和密码都是 <code class="highlighter-rouge">admin</code></strong></p>
+<p><strong>pmm server 启动后访问 <code class="language-plaintext highlighter-rouge">http(s)://IP_ADDRESS</code> 既可进入 granafa 面板，默认账户名和密码都是 <code class="language-plaintext highlighter-rouge">admin</code></strong></p>
 
 <h3 id="33安装-pmm-client">3.3、安装 PMM Client</h3>
 
-<p>PMM Client 同样采用 rpm 安装，下载地址 <a href="https://www.percona.com/downloads/pmm2/">https://www.percona.com/downloads/pmm2/</a>，当前采用最新的 2.1.0 版本；rpm 下载完成后直接 <code class="highlighter-rouge">yum install</code> 既可。</p>
+<p>PMM Client 同样采用 rpm 安装，下载地址 <a href="https://www.percona.com/downloads/pmm2/">https://www.percona.com/downloads/pmm2/</a>，当前采用最新的 2.1.0 版本；rpm 下载完成后直接 <code class="language-plaintext highlighter-rouge">yum install</code> 既可。</p>
 
-<p>rpm 安装完成后使用 <code class="highlighter-rouge">pmm-admin</code> 命令配置服务端地址，并添加当前 mysql 实例监控</p>
+<p>rpm 安装完成后使用 <code class="language-plaintext highlighter-rouge">pmm-admin</code> 命令配置服务端地址，并添加当前 mysql 实例监控</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 配置服务端地址</span>
 pmm-admin config <span class="nt">--server-url</span> https://admin:admin@pmm.mysql.node 172.16.0.11 generic mysql
@@ -578,11 +578,11 @@ mysql <span class="nt">-S</span> /data/mysql/mysql.sock <span class="nt">-u</spa
 
 <h3 id="51安装-xtrabackup">5.1、安装 xtrabackup</h3>
 
-<p>目前数据备份采用 Perconra xtrabackup 工具，xtrabackup 可以实现高速、压缩带增量的备份；xtrabackup 安装同样采用 rpm 方式，下载地址为 <a href="https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/">https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/</a>，下载完成后执行 <code class="highlighter-rouge">yum install</code> 既可</p>
+<p>目前数据备份采用 Perconra xtrabackup 工具，xtrabackup 可以实现高速、压缩带增量的备份；xtrabackup 安装同样采用 rpm 方式，下载地址为 <a href="https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/">https://www.percona.com/downloads/Percona-XtraBackup-2.4/LATEST/</a>，下载完成后执行 <code class="language-plaintext highlighter-rouge">yum install</code> 既可</p>
 
 <h3 id="52备份工具">5.2、备份工具</h3>
 
-<p>目前备份工具开源在 <a href="https://github.com/gozap/mybak">GitHub</a> 上，每次全量备份会写入 <code class="highlighter-rouge">.full-backup</code> 文件，增量备份会写入 <code class="highlighter-rouge">.inc-backup</code> 文件</p>
+<p>目前备份工具开源在 <a href="https://github.com/gozap/mybak">GitHub</a> 上，每次全量备份会写入 <code class="language-plaintext highlighter-rouge">.full-backup</code> 文件，增量备份会写入 <code class="language-plaintext highlighter-rouge">.inc-backup</code> 文件</p>
 
 <h3 id="53配置-systemd">5.3、配置 systemd</h3>
 
@@ -713,7 +713,7 @@ systemctl start mysqld
 
 <h3 id="62增量备份恢复">6.2、增量备份恢复</h3>
 
-<p>对于增量备份恢复，其与全量备份恢复的根本区别在于: <strong>对于非最后一个增量文件的预处理必须使用 <code class="highlighter-rouge">--apply-log-only</code> 选项防止运行回滚阶段的处理</strong></p>
+<p>对于增量备份恢复，其与全量备份恢复的根本区别在于: <strong>对于非最后一个增量文件的预处理必须使用 <code class="language-plaintext highlighter-rouge">--apply-log-only</code> 选项防止运行回滚阶段的处理</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 对所有备份文件进行解压处理</span>
 <span class="k">for </span><span class="nb">dir </span><span class="k">in</span> <span class="sb">`</span><span class="nb">ls</span><span class="sb">`</span><span class="p">;</span> <span class="k">do </span>xtrabackup <span class="nt">--decompress</span> <span class="nt">--parallel</span> 4 <span class="nt">--target-dir</span> <span class="nv">$dir</span><span class="p">;</span> <span class="k">done</span>
@@ -745,7 +745,7 @@ systemctl start mysqld
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>xtrabackup <span class="nt">--user</span><span class="o">=</span>root <span class="nt">--password</span><span class="o">=</span>xxxxxxx <span class="nt">--prepare</span> <span class="nt">--target-dir</span><span class="o">=</span>xxxx
 </code></pre></div></div>
 
-<p>预处理成功后便可执行恢复，以下命令将自动读取 <code class="highlighter-rouge">my.cnf</code> 配置，自动识别数据目录位置并将数据文件移动到该位置</p>
+<p>预处理成功后便可执行恢复，以下命令将自动读取 <code class="language-plaintext highlighter-rouge">my.cnf</code> 配置，自动识别数据目录位置并将数据文件移动到该位置</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>xtrabackup <span class="nt">--move-back</span> <span class="nt">--target-dir</span><span class="o">=</span>xxxxx
 </code></pre></div></div>
@@ -755,7 +755,7 @@ systemctl start mysqld
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql MYSQL_DATA_DIR
 </code></pre></div></div>
 
-<p>最后在 mysql 内启动 slave 既可，slave 信息可通过从数据备份目录的 <code class="highlighter-rouge">xtrabackup_binlog_info</code> 中获取</p>
+<p>最后在 mysql 内启动 slave 既可，slave 信息可通过从数据备份目录的 <code class="language-plaintext highlighter-rouge">xtrabackup_binlog_info</code> 中获取</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 获取备份 POS 信息</span>
 <span class="nb">cat </span>xxxxxx/xtrabackup_binlog_info
@@ -777,7 +777,7 @@ show slave status <span class="se">\G</span><span class="p">;</span>
 
 <h3 id="71数据目录">7.1、数据目录</h3>
 
-<p>目前生产环境数据目录位置调整到 <code class="highlighter-rouge">/home/mysql</code>，所以目录权限处理也要做对应调整</p>
+<p>目前生产环境数据目录位置调整到 <code class="language-plaintext highlighter-rouge">/home/mysql</code>，所以目录权限处理也要做对应调整</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> /var/log/mysql /home/mysql_tmp
 <span class="nb">chown</span> <span class="nt">-R</span> mysql:mysql /var/log/mysql /home/mysql_tmp
@@ -788,8 +788,8 @@ show slave status <span class="se">\G</span><span class="p">;</span>
 <p>生产环境目前节点配置如下</p>
 
 <ul>
-  <li>CPU: <code class="highlighter-rouge">Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz</code></li>
-  <li>RAM: <code class="highlighter-rouge">128G</code></li>
+  <li>CPU: <code class="language-plaintext highlighter-rouge">Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz</code></li>
+  <li>RAM: <code class="language-plaintext highlighter-rouge">128G</code></li>
 </ul>
 
 <p>所以配置文件也需要做相应的优化调整</p>
@@ -1029,7 +1029,7 @@ show slave status <span class="se">\G</span><span class="p">;</span>
 
 <h3 id="81动态配置-diff">8.1、动态配置 diff</h3>
 
-<p>mysql 默认允许在实例运行后使用 <code class="highlighter-rouge">set global VARIABLES=VALUE</code> 的方式动态调整一些配置，这可能导致在运行一段时间后(运维动态修改)实例运行配置和配置文件中配置不一致；所以<strong>建议定期 diff 运行时配置与配置文件配置差异，防制特殊情况下 mysql 重启后运行期配置丢失</strong></p>
+<p>mysql 默认允许在实例运行后使用 <code class="language-plaintext highlighter-rouge">set global VARIABLES=VALUE</code> 的方式动态调整一些配置，这可能导致在运行一段时间后(运维动态修改)实例运行配置和配置文件中配置不一致；所以<strong>建议定期 diff 运行时配置与配置文件配置差异，防制特殊情况下 mysql 重启后运行期配置丢失</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-config-diff /etc/percona-server.conf.d/mysqld.cnf <span class="nv">h</span><span class="o">=</span>127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--report-width</span> 100
 Enter MySQL password:
@@ -1109,7 +1109,7 @@ Enter password:
 
 <h3 id="84查看-io-详情">8.4、查看 IO 详情</h3>
 
-<p>不同于 <code class="highlighter-rouge">iostat</code>，<code class="highlighter-rouge">pt-diskstats</code> 提供了更加详细的 IO 详情统计，并且据有交互式处理，执行一下命令将会实时检测 IO 状态</p>
+<p>不同于 <code class="language-plaintext highlighter-rouge">iostat</code>，<code class="language-plaintext highlighter-rouge">pt-diskstats</code> 提供了更加详细的 IO 详情统计，并且据有交互式处理，执行一下命令将会实时检测 IO 状态</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-diskstats <span class="nt">--show-timestamps</span>
 </code></pre></div></div>
@@ -1122,7 +1122,7 @@ Enter password:
   <li>rd_mb_s: 每秒读取的平均兆字节数。</li>
   <li>rd_mrg: 在发送到物理设备之前在队列调度程序中合并在一起的读取请求的百分比。</li>
   <li>rd_rt: 读取操作的平均响应时间(以毫秒为单位)；这是端到端响应时间，包括在队列中花费的时间。这是发出 IO 请求的应用程序看到的响应时间，而不是块设备下的物理磁盘的响应时间。</li>
-  <li>busy: 设备至少有一个请求 wall-clock 时间的比例；等同于 <code class="highlighter-rouge">iostat</code> 的 <code class="highlighter-rouge">％util</code>。</li>
+  <li>busy: 设备至少有一个请求 wall-clock 时间的比例；等同于 <code class="language-plaintext highlighter-rouge">iostat</code> 的 <code class="language-plaintext highlighter-rouge">％util</code>。</li>
   <li>in_prg: 正在进行的请求数。与读写并发是从可靠数字中生成的平均值不同，该数字是一个时样本，您可以看到它可能表示请求峰值，而不是真正的长期平均值。如果此数字很大，则从本质上讲意味着设备高负载运行。</li>
   <li>ios_s: 物理设备的平均吞吐量，以每秒 IO 操作(IOPS)为单位。此列显示基础设备正在处理的总 IOPS；它是 rd_s 和 wr_s 的总和。</li>
   <li>qtime: 平均排队时间；也就是说，请求在发送到物理设备之前在设备调度程序队列中花费的时间。</li>
@@ -1182,7 +1182,7 @@ Enter password:
 <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_comments<span class="sb">`</span>
 </code></pre></div></div>
 
-<p>如果想要定制输出可以采用 <code class="highlighter-rouge">--printf</code> 选项</p>
+<p>如果想要定制输出可以采用 <code class="language-plaintext highlighter-rouge">--printf</code> 选项</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pt-find <span class="nt">--host</span> 127.0.0.1 <span class="nt">--user</span> root <span class="nt">--ask-pass</span> <span class="nt">--tablesize</span> +5G <span class="nt">--printf</span> <span class="s2">"%T</span><span class="se">\t</span><span class="s2">%D.%N</span><span class="se">\n</span><span class="s2">"</span> | <span class="nb">sort</span> <span class="nt">-rn</span>
 Enter password: 
@@ -1202,7 +1202,7 @@ Enter password:
 5892898816      <span class="sb">`</span>test_dix<span class="sb">`</span>.<span class="sb">`</span>test_link_votes<span class="sb">`</span>
 </code></pre></div></div>
 
-<p><strong>遗憾的是目前 <code class="highlighter-rouge">printf</code> 格式来源与 Perl 的 <code class="highlighter-rouge">sprintf</code> 函数，所以支持格式有限，不过简单的格式定制已经基本实现，复杂的建议通过 awk 处理</strong>；其他的可选参数具体参考官方文档 <a href="https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html">https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html</a></p>
+<p><strong>遗憾的是目前 <code class="language-plaintext highlighter-rouge">printf</code> 格式来源与 Perl 的 <code class="language-plaintext highlighter-rouge">sprintf</code> 函数，所以支持格式有限，不过简单的格式定制已经基本实现，复杂的建议通过 awk 处理</strong>；其他的可选参数具体参考官方文档 <a href="https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html">https://www.percona.com/doc/percona-toolkit/LATEST/pt-find.html</a></p>
 
 <h3 id="87其他命令">8.7、其他命令</h3>
 
@@ -1311,7 +1311,7 @@ Enter password:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

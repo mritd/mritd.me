@@ -214,7 +214,7 @@
 
 <h3 id="二gitlab-ci-简介">二、GitLab CI 简介</h3>
 
-<p>GitLab CI 是 GitLab 默认集成的 CI 功能，GitLab CI 通过在项目内 <code class="highlighter-rouge">.gitlab-ci.yaml</code> 配置文件读取 CI 任务并进行相应处理；GitLab CI 通过其称为 GitLab Runner 的 Agent 端进行 build 操作；Runner 本身可以使用多种方式安装，比如使用 Docker 镜像启动等；Runner 在进行 build 操作时也可以选择多种 build 环境提供者；比如直接在 Runner 所在宿主机 build、通过新创建虚拟机(vmware、virtualbox)进行 build等；同时 Runner 支持 Docker 作为 build 提供者，即每次 build 新启动容器进行 build；GitLab CI 其大致架构如下</p>
+<p>GitLab CI 是 GitLab 默认集成的 CI 功能，GitLab CI 通过在项目内 <code class="language-plaintext highlighter-rouge">.gitlab-ci.yaml</code> 配置文件读取 CI 任务并进行相应处理；GitLab CI 通过其称为 GitLab Runner 的 Agent 端进行 build 操作；Runner 本身可以使用多种方式安装，比如使用 Docker 镜像启动等；Runner 在进行 build 操作时也可以选择多种 build 环境提供者；比如直接在 Runner 所在宿主机 build、通过新创建虚拟机(vmware、virtualbox)进行 build等；同时 Runner 支持 Docker 作为 build 提供者，即每次 build 新启动容器进行 build；GitLab CI 其大致架构如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/wejnz.png" alt="GitLab" /></p>
 
@@ -245,7 +245,7 @@ services:
       - <span class="s1">'./data/gitlab/data:/var/opt/gitlab'</span>
 </code></pre></div></div>
 
-<p>直接启动后，首次登陆需要设置初始密码如下，默认用户为 <code class="highlighter-rouge">root</code></p>
+<p>直接启动后，首次登陆需要设置初始密码如下，默认用户为 <code class="language-plaintext highlighter-rouge">root</code></p>
 
 <p><img src="https://cdn.oss.link/markdown/5go94.png" alt="gitkab init" /></p>
 
@@ -305,7 +305,7 @@ services:
   <li>新建一个 HomeController</li>
 </ul>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">me</span><span class="o">.</span><span class="na">mritd</span><span class="o">.</span><span class="na">TestProject</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">me.mritd.TestProject</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="nn">org.springframework.stereotype.Controller</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">org.springframework.web.bind.annotation.RequestMapping</span><span class="o">;</span>
@@ -347,7 +347,7 @@ services:
 
 <p><img src="https://cdn.oss.link/markdown/5k12p.png" alt="TestProject" /></p>
 
-<p>执行 <code class="highlighter-rouge">assemble</code> Task 打包出可执行 jar 包，并运行 <code class="highlighter-rouge">java -jar TestProject-0.0.1-SNAPSHOT.jar</code> 测试下能启动访问页面即可</p>
+<p>执行 <code class="language-plaintext highlighter-rouge">assemble</code> Task 打包出可执行 jar 包，并运行 <code class="language-plaintext highlighter-rouge">java -jar TestProject-0.0.1-SNAPSHOT.jar</code> 测试下能启动访问页面即可</p>
 
 <p><img src="https://cdn.oss.link/markdown/xoj3d.png" alt="TestProject assemble" /></p>
 
@@ -401,7 +401,7 @@ docker <span class="nb">exec</span> <span class="nt">-it</span> gitlab-runner gi
 
 <p><img src="https://cdn.oss.link/markdown/xv03e.png" alt="Runner List" /></p>
 
-<p><strong>Runner 注册成功后会将配置写入到 config.toml 配置文件；由于两个测试宿主机都没有配置内网 DNS，所以为了保证 runner 在使用 docker build 时能正确的找到 GitLab 仓库地址，还需要增加一个 docker 的 host 映射( <code class="highlighter-rouge">extra_hosts</code> )；同时为了能调用 宿主机 Docker 和持久化 build 的一些缓存还挂载了一些文件和目录；完整的 配置如下(配置文件可以做一些更高级的配置，具体参考 <a href="https://docs.gitlab.com/runner/configuration/advanced-configuration.html">官方文档</a> )</strong></p>
+<p><strong>Runner 注册成功后会将配置写入到 config.toml 配置文件；由于两个测试宿主机都没有配置内网 DNS，所以为了保证 runner 在使用 docker build 时能正确的找到 GitLab 仓库地址，还需要增加一个 docker 的 host 映射( <code class="language-plaintext highlighter-rouge">extra_hosts</code> )；同时为了能调用 宿主机 Docker 和持久化 build 的一些缓存还挂载了一些文件和目录；完整的 配置如下(配置文件可以做一些更高级的配置，具体参考 <a href="https://docs.gitlab.com/runner/configuration/advanced-configuration.html">官方文档</a> )</strong></p>
 
 <ul>
   <li>config.toml</li>
@@ -428,7 +428,7 @@ docker <span class="nb">exec</span> <span class="nt">-it</span> gitlab-runner gi
   <span class="nn">[runners.cache]</span>
 </code></pre></div></div>
 
-<p><strong>注意，这里声明的 Volumes 会在每个运行的容器中都生效；也就是说 build 时新开启的每个容器都会被挂载这些目录</strong>；修改完成后重启 runner 容器即可，由于 runner 中没啥可保存的东西，所以可以直接 <code class="highlighter-rouge">docker-compose down &amp;&amp; docker-compose up -d</code> 重启</p>
+<p><strong>注意，这里声明的 Volumes 会在每个运行的容器中都生效；也就是说 build 时新开启的每个容器都会被挂载这些目录</strong>；修改完成后重启 runner 容器即可，由于 runner 中没啥可保存的东西，所以可以直接 <code class="language-plaintext highlighter-rouge">docker-compose down &amp;&amp; docker-compose up -d</code> 重启</p>
 
 <h4 id="42创建基础镜像">4.2、创建基础镜像</h4>
 
@@ -448,7 +448,7 @@ RUN apk add <span class="nt">--update</span> bash curl <span class="nb">tar </sp
 CMD <span class="o">[</span><span class="s2">"bash"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p><strong>这个 openjdk Dockerfile 升级到了 8.151 版本，并且集成了一些字体相关的软件，以解决在 Java 中某些验证码库无法运行问题，详见 <a href="https://mritd.me/2017/09/27/alpine-3.6-openjdk-8-bug/">Alpine 3.6 OpenJDK 8 Bug</a></strong>；使用这个 Dockerfile，在当前目录执行 <code class="highlighter-rouge">docker build -t mritd/openjdk:8 .</code> build 一个 openjdk8 的基础镜像，然后将其推送到私服，或者 Docker Hub 即可</p>
+<p><strong>这个 openjdk Dockerfile 升级到了 8.151 版本，并且集成了一些字体相关的软件，以解决在 Java 中某些验证码库无法运行问题，详见 <a href="https://mritd.me/2017/09/27/alpine-3.6-openjdk-8-bug/">Alpine 3.6 OpenJDK 8 Bug</a></strong>；使用这个 Dockerfile，在当前目录执行 <code class="language-plaintext highlighter-rouge">docker build -t mritd/openjdk:8 .</code> build 一个 openjdk8 的基础镜像，然后将其推送到私服，或者 Docker Hub 即可</p>
 
 <h4 id="43创建项目镜像">4.3、创建项目镜像</h4>
 
@@ -469,11 +469,11 @@ COPY build/libs/<span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAM
 CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"</span>,<span class="s2">"java -jar /</span><span class="k">${</span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="k">}</span><span class="s2">.jar"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p><strong>该 Dockerfile 通过声明一个 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 变量来表示项目的发布物名称；然后将其复制到根目录下，最终利用 java 执行这个 jar 包；所以每次 build 之前只要能拿到项目发布物的名称即可</strong></p>
+<p><strong>该 Dockerfile 通过声明一个 <code class="language-plaintext highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 变量来表示项目的发布物名称；然后将其复制到根目录下，最终利用 java 执行这个 jar 包；所以每次 build 之前只要能拿到项目发布物的名称即可</strong></p>
 
 <h4 id="44gradle-修改">4.4、Gradle 修改</h4>
 
-<p>上面已经创建了一个标准的通用型 Dockerfile，每次 build 镜像只要传入 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 这个最终发布物名称即可；对于发布物名称来说，最好不要固定死；当然不论是 Java 还是其他语言的项目我们都能将最终发布物变成一个固定名字，最不济可以写脚本重命名一下；但是不建议那么干，最好保留版本号信息，以便于异常情况下进入容器能够分辨；对于当前 Java 项目来说，想要拿到 <code class="highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 很简单，我们只需要略微修改一下 Gradle 的 build 脚本，让其每次打包 jar 包时将项目的名称及版本号导出到文件中即可；同时这里也加入了镜像版本号的处理，Gradle 脚本修改如下</p>
+<p>上面已经创建了一个标准的通用型 Dockerfile，每次 build 镜像只要传入 <code class="language-plaintext highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 这个最终发布物名称即可；对于发布物名称来说，最好不要固定死；当然不论是 Java 还是其他语言的项目我们都能将最终发布物变成一个固定名字，最不济可以写脚本重命名一下；但是不建议那么干，最好保留版本号信息，以便于异常情况下进入容器能够分辨；对于当前 Java 项目来说，想要拿到 <code class="language-plaintext highlighter-rouge">PROJECT_BUILD_FINALNAME</code> 很简单，我们只需要略微修改一下 Gradle 的 build 脚本，让其每次打包 jar 包时将项目的名称及版本号导出到文件中即可；同时这里也加入了镜像版本号的处理，Gradle 脚本修改如下</p>
 
 <ul>
   <li>build.gradle 最后面增加如下</li>
@@ -499,7 +499,7 @@ CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>这一步操作实际上是修改了 <code class="highlighter-rouge">bootRepackage</code> 这个 Task(不了解 Gradle 或者不是 Java 项目的请忽略)，在其结束后创建了一个叫 <code class="highlighter-rouge">PROJECT_ENV</code> 的文件，里面实际上就是写入了一些 bash 环境变量声明，以方便后面 source 一下这个文件拿到一些变量，然后用户 build 镜像使用</strong>，<code class="highlighter-rouge">PROJECT_ENV</code> 最终生成如下</p>
+<p><strong>这一步操作实际上是修改了 <code class="language-plaintext highlighter-rouge">bootRepackage</code> 这个 Task(不了解 Gradle 或者不是 Java 项目的请忽略)，在其结束后创建了一个叫 <code class="language-plaintext highlighter-rouge">PROJECT_ENV</code> 的文件，里面实际上就是写入了一些 bash 环境变量声明，以方便后面 source 一下这个文件拿到一些变量，然后用户 build 镜像使用</strong>，<code class="language-plaintext highlighter-rouge">PROJECT_ENV</code> 最终生成如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">PROJECT_BUILD_FINALNAME</span><span class="o">=</span>TestProject-0.0.1-SNAPSHOT
 <span class="nb">export </span><span class="nv">BUILD_DATE</span><span class="o">=</span><span class="sb">`</span><span class="nb">date</span> +%Y%m%d%H%M%S<span class="sb">`</span>
@@ -511,7 +511,7 @@ CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"
 
 <h4 id="45创建-ci-配置文件">4.5、创建 CI 配置文件</h4>
 
-<p>一切准备就绪以后，就可以编写 CI 脚本了；GitLab 依靠读取项目根目录下的 <code class="highlighter-rouge">.gitlab-ci.yml</code> 文件来执行相应的 CI 操作；以下为测试项目的 <code class="highlighter-rouge">.gitlab-ci.yml</code> 配置</p>
+<p>一切准备就绪以后，就可以编写 CI 脚本了；GitLab 依靠读取项目根目录下的 <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> 文件来执行相应的 CI 操作；以下为测试项目的 <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> 配置</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 调试开启</span>
 <span class="c1">#before_script:</span>
@@ -559,31 +559,31 @@ CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"
 
 <h5 id="stages">stages</h5>
 
-<p>stages 字段定义了整个 CI 一共有哪些阶段流程，以上的 CI 配置中，定义了该项目的 CI 总共分为 <code class="highlighter-rouge">build</code>、<code class="highlighter-rouge">deploy</code> 两个阶段；GitLab CI 会根据其顺序执行对应阶段下的所有任务；<strong>在正常生产环境流程可以定义很多个，比如可以有 <code class="highlighter-rouge">test</code>、<code class="highlighter-rouge">publish</code>，甚至可能有代码扫描的 <code class="highlighter-rouge">sonar</code> 阶段等；这些阶段没有任何限制，完全是自定义的</strong>，上面的阶段定义好后在 CI 中表现如下图</p>
+<p>stages 字段定义了整个 CI 一共有哪些阶段流程，以上的 CI 配置中，定义了该项目的 CI 总共分为 <code class="language-plaintext highlighter-rouge">build</code>、<code class="language-plaintext highlighter-rouge">deploy</code> 两个阶段；GitLab CI 会根据其顺序执行对应阶段下的所有任务；<strong>在正常生产环境流程可以定义很多个，比如可以有 <code class="language-plaintext highlighter-rouge">test</code>、<code class="language-plaintext highlighter-rouge">publish</code>，甚至可能有代码扫描的 <code class="language-plaintext highlighter-rouge">sonar</code> 阶段等；这些阶段没有任何限制，完全是自定义的</strong>，上面的阶段定义好后在 CI 中表现如下图</p>
 
 <p><img src="https://cdn.oss.link/markdown/8c7gs.png" alt="stages" /></p>
 
 <h5 id="task">task</h5>
 
-<p>task 隶属于 stages 之下；也就是说一个阶段可以有多个任务，任务执行顺序默认不指定会并发执行；对于上面的 CI 配置来说 <code class="highlighter-rouge">auto-build</code> 和 <code class="highlighter-rouge">deploy</code> 都是 task，他们通过 <code class="highlighter-rouge">stage: xxxx</code> 这个标签来指定他们隶属于哪个 stage；当 Runner 使用 Docker 作为 build 提供者时，我们可以在 task 的 <code class="highlighter-rouge">image</code> 标签下声明该 task 要使用哪个镜像运行，不指定则默认为 Runner 注册时的镜像(这里是 debian)；<strong>同时 task 还有一个 <code class="highlighter-rouge">tags</code> 的标签，该标签指明了这个任务将可以在哪些 Runner 上运行；这个标签可以从 Runner 页面看到，实际上就是 Runner 注册时输入的哪个 tag；对于某些特殊的项目，比如 IOS 项目，则必须在特定机器上执行，所以此时指定 tags 标签很有用</strong>，当 task 运行后如下图所示</p>
+<p>task 隶属于 stages 之下；也就是说一个阶段可以有多个任务，任务执行顺序默认不指定会并发执行；对于上面的 CI 配置来说 <code class="language-plaintext highlighter-rouge">auto-build</code> 和 <code class="language-plaintext highlighter-rouge">deploy</code> 都是 task，他们通过 <code class="language-plaintext highlighter-rouge">stage: xxxx</code> 这个标签来指定他们隶属于哪个 stage；当 Runner 使用 Docker 作为 build 提供者时，我们可以在 task 的 <code class="language-plaintext highlighter-rouge">image</code> 标签下声明该 task 要使用哪个镜像运行，不指定则默认为 Runner 注册时的镜像(这里是 debian)；<strong>同时 task 还有一个 <code class="language-plaintext highlighter-rouge">tags</code> 的标签，该标签指明了这个任务将可以在哪些 Runner 上运行；这个标签可以从 Runner 页面看到，实际上就是 Runner 注册时输入的哪个 tag；对于某些特殊的项目，比如 IOS 项目，则必须在特定机器上执行，所以此时指定 tags 标签很有用</strong>，当 task 运行后如下图所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/qzvlh.png" alt="Task" /></p>
 
-<p>除此之外 task 还能指定 <code class="highlighter-rouge">only</code> 标签用于限定那些分支才能触发这个 task，如果分支名字不满足则不会触发；<strong>默认情况下，这些 task 都是自动执行的，如果感觉某些任务太过危险，则可以通过增加 <code class="highlighter-rouge">when: manual</code> 改为手动执行；注意: 手动执行被 GitLab 认为是高权限的写操作，所以只有项目管理员才能手动运行一个 task，直白的说就是管理员才能点击</strong>；手动执行如下图所示</p>
+<p>除此之外 task 还能指定 <code class="language-plaintext highlighter-rouge">only</code> 标签用于限定那些分支才能触发这个 task，如果分支名字不满足则不会触发；<strong>默认情况下，这些 task 都是自动执行的，如果感觉某些任务太过危险，则可以通过增加 <code class="language-plaintext highlighter-rouge">when: manual</code> 改为手动执行；注意: 手动执行被 GitLab 认为是高权限的写操作，所以只有项目管理员才能手动运行一个 task，直白的说就是管理员才能点击</strong>；手动执行如下图所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/vcjci.png" alt="manual task" /></p>
 
 <h5 id="cache">cache</h5>
 
-<p>cache 这个参数用于定义全局那些文件将被 cache；<strong>在 GitLab CI 中，跨 stage 是不能保存东西的；也就是说在第一步 build 的操作生成的 jar 包，到第二部打包 docker image 时就会被删除；GitLab 会保证每个 stage 中任务在执行时都将工作目录(Docker 容器 中)还原到跟 GitLab 代码仓库中一模一样，多余文件及变更都会被删除</strong>；正常情况下，第一步 build 生成 jar 包应当立即推送到 nexus 私服；但是这里测试没有搭建，所以只能放到本地；但是放到本地下一个 task 就会删除它，所以利用 <code class="highlighter-rouge">cache</code> 这个参数将 <code class="highlighter-rouge">build</code> 目录 cache 住，保证其跨 stage 也能存在</p>
+<p>cache 这个参数用于定义全局那些文件将被 cache；<strong>在 GitLab CI 中，跨 stage 是不能保存东西的；也就是说在第一步 build 的操作生成的 jar 包，到第二部打包 docker image 时就会被删除；GitLab 会保证每个 stage 中任务在执行时都将工作目录(Docker 容器 中)还原到跟 GitLab 代码仓库中一模一样，多余文件及变更都会被删除</strong>；正常情况下，第一步 build 生成 jar 包应当立即推送到 nexus 私服；但是这里测试没有搭建，所以只能放到本地；但是放到本地下一个 task 就会删除它，所以利用 <code class="language-plaintext highlighter-rouge">cache</code> 这个参数将 <code class="language-plaintext highlighter-rouge">build</code> 目录 cache 住，保证其跨 stage 也能存在</p>
 
-<p><strong>关于 <code class="highlighter-rouge">.gitlab-ci.yml</code> 具体配置更完整的请参考 <a href="https://docs.gitlab.com/ee/ci/yaml/">官方文档</a></strong></p>
+<p><strong>关于 <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> 具体配置更完整的请参考 <a href="https://docs.gitlab.com/ee/ci/yaml/">官方文档</a></strong></p>
 
 <h3 id="五其他相关">五、其他相关</h3>
 
 <h4 id="51gitlab-内置环境变量">5.1、GitLab 内置环境变量</h4>
 
-<p>上面已经基本搞定了一个项目的 CI，但是有些变量可能并未说清楚；比如在创建的 <code class="highlighter-rouge">PROJECT_ENV</code> 文件中引用了 <code class="highlighter-rouge">${CI_COMMIT_SHA}</code> 变量；这种变量其实是 GitLab CI 的内置隐藏变量，这些变量在每次 CI 调用 Runner 运行某个任务时都会传递到对应的 Runner 的执行环境中；<strong>也就是说这些变量在每次的任务容器 SHELL 环境中都会存在，可以直接引用</strong>，具体的完整环境变量列表可以从 <a href="https://docs.gitlab.com/ee/ci/variables/">官方文档</a> 中获取；如果想知道环境变量具体的值，实际上可以通过在任务执行前用 <code class="highlighter-rouge">env</code> 指令打印出来，如下所示</p>
+<p>上面已经基本搞定了一个项目的 CI，但是有些变量可能并未说清楚；比如在创建的 <code class="language-plaintext highlighter-rouge">PROJECT_ENV</code> 文件中引用了 <code class="language-plaintext highlighter-rouge">${CI_COMMIT_SHA}</code> 变量；这种变量其实是 GitLab CI 的内置隐藏变量，这些变量在每次 CI 调用 Runner 运行某个任务时都会传递到对应的 Runner 的执行环境中；<strong>也就是说这些变量在每次的任务容器 SHELL 环境中都会存在，可以直接引用</strong>，具体的完整环境变量列表可以从 <a href="https://docs.gitlab.com/ee/ci/variables/">官方文档</a> 中获取；如果想知道环境变量具体的值，实际上可以通过在任务执行前用 <code class="language-plaintext highlighter-rouge">env</code> 指令打印出来，如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/la9kn.png" alt="env" /></p>
 
@@ -607,7 +607,7 @@ CMD <span class="o">[</span><span class="s2">"bash"</span>,<span class="s2">"-c"
 
 <p><img src="https://cdn.oss.link/markdown/bu17r.png" alt="kubectl" /></p>
 
-<p>其中 <code class="highlighter-rouge">mritd/docker-kubectl:v1.7.4</code> 这个镜像的 Dockerfile 如下</p>
+<p>其中 <code class="language-plaintext highlighter-rouge">mritd/docker-kubectl:v1.7.4</code> 这个镜像的 Dockerfile 如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM docker:dind 
 
@@ -630,7 +630,7 @@ RUN apk upgrade <span class="nt">--update</span> <span class="se">\</span>
 CMD <span class="o">[</span><span class="s2">"/bin/bash"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p>这里面的 <code class="highlighter-rouge">${KUBE_CONFIG}</code> 是一个自定义的环境变量，对于测试环境我将配置文件直接挂载入了容器中，然后 <code class="highlighter-rouge">${KUBE_CONFIG}</code> 只是指定了一个配置文件位置，实际生产环境中可以选择将配置文件变成自定义环境变量使用</p>
+<p>这里面的 <code class="language-plaintext highlighter-rouge">${KUBE_CONFIG}</code> 是一个自定义的环境变量，对于测试环境我将配置文件直接挂载入了容器中，然后 <code class="language-plaintext highlighter-rouge">${KUBE_CONFIG}</code> 只是指定了一个配置文件位置，实际生产环境中可以选择将配置文件变成自定义环境变量使用</p>
 
 <h4 id="54gitlab-ci-总结">5.4、GitLab CI 总结</h4>
 
@@ -755,7 +755,7 @@ CMD <span class="o">[</span><span class="s2">"/bin/bash"</span><span class="o">]
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

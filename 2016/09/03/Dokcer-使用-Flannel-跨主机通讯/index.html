@@ -239,7 +239,7 @@ wget https://github.com/coreos/flannel/releases/download/v0.6.1/flannel-v0.6.1-l
 <span class="nb">tar</span> <span class="nt">-zxvf</span> flannel-v0.6.1-linux-amd64.tar.gz
 </code></pre></div></div>
 
-<p>解压后的到 <code class="highlighter-rouge">flanneld</code>、<code class="highlighter-rouge">mk-docker-opts.sh</code> 两个文件，其中 <code class="highlighter-rouge">flanneld</code> 为主要的执行文件，sh 脚本用于生成 Docker 启动参数</p>
+<p>解压后的到 <code class="language-plaintext highlighter-rouge">flanneld</code>、<code class="language-plaintext highlighter-rouge">mk-docker-opts.sh</code> 两个文件，其中 <code class="language-plaintext highlighter-rouge">flanneld</code> 为主要的执行文件，sh 脚本用于生成 Docker 启动参数</p>
 
 <h3 id="23配置-flannel">2.3、配置 Flannel</h3>
 
@@ -288,7 +288,7 @@ ifconfig docker0 <span class="k">${</span><span class="nv">FLANNEL_SUBNET</span>
 
 <p><strong>创建 Docker 运行变量</strong></p>
 
-<p>接下来使用 Flannel 提供方的脚本创建 Docker 启动参数，创建好的启动参数位于 <code class="highlighter-rouge">/run/docker_opts.env </code> 文件中</p>
+<p>接下来使用 Flannel 提供方的脚本创建 Docker 启动参数，创建好的启动参数位于 <code class="language-plaintext highlighter-rouge">/run/docker_opts.env </code> 文件中</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./mk-docker-opts.sh <span class="nt">-d</span> /run/docker_opts.env <span class="nt">-c</span>
 </code></pre></div></div>
@@ -323,7 +323,7 @@ systemctl restart docker
 
 <p>CentOS 官方已经提供了 flannel 的 rpm 包，使用 rpm 包安装的好处是会自动创建一些配置文件，同时方便管理。</p>
 
-<p><strong>目前官方提供的 rpm 包一般版本都会低一些，可以使用 <a href="https://github.com/mritd/shell_scripts">shell_scripts</a> 中的 <code class="highlighter-rouge">build-flannel-rpm.sh</code> 脚本创建指定版本的 rpm 包，以下基于我创建好的 0.6.1 版本的 flannel rpm 安装</strong></p>
+<p><strong>目前官方提供的 rpm 包一般版本都会低一些，可以使用 <a href="https://github.com/mritd/shell_scripts">shell_scripts</a> 中的 <code class="language-plaintext highlighter-rouge">build-flannel-rpm.sh</code> 脚本创建指定版本的 rpm 包，以下基于我创建好的 0.6.1 版本的 flannel rpm 安装</strong></p>
 
 <h3 id="31安装-flannel">3.1、安装 flannel</h3>
 
@@ -460,7 +460,7 @@ systemctl restart docker
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

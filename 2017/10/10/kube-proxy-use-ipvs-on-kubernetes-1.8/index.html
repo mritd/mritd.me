@@ -275,7 +275,7 @@ systemctl disable firewalld
 
 <h4 id="23内核参数调整">2.3、内核参数调整</h4>
 
-<p>确保内核已经开启如下参数，或者说确保 <code class="highlighter-rouge">/etc/sysctl.conf</code> 有如下配置</p>
+<p>确保内核已经开启如下参数，或者说确保 <code class="language-plaintext highlighter-rouge">/etc/sysctl.conf</code> 有如下配置</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ <span class="nb">cat</span> /etc/sysctl.conf
 <span class="c"># sysctl settings are defined through files in</span>
@@ -293,7 +293,7 @@ net.bridge.bridge-nf-call-iptables<span class="o">=</span>1
 net.bridge.bridge-nf-call-ip6tables<span class="o">=</span>1
 </code></pre></div></div>
 
-<p>然后执行 <code class="highlighter-rouge">sysctl -p</code> 使之生效</p>
+<p>然后执行 <code class="language-plaintext highlighter-rouge">sysctl -p</code> 使之生效</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ sysctl <span class="nt">-p</span>
 net.ipv4.ip_forward <span class="o">=</span> 1
@@ -303,7 +303,7 @@ net.bridge.bridge-nf-call-ip6tables <span class="o">=</span> 1
 
 <h4 id="24内核模块加载">2.4、内核模块加载</h4>
 
-<p>由于 ipvs 已经加入到内核主干，所以需要内核模块支持，请确保内核已经加载了相应模块；如不确定，执行以下脚本，以确保内核加载相应模块，<strong>否则会出现 <code class="highlighter-rouge">failed to load kernel modules: [ip_vs_rr ip_vs_sh ip_vs_wrr]</code> 错误</strong></p>
+<p>由于 ipvs 已经加入到内核主干，所以需要内核模块支持，请确保内核已经加载了相应模块；如不确定，执行以下脚本，以确保内核加载相应模块，<strong>否则会出现 <code class="language-plaintext highlighter-rouge">failed to load kernel modules: [ip_vs_rr ip_vs_sh ip_vs_wrr]</code> 错误</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;</span> /etc/sysconfig/modules/ipvs.modules <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
 #!/bin/bash
@@ -318,7 +318,7 @@ done
 </span><span class="nb">chmod </span>755 /etc/sysconfig/modules/ipvs.modules <span class="o">&amp;&amp;</span> bash /etc/sysconfig/modules/ipvs.modules <span class="o">&amp;&amp;</span> lsmod | <span class="nb">grep </span>ip_vs
 </code></pre></div></div>
 
-<p>执行后应该如下图所示，<strong>如果 <code class="highlighter-rouge">lsmod | grep ip_vs</code> 并未出现 <code class="highlighter-rouge">ip_vs_rr</code> 等模块；那么请更换内核(一般不会，2.6 以后 ipvs 好像已经就合并进主干了)</strong></p>
+<p>执行后应该如下图所示，<strong>如果 <code class="language-plaintext highlighter-rouge">lsmod | grep ip_vs</code> 并未出现 <code class="language-plaintext highlighter-rouge">ip_vs_rr</code> 等模块；那么请更换内核(一般不会，2.6 以后 ipvs 好像已经就合并进主干了)</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/49wbb.jpg" alt="Load kernel modules" /></p>
 
@@ -326,7 +326,7 @@ done
 
 <h4 id="31修改配置">3.1、修改配置</h4>
 
-<p>修改 <code class="highlighter-rouge">/etc/kubernetes/proxy</code> 配置如下</p>
+<p>修改 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/proxy</code> 配置如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes proxy config</span>
@@ -349,12 +349,12 @@ done
 <p><strong>启用 ipvs 后与 1.7 版本的配置差异如下：</strong></p>
 
 <ul>
-  <li>增加 <code class="highlighter-rouge">--feature-gates=SupportIPVSProxyMode=true</code> 选项，用于告诉 kube-proxy 开启 ipvs 支持，因为目前 ipvs 并未稳定</li>
-  <li>增加 <code class="highlighter-rouge">ipvs-min-sync-period</code>、<code class="highlighter-rouge">--ipvs-sync-period</code>、<code class="highlighter-rouge">--ipvs-scheduler</code> 三个参数用于调整 ipvs，具体参数值请自行查阅 ipvs 文档</li>
-  <li><strong>增加 <code class="highlighter-rouge">--masquerade-all</code> 选项，以确保反向流量通过</strong></li>
+  <li>增加 <code class="language-plaintext highlighter-rouge">--feature-gates=SupportIPVSProxyMode=true</code> 选项，用于告诉 kube-proxy 开启 ipvs 支持，因为目前 ipvs 并未稳定</li>
+  <li>增加 <code class="language-plaintext highlighter-rouge">ipvs-min-sync-period</code>、<code class="language-plaintext highlighter-rouge">--ipvs-sync-period</code>、<code class="language-plaintext highlighter-rouge">--ipvs-scheduler</code> 三个参数用于调整 ipvs，具体参数值请自行查阅 ipvs 文档</li>
+  <li><strong>增加 <code class="language-plaintext highlighter-rouge">--masquerade-all</code> 选项，以确保反向流量通过</strong></li>
 </ul>
 
-<p><strong>重点说一下 <code class="highlighter-rouge">--masquerade-all</code> 选项: kube-proxy ipvs 是基于 NAT 实现的，当创建一个 service 后，kubernetes 会在每个节点上创建一个网卡，同时帮你将 Service IP(VIP) 绑定上，此时相当于每个 Node 都是一个 ds，而其他任何 Node 上的 Pod，甚至是宿主机服务(比如 kube-apiserver 的 6443)都可能成为 rs；按照正常的 lvs nat 模型，所有 rs 应该将 ds 设置成为默认网关，以便数据包在返回时能被 ds 正确修改；在 kubernetes 将 vip 设置到每个 Node 后，默认路由显然不可行，所以要设置 <code class="highlighter-rouge">--masquerade-all</code> 选项，以便反向数据包能通过</strong></p>
+<p><strong>重点说一下 <code class="language-plaintext highlighter-rouge">--masquerade-all</code> 选项: kube-proxy ipvs 是基于 NAT 实现的，当创建一个 service 后，kubernetes 会在每个节点上创建一个网卡，同时帮你将 Service IP(VIP) 绑定上，此时相当于每个 Node 都是一个 ds，而其他任何 Node 上的 Pod，甚至是宿主机服务(比如 kube-apiserver 的 6443)都可能成为 rs；按照正常的 lvs nat 模型，所有 rs 应该将 ds 设置成为默认网关，以便数据包在返回时能被 ds 正确修改；在 kubernetes 将 vip 设置到每个 Node 后，默认路由显然不可行，所以要设置 <code class="language-plaintext highlighter-rouge">--masquerade-all</code> 选项，以便反向数据包能通过</strong></p>
 
 <p>以上描述可能并不精准，具体请看 <a href="https://docs.google.com/document/d/1YEBWR4EWeCEWwxufXzRM0e82l_lYYzIXQiSayGaVQ8M/edit?usp=sharing">Google 文档</a></p>
 
@@ -378,7 +378,7 @@ systemctl restart kube-proxy
 
 <p><img src="https://cdn.oss.link/markdown/42pjm.jpg" alt="test ipvs1" /></p>
 
-<p><strong>最后说一点: ipvs 尚未稳定，请慎用；而且 <code class="highlighter-rouge">--masquerade-all</code> 选项与 Calico 安全策略控制不兼容，请酌情考虑使用(Calico 在做网络策略限制的时候要求不能开启此选项)</strong></p>
+<p><strong>最后说一点: ipvs 尚未稳定，请慎用；而且 <code class="language-plaintext highlighter-rouge">--masquerade-all</code> 选项与 Calico 安全策略控制不兼容，请酌情考虑使用(Calico 在做网络策略限制的时候要求不能开启此选项)</strong></p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -483,7 +483,7 @@ systemctl restart kube-proxy
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

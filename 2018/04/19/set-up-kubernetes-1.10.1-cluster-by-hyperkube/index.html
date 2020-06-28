@@ -243,7 +243,7 @@
   </tbody>
 </table>
 
-<p><strong>搭建前请看完整篇文章后再操作，一些变更说明我放到后面了；还有为了尽可能的懒，也不用什么 rpm、deb 了，直接 <code class="highlighter-rouge">hyperkube</code> + <code class="highlighter-rouge">service</code> 配置，布吉岛 <code class="highlighter-rouge">hyperkube</code> 的请看 <a href="https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/README.md">GitHub</a>；本篇文章基于一些小脚本搭建(懒)，所以不会写太详细的步骤，具体请参考 <a href="https://github.com/mritd/ktool">仓库脚本</a>，如果想看更详细的每一步的作用可以参考以前的 1.7、1.8 的搭建文档</strong></p>
+<p><strong>搭建前请看完整篇文章后再操作，一些变更说明我放到后面了；还有为了尽可能的懒，也不用什么 rpm、deb 了，直接 <code class="language-plaintext highlighter-rouge">hyperkube</code> + <code class="language-plaintext highlighter-rouge">service</code> 配置，布吉岛 <code class="language-plaintext highlighter-rouge">hyperkube</code> 的请看 <a href="https://github.com/kubernetes/kubernetes/blob/master/cluster/images/hyperkube/README.md">GitHub</a>；本篇文章基于一些小脚本搭建(懒)，所以不会写太详细的步骤，具体请参考 <a href="https://github.com/mritd/ktool">仓库脚本</a>，如果想看更详细的每一步的作用可以参考以前的 1.7、1.8 的搭建文档</strong></p>
 
 <h3 id="二搭建-etcd-集群">二、搭建 Etcd 集群</h3>
 
@@ -470,8 +470,8 @@ preinstall
 <ul>
   <li>download: 从 Github 下载二进制文件并解压</li>
   <li>preinstall: 为 Etcd 安装做准备，创建 etcd 用户，并指定家目录登录 shell 等</li>
-  <li>install: 将 etcd 二进制文件复制到安装目录(<code class="highlighter-rouge">/usr/local/bin</code>)，复制 conf 目录到 <code class="highlighter-rouge">/etc/etcd</code></li>
-  <li>postinstall: 安装后收尾工作，比如检测 <code class="highlighter-rouge">/var/lib/etcd</code> 是否存在，纠正权限等</li>
+  <li>install: 将 etcd 二进制文件复制到安装目录(<code class="language-plaintext highlighter-rouge">/usr/local/bin</code>)，复制 conf 目录到 <code class="language-plaintext highlighter-rouge">/etc/etcd</code></li>
+  <li>postinstall: 安装后收尾工作，比如检测 <code class="language-plaintext highlighter-rouge">/var/lib/etcd</code> 是否存在，纠正权限等</li>
 </ul>
 
 <p>整体目录结构如下</p>
@@ -493,7 +493,7 @@ preinstall
 └── install.sh
 </code></pre></div></div>
 
-<p><strong>请自行创建 conf 目录等，并放置好相关文件，保存上面脚本为 <code class="highlighter-rouge">install.sh</code>，直接执行即可；在每台机器上更改好对应的配置，如 etcd 名称等，etcd 估计都是轻车熟路了，这里不做过多阐述；安装后启动即可</strong></p>
+<p><strong>请自行创建 conf 目录等，并放置好相关文件，保存上面脚本为 <code class="language-plaintext highlighter-rouge">install.sh</code>，直接执行即可；在每台机器上更改好对应的配置，如 etcd 名称等，etcd 估计都是轻车熟路了，这里不做过多阐述；安装后启动即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl start etcd
 systemctl <span class="nb">enable </span>etcd
@@ -588,7 +588,7 @@ etcdctl <span class="nt">--cacert</span><span class="o">=</span>/etc/etcd/ssl/et
 
 <h5 id="kube-apiserver-csrjson">kube-apiserver-csr.json</h5>
 
-<p><strong>注意: 在以前的文档中这个配置叫 <code class="highlighter-rouge">kubernetes-csr.json</code>，为了明确划分职责，这个证书目前被重命名以表示其专属于 <code class="highlighter-rouge">apiserver</code> 使用；加了一个 <code class="highlighter-rouge">*.kubernetes.master</code> 域名以便内部私有 DNS 解析使用(可删除)；至于很多人问过 <code class="highlighter-rouge">kubernetes</code> 这几个能不能删掉，答案是不可以的；因为当集群创建好后，default namespace 下会创建一个叫 <code class="highlighter-rouge">kubenretes</code> 的 svc，有一些组件会直接连接这个 svc 来跟 api 通讯的，证书如果不包含可能会出现无法连接的情况；其他几个 <code class="highlighter-rouge">kubernetes</code> 开头的域名作用相同</strong></p>
+<p><strong>注意: 在以前的文档中这个配置叫 <code class="language-plaintext highlighter-rouge">kubernetes-csr.json</code>，为了明确划分职责，这个证书目前被重命名以表示其专属于 <code class="language-plaintext highlighter-rouge">apiserver</code> 使用；加了一个 <code class="language-plaintext highlighter-rouge">*.kubernetes.master</code> 域名以便内部私有 DNS 解析使用(可删除)；至于很多人问过 <code class="language-plaintext highlighter-rouge">kubernetes</code> 这几个能不能删掉，答案是不可以的；因为当集群创建好后，default namespace 下会创建一个叫 <code class="language-plaintext highlighter-rouge">kubenretes</code> 的 svc，有一些组件会直接连接这个 svc 来跟 api 通讯的，证书如果不包含可能会出现无法连接的情况；其他几个 <code class="language-plaintext highlighter-rouge">kubernetes</code> 开头的域名作用相同</strong></p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"CN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"kubernetes"</span><span class="p">,</span><span class="w">
@@ -724,7 +724,7 @@ rules:
 
 <h4 id="32准备-systemd-配置">3.2、准备 systemd 配置</h4>
 
-<p>所有组件的 <code class="highlighter-rouge">systemd</code> 配置如下</p>
+<p>所有组件的 <code class="language-plaintext highlighter-rouge">systemd</code> 配置如下</p>
 
 <h5 id="kube-apiserverservice">kube-apiserver.service</h5>
 
@@ -853,11 +853,11 @@ rules:
 
 <h4 id="33master-节点配置">3.3、Master 节点配置</h4>
 
-<p>Master 节点主要会运行 3 各组件: <code class="highlighter-rouge">kube-apiserver</code>、<code class="highlighter-rouge">kube-controller-manager</code>、<code class="highlighter-rouge">kube-scheduler</code>，其中用到的配置文件如下</p>
+<p>Master 节点主要会运行 3 各组件: <code class="language-plaintext highlighter-rouge">kube-apiserver</code>、<code class="language-plaintext highlighter-rouge">kube-controller-manager</code>、<code class="language-plaintext highlighter-rouge">kube-scheduler</code>，其中用到的配置文件如下</p>
 
 <h5 id="config">config</h5>
 
-<p><strong>config 是一个通用配置文件，值得注意的是由于安装时对于 Node、Master 节点都会包含该文件，在 Node 节点上请注释掉 <code class="highlighter-rouge">KUBE_MASTER</code> 变量，因为 Node 节点需要做 HA，要连接本地的 6443 加密端口；而这个变量将会覆盖 <code class="highlighter-rouge">kubeconfig</code> 中指定的 <code class="highlighter-rouge">127.0.0.1:6443</code> 地址</strong></p>
+<p><strong>config 是一个通用配置文件，值得注意的是由于安装时对于 Node、Master 节点都会包含该文件，在 Node 节点上请注释掉 <code class="language-plaintext highlighter-rouge">KUBE_MASTER</code> 变量，因为 Node 节点需要做 HA，要连接本地的 6443 加密端口；而这个变量将会覆盖 <code class="language-plaintext highlighter-rouge">kubeconfig</code> 中指定的 <code class="language-plaintext highlighter-rouge">127.0.0.1:6443</code> 地址</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes system config</span>
@@ -885,7 +885,7 @@ rules:
 
 <h5 id="apiserver">apiserver</h5>
 
-<p>apiserver 配置相对于 1.8 略有变动，其中准入控制器(<code class="highlighter-rouge">admission control</code>)选项名称变为了 <code class="highlighter-rouge">--enable-admission-plugins</code>，控制器列表也有相应变化，这里采用官方推荐配置，具体请参考 <a href="https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use">官方文档</a></p>
+<p>apiserver 配置相对于 1.8 略有变动，其中准入控制器(<code class="language-plaintext highlighter-rouge">admission control</code>)选项名称变为了 <code class="language-plaintext highlighter-rouge">--enable-admission-plugins</code>，控制器列表也有相应变化，这里采用官方推荐配置，具体请参考 <a href="https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use">官方文档</a></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes system config</span>
@@ -945,7 +945,7 @@ rules:
 
 <h5 id="controller-manager">controller-manager</h5>
 
-<p>controller manager 配置默认开启了证书轮换能力用于自动签署 kueblet 证书，并且证书时间也设置了 10 年，可自行调整；增加了 <code class="highlighter-rouge">--controllers</code> 选项以指定开启全部控制器</p>
+<p>controller manager 配置默认开启了证书轮换能力用于自动签署 kueblet 证书，并且证书时间也设置了 10 年，可自行调整；增加了 <code class="language-plaintext highlighter-rouge">--controllers</code> 选项以指定开启全部控制器</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># The following values are used to configure the kubernetes controller-manager</span>
@@ -985,11 +985,11 @@ rules:
 
 <h4 id="34node-节点配置">3.4、Node 节点配置</h4>
 
-<p>Node 节点上主要有 <code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">kube-proxy</code> 组件，用到的配置如下</p>
+<p>Node 节点上主要有 <code class="language-plaintext highlighter-rouge">kubelet</code>、<code class="language-plaintext highlighter-rouge">kube-proxy</code> 组件，用到的配置如下</p>
 
 <h5 id="kubelet">kubelet</h5>
 
-<p>kubeket 默认也开启了证书轮换能力以保证自动续签相关证书，同时增加了 <code class="highlighter-rouge">--node-labels</code> 选项为 node 打一个标签，关于这个标签最后部分会有讨论，<strong>如果在 master 上启动 kubelet，请将 <code class="highlighter-rouge">node-role.kubernetes.io/k8s-node=true</code> 修改为 <code class="highlighter-rouge">node-role.kubernetes.io/k8s-master=true</code></strong></p>
+<p>kubeket 默认也开启了证书轮换能力以保证自动续签相关证书，同时增加了 <code class="language-plaintext highlighter-rouge">--node-labels</code> 选项为 node 打一个标签，关于这个标签最后部分会有讨论，<strong>如果在 master 上启动 kubelet，请将 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/k8s-node=true</code> 修改为 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/k8s-master=true</code></strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes kubelet (minion) config</span>
@@ -1083,7 +1083,7 @@ rules:
     └── kube-scheduler.service
 </code></pre></div></div>
 
-<p>其中 <code class="highlighter-rouge">install.sh</code> 内容如下</p>
+<p>其中 <code class="language-plaintext highlighter-rouge">install.sh</code> 内容如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
 
@@ -1152,11 +1152,11 @@ postinstall
   <li>postinstall: 收尾工作，创建日志目录等，并处理权限</li>
 </ul>
 
-<p>最后执行此脚本安装即可，<strong>此外，应确保每个节点安装了 <code class="highlighter-rouge">ipset</code>、<code class="highlighter-rouge">conntrack</code> 两个包，因为 kube-proxy 组件会使用其处理 iptables 规则等</strong></p>
+<p>最后执行此脚本安装即可，<strong>此外，应确保每个节点安装了 <code class="language-plaintext highlighter-rouge">ipset</code>、<code class="language-plaintext highlighter-rouge">conntrack</code> 两个包，因为 kube-proxy 组件会使用其处理 iptables 规则等</strong></p>
 
 <h3 id="四启动-kubernetes-master-节点">四、启动 Kubernetes Master 节点</h3>
 
-<p>对于 <code class="highlighter-rouge">master</code> 节点启动无需做过多处理，多个 <code class="highlighter-rouge">master</code> 只要保证 <code class="highlighter-rouge">apiserver</code> 等配置中的 ip 地址监听没问题后直接启动即可</p>
+<p>对于 <code class="language-plaintext highlighter-rouge">master</code> 节点启动无需做过多处理，多个 <code class="language-plaintext highlighter-rouge">master</code> 只要保证 <code class="language-plaintext highlighter-rouge">apiserver</code> 等配置中的 ip 地址监听没问题后直接启动即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
 systemctl start kube-apiserver
@@ -1177,9 +1177,9 @@ systemctl <span class="nb">enable </span>kube-scheduler
 
 <h4 id="51nginx-proxy">5.1、nginx-proxy</h4>
 
-<p>在启动 <code class="highlighter-rouge">kubelet</code>、<code class="highlighter-rouge">kube-proxy</code> 服务之前，需要在本地启动 <code class="highlighter-rouge">nginx</code> 来 tcp 负载均衡 <code class="highlighter-rouge">apiserver</code> 6443 端口，<code class="highlighter-rouge">nginx-proxy</code> 使用 <code class="highlighter-rouge">docker</code> + <code class="highlighter-rouge">systemd</code> 启动，配置如下</p>
+<p>在启动 <code class="language-plaintext highlighter-rouge">kubelet</code>、<code class="language-plaintext highlighter-rouge">kube-proxy</code> 服务之前，需要在本地启动 <code class="language-plaintext highlighter-rouge">nginx</code> 来 tcp 负载均衡 <code class="language-plaintext highlighter-rouge">apiserver</code> 6443 端口，<code class="language-plaintext highlighter-rouge">nginx-proxy</code> 使用 <code class="language-plaintext highlighter-rouge">docker</code> + <code class="language-plaintext highlighter-rouge">systemd</code> 启动，配置如下</p>
 
-<p><strong>注意: 对于在 master 节点启动 kubelet 来说，不需要 nginx 做负载均衡；可以跳过此步骤，并修改 <code class="highlighter-rouge">kubelet.kubeconfig</code>、<code class="highlighter-rouge">kube-proxy.kubeconfig</code> 中的 apiserver 地址为当前 master ip 6443 端口即可</strong></p>
+<p><strong>注意: 对于在 master 节点启动 kubelet 来说，不需要 nginx 做负载均衡；可以跳过此步骤，并修改 <code class="language-plaintext highlighter-rouge">kubelet.kubeconfig</code>、<code class="language-plaintext highlighter-rouge">kube-proxy.kubeconfig</code> 中的 apiserver 地址为当前 master ip 6443 端口即可</strong></p>
 
 <ul>
   <li>nginx-proxy.service</li>
@@ -1253,7 +1253,7 @@ systemctl <span class="nb">enable </span>nginx-proxy
 
 <h4 id="52tls-bootstrapping">5.2、TLS bootstrapping</h4>
 
-<p>创建好 <code class="highlighter-rouge">nginx-proxy</code> 后不要忘记为 <code class="highlighter-rouge">TLS Bootstrap</code> 创建相应的 <code class="highlighter-rouge">RBAC</code> 规则，这些规则能实现证自动签署 <code class="highlighter-rouge">TLS Bootstrap</code> 发出的 <code class="highlighter-rouge">CSR</code> 请求，从而实现证书轮换(创建一次即可)；详情请参考 <a href="https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note/">Kubernetes TLS bootstrapping 那点事</a></p>
+<p>创建好 <code class="language-plaintext highlighter-rouge">nginx-proxy</code> 后不要忘记为 <code class="language-plaintext highlighter-rouge">TLS Bootstrap</code> 创建相应的 <code class="language-plaintext highlighter-rouge">RBAC</code> 规则，这些规则能实现证自动签署 <code class="language-plaintext highlighter-rouge">TLS Bootstrap</code> 发出的 <code class="language-plaintext highlighter-rouge">CSR</code> 请求，从而实现证书轮换(创建一次即可)；详情请参考 <a href="https://mritd.me/2018/01/07/kubernetes-tls-bootstrapping-note/">Kubernetes TLS bootstrapping 那点事</a></p>
 
 <ul>
   <li>tls-bootstrapping-clusterrole.yaml(与 1.8 一样)</li>
@@ -1298,7 +1298,7 @@ kubectl create clusterrolebinding node-server-auto-renew-crt <span class="se">\<
 
 <h4 id="53执行启动">5.3、执行启动</h4>
 
-<p>多节点部署时先启动好 <code class="highlighter-rouge">nginx-proxy</code>，然后修改好相应配置的 ip 地址等配置，最终直接启动即可(master 上启动 kubelet 不要忘了修改 kubeconfig 中的 apiserver 地址，还有对应的 kubelet 的 node label)</p>
+<p>多节点部署时先启动好 <code class="language-plaintext highlighter-rouge">nginx-proxy</code>，然后修改好相应配置的 ip 地址等配置，最终直接启动即可(master 上启动 kubelet 不要忘了修改 kubeconfig 中的 apiserver 地址，还有对应的 kubelet 的 node label)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
 systemctl start kubelet
@@ -1394,16 +1394,16 @@ RestartSec=10
 WantedBy=multi-user.target
 </span><span class="no">EOF
 </span></code></pre></div></div>
-<p><strong>对于以上脚本中的 <code class="highlighter-rouge">K8S_MASTER_IP</code> 变量，只需要填写一个 master ip 即可，这个变量用于 calico 自动选择 IP 使用；在宿主机有多张网卡的情况下，calcio node 会自动获取一个 IP，获取原则就是尝试是否能够联通这个 master ip</strong></p>
+<p><strong>对于以上脚本中的 <code class="language-plaintext highlighter-rouge">K8S_MASTER_IP</code> 变量，只需要填写一个 master ip 即可，这个变量用于 calico 自动选择 IP 使用；在宿主机有多张网卡的情况下，calcio node 会自动获取一个 IP，获取原则就是尝试是否能够联通这个 master ip</strong></p>
 
-<p>由于 calico 需要使用 etcd 存储数据，所以需要复制 etcd 证书到相关目录，<strong><code class="highlighter-rouge">/etc/calico</code> 需要在每个节点都有</strong></p>
+<p>由于 calico 需要使用 etcd 存储数据，所以需要复制 etcd 证书到相关目录，<strong><code class="language-plaintext highlighter-rouge">/etc/calico</code> 需要在每个节点都有</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> <span class="nt">-r</span> /etc/etcd/ssl /etc/calico
 </code></pre></div></div>
 
 <h4 id="53修改-kubelet-配置">5.3、修改 kubelet 配置</h4>
 
-<p>使用 Calico 后需要修改 kubelet 配置增加 CNI 设置(<code class="highlighter-rouge">--network-plugin=cni</code>)，修改后配置如下</p>
+<p>使用 Calico 后需要修改 kubelet 配置增加 CNI 设置(<code class="language-plaintext highlighter-rouge">--network-plugin=cni</code>)，修改后配置如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes kubelet (minion) config</span>
@@ -1669,7 +1669,7 @@ spec:
 <span class="nb">sed</span> <span class="nt">-e</span> s/CLUSTER_DNS_IP/<span class="nv">$CLUSTER_DNS_IP</span>/g <span class="nt">-e</span> s/CLUSTER_DOMAIN/<span class="nv">$CLUSTER_DOMAIN</span>/g <span class="nt">-e</span> s?SERVICE_CIDR?<span class="nv">$SERVICE_CIDR</span>?g <span class="nt">-e</span> s?POD_CIDR?<span class="nv">$POD_CIDR</span>?g <span class="nv">$YAML_TEMPLATE</span> <span class="o">&gt;</span> coredns.yaml
 </code></pre></div></div>
 
-<p>最后使用 <code class="highlighter-rouge">kubectl</code> 创建一下</p>
+<p>最后使用 <code class="language-plaintext highlighter-rouge">kubectl</code> 创建一下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 执行上面的替换脚本</span>
 ./deploy.sh
@@ -1809,7 +1809,7 @@ kubectl create <span class="nt">-f</span> https://raw.githubusercontent.com/kube
 
 <h4 id="81部署-dashboard">8.1、部署 Dashboard</h4>
 
-<p>Dashboard 部署同 heapster 一样，不过为了方便访问，我设置了 NodePort，还注意到一点是 yaml 拉取策略已经没有比较傻的 <code class="highlighter-rouge">Always</code> 了</p>
+<p>Dashboard 部署同 heapster 一样，不过为了方便访问，我设置了 NodePort，还注意到一点是 yaml 拉取策略已经没有比较傻的 <code class="language-plaintext highlighter-rouge">Always</code> 了</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml <span class="nt">-O</span> kubernetes-dashboard.yaml
 </code></pre></div></div>
@@ -1837,11 +1837,11 @@ kubectl create <span class="nt">-f</span> https://raw.githubusercontent.com/kube
     <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">kubernetes-dashboard</span>
 </code></pre></div></div>
 
-<p>然后执行 <code class="highlighter-rouge">kubectl create -f kubernetes-dashboard.yaml</code> 即可</p>
+<p>然后执行 <code class="language-plaintext highlighter-rouge">kubectl create -f kubernetes-dashboard.yaml</code> 即可</p>
 
 <h4 id="82创建-admin-账户">8.2、创建 admin 账户</h4>
 
-<p>默认情况下部署成功后可以直接访问 <code class="highlighter-rouge">https://NODE_IP:30000</code> 访问，但是想要登录进去查看的话需要使用 kubeconfig 或者 access token 的方式；实际上这个就是 RBAC 授权控制，以下提供一个创建 admin access token 的脚本，更细节的权限控制比如只读用户可以参考 <a href="https://mritd.me/2018/03/20/use-rbac-to-control-kubectl-permissions/">使用 RBAC 控制 kubectl 权限</a>，RBAC 权限控制原理是一样的</p>
+<p>默认情况下部署成功后可以直接访问 <code class="language-plaintext highlighter-rouge">https://NODE_IP:30000</code> 访问，但是想要登录进去查看的话需要使用 kubeconfig 或者 access token 的方式；实际上这个就是 RBAC 授权控制，以下提供一个创建 admin access token 的脚本，更细节的权限控制比如只读用户可以参考 <a href="https://mritd.me/2018/03/20/use-rbac-to-control-kubectl-permissions/">使用 RBAC 控制 kubectl 权限</a>，RBAC 权限控制原理是一样的</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
 
@@ -1855,7 +1855,7 @@ kubectl create <span class="nt">-f</span> https://raw.githubusercontent.com/kube
 </span>kubectl describe secret <span class="nt">-n</span> kube-system <span class="si">$(</span>kubectl get secrets <span class="nt">-n</span> kube-system | <span class="nb">grep </span>dashboard-admin | <span class="nb">cut</span> <span class="nt">-f1</span> <span class="nt">-d</span> <span class="s1">' '</span><span class="si">)</span> | <span class="nb">grep</span> <span class="nt">-E</span> <span class="s1">'^token'</span>
 </code></pre></div></div>
 
-<p>将以上脚本保存为 <code class="highlighter-rouge">create_dashboard_sa.sh</code> 执行即可，成功后访问截图如下(<strong>如果访问不了的话请检查下 iptable FORWARD 默认规则是否为 DROP，如果是将其改为 ACCEPT 即可</strong>)</p>
+<p>将以上脚本保存为 <code class="language-plaintext highlighter-rouge">create_dashboard_sa.sh</code> 执行即可，成功后访问截图如下(<strong>如果访问不了的话请检查下 iptable FORWARD 默认规则是否为 DROP，如果是将其改为 ACCEPT 即可</strong>)</p>
 
 <p><img src="https://cdn.oss.link/markdown/oxmms.png" alt="create_dashboard_sa" /></p>
 
@@ -1865,11 +1865,11 @@ kubectl create <span class="nt">-f</span> https://raw.githubusercontent.com/kube
 
 <h4 id="91选项-label-等说明">9.1、选项 label 等说明</h4>
 
-<p>部署过程中注意到一些选项已经做了名称更改，比如 <code class="highlighter-rouge">--network-plugin-dir</code> 变更为 <code class="highlighter-rouge">--cni-bin-dir</code> 等，具体的那些选项做了变更请自行对比配置，以及查看官方文档；</p>
+<p>部署过程中注意到一些选项已经做了名称更改，比如 <code class="language-plaintext highlighter-rouge">--network-plugin-dir</code> 变更为 <code class="language-plaintext highlighter-rouge">--cni-bin-dir</code> 等，具体的那些选项做了变更请自行对比配置，以及查看官方文档；</p>
 
-<p>对于 Node label <code class="highlighter-rouge">--node-labels=node-role.kubernetes.io/k8s-node=true</code> 这个选项，它的作用只是在 <code class="highlighter-rouge">kubectl get node</code> 时 ROLES 栏显示是什么节点；不过需要注意 <strong>master 上的 kubelet 不要将 <code class="highlighter-rouge">node-role.kubernetes.io/k8s-master=true</code> 更改成 <code class="highlighter-rouge">node-role.kubernetes.io/master=xxxx</code>；后面这个 <code class="highlighter-rouge">node-role.kubernetes.io/master</code> 是 kubeadm 用的，这个 label 会告诉 k8s 调度器当前节点为 master，从而执行一些特定动作，比如 <code class="highlighter-rouge">node-role.kubernetes.io/master:NoSchedule</code> 此节点将不会被分配 pod；具体参见 <a href="https://github.com/kubernetes-incubator/kubespray/issues/2108">kubespray issue</a> 以及 <a href="https://github.com/kubernetes/kubeadm/blob/master/docs/design/design_v1.9.md#mark-master">官方设计文档</a></strong></p>
+<p>对于 Node label <code class="language-plaintext highlighter-rouge">--node-labels=node-role.kubernetes.io/k8s-node=true</code> 这个选项，它的作用只是在 <code class="language-plaintext highlighter-rouge">kubectl get node</code> 时 ROLES 栏显示是什么节点；不过需要注意 <strong>master 上的 kubelet 不要将 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/k8s-master=true</code> 更改成 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/master=xxxx</code>；后面这个 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/master</code> 是 kubeadm 用的，这个 label 会告诉 k8s 调度器当前节点为 master，从而执行一些特定动作，比如 <code class="language-plaintext highlighter-rouge">node-role.kubernetes.io/master:NoSchedule</code> 此节点将不会被分配 pod；具体参见 <a href="https://github.com/kubernetes-incubator/kubespray/issues/2108">kubespray issue</a> 以及 <a href="https://github.com/kubernetes/kubeadm/blob/master/docs/design/design_v1.9.md#mark-master">官方设计文档</a></strong></p>
 
-<p>很多人可能会发现大约 1 小时候 <code class="highlighter-rouge">kubectl get csr</code> 看不到任何 csr 了，这是因为最新版本增加了 csr 清理功能，<strong>默认对于 <code class="highlighter-rouge">approved</code> 和 <code class="highlighter-rouge">denied</code> 状态的 csr 一小时后会被清理，对于 <code class="highlighter-rouge">pending</code> 状态的 csr 24 小时后会被清理，想问时间从哪来的请看 <a href="https://github.com/kubernetes/kubernetes/blob/fa85bf7094a8a503fede964b7038eed51360ffc7/pkg/controller/certificates/cleaner/cleaner.go#L47">代码</a>；PR issue 我忘记了，增加这个功能的起因大致就是因为当开启了证书轮换后，csr 会不断增加，所以需要增加一个清理功能</strong></p>
+<p>很多人可能会发现大约 1 小时候 <code class="language-plaintext highlighter-rouge">kubectl get csr</code> 看不到任何 csr 了，这是因为最新版本增加了 csr 清理功能，<strong>默认对于 <code class="language-plaintext highlighter-rouge">approved</code> 和 <code class="language-plaintext highlighter-rouge">denied</code> 状态的 csr 一小时后会被清理，对于 <code class="language-plaintext highlighter-rouge">pending</code> 状态的 csr 24 小时后会被清理，想问时间从哪来的请看 <a href="https://github.com/kubernetes/kubernetes/blob/fa85bf7094a8a503fede964b7038eed51360ffc7/pkg/controller/certificates/cleaner/cleaner.go#L47">代码</a>；PR issue 我忘记了，增加这个功能的起因大致就是因为当开启了证书轮换后，csr 会不断增加，所以需要增加一个清理功能</strong></p>
 
 <h4 id="92异常及警告说明">9.2、异常及警告说明</h4>
 
@@ -1997,7 +1997,7 @@ failed to construct signal: <span class="s2">"allocatableMemory.available"</span
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

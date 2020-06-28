@@ -200,7 +200,7 @@
   <p>国外一直有台服务器闲置，准备用来做 Docker 镜像下载加速，写了个小工具打成了镜像放了出来 😀</p>
 </blockquote>
 
-<p>ohmydocker 镜像基于 <code class="highlighter-rouge">docker:dind</code>，也就是所谓的 <strong>Dcoker in Docker</strong> 俄罗斯套娃镜像，使用方法如下:</p>
+<p>ohmydocker 镜像基于 <code class="language-plaintext highlighter-rouge">docker:dind</code>，也就是所谓的 <strong>Dcoker in Docker</strong> 俄罗斯套娃镜像，使用方法如下:</p>
 
 <h4 id="1启动镜像">1、启动镜像</h4>
 
@@ -211,7 +211,7 @@
 
 <h4 id="2拉取镜像">2、拉取镜像</h4>
 
-<p>ohmydocker 启动后将会暴露一个 <code class="highlighter-rouge">1028</code> 的 docker api 端口(tcp)，此时直接通过该端口连接容器内的 Docker daemon 进行 pull 镜像即可</p>
+<p>ohmydocker 启动后将会暴露一个 <code class="language-plaintext highlighter-rouge">1028</code> 的 docker api 端口(tcp)，此时直接通过该端口连接容器内的 Docker daemon 进行 pull 镜像即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker <span class="nt">-H</span> LOCAL_IP:1028 pull gcr.io/google_containers/kubernetes-dashboard-init-amd64:v1.0.1
 </code></pre></div></div>
@@ -330,7 +330,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

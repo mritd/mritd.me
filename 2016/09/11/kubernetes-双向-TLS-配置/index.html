@@ -369,7 +369,7 @@ systemctl status kube-scheduler
 <span class="nv">KUBELET_ARGS</span><span class="o">=</span><span class="s2">"--tls-cert-file=/etc/kubernetes/ssl/node1-worker.pem --tls-private-key-file=/etc/kubernetes/ssl/node1-worker-key.pem --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml"</span>
 </code></pre></div></div>
 
-<p><strong>如果使用了 <code class="highlighter-rouge">KUBELET_HOSTNAME</code>，那么 hostname 必须在本地 hosts 存在，所以还需要修改一下 hosts 文件</strong></p>
+<p><strong>如果使用了 <code class="language-plaintext highlighter-rouge">KUBELET_HOSTNAME</code>，那么 hostname 必须在本地 hosts 存在，所以还需要修改一下 hosts 文件</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"127.0.0.1 192-168-1-142"</span> <span class="o">&gt;&gt;</span> /etc/hosts
 </code></pre></div></div>
@@ -551,7 +551,7 @@ uname -r
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

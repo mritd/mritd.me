@@ -285,11 +285,11 @@
 <span class="nt">-p</span> 5000:5000 registry:2.5.1
 </code></pre></div></div>
 
-<p><strong>以上命令将启动一个 mirror registry，并且数据持久化到 <code class="highlighter-rouge">/data/registry</code></strong></p>
+<p><strong>以上命令将启动一个 mirror registry，并且数据持久化到 <code class="language-plaintext highlighter-rouge">/data/registry</code></strong></p>
 
 <h3 id="25nginx-配置-ssl">2.5、nginx 配置 ssl</h3>
 
-<p>当然此时直接在 docker 启动参数总增加 <code class="highlighter-rouge">--registry-mirror=http://IP:5000</code>，然后重启 docker 再进行 pull 即可生效，但是 5000 端口外加 http 总有点那么不装逼，所以最好增加一个 nginx 做反向代理，同时可以使用 ssl 加密，以下是一个 nginx 配置仅供参考，ssl 证书可采用 <a href="https://www.startssl.com">StartSSL</a> 免费一年的 DV 证书</p>
+<p>当然此时直接在 docker 启动参数总增加 <code class="language-plaintext highlighter-rouge">--registry-mirror=http://IP:5000</code>，然后重启 docker 再进行 pull 即可生效，但是 5000 端口外加 http 总有点那么不装逼，所以最好增加一个 nginx 做反向代理，同时可以使用 ssl 加密，以下是一个 nginx 配置仅供参考，ssl 证书可采用 <a href="https://www.startssl.com">StartSSL</a> 免费一年的 DV 证书</p>
 
 <p><strong>nginx.conf</strong></p>
 
@@ -525,7 +525,7 @@ server <span class="o">{</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

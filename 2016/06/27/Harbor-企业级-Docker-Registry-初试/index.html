@@ -230,7 +230,7 @@
 
 <p><strong>经过本人测试，其文件托管在亚马逊上，伟大的防火墙成功阻止下载……</strong></p>
 
-<p><strong>有能力的童鞋可以使用梯子，我已经下载好了一个 <a href="https://cdn.oss.link/files/docker-compose">点击下载</a></strong>；下载后直接 cp 到 <code class="highlighter-rouge">/usr/local/bin</code> 下并给与可执行权限即可。</p>
+<p><strong>有能力的童鞋可以使用梯子，我已经下载好了一个 <a href="https://cdn.oss.link/files/docker-compose">点击下载</a></strong>；下载后直接 cp 到 <code class="language-plaintext highlighter-rouge">/usr/local/bin</code> 下并给与可执行权限即可。</p>
 
 <h2 id="三搭建-harbor">三、搭建 Harbor</h2>
 
@@ -345,15 +345,15 @@ docker-compose up <span class="nt">-d</span>
 
 <h3 id="41主页">4.1、主页</h3>
 
-<p><strong>默认的访问地址即为 <code class="highlighter-rouge">harbor.cfg</code> 中 <code class="highlighter-rouge">hostname</code> 地址，直接访问即可，如下</strong></p>
+<p><strong>默认的访问地址即为 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 中 <code class="language-plaintext highlighter-rouge">hostname</code> 地址，直接访问即可，如下</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_homepage.png" alt="hexo_docker_harbor_homepage" /></p>
 
-<p><strong>如果 <code class="highlighter-rouge">harbor.cfg</code> 中 <code class="highlighter-rouge">self_registration</code> 属性设置为 <code class="highlighter-rouge">off</code>，那么普通用户将无法自己实现注册，只能由管理员创建用户，主页右上角的注册按钮也会消失。</strong></p>
+<p><strong>如果 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 中 <code class="language-plaintext highlighter-rouge">self_registration</code> 属性设置为 <code class="language-plaintext highlighter-rouge">off</code>，那么普通用户将无法自己实现注册，只能由管理员创建用户，主页右上角的注册按钮也会消失。</strong></p>
 
 <h3 id="42登录">4.2、登录</h3>
 
-<p><strong>Harbor 默认管理员用户为 <code class="highlighter-rouge">admin</code>，密码在 <code class="highlighter-rouge">harbor.cfg</code> 中设置过，默认的是 <code class="highlighter-rouge">Harbor12345</code>，可直接登陆</strong></p>
+<p><strong>Harbor 默认管理员用户为 <code class="language-plaintext highlighter-rouge">admin</code>，密码在 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 中设置过，默认的是 <code class="language-plaintext highlighter-rouge">Harbor12345</code>，可直接登陆</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_userspace.png" alt="hexo_docker_harbor_userspace" /></p>
 
@@ -367,14 +367,14 @@ docker-compose up <span class="nt">-d</span>
 
 <h4 id="441设置-http-仓库地址">4.4.1、设置 http 仓库地址</h4>
 
-<p>由于采用了默认的 http 方式连接，而 Docker 认为这是不安全的，所以在 push 之前需要调整一下 docker 配置，编辑 <code class="highlighter-rouge">/etc/default/docker</code> 增加如下内容</p>
+<p>由于采用了默认的 http 方式连接，而 Docker 认为这是不安全的，所以在 push 之前需要调整一下 docker 配置，编辑 <code class="language-plaintext highlighter-rouge">/etc/default/docker</code> 增加如下内容</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">DOCKER_OPTS</span><span class="o">=</span><span class="s2">"</span><span class="nv">$DOCKER_OPTS</span><span class="s2"> --insecure-registry 10.211.55.17"</span>
 </code></pre></div></div>
 
-<p><strong>其中 IP 地址要指向 <code class="highlighter-rouge">harbor.cfg</code> 中的 <code class="highlighter-rouge">hostname</code></strong>，然后执行 <code class="highlighter-rouge">docker-compose stop</code> 停掉所有 Contianer，再执行 <code class="highlighter-rouge">service docker restart</code> 重启 Dokcer 服务，最后执行 <code class="highlighter-rouge">docker-compose start</code> 即可。</p>
+<p><strong>其中 IP 地址要指向 <code class="language-plaintext highlighter-rouge">harbor.cfg</code> 中的 <code class="language-plaintext highlighter-rouge">hostname</code></strong>，然后执行 <code class="language-plaintext highlighter-rouge">docker-compose stop</code> 停掉所有 Contianer，再执行 <code class="language-plaintext highlighter-rouge">service docker restart</code> 重启 Dokcer 服务，最后执行 <code class="language-plaintext highlighter-rouge">docker-compose start</code> 即可。</p>
 
-<p><strong>注意 : Docker 服务重启后，执行 <code class="highlighter-rouge">docker-compose start</code> 时有一定几率出现如下错误(或者目录已存在等错误)，此时在 <code class="highlighter-rouge">docker-compose stop</code> 一下然后在启动即可，实在不行再次重启 Dokcer 服务，千万不要手贱的去删文件(别问我怎么知道的)</strong></p>
+<p><strong>注意 : Docker 服务重启后，执行 <code class="language-plaintext highlighter-rouge">docker-compose start</code> 时有一定几率出现如下错误(或者目录已存在等错误)，此时在 <code class="language-plaintext highlighter-rouge">docker-compose stop</code> 一下然后在启动即可，实在不行再次重启 Dokcer 服务，千万不要手贱的去删文件(别问我怎么知道的)</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_composeerror.jpeg" alt="hexo_docker_harbor_composeerror" /></p>
 
@@ -388,15 +388,15 @@ docker-compose up <span class="nt">-d</span>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_projectuserrole.png" alt="hexo_docker_harbor_projectuserrole" /></p>
 
-<p><strong>对于权限(角色)，<code class="highlighter-rouge">Project Admin</code> 和 <code class="highlighter-rouge">Developer</code> 可以有 push 的权限，而 <code class="highlighter-rouge">Guest</code> 只能查看和 pull</strong></p>
+<p><strong>对于权限(角色)，<code class="language-plaintext highlighter-rouge">Project Admin</code> 和 <code class="language-plaintext highlighter-rouge">Developer</code> 可以有 push 的权限，而 <code class="language-plaintext highlighter-rouge">Guest</code> 只能查看和 pull</strong></p>
 
 <h4 id="443push-镜像">4.4.3、push 镜像</h4>
 
-<p>首先使用一个对目标项目具有 push 权限的用户登录，以下 push 的目标是 mritd 项目，test1 用户在项目里定义为 <code class="highlighter-rouge">Developer</code>，所以登录后 push 即可</p>
+<p>首先使用一个对目标项目具有 push 权限的用户登录，以下 push 的目标是 mritd 项目，test1 用户在项目里定义为 <code class="language-plaintext highlighter-rouge">Developer</code>，所以登录后 push 即可</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_loginmritd.png" alt="hexo_docker_harbor_loginmritd" /></p>
 
-<p>然后 <code class="highlighter-rouge">tag</code> 一个 image，名称一定要标准( <code class="highlighter-rouge">registryAddress[:端口]/项目/imageName[:tag]</code> )，最后将其 push 即可</p>
+<p>然后 <code class="language-plaintext highlighter-rouge">tag</code> 一个 image，名称一定要标准( <code class="language-plaintext highlighter-rouge">registryAddress[:端口]/项目/imageName[:tag]</code> )，最后将其 push 即可</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_harbor_pushmritdimages.png" alt="hexo_docker_harbor_pushmritdimages" /></p>
 
@@ -508,7 +508,7 @@ docker-compose up <span class="nt">-d</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

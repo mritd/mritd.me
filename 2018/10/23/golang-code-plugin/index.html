@@ -198,7 +198,7 @@
 
 <h3 id="一问题由来">一、问题由来</h3>
 
-<p>纵观现在所有的 Go web 框架，在文档上可以看到使用方式很简明；非常符合我对 Go 的一贯感受: “所写即所得”；就拿 Gin 这个来说，在 README.md 上可以很轻松的看到 <code class="highlighter-rouge">engine</code> 或者说 <code class="highlighter-rouge">router</code> 这玩意的使用，比如下面这样:</p>
+<p>纵观现在所有的 Go web 框架，在文档上可以看到使用方式很简明；非常符合我对 Go 的一贯感受: “所写即所得”；就拿 Gin 这个来说，在 README.md 上可以很轻松的看到 <code class="language-plaintext highlighter-rouge">engine</code> 或者说 <code class="language-plaintext highlighter-rouge">router</code> 这玩意的使用，比如下面这样:</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
 	<span class="c">// Disable Console Color</span>
@@ -225,7 +225,7 @@
 
 <p>乍一看简单到爆，但实际使用中，在脚手架搭建上，我们需要规划好 <strong>包结构、配置文件、命令行参数、数据库连接、cache</strong> 等等；直到目前为止，至少我没有找到一种非常规范的后端 MVC 的标准架子结构；这点目前确实不如 Java 的生态；作为最初的脚手架搭建者，站在这个角度，我想我们更应当考虑如何做好适当的抽象、隔离；以防止后面开发者对系统基础功能可能造成的破坏。</p>
 
-<p>综上所述，再配合 Gin 或者说 Go 的代码风格，这就形成了一种强烈的冲突；在 Java 中，由于有注解(<code class="highlighter-rouge">Annotation</code>)的存在，事实上你是可以有这种操作的: <strong>新建一个 Class，创建 func，在上面加上合适的注解，最终框架会通过注解扫描的方式以适当的形式进行初始化</strong>；而 Go 中并没有 <code class="highlighter-rouge">Annotation</code> 这玩意，我们很难实现在 <strong>代码运行时扫描自身做出一种策略性调整</strong>；从而下面这个需求很难实现: <strong>作为脚手架搭建者，我希望我的基础代码安全的放在一个特定位置，后续开发者开发应当以一种类似可热插拔的形式注入进来</strong>，比如 Gin 的 router 路由设置，我不希望每次有修改都会有人动我的 router 核心配置文件。</p>
+<p>综上所述，再配合 Gin 或者说 Go 的代码风格，这就形成了一种强烈的冲突；在 Java 中，由于有注解(<code class="language-plaintext highlighter-rouge">Annotation</code>)的存在，事实上你是可以有这种操作的: <strong>新建一个 Class，创建 func，在上面加上合适的注解，最终框架会通过注解扫描的方式以适当的形式进行初始化</strong>；而 Go 中并没有 <code class="language-plaintext highlighter-rouge">Annotation</code> 这玩意，我们很难实现在 <strong>代码运行时扫描自身做出一种策略性调整</strong>；从而下面这个需求很难实现: <strong>作为脚手架搭建者，我希望我的基础代码安全的放在一个特定位置，后续开发者开发应当以一种类似可热插拔的形式注入进来</strong>，比如 Gin 的 router 路由设置，我不希望每次有修改都会有人动我的 router 核心配置文件。</p>
 
 <h3 id="二caddy-的套路">二、Caddy 的套路</h3>
 
@@ -363,7 +363,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

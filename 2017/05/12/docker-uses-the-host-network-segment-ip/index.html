@@ -206,12 +206,12 @@
 </code></pre></div></div>
 
 <ul>
-  <li><code class="highlighter-rouge">--subnet</code>: 指定网段(宿主机)</li>
-  <li><code class="highlighter-rouge">--gateway</code>: 指定网关(宿主机)</li>
-  <li><code class="highlighter-rouge">parent</code>: 注定父网卡(宿主机)</li>
+  <li><code class="language-plaintext highlighter-rouge">--subnet</code>: 指定网段(宿主机)</li>
+  <li><code class="language-plaintext highlighter-rouge">--gateway</code>: 指定网关(宿主机)</li>
+  <li><code class="language-plaintext highlighter-rouge">parent</code>: 注定父网卡(宿主机)</li>
 </ul>
 
-<p>创建以后可以使用 <code class="highlighter-rouge">docker network ls</code> 查看</p>
+<p>创建以后可以使用 <code class="language-plaintext highlighter-rouge">docker network ls</code> 查看</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  ~  docker network <span class="nb">ls
 </span>NETWORK ID          NAME                    DRIVER              SCOPE
@@ -229,7 +229,7 @@ a4a2980c9165        agent_default           bridge              <span class="nb"
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--net</span><span class="o">=</span>gitlab-net <span class="nt">--ip</span><span class="o">=</span>172.16.0.170  <span class="nt">-dt</span> <span class="nt">--name</span> <span class="nb">test </span>centos:7
 </code></pre></div></div>
 
-<p><strong><code class="highlighter-rouge">--net</code> 指定使用的网络,<code class="highlighter-rouge">--ip</code> 用于指定网段内 IP</strong>;启动后只需要在容器内启动程序测试即可</p>
+<p><strong><code class="language-plaintext highlighter-rouge">--net</code> 指定使用的网络,<code class="language-plaintext highlighter-rouge">--ip</code> 用于指定网段内 IP</strong>;启动后只需要在容器内启动程序测试即可</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 启动一个 nginx</span>
 yum <span class="nb">install </span>nginx
@@ -366,7 +366,7 @@ networks:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

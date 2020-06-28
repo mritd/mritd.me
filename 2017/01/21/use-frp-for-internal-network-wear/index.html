@@ -229,7 +229,7 @@ wget https://github.com/fatedier/frp/releases/download/v0.9.3/frp_0.9.3_linux_am
 <span class="nb">cd </span>frp_0.9.3_linux_amd64
 </code></pre></div></div>
 
-<p>编辑 <code class="highlighter-rouge">frps.ini</code> 如下</p>
+<p>编辑 <code class="language-plaintext highlighter-rouge">frps.ini</code> 如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 通用配置段</span>
 <span class="o">[</span>common]
@@ -288,7 +288,7 @@ listen_port <span class="o">=</span> 6000
 
 <p><strong>其他具体配置说明请参考frp <a href="https://github.com/fatedier/frp/blob/master/README_zh.md"> README</a> 文档</strong></p>
 
-<p>设置完成后执行 <code class="highlighter-rouge">./frps -c frps.ini</code> 启动即可</p>
+<p>设置完成后执行 <code class="language-plaintext highlighter-rouge">./frps -c frps.ini</code> 启动即可</p>
 
 <h3 id="四客户端配置">四、客户端配置</h3>
 
@@ -300,7 +300,7 @@ wget https://github.com/fatedier/frp/releases/download/v0.9.3/frp_0.9.3_linux_am
 <span class="nb">cd </span>frp_0.9.3_linux_amd64
 </code></pre></div></div>
 
-<p>编辑 <code class="highlighter-rouge">frpc.ini</code> 文件</p>
+<p>编辑 <code class="language-plaintext highlighter-rouge">frpc.ini</code> 文件</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 通用配置</span>
 <span class="o">[</span>common]
@@ -361,15 +361,15 @@ pool_count <span class="o">=</span> 20
 subdomain <span class="o">=</span> <span class="nb">test</span>
 </code></pre></div></div>
 
-<p>最后使用 <code class="highlighter-rouge">./frpc -c frpc.ini</code> 启动即可</p>
+<p>最后使用 <code class="language-plaintext highlighter-rouge">./frpc -c frpc.ini</code> 启动即可</p>
 
 <h3 id="五测试">五、测试</h3>
 
-<p>服务端和客户端同时开启完成后，即可访问 <code class="highlighter-rouge">http://domain.com:7500</code> 进入 frp 控制面板，如下</p>
+<p>服务端和客户端同时开启完成后，即可访问 <code class="language-plaintext highlighter-rouge">http://domain.com:7500</code> 进入 frp 控制面板，如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/1d8pq.jpg" alt="dashboard" /></p>
 
-<p>此时通过 <code class="highlighter-rouge">ssh root@domain.com -p 6000</code> 即可连接到内网服务器，通过访问 <code class="highlighter-rouge">http://test.domain.com:4080</code> 即可访问内网发布的位于 <code class="highlighter-rouge">8000</code> 端口服务</p>
+<p>此时通过 <code class="language-plaintext highlighter-rouge">ssh root@domain.com -p 6000</code> 即可连接到内网服务器，通过访问 <code class="language-plaintext highlighter-rouge">http://test.domain.com:4080</code> 即可访问内网发布的位于 <code class="language-plaintext highlighter-rouge">8000</code> 端口服务</p>
 
 <h3 id="六systemd-管理">六、Systemd 管理</h3>
 
@@ -506,7 +506,7 @@ systemctl status frps
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

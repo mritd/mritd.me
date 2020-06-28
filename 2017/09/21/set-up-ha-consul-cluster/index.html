@@ -315,18 +315,18 @@ yum <span class="nb">install</span> <span class="nt">-y</span> consul
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>另外两个节点与以上配置大致相同，差别在于其他两个 Server 节点 <code class="highlighter-rouge">bootstrap_expect</code> 值为 2，即期望启动时已经有两个节点就绪；然后依次启动三个 Server 节点即可</strong></p>
+<p><strong>另外两个节点与以上配置大致相同，差别在于其他两个 Server 节点 <code class="language-plaintext highlighter-rouge">bootstrap_expect</code> 值为 2，即期望启动时已经有两个节点就绪；然后依次启动三个 Server 节点即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl start consul
 systemctl <span class="nb">enable </span>consul
 systemctl status consul
 </code></pre></div></div>
 
-<p><strong>此时可访问任意一台 Server 节点的 UI 界面，地址为 <code class="highlighter-rouge">http://serverIP:8500</code>，截图如下</strong></p>
+<p><strong>此时可访问任意一台 Server 节点的 UI 界面，地址为 <code class="language-plaintext highlighter-rouge">http://serverIP:8500</code>，截图如下</strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/t9cxf.jpg" alt="Server Success" /></p>
 
-<p>接下来修改其他两个节点配置，使其作为 Client 加入到集群即可，<strong>注意的是当处于 Client 模式时，<code class="highlighter-rouge">bootstrap_expect</code> 必须为 0，即关闭状态；具体配置如下</strong></p>
+<p>接下来修改其他两个节点配置，使其作为 Client 加入到集群即可，<strong>注意的是当处于 Client 模式时，<code class="language-plaintext highlighter-rouge">bootstrap_expect</code> 必须为 0，即关闭状态；具体配置如下</strong></p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"datacenter"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dc1"</span><span class="p">,</span><span class="w">
@@ -460,7 +460,7 @@ systemctl status consul
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

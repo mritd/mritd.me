@@ -244,7 +244,7 @@
 
 <h4 id="23基础配置">2.3、基础配置</h4>
 
-<p>StrongSwan 的配置主要为 <code class="highlighter-rouge">ipsec.conf</code>、<code class="highlighter-rouge">strongswan.conf</code>、<code class="highlighter-rouge">xl2tpd.conf</code>、<code class="highlighter-rouge">options.xl2tpd</code> 这四个配置文件，以下为四个配置文件样例</p>
+<p>StrongSwan 的配置主要为 <code class="language-plaintext highlighter-rouge">ipsec.conf</code>、<code class="language-plaintext highlighter-rouge">strongswan.conf</code>、<code class="language-plaintext highlighter-rouge">xl2tpd.conf</code>、<code class="language-plaintext highlighter-rouge">options.xl2tpd</code> 这四个配置文件，以下为四个配置文件样例</p>
 
 <h5 id="231ipsecconf">2.3.1、ipsec.conf</h5>
 
@@ -422,7 +422,7 @@ ipsec pki <span class="nt">--self</span> <span class="nt">--in</span> ca.key.pem
 
 <h5 id="242创建服务器证书">2.4.2、创建服务器证书</h5>
 
-<p><strong>其中 <code class="highlighter-rouge">--san</code> 可以指定多个，但一般为一个是域名，一个是外网 IP，如果经过了路由，那么只需要写本机的对外暴露网卡的 IP 即可</strong></p>
+<p><strong>其中 <code class="language-plaintext highlighter-rouge">--san</code> 可以指定多个，但一般为一个是域名，一个是外网 IP，如果经过了路由，那么只需要写本机的对外暴露网卡的 IP 即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># create server certificate</span>
 ipsec pki <span class="nt">--gen</span> <span class="nt">--outform</span> pem <span class="o">&gt;</span> server.key.pem
@@ -485,7 +485,7 @@ ipsec pki <span class="nt">--pub</span> <span class="nt">--in</span> client.key.
 </span><span class="no">EOF
 </span></code></pre></div></div>
 
-<p><strong>将其保存为 <code class="highlighter-rouge">vpn_adduser.sh</code>，执行 <code class="highlighter-rouge">./vpn_adduser.sh USERNAME PASSWD</code> 即可添加用户</strong></p>
+<p><strong>将其保存为 <code class="language-plaintext highlighter-rouge">vpn_adduser.sh</code>，执行 <code class="language-plaintext highlighter-rouge">./vpn_adduser.sh USERNAME PASSWD</code> 即可添加用户</strong></p>
 
 <h4 id="26设置-psk">2.6、设置 PSK</h4>
 
@@ -616,7 +616,7 @@ ipsec pki <span class="nt">--pub</span> <span class="nt">--in</span> client.key.
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

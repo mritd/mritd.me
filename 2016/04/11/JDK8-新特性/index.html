@@ -194,7 +194,7 @@
 
                 <h2 id="一接口的默认方法实现">一、接口的默认方法实现</h2>
 
-<p>在 JDK8 中，接口允许有默认的实现方法，这些默认的实现方法需要使用 <code class="highlighter-rouge">default</code> 关键字修饰即可，同时其实现类可直接调用这些方法；代码示例如下：</p>
+<p>在 JDK8 中，接口允许有默认的实现方法，这些默认的实现方法需要使用 <code class="language-plaintext highlighter-rouge">default</code> 关键字修饰即可，同时其实现类可直接调用这些方法；代码示例如下：</p>
 
 <h3 id="1自定义接口">1、自定义接口</h3>
 
@@ -416,7 +416,7 @@
 
 <h3 id="1基本语法">1、基本语法</h3>
 
-<p>Lambda 基本语法以 <code class="highlighter-rouge">(argument) -&gt; (body)</code> 表示，以下为具体的一些例子：</p>
+<p>Lambda 基本语法以 <code class="language-plaintext highlighter-rouge">(argument) -&gt; (body)</code> 表示，以下为具体的一些例子：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 不需要参数，返回值为5</span>
 <span class="o">()</span> <span class="o">-&gt;</span> <span class="mi">5</span>
@@ -432,12 +432,12 @@
 
 <ul>
   <li>一个 Lambda 可以有零个或者多个参数；</li>
-  <li>参数类型可以声明，也可以由上下文推断，如 <code class="highlighter-rouge">(int a)</code> 与 <code class="highlighter-rouge">(a)</code> 效果一致；</li>
-  <li>所有参数包含在圆括号内，参数之间用分号分隔，如 <code class="highlighter-rouge">(int a,int b)</code> 或 <code class="highlighter-rouge">(a,b)</code>;</li>
-  <li>空圆括号代表参数集为空，如 <code class="highlighter-rouge">() -&gt; 2</code>；</li>
-  <li>当只有一个参数，且类型可被推倒时，圆括号可省略，如 <code class="highlighter-rouge">a -&gt; a+1</code>；</li>
+  <li>参数类型可以声明，也可以由上下文推断，如 <code class="language-plaintext highlighter-rouge">(int a)</code> 与 <code class="language-plaintext highlighter-rouge">(a)</code> 效果一致；</li>
+  <li>所有参数包含在圆括号内，参数之间用分号分隔，如 <code class="language-plaintext highlighter-rouge">(int a,int b)</code> 或 <code class="language-plaintext highlighter-rouge">(a,b)</code>;</li>
+  <li>空圆括号代表参数集为空，如 <code class="language-plaintext highlighter-rouge">() -&gt; 2</code>；</li>
+  <li>当只有一个参数，且类型可被推倒时，圆括号可省略，如 <code class="language-plaintext highlighter-rouge">a -&gt; a+1</code>；</li>
   <li>Lambda 表达式主体可包含一条或多条语句；</li>
-  <li>如果 Lamdba 表达式主体部分只有一条语句，那么花括号可以省略，同时匿名函数返回类型与该语句返回类型一致，如 <code class="highlighter-rouge">(int a,int b) -&gt; return a+b</code>；</li>
+  <li>如果 Lamdba 表达式主体部分只有一条语句，那么花括号可以省略，同时匿名函数返回类型与该语句返回类型一致，如 <code class="language-plaintext highlighter-rouge">(int a,int b) -&gt; return a+b</code>；</li>
   <li>如果 Lambda 表达式主体部分含有多条语句，则必须使用花括号，此时匿名函数返回类型与该代码块返回一致，没有返回则为空。</li>
 </ul>
 
@@ -445,7 +445,7 @@
 
 <p>在 Java 中有两种描述层面的特殊接口：</p>
 
-<p><strong>Marker(标记) 接口</strong>：这种接口内部不定义任何待实现的抽象方法，就像他的名字那样，只用作标记一个类，从而使其能够通过 <code class="highlighter-rouge">instanceof</code> 关键字检查。</p>
+<p><strong>Marker(标记) 接口</strong>：这种接口内部不定义任何待实现的抽象方法，就像他的名字那样，只用作标记一个类，从而使其能够通过 <code class="language-plaintext highlighter-rouge">instanceof</code> 关键字检查。</p>
 
 <p><strong>Function(函数) 接口</strong>：与标记接口不同的是，这种接口内部内有一个待实现的抽象方法，此种接口的作用是提供函数式编程需要，例如为 Lambda 表达式提供便利。</p>
 
@@ -464,7 +464,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>以上代码，由于 <code class="highlighter-rouge">Thread</code> 类存在一个接受 <code class="highlighter-rouge">Runnable</code> 接口的构造器，而 <code class="highlighter-rouge">Runnable</code> 又是函数式接口，所以编译器自动推断将 Lambda 表达式隐式的赋值给了 <code class="highlighter-rouge">Runnable</code> 接口。</p>
+<p>以上代码，由于 <code class="language-plaintext highlighter-rouge">Thread</code> 类存在一个接受 <code class="language-plaintext highlighter-rouge">Runnable</code> 接口的构造器，而 <code class="language-plaintext highlighter-rouge">Runnable</code> 又是函数式接口，所以编译器自动推断将 Lambda 表达式隐式的赋值给了 <code class="language-plaintext highlighter-rouge">Runnable</code> 接口。</p>
 
 <p><strong>注意：根据本人测试，当某个类有两个有参构造器，且两个有参构造器入参全部为函数式接口，同时该函数式接口返回值相同时，Lambda 表达式必须强制转换为其中一种类型，因为编译器无法推断出 Lambda 表达式到底是实现的那种函数式接口，测试代码如下：</strong></p>
 
@@ -506,7 +506,7 @@
 
 <h3 id="4functionalinterface-注解">4、FunctionalInterface 注解</h3>
 
-<p>JDK 8 新增了 <code class="highlighter-rouge">FunctionalInterface</code> 注解，该注解只能作用在接口上，<strong>用于标注该接口是一个函数式接口；</strong>从而显式的告诉 Lambda 表达式将其赋值到此接口，这个注解标注了函数式接口，<strong>同时也限定了该接口内只能有一个抽象方法，</strong>否则将无法编译通过，示例如下：</p>
+<p>JDK 8 新增了 <code class="language-plaintext highlighter-rouge">FunctionalInterface</code> 注解，该注解只能作用在接口上，<strong>用于标注该接口是一个函数式接口；</strong>从而显式的告诉 Lambda 表达式将其赋值到此接口，这个注解标注了函数式接口，<strong>同时也限定了该接口内只能有一个抽象方法，</strong>否则将无法编译通过，示例如下：</p>
 
 <p><strong>标注 @FunctionalInterface 注解的函数式接口</strong></p>
 
@@ -536,7 +536,7 @@
 
 <h4 id="51局部变量">5.1、局部变量</h4>
 
-<p>局部变量不必使用 <code class="highlighter-rouge">final</code> 关键字修饰，即可在 Lambda 表达式中直接使用，但是此后的该变量不可改变，相当于隐式 final，如下：</p>
+<p>局部变量不必使用 <code class="language-plaintext highlighter-rouge">final</code> 关键字修饰，即可在 Lambda 表达式中直接使用，但是此后的该变量不可改变，相当于隐式 final，如下：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestLocalVariables</span> <span class="o">{</span>
 
@@ -689,12 +689,12 @@
 <p>JDK 8中方法引用大致分为以下6种：</p>
 
 <ul>
-  <li>静态方法引用 <code class="highlighter-rouge">ClassName::methodName</code></li>
-  <li>实例上的实例方法引用 <code class="highlighter-rouge">instanceReference::methodName</code></li>
-  <li>超类上的实例方法引用 <code class="highlighter-rouge">super::methodName</code></li>
-  <li>类型上的实例方法引用 <code class="highlighter-rouge">ClassName::methodName</code></li>
-  <li>构造方法引用 <code class="highlighter-rouge">Class::new</code></li>
-  <li>数组构造方法引用 <code class="highlighter-rouge">TypeName[]::new</code></li>
+  <li>静态方法引用 <code class="language-plaintext highlighter-rouge">ClassName::methodName</code></li>
+  <li>实例上的实例方法引用 <code class="language-plaintext highlighter-rouge">instanceReference::methodName</code></li>
+  <li>超类上的实例方法引用 <code class="language-plaintext highlighter-rouge">super::methodName</code></li>
+  <li>类型上的实例方法引用 <code class="language-plaintext highlighter-rouge">ClassName::methodName</code></li>
+  <li>构造方法引用 <code class="language-plaintext highlighter-rouge">Class::new</code></li>
+  <li>数组构造方法引用 <code class="language-plaintext highlighter-rouge">TypeName[]::new</code></li>
 </ul>
 
 <h3 id="3方法引用与-lambda-表达式">3、方法引用与 Lambda 表达式</h3>
@@ -715,7 +715,7 @@
 
 <h3 id="1strean-api-简介">1、Strean API 简介</h3>
 
-<p>新增的 <code class="highlighter-rouge">Stream API</code> 主要围绕 <code class="highlighter-rouge">java.util.stream</code> 包下的 <code class="highlighter-rouge">Stream</code> 类展开，Stream API 并非其语义上的 “流”，它不同于任何 I/O 流，实质上 <strong>Stream 可以看做是一个加强版 Iterator，不同的是 Stream 可以并行并高效的对集合进行 “神的” 奇操作</strong>，如下一个小例子：</p>
+<p>新增的 <code class="language-plaintext highlighter-rouge">Stream API</code> 主要围绕 <code class="language-plaintext highlighter-rouge">java.util.stream</code> 包下的 <code class="language-plaintext highlighter-rouge">Stream</code> 类展开，Stream API 并非其语义上的 “流”，它不同于任何 I/O 流，实质上 <strong>Stream 可以看做是一个加强版 Iterator，不同的是 Stream 可以并行并高效的对集合进行 “神的” 奇操作</strong>，如下一个小例子：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Test1</span> <span class="o">{</span>
 
@@ -766,11 +766,11 @@
 
 <h3 id="3创建-stream">3、创建 Stream</h3>
 
-<p>创建一个 Stream 可以通过两种方式，一种是通过其静态工厂方法创建，另一种通过 <code class="highlighter-rouge">Collection</code> 接口默认方法创建；</p>
+<p>创建一个 Stream 可以通过两种方式，一种是通过其静态工厂方法创建，另一种通过 <code class="language-plaintext highlighter-rouge">Collection</code> 接口默认方法创建；</p>
 
 <h4 id="31静态工厂创建-stream">3.1、静态工厂创建 Stream</h4>
 
-<p>Stream 类中提供了三个静态工厂方法 <code class="highlighter-rouge">Stream.of()</code> 、 <code class="highlighter-rouge">Stream.generate()</code> 和 <code class="highlighter-rouge">Stream.iterate()</code> 来创建 Stream，其中 <code class="highlighter-rouge">Stream.of()</code> 有两个重载，一个接受固定长度的参数，一个接受可变长度的参数.</p>
+<p>Stream 类中提供了三个静态工厂方法 <code class="language-plaintext highlighter-rouge">Stream.of()</code> 、 <code class="language-plaintext highlighter-rouge">Stream.generate()</code> 和 <code class="language-plaintext highlighter-rouge">Stream.iterate()</code> 来创建 Stream，其中 <code class="language-plaintext highlighter-rouge">Stream.of()</code> 有两个重载，一个接受固定长度的参数，一个接受可变长度的参数.</p>
 
 <p><strong>Stream.of() 创建 Stream</strong></p>
 
@@ -783,14 +783,14 @@
 
 <p><strong>Stream.generate() 创建 Stream</strong></p>
 
-<p><code class="highlighter-rouge">Stream.generate()</code> 方法用于生成一个无限长度的 Stream，其接受一个 <code class="highlighter-rouge">Supplier</code> 接口作为入参，该接口可看作是 Stream 内部元素的对象工厂，每次调用必须返回一个对象实例，测试如下：</p>
+<p><code class="language-plaintext highlighter-rouge">Stream.generate()</code> 方法用于生成一个无限长度的 Stream，其接受一个 <code class="language-plaintext highlighter-rouge">Supplier</code> 接口作为入参，该接口可看作是 Stream 内部元素的对象工厂，每次调用必须返回一个对象实例，测试如下：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Stream</span> <span class="n">stream3</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">generate</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nc">Object</span><span class="o">());</span>
 </code></pre></div></div>
 
 <p><strong>Stream.iterate() 创建 Stream</strong></p>
 
-<p>该方法同样用于创建一个无限长度的 Stream，不同的是 <code class="highlighter-rouge">iterate()</code> 方法接受两个参数，第一个参数可看作是一个种子，第二个参数可看作是一个方法，每次都会使用种子重复的执行方法，如下：</p>
+<p>该方法同样用于创建一个无限长度的 Stream，不同的是 <code class="language-plaintext highlighter-rouge">iterate()</code> 方法接受两个参数，第一个参数可看作是一个种子，第二个参数可看作是一个方法，每次都会使用种子重复的执行方法，如下：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 此代码将一直执行</span>
 <span class="nc">Stream</span><span class="o">.</span><span class="na">iterate</span><span class="o">(</span><span class="mi">1</span><span class="o">,(</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">++).</span><span class="na">forEach</span><span class="o">((</span><span class="n">i</span><span class="o">)-&gt;</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
@@ -798,7 +798,7 @@
 
 <h4 id="32collection-创建-stream">3.2、Collection 创建 Stream</h4>
 
-<p>Collection 集合类的父接口提供了一个默认的方法 <code class="highlighter-rouge">ConllectionInstance.stream()</code> 来实现创建 Stream，所以直接使用或使用任意的 Collection 实现类即可创建 Stream，样例代码如下：</p>
+<p>Collection 集合类的父接口提供了一个默认的方法 <code class="language-plaintext highlighter-rouge">ConllectionInstance.stream()</code> 来实现创建 Stream，所以直接使用或使用任意的 Collection 实现类即可创建 Stream，样例代码如下：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 使用 ArrayList 创建</span>
 <span class="nc">Stream</span> <span class="n">stream</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">().</span><span class="na">stream</span><span class="o">();</span>
@@ -904,7 +904,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>从上面可以看出，当转换方法返回另一个流即套嵌流 <code class="highlighter-rouge">Stream&lt;Stream&gt;</code> 时，我们想获取 Stream 中所有内容极其困难和复杂，而 flatMap 方法很好的解决了这个问题：</strong></p>
+<p><strong>从上面可以看出，当转换方法返回另一个流即套嵌流 <code class="language-plaintext highlighter-rouge">Stream&lt;Stream&gt;</code> 时，我们想获取 Stream 中所有内容极其困难和复杂，而 flatMap 方法很好的解决了这个问题：</strong></p>
 
 <p><strong>flatmap 实现</strong></p>
 
@@ -946,7 +946,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>总结：map 方法在实现的转换方法返回 Stream 时，会形成套嵌 <code class="highlighter-rouge">Stream&lt;Stream&gt;</code>，当要遍历时极其困难，而 flatMap 方法则会自动合并套嵌流。</strong></p>
+<p><strong>总结：map 方法在实现的转换方法返回 Stream 时，会形成套嵌 <code class="language-plaintext highlighter-rouge">Stream&lt;Stream&gt;</code>，当要遍历时极其困难，而 flatMap 方法则会自动合并套嵌流。</strong></p>
 
 <h4 id="45peek-方法">4.5、peek 方法</h4>
 
@@ -995,7 +995,7 @@
 
 <h4 id="51可变汇聚">5.1、可变汇聚</h4>
 
-<p>可变汇聚对应的只有一个方法 <code class="highlighter-rouge">Stream.collect()</code>，该方法将流中处理后的元素汇聚到一个 容器中，比如 <code class="highlighter-rouge">Collection</code>；<strong>注意，Stream API 中对流处理操作并不会改变原有容器，比图 List.stream() 返回的流无论怎么处理，原来的 List 都不会受影响。</strong></p>
+<p>可变汇聚对应的只有一个方法 <code class="language-plaintext highlighter-rouge">Stream.collect()</code>，该方法将流中处理后的元素汇聚到一个 容器中，比如 <code class="language-plaintext highlighter-rouge">Collection</code>；<strong>注意，Stream API 中对流处理操作并不会改变原有容器，比图 List.stream() 返回的流无论怎么处理，原来的 List 都不会受影响。</strong></p>
 
 <h5 id="511默认的-collect-方法">5.1.1、默认的 collect 方法</h5>
 
@@ -1025,7 +1025,7 @@
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="no">R</span><span class="o">,</span> <span class="no">A</span><span class="o">&gt;</span> <span class="no">R</span> <span class="nf">collect</span><span class="o">(</span><span class="nc">Collector</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="no">T</span><span class="o">,</span> <span class="no">A</span><span class="o">,</span> <span class="no">R</span><span class="o">&gt;</span> <span class="n">collector</span><span class="o">);</span>
 </code></pre></div></div>
 
-<p>从上面可以看出，该方法接受一个 <code class="highlighter-rouge">Collector</code> 接口，JDK 8 为我们提供了快速创建该接口的工具类 <code class="highlighter-rouge">java.util.stream.Collectors</code>，其中调用该工具类的方法可以快速创建 <code class="highlighter-rouge">Collector</code> 接口的实力，典型的方法有 <code class="highlighter-rouge">Collectors.toList()</code>、<code class="highlighter-rouge">Collectors.toSet()</code>、<code class="highlighter-rouge">Collectors.toCollection()</code> 等等，具体可自行查看源码，从名字也很容易看出其用途，如下是一个汇聚到 List 的代码示例：</p>
+<p>从上面可以看出，该方法接受一个 <code class="language-plaintext highlighter-rouge">Collector</code> 接口，JDK 8 为我们提供了快速创建该接口的工具类 <code class="language-plaintext highlighter-rouge">java.util.stream.Collectors</code>，其中调用该工具类的方法可以快速创建 <code class="language-plaintext highlighter-rouge">Collector</code> 接口的实力，典型的方法有 <code class="language-plaintext highlighter-rouge">Collectors.toList()</code>、<code class="language-plaintext highlighter-rouge">Collectors.toSet()</code>、<code class="language-plaintext highlighter-rouge">Collectors.toCollection()</code> 等等，具体可自行查看源码，从名字也很容易看出其用途，如下是一个汇聚到 List 的代码示例：</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span> <span class="n">result</span> <span class="o">=</span> <span class="nc">Stream</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">).</span><span class="na">filter</span><span class="o">((</span><span class="n">i</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">).</span><span class="na">collect</span><span class="o">(</span><span class="nc">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
 </code></pre></div></div>
@@ -1056,7 +1056,7 @@
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">T</span> <span class="nf">reduce</span><span class="o">(</span><span class="no">T</span> <span class="n">identity</span><span class="o">,</span> <span class="nc">BinaryOperator</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">accumulator</span><span class="o">);</span>
 </code></pre></div></div>
 
-<p><strong>注意，该版本返回值直接就是一个具体的数据类型，这个数据类型可以根据传入的初始值 <code class="highlighter-rouge">identity</code> 进行推断出来。</strong></p>
+<p><strong>注意，该版本返回值直接就是一个具体的数据类型，这个数据类型可以根据传入的初始值 <code class="language-plaintext highlighter-rouge">identity</code> 进行推断出来。</strong></p>
 
 <p>此时第一个参数为一个初始值，后面的累加操作基于这个初始值，如果 Stream 为空那么将直接返回初始值，第二个参数同样为累加算法，测试代码如下：</p>
 
@@ -1199,7 +1199,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

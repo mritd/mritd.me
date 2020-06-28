@@ -214,7 +214,7 @@
 
 <h3 id="二创建容器">二、创建容器</h3>
 
-<p>注册号账号以后，登录控制台，点击 <code class="highlighter-rouge">Create</code> 创建容器</p>
+<p>注册号账号以后，登录控制台，点击 <code class="language-plaintext highlighter-rouge">Create</code> 创建容器</p>
 
 <p><img src="https://cdn.oss.link/markdown/3ai5c.jpg" alt="login" /></p>
 
@@ -222,7 +222,7 @@
 
 <p><img src="https://cdn.oss.link/markdown/0dkkc.jpg" alt="set_container" /></p>
 
-<p><strong>其中 <code class="highlighter-rouge">Image</code> 填写 <code class="highlighter-rouge">mritd/shadowsocks</code>，表示使用哪个镜像模板创建容器，关于 Docker 镜像含义等请自行 Google，<code class="highlighter-rouge">mritd/shadowsocks</code> 这个镜像是我维护的一个 shadowsocks 镜像，如果想使用其他 shadowsocks 可从 <a href="https://hub.docker.com/">Docker Hub</a> 上自行搜索</strong></p>
+<p><strong>其中 <code class="language-plaintext highlighter-rouge">Image</code> 填写 <code class="language-plaintext highlighter-rouge">mritd/shadowsocks</code>，表示使用哪个镜像模板创建容器，关于 Docker 镜像含义等请自行 Google，<code class="language-plaintext highlighter-rouge">mritd/shadowsocks</code> 这个镜像是我维护的一个 shadowsocks 镜像，如果想使用其他 shadowsocks 可从 <a href="https://hub.docker.com/">Docker Hub</a> 上自行搜索</strong></p>
 
 <p><strong>其他各选项含义如下:</strong></p>
 
@@ -231,8 +231,8 @@
   <li>Memory: 容器使用的内存大小，256 也可以</li>
   <li>Endpoint: 暴露端口，可不填</li>
   <li>Port: 容器对外提供服务的端口，默认为 5000</li>
-  <li>ENV: 是否使用环境变量，<code class="highlighter-rouge">mritd/shadowsocks</code> 镜像支持使用环境变量设置 shadowsocks 相关参数，这里可以省略</li>
-  <li>CMD: 要执行容器中的命令，<strong>首部必须填写 <code class="highlighter-rouge">/root/entrypoint.sh</code>，后面其他参数可以省略，但是一般会加上 <code class="highlighter-rouge">-k</code> 设置 shadowsocks 的密码，关于都能用哪些参数和参数意义请看考 <a href="https://hub.docker.com/r/mritd/shadowsocks/">Docker Hub</a> 上的说明(shadowsocks 默认加密方式为 aes-256-cfb)</strong></li>
+  <li>ENV: 是否使用环境变量，<code class="language-plaintext highlighter-rouge">mritd/shadowsocks</code> 镜像支持使用环境变量设置 shadowsocks 相关参数，这里可以省略</li>
+  <li>CMD: 要执行容器中的命令，<strong>首部必须填写 <code class="language-plaintext highlighter-rouge">/root/entrypoint.sh</code>，后面其他参数可以省略，但是一般会加上 <code class="language-plaintext highlighter-rouge">-k</code> 设置 shadowsocks 的密码，关于都能用哪些参数和参数意义请看考 <a href="https://hub.docker.com/r/mritd/shadowsocks/">Docker Hub</a> 上的说明(shadowsocks 默认加密方式为 aes-256-cfb)</strong></li>
 </ul>
 
 <p>最后点击创建即可</p>
@@ -249,7 +249,7 @@
 
 <p><img src="https://cdn.oss.link/markdown/m093z.jpg" alt="create_detail" /></p>
 
-<p>稍等片刻后容器变为绿色，并为 <code class="highlighter-rouge">Running</code> 状态表示创建完成</p>
+<p>稍等片刻后容器变为绿色，并为 <code class="language-plaintext highlighter-rouge">Running</code> 状态表示创建完成</p>
 
 <p><img src="https://cdn.oss.link/markdown/ybwqj.jpg" alt="create_success" /></p>
 
@@ -271,9 +271,9 @@
 
 <p>关于镜像使用在 <a href="https://hub.docker.com/r/mritd/shadowsocks/">Docker Hub</a> 页面详细描述了镜像参数，具体可以参考一下</p>
 
-<p><strong>镜像可以理解为一个微型 Linux 系统，其中 CMD 选项代表要执行系统中的那个命令，填写 <code class="highlighter-rouge">/root/entrypoint.sh</code> 是因为制作镜像时指定了 shadowsocks 通过这个脚本启动，后面的 <code class="highlighter-rouge">-k</code> 等参数会被这个脚本执行，脚本支持哪些参数可以从上面的 Docker Hub 页面获取</strong></p>
+<p><strong>镜像可以理解为一个微型 Linux 系统，其中 CMD 选项代表要执行系统中的那个命令，填写 <code class="language-plaintext highlighter-rouge">/root/entrypoint.sh</code> 是因为制作镜像时指定了 shadowsocks 通过这个脚本启动，后面的 <code class="language-plaintext highlighter-rouge">-k</code> 等参数会被这个脚本执行，脚本支持哪些参数可以从上面的 Docker Hub 页面获取</strong></p>
 
-<p><strong>镜像支持以环境变量的方式设置密码等，环境变量表现为一个 <code class="highlighter-rouge">key-value</code> (键值对) 形式，也就是说 CMD 其实可以只写 <code class="highlighter-rouge">/root/entrypoint.sh</code> 不加 <code class="highlighter-rouge">-k</code> 参数，而通过勾选 <code class="highlighter-rouge">ENV</code> 选项并添加一个 <code class="highlighter-rouge">PASSWORD=Your-PassWord</code> 环境变量来设置</strong></p>
+<p><strong>镜像支持以环境变量的方式设置密码等，环境变量表现为一个 <code class="language-plaintext highlighter-rouge">key-value</code> (键值对) 形式，也就是说 CMD 其实可以只写 <code class="language-plaintext highlighter-rouge">/root/entrypoint.sh</code> 不加 <code class="language-plaintext highlighter-rouge">-k</code> 参数，而通过勾选 <code class="language-plaintext highlighter-rouge">ENV</code> 选项并添加一个 <code class="language-plaintext highlighter-rouge">PASSWORD=Your-PassWord</code> 环境变量来设置</strong></p>
 
 <p><strong>目前镜像内集成了 kcptun，但是由于 kcptun 自定义设置需要挂载配置文件，所以在樱花 Docker 中还无法使用，后期准备支持环境变量设置</strong>
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
@@ -379,7 +379,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

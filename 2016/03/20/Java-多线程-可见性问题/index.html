@@ -232,7 +232,7 @@
 
 <h2 id="三synchronized-实现可见性">三、synchronized 实现可见性</h2>
 
-<p>Java 中对代码块或方法使用 <code class="highlighter-rouge">symchroized</code> 关键字，可保证其内部的共享变量实现多线程可见性。</p>
+<p>Java 中对代码块或方法使用 <code class="language-plaintext highlighter-rouge">symchroized</code> 关键字，可保证其内部的共享变量实现多线程可见性。</p>
 
 <h3 id="1jmm-对-synchroized-相关规定">1、JMM 对 synchroized 相关规定</h3>
 
@@ -244,12 +244,12 @@
 <h3 id="2线程执行互斥代码过程">2、线程执行互斥代码过程</h3>
 
 <ul>
-  <li>1、线程在 <code class="highlighter-rouge">synchroized</code> 入口处获得互斥锁</li>
+  <li>1、线程在 <code class="language-plaintext highlighter-rouge">synchroized</code> 入口处获得互斥锁</li>
   <li>2、线程清空自己的工作内存</li>
   <li>3、线程将主内存数据刷新到工作内存</li>
   <li>4、线程执行互斥代码</li>
   <li>5、线程将工作内存数据刷新到主内存</li>
-  <li>6、线程退出 <code class="highlighter-rouge">synchroized</code> 代码块并释放互斥锁</li>
+  <li>6、线程退出 <code class="language-plaintext highlighter-rouge">synchroized</code> 代码块并释放互斥锁</li>
 </ul>
 
 <h3 id="3指令重排序">3、指令重排序</h3>
@@ -278,7 +278,7 @@
 
 <h3 id="4代码示例">4、代码示例</h3>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">mkw</span><span class="o">.</span><span class="na">demo</span><span class="o">.</span><span class="na">syn</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">mkw.demo.syn</span><span class="o">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SynchronizedDemo</span> <span class="o">{</span>
 	<span class="c1">//共享变量</span>
@@ -336,8 +336,8 @@
 <p>volatile 通过加入内存屏障和禁止指令重排序实现可见性控制，其过程大致分为以下两个过程：</p>
 
 <ul>
-  <li>对 volatile 变量进行写操作时，会在写操作后加入一条 <code class="highlighter-rouge">store</code> 屏蔽指令；<strong>该命令会将工作内存中内容强制刷新到主内存(覆盖)；同时会防止编译器/CPU指令重排序时将前面的变量重排到 volatile 修饰的变量之后(禁止颠倒顺序)。</strong></li>
-  <li>对 volatile 变量进行读操作时，会在读操作前加入一条 <code class="highlighter-rouge">load</code> 屏蔽指令；<strong>该指令会强制使工作内存失效，从而达到必须从主内存刷新到工作内存的效果</strong></li>
+  <li>对 volatile 变量进行写操作时，会在写操作后加入一条 <code class="language-plaintext highlighter-rouge">store</code> 屏蔽指令；<strong>该命令会将工作内存中内容强制刷新到主内存(覆盖)；同时会防止编译器/CPU指令重排序时将前面的变量重排到 volatile 修饰的变量之后(禁止颠倒顺序)。</strong></li>
+  <li>对 volatile 变量进行读操作时，会在读操作前加入一条 <code class="language-plaintext highlighter-rouge">load</code> 屏蔽指令；<strong>该指令会强制使工作内存失效，从而达到必须从主内存刷新到工作内存的效果</strong></li>
 </ul>
 
 <p>总结：使用 valotile 修饰变量后，线程在每次读取该变量时，会强制从主内存刷新最新状态到工作内存；在每次写入该变量时，会强制从工作内存刷新到主内存，以保证线程可见性。</p>
@@ -346,7 +346,7 @@
 
 <p>由上可知 volatile 在保证可见性的原理大致和 synchroized 类似，主要是控制工作内存与主内存的刷新关系；但是相对于 synchroized ，volatile 不能保证原子性操作，测试代码如下：</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">mkw</span><span class="o">.</span><span class="na">demo</span><span class="o">.</span><span class="na">vol</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">mkw.demo.vol</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="nn">java.util.concurrent.locks.Lock</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">java.util.concurrent.locks.ReentrantLock</span><span class="o">;</span>
@@ -395,7 +395,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>当以上代码运行多次后，number 打印的值会出现很多小于500的情况；其原因是 volatile 无法保证 number++ 这行代码的原子性操作；实质上 <code class="highlighter-rouge">number++</code> 执行了3个动作，首先读取 number 值，然后进行+1，最后写会 number；</p>
+<p>当以上代码运行多次后，number 打印的值会出现很多小于500的情况；其原因是 volatile 无法保证 number++ 这行代码的原子性操作；实质上 <code class="language-plaintext highlighter-rouge">number++</code> 执行了3个动作，首先读取 number 值，然后进行+1，最后写会 number；</p>
 
 <p>首先假设 number=2，在多线程并发的情况下，A线程由于 volatile 原因，首先将 number 从主内存强制刷新到工作内存，然后进行 +1 操作，此时A线程工作内存中 number=3，当要回写到工作内存时。线程 B 获取了CPU资源开始执行；不难想象，B线程对 number+1 后，可能被A线程覆盖掉；此时 volatile 无法保证原子性的问题就暴露了出来。</p>
 
@@ -512,7 +512,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

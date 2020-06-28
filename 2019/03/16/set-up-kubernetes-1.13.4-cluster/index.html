@@ -504,7 +504,7 @@ preinstall
 <span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
 </code></pre></div></div>
 
-<p>最后三台机器依次修改 <code class="highlighter-rouge">IP</code>、<code class="highlighter-rouge">ETCD_NAME</code> 然后启动即可，<strong>生产环境请不要忘记修改集群 Token 为真实随机字符串 (<code class="highlighter-rouge">ETCD_INITIAL_CLUSTER_TOKEN</code> 变量)</strong>启动后可以通过以下命令测试集群联通性</p>
+<p>最后三台机器依次修改 <code class="language-plaintext highlighter-rouge">IP</code>、<code class="language-plaintext highlighter-rouge">ETCD_NAME</code> 然后启动即可，<strong>生产环境请不要忘记修改集群 Token 为真实随机字符串 (<code class="language-plaintext highlighter-rouge">ETCD_INITIAL_CLUSTER_TOKEN</code> 变量)</strong>启动后可以通过以下命令测试集群联通性</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker1.node ➜  ~ <span class="nb">export </span><span class="nv">ETCDCTL_API</span><span class="o">=</span>3
 docker1.node ➜  ~ etcdctl member list
@@ -519,7 +519,7 @@ docker1.node ➜  ~ etcdctl member list
 
 <h4 id="311生成证书">3.1.1、生成证书</h4>
 
-<p>新版本已经越来越趋近全面 TLS + RBAC 配置，<strong>所以本次安装将会启动大部分 TLS + RBAC 配置，包括 <code class="highlighter-rouge">kube-controler-manager</code>、<code class="highlighter-rouge">kube-scheduler</code> 组件不再连接本地 <code class="highlighter-rouge">kube-apiserver</code> 的 8080 非认证端口，<code class="highlighter-rouge">kubelet</code> 等组件 API 端点关闭匿名访问，启动 RBAC 认证等</strong>；为了满足这些认证，需要签署以下证书</p>
+<p>新版本已经越来越趋近全面 TLS + RBAC 配置，<strong>所以本次安装将会启动大部分 TLS + RBAC 配置，包括 <code class="language-plaintext highlighter-rouge">kube-controler-manager</code>、<code class="language-plaintext highlighter-rouge">kube-scheduler</code> 组件不再连接本地 <code class="language-plaintext highlighter-rouge">kube-apiserver</code> 的 8080 非认证端口，<code class="language-plaintext highlighter-rouge">kubelet</code> 等组件 API 端点关闭匿名访问，启动 RBAC 认证等</strong>；为了满足这些认证，需要签署以下证书</p>
 
 <ul>
   <li>k8s-root-ca-csr.json 集群 CA 根证书</li>
@@ -604,7 +604,7 @@ docker1.node ➜  ~ etcdctl member list
 </span></code></pre></div></div>
 
 <ul>
-  <li>kube-controller-manager-csr.json controller manager 连接 apiserver 需要使用的证书，同时本身 <code class="highlighter-rouge">10257</code> 端口也会使用此证书</li>
+  <li>kube-controller-manager-csr.json controller manager 连接 apiserver 需要使用的证书，同时本身 <code class="language-plaintext highlighter-rouge">10257</code> 端口也会使用此证书</li>
 </ul>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
@@ -631,7 +631,7 @@ docker1.node ➜  ~ etcdctl member list
 </span></code></pre></div></div>
 
 <ul>
-  <li>kube-scheduler-csr.json scheduler 连接 apiserver 需要使用的证书，同时本身 <code class="highlighter-rouge">10259</code> 端口也会使用此证书</li>
+  <li>kube-scheduler-csr.json scheduler 连接 apiserver 需要使用的证书，同时本身 <code class="language-plaintext highlighter-rouge">10259</code> 端口也会使用此证书</li>
 </ul>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
@@ -681,7 +681,7 @@ docker1.node ➜  ~ etcdctl member list
 </span></code></pre></div></div>
 
 <ul>
-  <li>kubelet-api-admin-csr.json apiserver 反向连接 kubelet 组件 <code class="highlighter-rouge">10250</code> 端口需要使用的证书(例如执行 <code class="highlighter-rouge">kubectl logs</code>)</li>
+  <li>kubelet-api-admin-csr.json apiserver 反向连接 kubelet 组件 <code class="language-plaintext highlighter-rouge">10250</code> 端口需要使用的证书(例如执行 <code class="language-plaintext highlighter-rouge">kubectl logs</code>)</li>
 </ul>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
@@ -726,7 +726,7 @@ docker1.node ➜  ~ etcdctl member list
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p><strong>注意: 请不要修改证书配置的 <code class="highlighter-rouge">CN</code>、<code class="highlighter-rouge">O</code> 字段，这两个字段名称比较特殊，大多数为 <code class="highlighter-rouge">system:</code> 开头，实际上是为了匹配 RBAC 规则，具体请参考 <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/#default-roles-and-role-bindings">Default Roles and Role Bindings</a></strong></p>
+<p><strong>注意: 请不要修改证书配置的 <code class="language-plaintext highlighter-rouge">CN</code>、<code class="language-plaintext highlighter-rouge">O</code> 字段，这两个字段名称比较特殊，大多数为 <code class="language-plaintext highlighter-rouge">system:</code> 开头，实际上是为了匹配 RBAC 规则，具体请参考 <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/#default-roles-and-role-bindings">Default Roles and Role Bindings</a></strong></p>
 
 <p>最后使用如下命令生成即可:</p>
 
@@ -740,15 +740,15 @@ bare <span class="nv">$targetName</span>
 
 <h4 id="312生成配置文件">3.1.2、生成配置文件</h4>
 
-<p>集群搭建需要预先生成一系列配置文件，生成配置需要预先安装 <code class="highlighter-rouge">kubectl</code> 命令，请自行根据文档安装 <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-binary-using-curl">Install kubectl binary using curl</a>；其中配置文件及其作用如下:</p>
+<p>集群搭建需要预先生成一系列配置文件，生成配置需要预先安装 <code class="language-plaintext highlighter-rouge">kubectl</code> 命令，请自行根据文档安装 <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-binary-using-curl">Install kubectl binary using curl</a>；其中配置文件及其作用如下:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">bootstrap.kubeconfig</code> kubelet TLS Bootstarp 引导阶段需要使用的配置文件</li>
-  <li><code class="highlighter-rouge">kube-controller-manager.kubeconfig</code> controller manager 组件开启安全端口及 RBAC 认证所需配置</li>
-  <li><code class="highlighter-rouge">kube-scheduler.kubeconfig</code> scheduler 组件开启安全端口及 RBAC 认证所需配置</li>
-  <li><code class="highlighter-rouge">kube-proxy.kubeconfig</code> proxy 组件连接 apiserver 所需配置文件</li>
-  <li><code class="highlighter-rouge">audit-policy.yaml</code> apiserver RBAC 审计日志配置文件</li>
-  <li><code class="highlighter-rouge">bootstrap.secret.yaml</code> kubelet TLS Bootstarp 引导阶段使用 Bootstrap Token 方式引导，需要预先创建此 Token</li>
+  <li><code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code> kubelet TLS Bootstarp 引导阶段需要使用的配置文件</li>
+  <li><code class="language-plaintext highlighter-rouge">kube-controller-manager.kubeconfig</code> controller manager 组件开启安全端口及 RBAC 认证所需配置</li>
+  <li><code class="language-plaintext highlighter-rouge">kube-scheduler.kubeconfig</code> scheduler 组件开启安全端口及 RBAC 认证所需配置</li>
+  <li><code class="language-plaintext highlighter-rouge">kube-proxy.kubeconfig</code> proxy 组件连接 apiserver 所需配置文件</li>
+  <li><code class="language-plaintext highlighter-rouge">audit-policy.yaml</code> apiserver RBAC 审计日志配置文件</li>
+  <li><code class="language-plaintext highlighter-rouge">bootstrap.secret.yaml</code> kubelet TLS Bootstarp 引导阶段使用 Bootstrap Token 方式引导，需要预先创建此 Token</li>
 </ul>
 
 <p>生成这些配置文件的脚本如下</p>
@@ -869,7 +869,7 @@ stringData:
 
 <h3 id="32处理-ipvs-及依赖">3.2、处理 ipvs 及依赖</h3>
 
-<p>新版本目前 <code class="highlighter-rouge">kube-proxy</code> 组件全部采用 ipvs 方式负载，所以为了 <code class="highlighter-rouge">kube-proxy</code> 能正常工作需要预先处理一下 ipvs 配置以及相关依赖(每台 node 都要处理)</p>
+<p>新版本目前 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 组件全部采用 ipvs 方式负载，所以为了 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 能正常工作需要预先处理一下 ipvs 配置以及相关依赖(每台 node 都要处理)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/sysctl.conf <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
 net.ipv4.ip_forward=1
@@ -902,15 +902,15 @@ ip_vs_ftp
 
 <h4 id="331安装脚本">3.3.1、安装脚本</h4>
 
-<p>master 节点上需要三个组件: <code class="highlighter-rouge">kube-apiserver</code>、<code class="highlighter-rouge">kube-controller-manager</code>、<code class="highlighter-rouge">kube-scheduler</code></p>
+<p>master 节点上需要三个组件: <code class="language-plaintext highlighter-rouge">kube-apiserver</code>、<code class="language-plaintext highlighter-rouge">kube-controller-manager</code>、<code class="language-plaintext highlighter-rouge">kube-scheduler</code></p>
 
 <p><strong>安装流程整体为以下几步</strong></p>
 
 <ul>
-  <li><strong>创建单独的 <code class="highlighter-rouge">kube</code> 用户</strong></li>
-  <li><strong>复制相关二进制文件到 <code class="highlighter-rouge">/usr/bin</code>，可以采用 <code class="highlighter-rouge">all in one</code> 的 <code class="highlighter-rouge">hyperkube</code></strong></li>
-  <li><strong>复制配置文件到 <code class="highlighter-rouge">/etc/kubernetes</code></strong></li>
-  <li><strong>复制证书文件到 <code class="highlighter-rouge">/etc/kubernetes/ssl</code></strong></li>
+  <li><strong>创建单独的 <code class="language-plaintext highlighter-rouge">kube</code> 用户</strong></li>
+  <li><strong>复制相关二进制文件到 <code class="language-plaintext highlighter-rouge">/usr/bin</code>，可以采用 <code class="language-plaintext highlighter-rouge">all in one</code> 的 <code class="language-plaintext highlighter-rouge">hyperkube</code></strong></li>
+  <li><strong>复制配置文件到 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code></strong></li>
+  <li><strong>复制证书文件到 <code class="language-plaintext highlighter-rouge">/etc/kubernetes/ssl</code></strong></li>
   <li><strong>修改配置并启动</strong></li>
 </ul>
 
@@ -980,9 +980,9 @@ install_k8s
 postinstall
 </code></pre></div></div>
 
-<p><strong>hyperkube 是一个多合一的可执行文件，通过 <code class="highlighter-rouge">--make-symlinks</code> 会在当前目录生成 kubernetes 各个组件的软连接</strong></p>
+<p><strong>hyperkube 是一个多合一的可执行文件，通过 <code class="language-plaintext highlighter-rouge">--make-symlinks</code> 会在当前目录生成 kubernetes 各个组件的软连接</strong></p>
 
-<p>被复制的 conf 目录结构如下(最终被复制到 <code class="highlighter-rouge">/etc/kubernetes</code>)</p>
+<p>被复制的 conf 目录结构如下(最终被复制到 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code>)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">.</span>
 ├── apiserver
@@ -1174,24 +1174,24 @@ postinstall
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">--client-ca-file</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--client-ca-file</code></td>
       <td>定义客户端 CA</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--endpoint-reconciler-type</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--endpoint-reconciler-type</code></td>
       <td>master endpoint 策略</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--kubelet-client-certificate</code>、<code class="highlighter-rouge">--kubelet-client-key</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--kubelet-client-certificate</code>、<code class="language-plaintext highlighter-rouge">--kubelet-client-key</code></td>
       <td>master 反向连接 kubelet 使用的证书</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--service-account-key-file</code></td>
+      <td><code class="language-plaintext highlighter-rouge">--service-account-key-file</code></td>
       <td>service account 签名 key(用于有效性验证)</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">--tls-cert-file</code>、<code class="highlighter-rouge">--tls-private-key-file</code></td>
-      <td>master apiserver <code class="highlighter-rouge">6443</code> 端口证书</td>
+      <td><code class="language-plaintext highlighter-rouge">--tls-cert-file</code>、<code class="language-plaintext highlighter-rouge">--tls-private-key-file</code></td>
+      <td>master apiserver <code class="language-plaintext highlighter-rouge">6443</code> 端口证书</td>
     </tr>
   </tbody>
 </table>
@@ -1236,7 +1236,7 @@ postinstall
                                 --v=2"</span>
 </code></pre></div></div>
 
-<p>controller manager 将不安全端口 <code class="highlighter-rouge">10252</code> 绑定到 127.0.0.1 确保 <code class="highlighter-rouge">kuebctl get cs</code> 有正确返回；将安全端口 <code class="highlighter-rouge">10257</code> 绑定到 0.0.0.0 公开，提供服务调用；<strong>由于 controller manager 开始连接 apiserver 的 <code class="highlighter-rouge">6443</code> 认证端口，所以需要 <code class="highlighter-rouge">--use-service-account-credentials</code> 选项来让 controller manager 创建单独的 service account(默认 <code class="highlighter-rouge">system:kube-controller-manager</code> 用户没有那么高权限)</strong></p>
+<p>controller manager 将不安全端口 <code class="language-plaintext highlighter-rouge">10252</code> 绑定到 127.0.0.1 确保 <code class="language-plaintext highlighter-rouge">kuebctl get cs</code> 有正确返回；将安全端口 <code class="language-plaintext highlighter-rouge">10257</code> 绑定到 0.0.0.0 公开，提供服务调用；<strong>由于 controller manager 开始连接 apiserver 的 <code class="language-plaintext highlighter-rouge">6443</code> 认证端口，所以需要 <code class="language-plaintext highlighter-rouge">--use-service-account-credentials</code> 选项来让 controller manager 创建单独的 service account(默认 <code class="language-plaintext highlighter-rouge">system:kube-controller-manager</code> 用户没有那么高权限)</strong></p>
 
 <ul>
   <li>scheduler</li>
@@ -1386,7 +1386,7 @@ postinstall
                 --v=2"</span>
 </code></pre></div></div>
 
-<p><strong>当 kubelet 组件设置了 <code class="highlighter-rouge">--rotate-certificates</code>，<code class="highlighter-rouge">--rotate-server-certificates</code> 后会自动更新其使用的相关证书，同时指定 <code class="highlighter-rouge">--authorization-mode=Webhook</code> 后 <code class="highlighter-rouge">10250</code> 端口 RBAC 授权将会委托给 apiserver</strong></p>
+<p><strong>当 kubelet 组件设置了 <code class="language-plaintext highlighter-rouge">--rotate-certificates</code>，<code class="language-plaintext highlighter-rouge">--rotate-server-certificates</code> 后会自动更新其使用的相关证书，同时指定 <code class="language-plaintext highlighter-rouge">--authorization-mode=Webhook</code> 后 <code class="language-plaintext highlighter-rouge">10250</code> 端口 RBAC 授权将会委托给 apiserver</strong></p>
 
 <ul>
   <li>proxy</li>
@@ -1412,7 +1412,7 @@ postinstall
                     --v=2"</span>
 </code></pre></div></div>
 
-<p>由于 <code class="highlighter-rouge">kubelet</code> 组件是采用 TLS Bootstrap 启动，所以需要预先创建相关配置</p>
+<p>由于 <code class="language-plaintext highlighter-rouge">kubelet</code> 组件是采用 TLS Bootstrap 启动，所以需要预先创建相关配置</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建用于 tls bootstrap 的 token secret</span>
 kubectl create <span class="nt">-f</span> bootstrap.secret.yaml
@@ -1442,7 +1442,7 @@ kubectl create clusterrolebinding system:kubelet-api-admin <span class="se">\</s
 
 <h4 id="343nginx-代理">3.4.3、Nginx 代理</h4>
 
-<p>为了保证 apiserver 的 HA，需要在每个 node 上部署 nginx 来反向代理(tcp)所有 apiserver；然后 kubelet、kube-proxy 组件连接本地 <code class="highlighter-rouge">127.0.0.1:6443</code> 访问 apiserver，以确保任何 master 挂掉以后 node 都不会受到影响</p>
+<p>为了保证 apiserver 的 HA，需要在每个 node 上部署 nginx 来反向代理(tcp)所有 apiserver；然后 kubelet、kube-proxy 组件连接本地 <code class="language-plaintext highlighter-rouge">127.0.0.1:6443</code> 访问 apiserver，以确保任何 master 挂掉以后 node 都不会受到影响</p>
 
 <ul>
   <li>nginx.conf</li>
@@ -2019,7 +2019,7 @@ certificatesigningrequest.certificates.k8s.io/csr-99l77 approved
   <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
 </code></pre></div></div>
 
-<p><strong>需要注意的是我们添加了 <code class="highlighter-rouge">IP_AUTODETECTION_METHOD</code> 变量，这个变量会设置 calcio 获取 node ip 的方式；默认情况下采用 <a href="https://docs.projectcalico.org/v3.6/reference/node/configuration#ip-autodetection-methods">first-found</a> 方式获取，即获取第一个有效网卡的 IP 作为 node ip；在某些多网卡机器上可能会出现问题；这里将值设置为 <code class="highlighter-rouge">can-reach=192.168.1.51</code>，即使用第一个能够访问 master <code class="highlighter-rouge">192.168.1.51</code> 的网卡地址作为 node ip</strong></p>
+<p><strong>需要注意的是我们添加了 <code class="language-plaintext highlighter-rouge">IP_AUTODETECTION_METHOD</code> 变量，这个变量会设置 calcio 获取 node ip 的方式；默认情况下采用 <a href="https://docs.projectcalico.org/v3.6/reference/node/configuration#ip-autodetection-methods">first-found</a> 方式获取，即获取第一个有效网卡的 IP 作为 node ip；在某些多网卡机器上可能会出现问题；这里将值设置为 <code class="language-plaintext highlighter-rouge">can-reach=192.168.1.51</code>，即使用第一个能够访问 master <code class="language-plaintext highlighter-rouge">192.168.1.51</code> 的网卡地址作为 node ip</strong></p>
 
 <p>最后执行创建即可，创建成功后如下所示</p>
 
@@ -2391,7 +2391,7 @@ calico-node-vj8np                         1/1     Running   0          85s   192
 
 <h3 id="42其他说明">4.2、其他说明</h3>
 
-<p>此次搭建开启了大部分认证，限于篇幅原因没有将每个选项作用做完整解释，推荐搭建完成后仔细阅读以下 <code class="highlighter-rouge">--help</code> 中的描述(官方文档页面有时候更新不完整)；目前 apiserver 仍然保留了 8080 端口(因为直接使用 kubectl 方便)，但是在高安全性环境请关闭 8080 端口，因为即使绑定在 127.0.0.1 上，对于任何能够登录 master 机器的用户仍然能够不经验证操作整个集群</p>
+<p>此次搭建开启了大部分认证，限于篇幅原因没有将每个选项作用做完整解释，推荐搭建完成后仔细阅读以下 <code class="language-plaintext highlighter-rouge">--help</code> 中的描述(官方文档页面有时候更新不完整)；目前 apiserver 仍然保留了 8080 端口(因为直接使用 kubectl 方便)，但是在高安全性环境请关闭 8080 端口，因为即使绑定在 127.0.0.1 上，对于任何能够登录 master 机器的用户仍然能够不经验证操作整个集群</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -2496,7 +2496,7 @@ calico-node-vj8np                         1/1     Running   0          85s   192
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

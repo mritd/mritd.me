@@ -237,9 +237,9 @@
   </tbody>
 </table>
 
-<p>同时保证部署机器对集群内节点拥有 root 免密登录权限，<strong>由于墙的原因，部署所需镜像已经全部打包到百度云，点击 <a href="https://pan.baidu.com/s/1jHMvMn0">这里</a> 下载，然后进行 load 即可；注意: 直接使用我的 <code class="highlighter-rouge">vagrant</code> 文件时，请删除我在 <code class="highlighter-rouge">init.sh</code> 脚本里对 docker 设置的本地代理，直接使用可能导致 docker 无法 pull 任何镜像；vagrant 可能需要执行 <code class="highlighter-rouge">vagrant plugin install vagrant-hosts</code> 安装插件以支持自动设置 host；如果自己采用其他虚拟机请保证单台虚拟机最低 1.5G 内存，否则会导致安装失败，别问我怎么知道的</strong></p>
+<p>同时保证部署机器对集群内节点拥有 root 免密登录权限，<strong>由于墙的原因，部署所需镜像已经全部打包到百度云，点击 <a href="https://pan.baidu.com/s/1jHMvMn0">这里</a> 下载，然后进行 load 即可；注意: 直接使用我的 <code class="language-plaintext highlighter-rouge">vagrant</code> 文件时，请删除我在 <code class="language-plaintext highlighter-rouge">init.sh</code> 脚本里对 docker 设置的本地代理，直接使用可能导致 docker 无法 pull 任何镜像；vagrant 可能需要执行 <code class="language-plaintext highlighter-rouge">vagrant plugin install vagrant-hosts</code> 安装插件以支持自动设置 host；如果自己采用其他虚拟机请保证单台虚拟机最低 1.5G 内存，否则会导致安装失败，别问我怎么知道的</strong></p>
 
-<p><strong>最新更新：经过测试，请使用 pip 安装 ansible，保证 <code class="highlighter-rouge">ansible &gt;= 2.2.1</code> &amp;&amp; <code class="highlighter-rouge">jinja2 &gt;= 2.8,&lt; 2.9</code>；否则可能出现安装时校验失败问题</strong></p>
+<p><strong>最新更新：经过测试，请使用 pip 安装 ansible，保证 <code class="language-plaintext highlighter-rouge">ansible &gt;= 2.2.1</code> &amp;&amp; <code class="language-plaintext highlighter-rouge">jinja2 &gt;= 2.8,&lt; 2.9</code>；否则可能出现安装时校验失败问题</strong></p>
 
 <h3 id="二搭建集群">二、搭建集群</h3>
 
@@ -262,9 +262,9 @@ yum <span class="nb">install</span> <span class="nt">-y</span> ansible
 
 <h4 id="23编辑配置文件">2.3、编辑配置文件</h4>
 
-<p><strong>注意：以下配置段中，所有双大括号 <code class="highlighter-rouge">{ {</code> 、<code class="highlighter-rouge">} }</code>，中间全部加了空格，因为双大括号会跟主题模板引擎产生冲突，默认应该是没有的，请自行 vim 替换</strong></p>
+<p><strong>注意：以下配置段中，所有双大括号 <code class="language-plaintext highlighter-rouge">{ {</code> 、<code class="language-plaintext highlighter-rouge">} }</code>，中间全部加了空格，因为双大括号会跟主题模板引擎产生冲突，默认应该是没有的，请自行 vim 替换</strong></p>
 
-<p>首先根据自己需要更改 kargo 的配置，配置文件位于 <code class="highlighter-rouge">inventory/group_vars/k8s-cluster.yml</code>，<strong>最新稳定版本版本(2.1.0) 配置文件还未更名，全部在 <code class="highlighter-rouge">inventory/group_vars/all.yml</code> 中，这里采用最新版本的原因是…借着写博客我也看看更新了啥(偷笑…)</strong></p>
+<p>首先根据自己需要更改 kargo 的配置，配置文件位于 <code class="language-plaintext highlighter-rouge">inventory/group_vars/k8s-cluster.yml</code>，<strong>最新稳定版本版本(2.1.0) 配置文件还未更名，全部在 <code class="language-plaintext highlighter-rouge">inventory/group_vars/all.yml</code> 中，这里采用最新版本的原因是…借着写博客我也看看更新了啥(偷笑…)</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim inventory/group_vars/k8s-cluster.yml
 
@@ -668,7 +668,7 @@ efk_enabled: <span class="nb">true</span>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

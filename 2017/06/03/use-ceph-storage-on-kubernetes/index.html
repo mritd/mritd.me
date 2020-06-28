@@ -202,7 +202,7 @@
 
 <h3 id="一基础环境准备">一、基础环境准备</h3>
 
-<p>Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，<strong>采用 kargo 部署时确保配置中开启内核模块加载( <code class="highlighter-rouge">kubelet_load_modules: true</code> )</strong>；Kubernetes 版本为 1.6.4，Ceph 采用最新的稳定版 Jewel</p>
+<p>Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，<strong>采用 kargo 部署时确保配置中开启内核模块加载( <code class="language-plaintext highlighter-rouge">kubelet_load_modules: true</code> )</strong>；Kubernetes 版本为 1.6.4，Ceph 采用最新的稳定版 Jewel</p>
 
 <table>
   <thead>
@@ -287,7 +287,7 @@ mkfs.xfs /dev/rbd0
 
 <h4 id="31pv--pvc-方式">3.1、PV &amp; PVC 方式</h4>
 
-<p>传统的使用分布式存储的方案一般为 <code class="highlighter-rouge">PV &amp; PVC</code> 方式，也就是说管理员预先创建好相关 PV 和 PVC，然后对应的 deployment 或者 replication 挂载 PVC 来使用</p>
+<p>传统的使用分布式存储的方案一般为 <code class="language-plaintext highlighter-rouge">PV &amp; PVC</code> 方式，也就是说管理员预先创建好相关 PV 和 PVC，然后对应的 deployment 或者 replication 挂载 PVC 来使用</p>
 
 <p><strong>创建 Secret</strong></p>
 
@@ -392,7 +392,7 @@ spec:
 
 <p><strong>创建系统级 Secret</strong></p>
 
-<p><strong>注意: 由于 StorageClass 要求 Ceph 的 Secret type 必须为 <code class="highlighter-rouge">kubernetes.io/rbd</code>，所以上一步创建的 <code class="highlighter-rouge">ceph-secret</code> 需要先被删除，然后使用如下命令重新创建；此时的 key 并没有经过 base64</strong></p>
+<p><strong>注意: 由于 StorageClass 要求 Ceph 的 Secret type 必须为 <code class="language-plaintext highlighter-rouge">kubernetes.io/rbd</code>，所以上一步创建的 <code class="language-plaintext highlighter-rouge">ceph-secret</code> 需要先被删除，然后使用如下命令重新创建；此时的 key 并没有经过 base64</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 这个 secret type 必须为 kubernetes.io/rbd，否则会造成 PVC 无法使用</span>
 kubectl create secret generic ceph-secret <span class="nt">--type</span><span class="o">=</span><span class="s2">"kubernetes.io/rbd"</span> <span class="nt">--from-literal</span><span class="o">=</span><span class="nv">key</span><span class="o">=</span><span class="s1">'AQCikDFZs870AhAA7q1dF80V8Vq1cF6vm6bGTg=='</span> <span class="nt">--namespace</span><span class="o">=</span>kube-system
@@ -579,7 +579,7 @@ spec:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

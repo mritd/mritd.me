@@ -235,7 +235,7 @@
   </tbody>
 </table>
 
-<p><strong>本文尽量以实际操作为主，因为写过一篇 <a href="https://mritd.me/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">Kubernetes 1.7 搭建文档</a>，所以以下细节部分不在详细阐述，不懂得可以参考上一篇文章；本文所有安装工具均已打包上传到了 <a href="https://pan.baidu.com/s/1nvwZCfv">百度云</a> 密码: <code class="highlighter-rouge">4zaz</code>，可直接下载重复搭建过程，搭建前请自行 load 好 images 目录下的相关 docker 镜像</strong></p>
+<p><strong>本文尽量以实际操作为主，因为写过一篇 <a href="https://mritd.me/2017/07/21/set-up-kubernetes-ha-cluster-by-binary/">Kubernetes 1.7 搭建文档</a>，所以以下细节部分不在详细阐述，不懂得可以参考上一篇文章；本文所有安装工具均已打包上传到了 <a href="https://pan.baidu.com/s/1nvwZCfv">百度云</a> 密码: <code class="language-plaintext highlighter-rouge">4zaz</code>，可直接下载重复搭建过程，搭建前请自行 load 好 images 目录下的相关 docker 镜像</strong></p>
 
 <h3 id="二搭建-etcd-集群">二、搭建 Etcd 集群</h3>
 
@@ -632,7 +632,7 @@ rules:
 
 <h4 id="33-搭建-master-节点">3.3、 搭建 Master 节点</h4>
 
-<p>证书与 rpm 都安装完成后，只需要修改配置(配置位于 <code class="highlighter-rouge">/etc/kubernetes</code> 目录)后启动相关组件即可</p>
+<p>证书与 rpm 都安装完成后，只需要修改配置(配置位于 <code class="language-plaintext highlighter-rouge">/etc/kubernetes</code> 目录)后启动相关组件即可</p>
 
 <ul>
   <li>config 通用配置</li>
@@ -717,11 +717,11 @@ rules:
 <p><strong>注意：API SERVER 对比 1.7 配置出现几项变动:</strong></p>
 
 <ul>
-  <li>移除了 <code class="highlighter-rouge">--runtime-config=rbac.authorization.k8s.io/v1beta1</code> 配置，因为 RBAC 已经稳定，被纳入了 v1 api，不再需要指定开启</li>
-  <li><code class="highlighter-rouge">--authorization-mode</code> 授权模型增加了 <code class="highlighter-rouge">Node</code> 参数，因为 1.8 后默认 <code class="highlighter-rouge">system:node</code> role 不会自动授予 <code class="highlighter-rouge">system:nodes</code> 组，具体请参看 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 段最后一条说明)</li>
-  <li>由于以上原因，<code class="highlighter-rouge">--admission-control</code> 同时增加了 <code class="highlighter-rouge">NodeRestriction</code> 参数，关于关于节点授权器请参考 <a href="https://kubernetes.io/docs/admin/authorization/node/">Using Node Authorization</a></li>
-  <li>增加 <code class="highlighter-rouge">--audit-policy-file</code> 参数用于指定高级审计配置，具体可参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 第四条)、<a href="https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#advanced-audit">Advanced audit</a></li>
-  <li>移除 <code class="highlighter-rouge">--experimental-bootstrap-token-auth</code> 参数，更换为 <code class="highlighter-rouge">--enable-bootstrap-token-auth</code>，详情参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#auth">CHANGELOG</a>(Auth 第二条)</li>
+  <li>移除了 <code class="language-plaintext highlighter-rouge">--runtime-config=rbac.authorization.k8s.io/v1beta1</code> 配置，因为 RBAC 已经稳定，被纳入了 v1 api，不再需要指定开启</li>
+  <li><code class="language-plaintext highlighter-rouge">--authorization-mode</code> 授权模型增加了 <code class="language-plaintext highlighter-rouge">Node</code> 参数，因为 1.8 后默认 <code class="language-plaintext highlighter-rouge">system:node</code> role 不会自动授予 <code class="language-plaintext highlighter-rouge">system:nodes</code> 组，具体请参看 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 段最后一条说明)</li>
+  <li>由于以上原因，<code class="language-plaintext highlighter-rouge">--admission-control</code> 同时增加了 <code class="language-plaintext highlighter-rouge">NodeRestriction</code> 参数，关于关于节点授权器请参考 <a href="https://kubernetes.io/docs/admin/authorization/node/">Using Node Authorization</a></li>
+  <li>增加 <code class="language-plaintext highlighter-rouge">--audit-policy-file</code> 参数用于指定高级审计配置，具体可参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 第四条)、<a href="https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#advanced-audit">Advanced audit</a></li>
+  <li>移除 <code class="language-plaintext highlighter-rouge">--experimental-bootstrap-token-auth</code> 参数，更换为 <code class="language-plaintext highlighter-rouge">--enable-bootstrap-token-auth</code>，详情参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#auth">CHANGELOG</a>(Auth 第二条)</li>
 </ul>
 
 <h5 id="controller-manager-配置">controller-manager 配置</h5>
@@ -774,7 +774,7 @@ systemctl <span class="nb">enable </span>kube-scheduler
 
 <h4 id="41分发-rpm-及证书">4.1、分发 rpm 及证书</h4>
 
-<p>对于 Node 节点，只需要安装 <code class="highlighter-rouge">kubernetes-node</code> 即可，同时为了方便使用，这里也安装了 <code class="highlighter-rouge">kubernetes-client</code>，如下</p>
+<p>对于 Node 节点，只需要安装 <code class="language-plaintext highlighter-rouge">kubernetes-node</code> 即可，同时为了方便使用，这里也安装了 <code class="language-plaintext highlighter-rouge">kubernetes-client</code>，如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for </span>IP <span class="k">in</span> <span class="sb">`</span><span class="nb">seq </span>8 9<span class="sb">`</span><span class="p">;</span><span class="k">do
     </span>scp kubernetes-node-1.8.0-1.el7.centos.x86_64.rpm kubernetes-client-1.8.0-1.el7.centos.x86_64.rpm root@10.10.1.<span class="nv">$IP</span>:~
@@ -865,8 +865,8 @@ systemctl <span class="nb">enable </span>kube-scheduler
 <p><strong>注意: kubelet 配置与 1.7 版本有一定改动</strong></p>
 
 <ul>
-  <li>增加 <code class="highlighter-rouge">--fail-swap-on=false</code> 选项，否则可能导致在开启 swap 分区的机器上无法启动 kubelet，详细可参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 第一条)</li>
-  <li>移除 <code class="highlighter-rouge">--require-kubeconfig</code> 选项，已经过时废弃</li>
+  <li>增加 <code class="language-plaintext highlighter-rouge">--fail-swap-on=false</code> 选项，否则可能导致在开启 swap 分区的机器上无法启动 kubelet，详细可参考 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#before-upgrading">CHANGELOG</a>(before-upgrading 第一条)</li>
+  <li>移除 <code class="language-plaintext highlighter-rouge">--require-kubeconfig</code> 选项，已经过时废弃</li>
 </ul>
 
 <h5 id="proxy-配置">proxy 配置</h5>
@@ -1001,11 +1001,11 @@ docker5.node   Ready     &lt;none&gt;    3m        v1.8.0
 systemctl <span class="nb">enable </span>kube-proxy
 </code></pre></div></div>
 
-<p><strong>再次提醒: 如果 kubelet 启动出现了类似 <code class="highlighter-rouge">system:node:xxxx</code> 用户没有权限访问 API 的 RBAC 错误，那么一定是 API Server 授权控制器、准入控制配置有问题，请仔细阅读上面的文档进行更改</strong></p>
+<p><strong>再次提醒: 如果 kubelet 启动出现了类似 <code class="language-plaintext highlighter-rouge">system:node:xxxx</code> 用户没有权限访问 API 的 RBAC 错误，那么一定是 API Server 授权控制器、准入控制配置有问题，请仔细阅读上面的文档进行更改</strong></p>
 
 <h4 id="45master-作为-node">4.5、Master 作为 Node</h4>
 
-<p>如果想讲 Master 也作为 Node 的话，请在 Master 上安装 kubernete-node rpm 包，配置与上面基本一致；<strong>区别于 Master 上不需要启动 nginx 做负载均衡，同时 <code class="highlighter-rouge">bootstrap.kubeconfig</code>、<code class="highlighter-rouge">kube-proxy.kubeconfig</code> 中的 API Server 地址改成当前 Master IP 即可。</strong></p>
+<p>如果想讲 Master 也作为 Node 的话，请在 Master 上安装 kubernete-node rpm 包，配置与上面基本一致；<strong>区别于 Master 上不需要启动 nginx 做负载均衡，同时 <code class="language-plaintext highlighter-rouge">bootstrap.kubeconfig</code>、<code class="language-plaintext highlighter-rouge">kube-proxy.kubeconfig</code> 中的 API Server 地址改成当前 Master IP 即可。</strong></p>
 
 <p>最终成功后如下图所示</p>
 
@@ -1042,7 +1042,7 @@ wget https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation
 
 <h4 id="52创建-systemd-文件">5.2、创建 Systemd 文件</h4>
 
-<p>上一步注释了 <code class="highlighter-rouge">calico.yaml</code> 中 Calico Node 相关内容，为了防止自动获取 IP 出现问题，将其移动到 Systemd，Systemd service 配置如下，<strong>每个节点都要安装 calico-node 的 Service</strong>，其他节点请自行修改 ip(被问我为啥是两个反引号 <code class="highlighter-rouge">\\</code>，自己试就知道了)</p>
+<p>上一步注释了 <code class="language-plaintext highlighter-rouge">calico.yaml</code> 中 Calico Node 相关内容，为了防止自动获取 IP 出现问题，将其移动到 Systemd，Systemd service 配置如下，<strong>每个节点都要安装 calico-node 的 Service</strong>，其他节点请自行修改 ip(被问我为啥是两个反引号 <code class="language-plaintext highlighter-rouge">\\</code>，自己试就知道了)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&gt;</span> /usr/lib/systemd/system/calico-node.service <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
 [Unit]
@@ -1090,7 +1090,7 @@ WantedBy=multi-user.target
 
 <h4 id="53修改-kubelet-配置">5.3、修改 kubelet 配置</h4>
 
-<p>根据官方文档要求 <code class="highlighter-rouge">kubelet</code> 配置必须增加 <code class="highlighter-rouge">--network-plugin=cni</code> 选项，所以需要修改 kubelet 配置</p>
+<p>根据官方文档要求 <code class="language-plaintext highlighter-rouge">kubelet</code> 配置必须增加 <code class="language-plaintext highlighter-rouge">--network-plugin=cni</code> 选项，所以需要修改 kubelet 配置</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">###</span>
 <span class="c"># kubernetes kubelet (minion) config</span>
@@ -1123,7 +1123,7 @@ WantedBy=multi-user.target
 systemctl restart kubelet
 </code></pre></div></div>
 
-<p>此时执行 <code class="highlighter-rouge">kubectl get node</code> 会看到 Node 为 <code class="highlighter-rouge">NotReady</code> 状态，属于正常情况</p>
+<p>此时执行 <code class="language-plaintext highlighter-rouge">kubectl get node</code> 会看到 Node 为 <code class="language-plaintext highlighter-rouge">NotReady</code> 状态，属于正常情况</p>
 
 <h4 id="54创建-calico-daemonset">5.4、创建 Calico Daemonset</h4>
 
@@ -1136,7 +1136,7 @@ kubectl create <span class="nt">-f</span> calico.yaml
 
 <h4 id="55创建-calico-node">5.5、创建 Calico Node</h4>
 
-<p>Calico Node 采用 Systemd 方式启动，在每个节点配置好 Systemd service后，<strong>每个节点修改对应的 <code class="highlighter-rouge">calico-node.service</code> 中的 IP 和节点名称，然后启动即可</strong></p>
+<p>Calico Node 采用 Systemd 方式启动，在每个节点配置好 Systemd service后，<strong>每个节点修改对应的 <code class="language-plaintext highlighter-rouge">calico-node.service</code> 中的 IP 和节点名称，然后启动即可</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl daemon-reload
 systemctl restart calico-node
@@ -1184,7 +1184,7 @@ spec:
 
 <h4 id="61部署集群-dns">6.1、部署集群 DNS</h4>
 
-<p>DNS 组件部署非常简单，直接创建相应的 deployment 等即可；但是有一个事得说一嘴，Kubernets 一直在推那个 <code class="highlighter-rouge">Addon Manager</code> 的工具来管理 DNS 啥的，文档说的条条是道，就是不希望我们手动搞这些东西，防止意外修改云云… 但问题是关于那个 <code class="highlighter-rouge">Addon Manager</code> 咋用一句没提，虽然说里面就一个小脚本，看看也能懂；但是我还是选择手动 😌… 还有这个 DNS 配置文件好像又挪地方了，以前在 <code class="highlighter-rouge">contrib</code> 项目下的…</p>
+<p>DNS 组件部署非常简单，直接创建相应的 deployment 等即可；但是有一个事得说一嘴，Kubernets 一直在推那个 <code class="language-plaintext highlighter-rouge">Addon Manager</code> 的工具来管理 DNS 啥的，文档说的条条是道，就是不希望我们手动搞这些东西，防止意外修改云云… 但问题是关于那个 <code class="language-plaintext highlighter-rouge">Addon Manager</code> 咋用一句没提，虽然说里面就一个小脚本，看看也能懂；但是我还是选择手动 😌… 还有这个 DNS 配置文件好像又挪地方了，以前在 <code class="language-plaintext highlighter-rouge">contrib</code> 项目下的…</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 获取文件</span>
 wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/dns/kube-dns.yaml.sed
@@ -1329,7 +1329,7 @@ kubectl create <span class="nt">-f</span> dns-horizontal-autoscaler.yaml
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

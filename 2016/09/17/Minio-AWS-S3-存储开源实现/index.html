@@ -202,7 +202,7 @@
 
 <h2 id="二minio-服务器搭建">二、Minio 服务器搭建</h2>
 
-<p>Minio 基于 golang 开发，所以编译后只有一个可执行文件，启动一个 Minio 服务器极其简单，只需要使用 <code class="highlighter-rouge">server</code> 参数，并附带一个或多个存储目录即可</p>
+<p>Minio 基于 golang 开发，所以编译后只有一个可执行文件，启动一个 Minio 服务器极其简单，只需要使用 <code class="language-plaintext highlighter-rouge">server</code> 参数，并附带一个或多个存储目录即可</p>
 
 <!--more-->
 
@@ -216,7 +216,7 @@ wget https://dl.minio.io/server/minio/release/linux-amd64/minio
 <span class="nb">nohup</span> ./minio server /data/aws_s3 &amp;
 </code></pre></div></div>
 
-<p>minio 默认监听所有网卡的 9000 端口，此时直接访问 <code class="highlighter-rouge">http://ip:9000</code> 即可查看 web ui 界面，如下所示</p>
+<p>minio 默认监听所有网卡的 9000 端口，此时直接访问 <code class="language-plaintext highlighter-rouge">http://ip:9000</code> 即可查看 web ui 界面，如下所示</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_minio_homepage.png" alt="hexo_minio_homepage" /></p>
 
@@ -234,7 +234,7 @@ wget https://dl.minio.io/client/mc/release/linux-amd64/mc
 <span class="nb">chmod</span> +x mc
 </code></pre></div></div>
 
-<p>mc 客户端通过 <code class="highlighter-rouge">config host add</code> 指令增加 minio 服务器，其实质操作是<strong>向 <code class="highlighter-rouge">~/.mc/config.json</code> 文件中加入新的 json 串</strong>，以下为增加一个 minio 服务器示例，相关参数可从服务端输出日志中找到</p>
+<p>mc 客户端通过 <code class="language-plaintext highlighter-rouge">config host add</code> 指令增加 minio 服务器，其实质操作是<strong>向 <code class="language-plaintext highlighter-rouge">~/.mc/config.json</code> 文件中加入新的 json 串</strong>，以下为增加一个 minio 服务器示例，相关参数可从服务端输出日志中找到</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mc config host add aws_s3 http://192.168.1.100:9000 TP6T2AXYYVLI8D2CEHYQ /+4+KVa7p3suABEaJ/E1gv4KQra7GdwsxWNs0Nr7
 </code></pre></div></div>
@@ -365,7 +365,7 @@ mc <span class="nb">rm </span>aws_s3/test/test.tar.gz
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

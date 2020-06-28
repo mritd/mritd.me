@@ -206,7 +206,7 @@
 
 <h2 id="一起因">一、起因</h2>
 
-<p>公司目前主要使用 GitLab CI 作为主力 CI 构建工具，而且由于机器有限，我们对一些包管理器的本地 cache 直接持久化到了本机；比如 maven 的 <code class="highlighter-rouge">.m2</code> 目录，nodejs 的 <code class="highlighter-rouge">.npm</code> 目录等；虽然我们创建了对应的私服，但是在 build 时毕竟会下载，所以当时索性调整 GitLab Runner 在每个由 GitLab Runner 启动的容器中挂载这些缓存目录(GitLab CI 在 build 时会新启动容器运行 build 任务)；今天调整 nodejs 项目浪了一下，直接采用 Dockerfile 的 multi-stage build 功能进行 “Build =&gt; Package(docker image)” 的实现，基本 Dockerfile 如下</p>
+<p>公司目前主要使用 GitLab CI 作为主力 CI 构建工具，而且由于机器有限，我们对一些包管理器的本地 cache 直接持久化到了本机；比如 maven 的 <code class="language-plaintext highlighter-rouge">.m2</code> 目录，nodejs 的 <code class="language-plaintext highlighter-rouge">.npm</code> 目录等；虽然我们创建了对应的私服，但是在 build 时毕竟会下载，所以当时索性调整 GitLab Runner 在每个由 GitLab Runner 启动的容器中挂载这些缓存目录(GitLab CI 在 build 时会新启动容器运行 build 任务)；今天调整 nodejs 项目浪了一下，直接采用 Dockerfile 的 multi-stage build 功能进行 “Build =&gt; Package(docker image)” 的实现，基本 Dockerfile 如下</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM gozap/build as builder
 
@@ -231,7 +231,7 @@ STOPSIGNAL SIGTERM
 CMD <span class="o">[</span><span class="s2">"nginx"</span>, <span class="s2">"-g"</span>, <span class="s2">"daemon off;"</span><span class="o">]</span>
 </code></pre></div></div>
 
-<p>本来这个 <code class="highlighter-rouge">cnpm</code> 命令是带有 cache 的(<a href="https://github.com/Gozap/dockerfile/blob/master/build/cnpm">见这里</a>)，不过运行完 build 以后发现很慢，检查宿主机 cache 目录发现根本没有 cache…然后突然感觉</p>
+<p>本来这个 <code class="language-plaintext highlighter-rouge">cnpm</code> 命令是带有 cache 的(<a href="https://github.com/Gozap/dockerfile/blob/master/build/cnpm">见这里</a>)，不过运行完 build 以后发现很慢，检查宿主机 cache 目录发现根本没有 cache…然后突然感觉</p>
 
 <p><img src="https://cdn.oss.link/markdown/6ieh4.jpg" alt="事情并没有这么简单" /></p>
 
@@ -259,7 +259,7 @@ CMD <span class="o">[</span><span class="s2">"nginx"</span>, <span class="s2">"-
 
 <p><img src="https://cdn.oss.link/markdown/9ov8m.jpg" alt="挂载不管用" /></p>
 
-<p>后来经过查阅文档，发现 Dockerfile 是有扩展语法的(当然最终我还是没用)，具体请见<del>下篇文章</del>(我怕被打死)下面，<strong>先说好，下面的内容无法完美的解决上面的问题，目前只是支持了一部分功能，当然未来很可能支持类似 <code class="highlighter-rouge">IF ELSE</code> 语法、直接挂载宿主机目录等功能</strong></p>
+<p>后来经过查阅文档，发现 Dockerfile 是有扩展语法的(当然最终我还是没用)，具体请见<del>下篇文章</del>(我怕被打死)下面，<strong>先说好，下面的内容无法完美的解决上面的问题，目前只是支持了一部分功能，当然未来很可能支持类似 <code class="language-plaintext highlighter-rouge">IF ELSE</code> 语法、直接挂载宿主机目录等功能</strong></p>
 
 <h2 id="二开启-dockerfile-扩展语法">二、开启 Dockerfile 扩展语法</h2>
 
@@ -277,11 +277,11 @@ CMD <span class="o">[</span><span class="s2">"nginx"</span>, <span class="s2">"-
                             <span class="nt">--log-opt</span> max-file<span class="o">=</span>3
 </code></pre></div></div>
 
-<p>主要是 <code class="highlighter-rouge">--experimental</code> 参数，参考<a href="https://docs.docker.com/engine/reference/commandline/dockerd/#description">官方文档</a>；<strong>同时在 build 前声明 <code class="highlighter-rouge">export DOCKER_BUILDKIT=1</code> 变量</strong></p>
+<p>主要是 <code class="language-plaintext highlighter-rouge">--experimental</code> 参数，参考<a href="https://docs.docker.com/engine/reference/commandline/dockerd/#description">官方文档</a>；<strong>同时在 build 前声明 <code class="language-plaintext highlighter-rouge">export DOCKER_BUILDKIT=1</code> 变量</strong></p>
 
 <h3 id="22修改-dockerfile">2.2、修改 Dockerfile</h3>
 
-<p>开启实验性功能后，只需要在 Dockerfile 头部增加 <code class="highlighter-rouge"># syntax=docker/dockerfile:experimental</code> 既可；为了保证稳定性，你也可以指定具体的版本号，类似这样</p>
+<p>开启实验性功能后，只需要在 Dockerfile 头部增加 <code class="language-plaintext highlighter-rouge"># syntax=docker/dockerfile:experimental</code> 既可；为了保证稳定性，你也可以指定具体的版本号，类似这样</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># syntax=docker/dockerfile:1.1.1-experimental</span>
 FROM tomcat
@@ -290,7 +290,7 @@ FROM tomcat
 <h3 id="23可用的扩展语法">2.3、可用的扩展语法</h3>
 
 <ul>
-  <li><code class="highlighter-rouge">RUN --mount=type=bind</code></li>
+  <li><code class="language-plaintext highlighter-rouge">RUN --mount=type=bind</code></li>
 </ul>
 
 <p>这个是默认的挂载模式，这个允许将上下文或者镜像以可都可写/只读模式挂载到 build 容器中，可选参数如下(不翻译了)</p>
@@ -304,26 +304,26 @@ FROM tomcat
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td><code class="language-plaintext highlighter-rouge">target</code> (required)</td>
       <td>Mount path.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">source</code></td>
-      <td>Source path in the <code class="highlighter-rouge">from</code>. Defaults to the root of the <code class="highlighter-rouge">from</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">source</code></td>
+      <td>Source path in the <code class="language-plaintext highlighter-rouge">from</code>. Defaults to the root of the <code class="language-plaintext highlighter-rouge">from</code>.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">from</code></td>
+      <td><code class="language-plaintext highlighter-rouge">from</code></td>
       <td>Build stage or image name for the root of the source. Defaults to the build context.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">rw</code>,<code class="highlighter-rouge">readwrite</code></td>
+      <td><code class="language-plaintext highlighter-rouge">rw</code>,<code class="language-plaintext highlighter-rouge">readwrite</code></td>
       <td>Allow writes on the mount. Written data will be discarded.</td>
     </tr>
   </tbody>
 </table>
 
 <ul>
-  <li><code class="highlighter-rouge">RUN --mount=type=cache</code></li>
+  <li><code class="language-plaintext highlighter-rouge">RUN --mount=type=cache</code></li>
 </ul>
 
 <p>专用于作为 cache 的挂载位置，一般用于 cache 包管理器的下载等</p>
@@ -337,28 +337,28 @@ FROM tomcat
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">id</code></td>
       <td>Optional ID to identify separate/different caches</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td><code class="language-plaintext highlighter-rouge">target</code> (required)</td>
       <td>Mount path.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">ro</code>,<code class="highlighter-rouge">readonly</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ro</code>,<code class="language-plaintext highlighter-rouge">readonly</code></td>
       <td>Read-only if set.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">sharing</code></td>
-      <td>One of <code class="highlighter-rouge">shared</code>, <code class="highlighter-rouge">private</code>, or <code class="highlighter-rouge">locked</code>. Defaults to <code class="highlighter-rouge">shared</code>. A <code class="highlighter-rouge">shared</code> cache mount can be used concurrently by multiple writers. <code class="highlighter-rouge">private</code> creates a new mount if there are multiple writers. <code class="highlighter-rouge">locked</code> pauses the second writer until the first one releases the mount.</td>
+      <td><code class="language-plaintext highlighter-rouge">sharing</code></td>
+      <td>One of <code class="language-plaintext highlighter-rouge">shared</code>, <code class="language-plaintext highlighter-rouge">private</code>, or <code class="language-plaintext highlighter-rouge">locked</code>. Defaults to <code class="language-plaintext highlighter-rouge">shared</code>. A <code class="language-plaintext highlighter-rouge">shared</code> cache mount can be used concurrently by multiple writers. <code class="language-plaintext highlighter-rouge">private</code> creates a new mount if there are multiple writers. <code class="language-plaintext highlighter-rouge">locked</code> pauses the second writer until the first one releases the mount.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">from</code></td>
+      <td><code class="language-plaintext highlighter-rouge">from</code></td>
       <td>Build stage to use as a base of the cache mount. Defaults to empty directory.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">source</code></td>
-      <td>Subpath in the <code class="highlighter-rouge">from</code> to mount. Defaults to the root of the <code class="highlighter-rouge">from</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">source</code></td>
+      <td>Subpath in the <code class="language-plaintext highlighter-rouge">from</code> to mount. Defaults to the root of the <code class="language-plaintext highlighter-rouge">from</code>.</td>
     </tr>
   </tbody>
 </table>
@@ -381,7 +381,7 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
 </code></pre></div></div>
 
 <ul>
-  <li><code class="highlighter-rouge">RUN --mount=type=tmpfs</code></li>
+  <li><code class="language-plaintext highlighter-rouge">RUN --mount=type=tmpfs</code></li>
 </ul>
 
 <p>专用于挂载 tmpfs 的选项</p>
@@ -395,17 +395,17 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">target</code> (required)</td>
+      <td><code class="language-plaintext highlighter-rouge">target</code> (required)</td>
       <td>Mount path.</td>
     </tr>
   </tbody>
 </table>
 
 <ul>
-  <li><code class="highlighter-rouge">RUN --mount=type=secret</code></li>
+  <li><code class="language-plaintext highlighter-rouge">RUN --mount=type=secret</code></li>
 </ul>
 
-<p>这个类似 k8s 的 secret，用来挂载一些不想打入镜像，但是构建时想使用的密钥等，例如 docker 的 <code class="highlighter-rouge">config.json</code>，S3 的 <code class="highlighter-rouge">credentials</code></p>
+<p>这个类似 k8s 的 secret，用来挂载一些不想打入镜像，但是构建时想使用的密钥等，例如 docker 的 <code class="language-plaintext highlighter-rouge">config.json</code>，S3 的 <code class="language-plaintext highlighter-rouge">credentials</code></p>
 
 <table>
   <thead>
@@ -416,27 +416,27 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">id</code></td>
       <td>ID of the secret. Defaults to basename of the target path.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">target</code></td>
-      <td>Mount path. Defaults to <code class="highlighter-rouge">/run/secrets/</code> + <code class="highlighter-rouge">id</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">target</code></td>
+      <td>Mount path. Defaults to <code class="language-plaintext highlighter-rouge">/run/secrets/</code> + <code class="language-plaintext highlighter-rouge">id</code>.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">required</code></td>
-      <td>If set to <code class="highlighter-rouge">true</code>, the instruction errors out when the secret is unavailable. Defaults to <code class="highlighter-rouge">false</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">required</code></td>
+      <td>If set to <code class="language-plaintext highlighter-rouge">true</code>, the instruction errors out when the secret is unavailable. Defaults to <code class="language-plaintext highlighter-rouge">false</code>.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">mode</code></td>
+      <td><code class="language-plaintext highlighter-rouge">mode</code></td>
       <td>File mode for secret file in octal. Default 0400.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">uid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">uid</code></td>
       <td>User ID for secret file. Default 0.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">gid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">gid</code></td>
       <td>Group ID for secret file. Default 0.</td>
     </tr>
   </tbody>
@@ -450,17 +450,17 @@ RUN pip <span class="nb">install </span>awscli
 RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type</span><span class="o">=</span>secret,id<span class="o">=</span>aws,target<span class="o">=</span>/root/.aws/credentials aws s3 <span class="nb">cp </span>s3://... ...
 </code></pre></div></div>
 
-<p><strong>注意: <code class="highlighter-rouge">buildctl</code> 是 BuildKit 的命令，你要测试的话自己换成 <code class="highlighter-rouge">docker build</code> 相关参数</strong></p>
+<p><strong>注意: <code class="language-plaintext highlighter-rouge">buildctl</code> 是 BuildKit 的命令，你要测试的话自己换成 <code class="language-plaintext highlighter-rouge">docker build</code> 相关参数</strong></p>
 
 <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="w"> </span>buildctl build <span class="nt">--frontend</span><span class="o">=</span>dockerfile.v0 <span class="nt">--local</span> <span class="nv">context</span><span class="o">=</span><span class="nb">.</span> <span class="nt">--local</span> <span class="nv">dockerfile</span><span class="o">=</span><span class="nb">.</span> <span class="se">\</span>
   <span class="nt">--secret</span> <span class="nb">id</span><span class="o">=</span>aws,src<span class="o">=</span><span class="nv">$HOME</span>/.aws/credentials
 </code></pre></div></div>
 
 <ul>
-  <li><code class="highlighter-rouge">RUN --mount=type=ssh</code></li>
+  <li><code class="language-plaintext highlighter-rouge">RUN --mount=type=ssh</code></li>
 </ul>
 
-<p>允许 build 容器通过 SSH agent 访问 SSH key，并且支持 <code class="highlighter-rouge">passphrases</code></p>
+<p>允许 build 容器通过 SSH agent 访问 SSH key，并且支持 <code class="language-plaintext highlighter-rouge">passphrases</code></p>
 
 <table>
   <thead>
@@ -471,27 +471,27 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
   </thead>
   <tbody>
     <tr>
-      <td><code class="highlighter-rouge">id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">id</code></td>
       <td>ID of SSH agent socket or key. Defaults to “default”.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">target</code></td>
-      <td>SSH agent socket path. Defaults to <code class="highlighter-rouge">/run/buildkit/ssh_agent.${N}</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">target</code></td>
+      <td>SSH agent socket path. Defaults to <code class="language-plaintext highlighter-rouge">/run/buildkit/ssh_agent.${N}</code>.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">required</code></td>
-      <td>If set to <code class="highlighter-rouge">true</code>, the instruction errors out when the key is unavailable. Defaults to <code class="highlighter-rouge">false</code>.</td>
+      <td><code class="language-plaintext highlighter-rouge">required</code></td>
+      <td>If set to <code class="language-plaintext highlighter-rouge">true</code>, the instruction errors out when the key is unavailable. Defaults to <code class="language-plaintext highlighter-rouge">false</code>.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">mode</code></td>
+      <td><code class="language-plaintext highlighter-rouge">mode</code></td>
       <td>File mode for socket in octal. Default 0600.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">uid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">uid</code></td>
       <td>User ID for socket. Default 0.</td>
     </tr>
     <tr>
-      <td><code class="highlighter-rouge">gid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">gid</code></td>
       <td>Group ID for socket. Default 0.</td>
     </tr>
   </tbody>
@@ -517,7 +517,7 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
 
 <p>你也可以直接使用宿主机目录的 pem 文件，但是带有密码的 pem 目前不支持</p>
 
-<p><strong>目前根据文档测试，当前的挂载类型比如 <code class="highlighter-rouge">cache</code> 类型，仅用于 multi-stage 内的挂载，比如你有 2+ 个构建步骤，<code class="highlighter-rouge">cache</code> 挂载类型能帮你在各个阶段内共享文件；但是它目前无法解决直接将宿主机目录挂载到 multi-stage 的问题(可以采取些曲线救国方案，但是很不优雅)；但是未来还是很有展望的，可以关注一下</strong></p>
+<p><strong>目前根据文档测试，当前的挂载类型比如 <code class="language-plaintext highlighter-rouge">cache</code> 类型，仅用于 multi-stage 内的挂载，比如你有 2+ 个构建步骤，<code class="language-plaintext highlighter-rouge">cache</code> 挂载类型能帮你在各个阶段内共享文件；但是它目前无法解决直接将宿主机目录挂载到 multi-stage 的问题(可以采取些曲线救国方案，但是很不优雅)；但是未来还是很有展望的，可以关注一下</strong></p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -622,7 +622,7 @@ RUN <span class="nt">--mount</span><span class="o">=</span><span class="nb">type
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

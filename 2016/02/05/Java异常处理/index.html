@@ -194,7 +194,7 @@
 
                 <h2 id="一异常分类">一、异常分类</h2>
 
-<p>在JAVA中，所有异常都由 <code class="highlighter-rouge">Throwable</code> 继承而来；但在下一层立即分解为两个分支：<code class="highlighter-rouge">Error</code> 和 <code class="highlighter-rouge">Exception</code>。</p>
+<p>在JAVA中，所有异常都由 <code class="language-plaintext highlighter-rouge">Throwable</code> 继承而来；但在下一层立即分解为两个分支：<code class="language-plaintext highlighter-rouge">Error</code> 和 <code class="language-plaintext highlighter-rouge">Exception</code>。</p>
 
 <h3 id="error">Error</h3>
 
@@ -230,7 +230,7 @@
 
 <p><img src="https://cdn.oss.link/markdown/hexo_java_exception.jpeg" alt="hexo_java_exception.jpeg" /></p>
 
-<p><strong>从上面可以看出，”一旦出现 RuntimeException 那么一定是你的问题！” 这句话很有道理。</strong>JAVA语言规范将 派生于Error类或RuntimeException类的异常称之为 <code class="highlighter-rouge">未检查异常(unchecked)</code>；其他异常称之为 <code class="highlighter-rouge">已检查异常(checked)</code>；对于已检查，编译器将要求提供对应的异常处理器。</p>
+<p><strong>从上面可以看出，”一旦出现 RuntimeException 那么一定是你的问题！” 这句话很有道理。</strong>JAVA语言规范将 派生于Error类或RuntimeException类的异常称之为 <code class="language-plaintext highlighter-rouge">未检查异常(unchecked)</code>；其他异常称之为 <code class="language-plaintext highlighter-rouge">已检查异常(checked)</code>；对于已检查，编译器将要求提供对应的异常处理器。</p>
 
 <h2 id="二声明和抛出异常">二、声明和抛出异常</h2>
 
@@ -240,7 +240,7 @@
   <p>在JAVA中如果方法内存在可能出现的异常，那么方法不光要告诉编译器返回什么，同时还要告诉编译器有可能产生哪些异常，如果文件的I/O异常等。</p>
 </blockquote>
 
-<p><strong>方法在其首部通过 <code class="highlighter-rouge">throws</code> 关键字声明该方法内可能抛出的已检查异常，如下：</strong></p>
+<p><strong>方法在其首部通过 <code class="language-plaintext highlighter-rouge">throws</code> 关键字声明该方法内可能抛出的已检查异常，如下：</strong></p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="n">testException</span> <span class="kd">throws</span> <span class="nf">FileNotFoundException</span><span class="o">(){</span>
     <span class="c1">// 其他代码...</span>
@@ -253,7 +253,7 @@
 <h3 id="异常的抛出">异常的抛出</h3>
 
 <blockquote>
-  <p>在JAVA中抛出一个异常可以通过 <code class="highlighter-rouge">throw</code> 关键字进行抛出。但需要注意的是，我们抛出异常是要注意异常的作用场景，比如绝对不能抛出 Error 这种异常，抛出异常的样例如下：</p>
+  <p>在JAVA中抛出一个异常可以通过 <code class="language-plaintext highlighter-rouge">throw</code> 关键字进行抛出。但需要注意的是，我们抛出异常是要注意异常的作用场景，比如绝对不能抛出 Error 这种异常，抛出异常的样例如下：</p>
 </blockquote>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="n">testException</span> <span class="kd">throws</span> <span class="nf">FileNotFoundException</span><span class="o">(){</span>
@@ -287,7 +287,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong><code class="highlighter-rouge">try-catch</code> 语句块的作用是：</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">try-catch</code> 语句块的作用是：</strong></p>
 
 <ul>
   <li>如果在 try 块中出现了在 catch 块中说明的异常(ExceptionType类型的异常)，那么 try 块中余下代码将不会被执行，程序将执行 catch 块中的处理代码。</li>
@@ -310,7 +310,7 @@
 <span class="o">}</span> <span class="o">...</span>
 </code></pre></div></div>
 
-<p>**注意：在进行多异常捕获时，应尽量根据业务需要保证精确性；除非你知道你想要干什么，否则尽量不要直接捕获更高级的类似于 <code class="highlighter-rouge">Exception</code> 这种超类异常，因为这可能造成我们无法判定具体是 <code class="highlighter-rouge">FileNotFoundException</code> 还是 <code class="highlighter-rouge">EOFException</code>；对后续的处理会相当麻烦；除非真正的业务不关心具体细节；但还是那句话，异常捕获的界别取决于业务需要。 **</p>
+<p>**注意：在进行多异常捕获时，应尽量根据业务需要保证精确性；除非你知道你想要干什么，否则尽量不要直接捕获更高级的类似于 <code class="language-plaintext highlighter-rouge">Exception</code> 这种超类异常，因为这可能造成我们无法判定具体是 <code class="language-plaintext highlighter-rouge">FileNotFoundException</code> 还是 <code class="language-plaintext highlighter-rouge">EOFException</code>；对后续的处理会相当麻烦；除非真正的业务不关心具体细节；但还是那句话，异常捕获的界别取决于业务需要。 **</p>
 
 <blockquote>
   <p>在 Java SE 7中，同一 catch 块可以捕获 <strong>彼此不存在子类关系</strong> 的多个异常进行统一处理，从而达到合并 catch 块，样例如下：</p>
@@ -342,8 +342,8 @@
 <p><strong>当然这里由于新抛出了IO异常，所以原来的具体异常信息可能丢失，一般我们会采用以下两种方案：</strong></p>
 
 <ul>
-  <li>将原来的异常信息当做新异常的构造参数传入：<code class="highlighter-rouge">throw new IOException("文件未找到: "+e.getMessage());</code></li>
-  <li>也可以调用新异常的 <code class="highlighter-rouge">newException.initCause(oldException)</code> 完成异常信息的封装；后续可通过 <code class="highlighter-rouge">newException.getCause();</code> 获得原始的异常信息。</li>
+  <li>将原来的异常信息当做新异常的构造参数传入：<code class="language-plaintext highlighter-rouge">throw new IOException("文件未找到: "+e.getMessage());</code></li>
+  <li>也可以调用新异常的 <code class="language-plaintext highlighter-rouge">newException.initCause(oldException)</code> 完成异常信息的封装；后续可通过 <code class="language-plaintext highlighter-rouge">newException.getCause();</code> 获得原始的异常信息。</li>
 </ul>
 
 <h2 id="五finally-语句块">五、finally 语句块</h2>
@@ -373,7 +373,7 @@
 <h2 id="六java-se-7-带资源释放的-try-语句">六、Java SE 7 带资源释放的 try 语句</h2>
 
 <blockquote>
-  <p>在 Java SE 7 中，如果资源类实现了 <code class="highlighter-rouge">AutoCloseable</code> 接口或其子接口(Closeable)，那么可以使用带资源的 try-catch 块来释放资源，省去 finally 语句块，示例如下：</p>
+  <p>在 Java SE 7 中，如果资源类实现了 <code class="language-plaintext highlighter-rouge">AutoCloseable</code> 接口或其子接口(Closeable)，那么可以使用带资源的 try-catch 块来释放资源，省去 finally 语句块，示例如下：</p>
 </blockquote>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 首先定义需要释放的资源</span>
@@ -388,7 +388,7 @@
 
 <ul>
   <li>1、catch 块中需要捕获 <strong>资源释放中的</strong> 已检查已检查异常；也就是说如果 try 块后面的括号内的异常也必须在 catch 中体现(捕获)；</li>
-  <li>2、同原来的 catch/finally 中出现异常不一样，资源释放中出现异常将自动被抑制，原来的会重新抛出，不会覆盖原来的异常信息；资源释放产生的异常通过 <code class="highlighter-rouge">addSuppressed</code> 方法添加到原来异常的抑制列表中，可通过 <code class="highlighter-rouge">getSuppressed</code> 方法重新获取资源释放时产生的异常信息。
+  <li>2、同原来的 catch/finally 中出现异常不一样，资源释放中出现异常将自动被抑制，原来的会重新抛出，不会覆盖原来的异常信息；资源释放产生的异常通过 <code class="language-plaintext highlighter-rouge">addSuppressed</code> 方法添加到原来异常的抑制列表中，可通过 <code class="language-plaintext highlighter-rouge">getSuppressed</code> 方法重新获取资源释放时产生的异常信息。
 转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</li>
 </ul>
 
@@ -493,7 +493,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

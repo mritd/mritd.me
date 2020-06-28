@@ -211,12 +211,12 @@
 
 <ul>
   <li>升级后所有集群组件 Pod 会重启(hash 变更)</li>
-  <li><strong>升级时 <code class="highlighter-rouge">kubeadm</code> 版本必须大于或等于目标版本</strong></li>
-  <li><strong>升级期间所有 <code class="highlighter-rouge">kube-proxy</code> 组件会有一次全节点滚动更新</strong></li>
+  <li><strong>升级时 <code class="language-plaintext highlighter-rouge">kubeadm</code> 版本必须大于或等于目标版本</strong></li>
+  <li><strong>升级期间所有 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 组件会有一次全节点滚动更新</strong></li>
   <li><strong>升级只支持顺次进行，不支持跨版本升级(You only can upgrade from one MINOR version to the next MINOR version, or between PATCH versions of the same MINOR. That is, you cannot skip MINOR versions when you upgrade. For example, you can upgrade from 1.y to 1.y+1, but not from 1.y to 1.y+2.)</strong></li>
 </ul>
 
-<p>关于升级版本问题…虽然是这么说的，但是官方文档样例代码里是从 <code class="highlighter-rouge">v1.16.0</code> 升级到 <code class="highlighter-rouge">v1.17.0</code>；可能是我理解有误，跨大版本升级好像官方没提，具体啥后果不清楚…</p>
+<p>关于升级版本问题…虽然是这么说的，但是官方文档样例代码里是从 <code class="language-plaintext highlighter-rouge">v1.16.0</code> 升级到 <code class="language-plaintext highlighter-rouge">v1.17.0</code>；可能是我理解有误，跨大版本升级好像官方没提，具体啥后果不清楚…</p>
 
 <h2 id="三升级-master">三、升级 Master</h2>
 
@@ -226,7 +226,7 @@
 
 <h3 id="31升级-kubeadmkubectl">3.1、升级 kubeadm、kubectl</h3>
 
-<p>首先由于升级限制，必须先将 <code class="highlighter-rouge">kubeadm</code> 和 <code class="highlighter-rouge">kubectl</code> 升级到大于等于目标版本</p>
+<p>首先由于升级限制，必须先将 <code class="language-plaintext highlighter-rouge">kubeadm</code> 和 <code class="language-plaintext highlighter-rouge">kubectl</code> 升级到大于等于目标版本</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># replace x in 1.17.x-00 with the latest patch version</span>
 apt-mark unhold kubeadm kubectl
@@ -235,13 +235,13 @@ apt-get <span class="nb">install</span> <span class="nt">-y</span> <span class="
 apt-mark hold kubeadm kubectl
 </code></pre></div></div>
 
-<p>当然如果你之前没有 <code class="highlighter-rouge">hold</code> 住这几个软件包的版本，那么就不需要 <code class="highlighter-rouge">unhold</code>；我的做法可能比较极端…一般为了防止后面的误升级安装完成后我会直接 <code class="highlighter-rouge">rename</code> 掉相关软件包的 <code class="highlighter-rouge">apt source</code> 配置(从根本上防止手贱)。</p>
+<p>当然如果你之前没有 <code class="language-plaintext highlighter-rouge">hold</code> 住这几个软件包的版本，那么就不需要 <code class="language-plaintext highlighter-rouge">unhold</code>；我的做法可能比较极端…一般为了防止后面的误升级安装完成后我会直接 <code class="language-plaintext highlighter-rouge">rename</code> 掉相关软件包的 <code class="language-plaintext highlighter-rouge">apt source</code> 配置(从根本上防止手贱)。</p>
 
 <h3 id="32升级前准备">3.2、升级前准备</h3>
 
 <h4 id="321配置修改">3.2.1、配置修改</h4>
 
-<p>对于高级玩家一般安装集群时都会自定义很多组件参数，此时不可避免的会采用配置文件；所以安装完新版本的 <code class="highlighter-rouge">kubeadm</code> 后就要着手修改配置文件中的 <code class="highlighter-rouge">kubernetesVersion</code> 字段为目标集群版本，当然有其他变更也可以一起修改。</p>
+<p>对于高级玩家一般安装集群时都会自定义很多组件参数，此时不可避免的会采用配置文件；所以安装完新版本的 <code class="language-plaintext highlighter-rouge">kubeadm</code> 后就要着手修改配置文件中的 <code class="language-plaintext highlighter-rouge">kubernetesVersion</code> 字段为目标集群版本，当然有其他变更也可以一起修改。</p>
 
 <h4 id="322节点驱逐">3.2.2、节点驱逐</h4>
 
@@ -299,11 +299,11 @@ _____________________________________________________________________
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeadm upgrade apply v1.17.1 <span class="nt">--config</span> /etc/kubernetes/kubeadm.yaml
 </code></pre></div></div>
 
-<p>升级期间会打印很详细的日志，在日志中可以实时观察到升级流程，建议仔细关注升级流程；<strong>在最后一步会有一条日志 <code class="highlighter-rouge">[addons] Applied essential addon: kube-proxy</code>，这意味着集群开始更新 <code class="highlighter-rouge">kube-proxy</code> 组件，该组件目前是通过 <code class="highlighter-rouge">daemonset</code> 方式启动的；这会意味着此时会造成全节点的 <code class="highlighter-rouge">kube-proxy</code> 更新；</strong>理论上不会有很大影响，但是升级是还是需要注意一下这一步操作，在我的观察中似乎 <code class="highlighter-rouge">kube-proxy</code> 也是通过滚动更新完成的，所以问题应该不大。</p>
+<p>升级期间会打印很详细的日志，在日志中可以实时观察到升级流程，建议仔细关注升级流程；<strong>在最后一步会有一条日志 <code class="language-plaintext highlighter-rouge">[addons] Applied essential addon: kube-proxy</code>，这意味着集群开始更新 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 组件，该组件目前是通过 <code class="language-plaintext highlighter-rouge">daemonset</code> 方式启动的；这会意味着此时会造成全节点的 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 更新；</strong>理论上不会有很大影响，但是升级是还是需要注意一下这一步操作，在我的观察中似乎 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 也是通过滚动更新完成的，所以问题应该不大。</p>
 
 <h3 id="34升级-kubelet">3.4、升级 kubelet</h3>
 
-<p>在单个 master 上升级完成后，<strong>只会升级本节点的 master 相关组件和全节点的 <code class="highlighter-rouge">kube-proxy</code> 组件；</strong>由于 kubelet 是在宿主机安装的，所以需要通过包管理器手动升级 kubelet</p>
+<p>在单个 master 上升级完成后，<strong>只会升级本节点的 master 相关组件和全节点的 <code class="language-plaintext highlighter-rouge">kube-proxy</code> 组件；</strong>由于 kubelet 是在宿主机安装的，所以需要通过包管理器手动升级 kubelet</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># replace x in 1.17.x-00 with the latest patch version</span>
 apt-mark unhold kubelet
@@ -311,19 +311,19 @@ apt-get <span class="nb">install</span> <span class="nt">-y</span> <span class="
 apt-mark hold kubelet
 </code></pre></div></div>
 
-<p>更新完成后执行 <code class="highlighter-rouge">systemctl restart kubelet</code> 重启，并等待启动成功既可；最后不要忘记解除当前节点的维护模式(<code class="highlighter-rouge">uncordon</code>)。</p>
+<p>更新完成后执行 <code class="language-plaintext highlighter-rouge">systemctl restart kubelet</code> 重启，并等待启动成功既可；最后不要忘记解除当前节点的维护模式(<code class="language-plaintext highlighter-rouge">uncordon</code>)。</p>
 
 <h3 id="35升级其他-master">3.5、升级其他 Master</h3>
 
-<p>当其中一个 master 节点升级完成后，其他的 master 升级就会相对简单的多；<strong>首先国际惯例升级一下 <code class="highlighter-rouge">kubeadm</code> 和 <code class="highlighter-rouge">kubectl</code> 软件包，然后直接在其他 master 节点执行 <code class="highlighter-rouge">kubeadm upgrade node</code> 既可。</strong>由于 apiserver 等组件配置已经在升级第一个 master 时上传到了集群的 configMap 中，所以事实上其他 master 节点只是正常拉取然后重启相关组件既可；这一步同样会输出详细日志，可以仔细观察进度，<strong>最后不要忘记升级之前先进入维护模式，升级完成后重新安装 <code class="highlighter-rouge">kubelet</code> 并关闭节点维护模式。</strong></p>
+<p>当其中一个 master 节点升级完成后，其他的 master 升级就会相对简单的多；<strong>首先国际惯例升级一下 <code class="language-plaintext highlighter-rouge">kubeadm</code> 和 <code class="language-plaintext highlighter-rouge">kubectl</code> 软件包，然后直接在其他 master 节点执行 <code class="language-plaintext highlighter-rouge">kubeadm upgrade node</code> 既可。</strong>由于 apiserver 等组件配置已经在升级第一个 master 时上传到了集群的 configMap 中，所以事实上其他 master 节点只是正常拉取然后重启相关组件既可；这一步同样会输出详细日志，可以仔细观察进度，<strong>最后不要忘记升级之前先进入维护模式，升级完成后重新安装 <code class="language-plaintext highlighter-rouge">kubelet</code> 并关闭节点维护模式。</strong></p>
 
 <h2 id="四升级-node">四、升级 Node</h2>
 
-<p>node 节点的升级实际上在升级完 master 节点以后不需要什么特殊操作，node 节点唯一需要升级的就是 <code class="highlighter-rouge">kubelet</code> 组件；<strong>首先在 node 节点执行 <code class="highlighter-rouge">kubeadm upgrade node</code> 命令，该命令会拉取集群内的 <code class="highlighter-rouge">kubelet</code> 配置文件，然后重新安装 <code class="highlighter-rouge">kubelet</code> 重启既可；</strong>同样升级 node 节点时不要忘记开启维护模式。针对于 CNI 组件请按需手动升级，并且确认好 CNI 组件的兼容版本。</p>
+<p>node 节点的升级实际上在升级完 master 节点以后不需要什么特殊操作，node 节点唯一需要升级的就是 <code class="language-plaintext highlighter-rouge">kubelet</code> 组件；<strong>首先在 node 节点执行 <code class="language-plaintext highlighter-rouge">kubeadm upgrade node</code> 命令，该命令会拉取集群内的 <code class="language-plaintext highlighter-rouge">kubelet</code> 配置文件，然后重新安装 <code class="language-plaintext highlighter-rouge">kubelet</code> 重启既可；</strong>同样升级 node 节点时不要忘记开启维护模式。针对于 CNI 组件请按需手动升级，并且确认好 CNI 组件的兼容版本。</p>
 
 <h2 id="五验证集群">五、验证集群</h2>
 
-<p>所有组件升级完成后，可以通过 <code class="highlighter-rouge">kubectl describe POD_NAME</code> 的方式验证 master 组件是否都升级到了最新版本；通过 <code class="highlighter-rouge">kuebctl version</code> 命令验证 api 相关信息(HA rr 轮训模式下可以多执行几遍)；还有就是通过 <code class="highlighter-rouge">kubectl get node -o wide</code> 查看相关 node 的信息，确保 <code class="highlighter-rouge">kubelet</code> 都升级成功，同时全部节点维护模式都已经关闭，其他细节可以参考<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade">官方文档</a>。</p>
+<p>所有组件升级完成后，可以通过 <code class="language-plaintext highlighter-rouge">kubectl describe POD_NAME</code> 的方式验证 master 组件是否都升级到了最新版本；通过 <code class="language-plaintext highlighter-rouge">kuebctl version</code> 命令验证 api 相关信息(HA rr 轮训模式下可以多执行几遍)；还有就是通过 <code class="language-plaintext highlighter-rouge">kubectl get node -o wide</code> 查看相关 node 的信息，确保 <code class="language-plaintext highlighter-rouge">kubelet</code> 都升级成功，同时全部节点维护模式都已经关闭，其他细节可以参考<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade">官方文档</a>。</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -428,7 +428,7 @@ apt-mark hold kubelet
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

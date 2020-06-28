@@ -250,31 +250,31 @@
 
 <h3 id="3mdadm-命令">3、mdadm 命令</h3>
 
-<p>mdadm 命令用于与内核的 md 模块通讯，设置软件模式的 RAID；mdadm 类似 vim 是一个模式化的工具，其配置文件在 <code class="highlighter-rouge">/etc/mdadm.conf</code>，具体模式如下(用的很少) :</p>
+<p>mdadm 命令用于与内核的 md 模块通讯，设置软件模式的 RAID；mdadm 类似 vim 是一个模式化的工具，其配置文件在 <code class="language-plaintext highlighter-rouge">/etc/mdadm.conf</code>，具体模式如下(用的很少) :</p>
 
 <ul>
-  <li><code class="highlighter-rouge">-A</code> : Assemble 装配模式</li>
-  <li><code class="highlighter-rouge">-C</code> : Create 创建模式
+  <li><code class="language-plaintext highlighter-rouge">-A</code> : Assemble 装配模式</li>
+  <li><code class="language-plaintext highlighter-rouge">-C</code> : Create 创建模式
     <ul>
-      <li><code class="highlighter-rouge">-n #</code> : 用于创建RAID设备的个数</li>
-      <li><code class="highlighter-rouge">-x #</code> : 热备磁盘的个数</li>
-      <li><code class="highlighter-rouge">-l</code> : 指定RAID级别</li>
-      <li><code class="highlighter-rouge">-a</code> : =yes（自动为创建的RAID设备创建设备文件） md mdp part p 如何创建设备文件</li>
-      <li><code class="highlighter-rouge">-c</code> :指定块的大小，默认为512KB</li>
+      <li><code class="language-plaintext highlighter-rouge">-n #</code> : 用于创建RAID设备的个数</li>
+      <li><code class="language-plaintext highlighter-rouge">-x #</code> : 热备磁盘的个数</li>
+      <li><code class="language-plaintext highlighter-rouge">-l</code> : 指定RAID级别</li>
+      <li><code class="language-plaintext highlighter-rouge">-a</code> : =yes（自动为创建的RAID设备创建设备文件） md mdp part p 如何创建设备文件</li>
+      <li><code class="language-plaintext highlighter-rouge">-c</code> :指定块的大小，默认为512KB</li>
     </ul>
   </li>
-  <li><code class="highlighter-rouge">-F</code> : FOLLOW 监控</li>
-  <li><code class="highlighter-rouge">-S</code> : 停止RAID</li>
-  <li><code class="highlighter-rouge">-D</code>、<code class="highlighter-rouge">--detail</code> : 显示阵列详细信息</li>
+  <li><code class="language-plaintext highlighter-rouge">-F</code> : FOLLOW 监控</li>
+  <li><code class="language-plaintext highlighter-rouge">-S</code> : 停止RAID</li>
+  <li><code class="language-plaintext highlighter-rouge">-D</code>、<code class="language-plaintext highlighter-rouge">--detail</code> : 显示阵列详细信息</li>
   <li>Manage 管理模式专用项
     <ul>
-      <li><code class="highlighter-rouge">-f</code> : 模拟损害</li>
-      <li><code class="highlighter-rouge">-r</code> : 模拟移除设备</li>
-      <li><code class="highlighter-rouge">-a</code> : 模拟添加新设备</li>
+      <li><code class="language-plaintext highlighter-rouge">-f</code> : 模拟损害</li>
+      <li><code class="language-plaintext highlighter-rouge">-r</code> : 模拟移除设备</li>
+      <li><code class="language-plaintext highlighter-rouge">-a</code> : 模拟添加新设备</li>
     </ul>
   </li>
-  <li><code class="highlighter-rouge">/proc/mdstat</code> : 内核 md 模块配置</li>
-  <li>创建一个大小为12G的RAID0：2<em>6G，3</em>4G 4<em>3G 6</em>2G : <code class="highlighter-rouge">mdadm -C /dev/md0 -a yes -l 0 -n 2 /dev/sdb{1,2}</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/proc/mdstat</code> : 内核 md 模块配置</li>
+  <li>创建一个大小为12G的RAID0：2<em>6G，3</em>4G 4<em>3G 6</em>2G : <code class="language-plaintext highlighter-rouge">mdadm -C /dev/md0 -a yes -l 0 -n 2 /dev/sdb{1,2}</code></li>
 </ul>
 
 <audio autoplay="autoplay">
@@ -384,7 +384,7 @@ Your browser does not support the audio element.
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

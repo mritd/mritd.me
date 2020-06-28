@@ -231,7 +231,7 @@
 
 <h4 id="21创建-kubernetes-集群">2.1、创建 kubernetes 集群</h4>
 
-<p>具体各种注意细节这里不再阐述，请参考本博客其他文章，<strong>唯一要注意一点是创建集群(init)时要增加 <code class="highlighter-rouge">--pod-network-cidr 10.244.0.0/16</code> 参数；</strong>网段根据需要自己指定，如果不使用 <code class="highlighter-rouge">--pod-network-cidr</code>  参数，则 flannel pod 启动后会出现 <code class="highlighter-rouge">failed to register network: failed to acquire lease: node "xxxxxx" pod cidr not assigned</code> 错误，以下为部分样例命令</p>
+<p>具体各种注意细节这里不再阐述，请参考本博客其他文章，<strong>唯一要注意一点是创建集群(init)时要增加 <code class="language-plaintext highlighter-rouge">--pod-network-cidr 10.244.0.0/16</code> 参数；</strong>网段根据需要自己指定，如果不使用 <code class="language-plaintext highlighter-rouge">--pod-network-cidr</code>  参数，则 flannel pod 启动后会出现 <code class="language-plaintext highlighter-rouge">failed to register network: failed to acquire lease: node "xxxxxx" pod cidr not assigned</code> 错误，以下为部分样例命令</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 rpm</span>
 <span class="nb">tee</span> /etc/yum.repos.d/mritd.repo <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
@@ -268,13 +268,13 @@ kubeadm init <span class="nt">--api-advertise-addresses</span> 192.168.1.101 <sp
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create <span class="nt">-f</span> https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 </code></pre></div></div>
 
-<p>有兴趣的可以把 yml 搞下来看下，由于他的镜像托管在 <code class="highlighter-rouge">quay.io</code>，所以没有墙的问题，也可以提前 load 进来；对于 yml 上面的 <code class="highlighter-rouge">ConfigMap</code> 中的 ip 段最好与 <code class="highlighter-rouge">--pod-network-cidr</code> 一致(不一致没测试，想作死自己试吧)，然后稍等片刻网络便创建成功，截图如下</p>
+<p>有兴趣的可以把 yml 搞下来看下，由于他的镜像托管在 <code class="language-plaintext highlighter-rouge">quay.io</code>，所以没有墙的问题，也可以提前 load 进来；对于 yml 上面的 <code class="language-plaintext highlighter-rouge">ConfigMap</code> 中的 ip 段最好与 <code class="language-plaintext highlighter-rouge">--pod-network-cidr</code> 一致(不一致没测试，想作死自己试吧)，然后稍等片刻网络便创建成功，截图如下</p>
 
 <p><img src="https://cdn.oss.link/markdown/fh723.jpg" alt="flannel" /></p>
 
 <h4 id="23网络测试">2.3、网络测试</h4>
 
-<p>由于环境有限(virtualbox 虚拟机)，所以暂时只测试一下网络互通是否有问题，关于性能啥的由于本人对网络部分也一直是个短板，需要大神们自己来了，如果可以给篇测试报告我也看看 <code class="highlighter-rouge">:)</code></p>
+<p>由于环境有限(virtualbox 虚拟机)，所以暂时只测试一下网络互通是否有问题，关于性能啥的由于本人对网络部分也一直是个短板，需要大神们自己来了，如果可以给篇测试报告我也看看 <code class="language-plaintext highlighter-rouge">:)</code></p>
 
 <p><strong>rc 如下</strong></p>
 
@@ -420,7 +420,7 @@ spec:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

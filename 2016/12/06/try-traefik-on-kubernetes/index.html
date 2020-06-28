@@ -388,7 +388,7 @@ spec:
 
 <p>关于健康检查，测试可以使用 kubernetes 的 Liveness Probe 实现，如果 Liveness Probe检查失败，则 traefik 会自动移除该 pod，以下是一个 示例</p>
 
-<p><strong>test 的 deployment，健康检查方式是 <code class="highlighter-rouge">cat /tmp/health</code>，容器启动 2 分钟后会删掉这个文件，模拟健康检查失败</strong></p>
+<p><strong>test 的 deployment，健康检查方式是 <code class="language-plaintext highlighter-rouge">cat /tmp/health</code>，容器启动 2 分钟后会删掉这个文件，模拟健康检查失败</strong></p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
 kind: Deployment
@@ -575,7 +575,7 @@ metadata:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

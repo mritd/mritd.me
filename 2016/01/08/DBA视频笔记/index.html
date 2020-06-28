@@ -255,9 +255,9 @@ BFILE                   存储在数据库之外的二进制文件中，文件�
     <blockquote>
       <p>CLOB、NCLOB、BLOB都是内部LOB类型，没有LONG每个表只能有一列的限制；保存图片或者电影BLOB最好，小说等文本使用VLOB最好；LONG、RAW即将废弃，但并未完全废弃，11G重要视图dba_views，对于text(视图定义)仍沿用LONG类型</p>
 
-      <p>Oracle 11g 重新设计了大对象，提出Secure Lobs的概念，相关参数是 <code class="highlighter-rouge">db_securefile</code>，采用Secure File的前提是11g以上版本，ASSM管理等；符合这些条件的BasicFile Lobs也可以转换成 SecureFile Lobs，<strong>较之前的BasicFile Lobs，SecureFile Lobs有极大改进：压缩、去重、加密</strong></p>
+      <p>Oracle 11g 重新设计了大对象，提出Secure Lobs的概念，相关参数是 <code class="language-plaintext highlighter-rouge">db_securefile</code>，采用Secure File的前提是11g以上版本，ASSM管理等；符合这些条件的BasicFile Lobs也可以转换成 SecureFile Lobs，<strong>较之前的BasicFile Lobs，SecureFile Lobs有极大改进：压缩、去重、加密</strong></p>
 
-      <p><strong>当 <code class="highlighter-rouge">CREATE TABLE</code> 定义LOB列时，往往用到 <code class="highlighter-rouge">LOB_storage_clause</code>；之后对LOB的操作往往是ORACLE提供的 <code class="highlighter-rouge">DBMS_LOB</code> 包，通过编写 PL/SQL 块来对LOB数据进行管理</strong></p>
+      <p><strong>当 <code class="language-plaintext highlighter-rouge">CREATE TABLE</code> 定义LOB列时，往往用到 <code class="language-plaintext highlighter-rouge">LOB_storage_clause</code>；之后对LOB的操作往往是ORACLE提供的 <code class="language-plaintext highlighter-rouge">DBMS_LOB</code> 包，通过编写 PL/SQL 块来对LOB数据进行管理</strong></p>
     </blockquote>
   </li>
 </ul>
@@ -342,7 +342,7 @@ ROUND(p,s)、TRUNC(p,s)</p>
   ASCII()                            –ASCII转字符
   SYS_CONTEXT                        –获取上下文环境函数</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  **SYS_CONTEXT函数参考** **[其他参考](http://alany.blog.51cto.com/6125308/1418163)**
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  **SYS_CONTEXT函数参考** **[其他参考](http://alany.blog.51cto.com/6125308/1418163)**
   ``` sql
   select sys_context('USERENV','AUTHENTICATION_TYPE') from dual;--用户的认证类型
   select sys_context('USERENV','AUTHENTICATION_DATA') from dual;--未知
@@ -484,7 +484,7 @@ ROUND(p,s)、TRUNC(p,s)</p>
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

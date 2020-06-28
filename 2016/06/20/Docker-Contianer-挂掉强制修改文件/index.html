@@ -197,7 +197,7 @@
                 <h2 id="一扯犊子">一、扯犊子</h2>
 
 <blockquote>
-  <p>起因是为了装逼，想申请一个 StartSSL 证书给博客装下逼…… 目前博客全部采用 Dokcer 部署，前端一个 Nginx 的 Contianer 做反代，后端起了静态博客、WP老博客什么的一些东西；手残党开始肆无忌惮的改前端 Nginx Contianer 中的配置；发现 <code class="highlighter-rouge">service nginx reload</code> 没效果，这特么哪行，果断 <code class="highlighter-rouge">docker restart nginx</code>…..后面你懂的，<code class="highlighter-rouge">docker logs nginx</code> 发现配置报错了……所以就有了下文……</p>
+  <p>起因是为了装逼，想申请一个 StartSSL 证书给博客装下逼…… 目前博客全部采用 Dokcer 部署，前端一个 Nginx 的 Contianer 做反代，后端起了静态博客、WP老博客什么的一些东西；手残党开始肆无忌惮的改前端 Nginx Contianer 中的配置；发现 <code class="language-plaintext highlighter-rouge">service nginx reload</code> 没效果，这特么哪行，果断 <code class="language-plaintext highlighter-rouge">docker restart nginx</code>…..后面你懂的，<code class="language-plaintext highlighter-rouge">docker logs nginx</code> 发现配置报错了……所以就有了下文……</p>
 </blockquote>
 
 <!--more-->
@@ -206,16 +206,16 @@
 
 <h3 id="21images-存储aufs-摘自-dockerone">2.1、images 存储(aufs) 摘自 <a href="http://dockone.io/question/70">DockerOne</a></h3>
 <ul>
-  <li><code class="highlighter-rouge">/var/lib/graph/&lt;image id&gt;</code> 下面没有layer目录，只有每个镜像的json描述文件和layersize大小</li>
-  <li><code class="highlighter-rouge">/var/lib/docker/repositories-aufs</code> TagStore的存储地方，里面有image id与reponame ，tag之间的映射关系. aufs是driver名</li>
-  <li><code class="highlighter-rouge">/var/lib/docker/aufs/diff/&lt;image id or container id&gt;</code> 每层layer与其父layer之间的文件差异，有的为空，有的有一些文件(镜像实际存储的地方)</li>
-  <li><code class="highlighter-rouge">/var/lib/docker/aufs/layers/&lt;image id or container id&gt;</code> 每层layer一个文件，记录其父layer一直到根layer之间的ID，每个ID一行。大部分文件的最后一行都一样，表示继承自同一个layer.</li>
-  <li><code class="highlighter-rouge">/var/lib/docker/aufs/mnt/&lt;image id or container id&gt;</code> 有容器运行时里面有数据(容器数据实际存储的地方,包含整个文件系统数据)，退出时里面为空</li>
+  <li><code class="language-plaintext highlighter-rouge">/var/lib/graph/&lt;image id&gt;</code> 下面没有layer目录，只有每个镜像的json描述文件和layersize大小</li>
+  <li><code class="language-plaintext highlighter-rouge">/var/lib/docker/repositories-aufs</code> TagStore的存储地方，里面有image id与reponame ，tag之间的映射关系. aufs是driver名</li>
+  <li><code class="language-plaintext highlighter-rouge">/var/lib/docker/aufs/diff/&lt;image id or container id&gt;</code> 每层layer与其父layer之间的文件差异，有的为空，有的有一些文件(镜像实际存储的地方)</li>
+  <li><code class="language-plaintext highlighter-rouge">/var/lib/docker/aufs/layers/&lt;image id or container id&gt;</code> 每层layer一个文件，记录其父layer一直到根layer之间的ID，每个ID一行。大部分文件的最后一行都一样，表示继承自同一个layer.</li>
+  <li><code class="language-plaintext highlighter-rouge">/var/lib/docker/aufs/mnt/&lt;image id or container id&gt;</code> 有容器运行时里面有数据(容器数据实际存储的地方,包含整个文件系统数据)，退出时里面为空</li>
 </ul>
 
 <h3 id="22contianer-文件修改">2.2、Contianer 文件修改</h3>
 
-<p>所有 Contianer 文件存放于 <code class="highlighter-rouge">/var/lib/docker/aufs/mnt</code> 目录，改废掉的文件名为 <code class="highlighter-rouge">hexo.conf</code>，so  直接开搜 :</p>
+<p>所有 Contianer 文件存放于 <code class="language-plaintext highlighter-rouge">/var/lib/docker/aufs/mnt</code> 目录，改废掉的文件名为 <code class="language-plaintext highlighter-rouge">hexo.conf</code>，so  直接开搜 :</p>
 
 <p><img src="https://cdn.oss.link/markdown/hexo_docker_modify_contianerfile.png" alt="hexo_docker_modify_contianerfile" /></p>
 
@@ -325,7 +325,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

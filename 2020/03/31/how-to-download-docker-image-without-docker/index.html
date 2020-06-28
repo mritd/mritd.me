@@ -198,7 +198,7 @@
 
 <h2 id="一起因">一、起因</h2>
 
-<p>由于最近某个爬虫业务需要抓取微信公众号的一些文章，某开发小伙伴想到了通过启动安卓虚拟机然后抓包的方式实现；经过几番寻找最终我们选择采用 docker 的方式启动安卓虚拟机，docker 里安卓虚拟机比较成熟的项目我们找到了 <a href="https://github.com/budtmo/docker-android">https://github.com/budtmo/docker-android</a> 这个项目；但是由于众所周知的原因这个 2G+ 的镜像国内拉取是非常慢的，于是我想到了通过国外 VPS 拉取然后 scp 回来… 由于贫穷的原因，当我实际操作的时候遇到了比较尴尬的问题: <strong>VPS 磁盘空间 25G，镜像拉取后解压接近 10G，我需要 <code class="highlighter-rouge">docker save</code> 成 tar 包再进行打包成 <code class="highlighter-rouge">tar.gz</code> 格式 scp 回来，这个时候空间不够用了…</strong>所以我当时就在想有没有办法让 docker daemon 拉取镜像时不解压？或者说自己通过 HTTP 下载镜像直接存储为 tar？</p>
+<p>由于最近某个爬虫业务需要抓取微信公众号的一些文章，某开发小伙伴想到了通过启动安卓虚拟机然后抓包的方式实现；经过几番寻找最终我们选择采用 docker 的方式启动安卓虚拟机，docker 里安卓虚拟机比较成熟的项目我们找到了 <a href="https://github.com/budtmo/docker-android">https://github.com/budtmo/docker-android</a> 这个项目；但是由于众所周知的原因这个 2G+ 的镜像国内拉取是非常慢的，于是我想到了通过国外 VPS 拉取然后 scp 回来… 由于贫穷的原因，当我实际操作的时候遇到了比较尴尬的问题: <strong>VPS 磁盘空间 25G，镜像拉取后解压接近 10G，我需要 <code class="language-plaintext highlighter-rouge">docker save</code> 成 tar 包再进行打包成 <code class="language-plaintext highlighter-rouge">tar.gz</code> 格式 scp 回来，这个时候空间不够用了…</strong>所以我当时就在想有没有办法让 docker daemon 拉取镜像时不解压？或者说自己通过 HTTP 下载镜像直接存储为 tar？</p>
 
 <h2 id="二尝试造轮子">二、尝试造轮子</h2>
 
@@ -221,11 +221,11 @@
 The skopeo tool uses the containers/image library and takes advantage of many of its features, e.g. skopeo copy exposes the containers/image/copy.Image functionality.</p>
 </blockquote>
 
-<p>那么也就是说镜像下载这块很大可能应该调用 <code class="highlighter-rouge">containers/image/copy.Image</code> 完成，随即就看了下源码文档</p>
+<p>那么也就是说镜像下载这块很大可能应该调用 <code class="language-plaintext highlighter-rouge">containers/image/copy.Image</code> 完成，随即就看了下源码文档</p>
 
 <p><img src="https://cdn.oss.link/markdown/tv7iy.png" alt="" /></p>
 
-<p>很明显，<code class="highlighter-rouge">types.ImageReference</code>、<code class="highlighter-rouge">Options</code> 里面的属性啥的我完全看不懂… 😂😂😂</p>
+<p>很明显，<code class="language-plaintext highlighter-rouge">types.ImageReference</code>、<code class="language-plaintext highlighter-rouge">Options</code> 里面的属性啥的我完全看不懂… 😂😂😂</p>
 
 <h2 id="四看-skopeo-源码">四、看 skopeo 源码</h2>
 
@@ -268,15 +268,15 @@ COMMANDS:
 
 <p><img src="https://cdn.oss.link/markdown/urn3l.png" alt="copy_cmd" /></p>
 
-<p>通过继续追踪 <code class="highlighter-rouge">alltransports.ParseImageName</code> 方法最终可以得知 copy 命令的 <code class="highlighter-rouge">SOURCE-IMAGE</code> 和 <code class="highlighter-rouge">DESTINATION-IMAGE</code> 都支持哪些写法</p>
+<p>通过继续追踪 <code class="language-plaintext highlighter-rouge">alltransports.ParseImageName</code> 方法最终可以得知 copy 命令的 <code class="language-plaintext highlighter-rouge">SOURCE-IMAGE</code> 和 <code class="language-plaintext highlighter-rouge">DESTINATION-IMAGE</code> 都支持哪些写法</p>
 
 <p><img src="https://cdn.oss.link/markdown/ush4t.png" alt="tp_register" /></p>
 
-<p><strong>每一个 Transport 的实现都提供了 Name 方法，其名称即为 src 或 dest 镜像名称的前缀，例如 <code class="highlighter-rouge">docker://nginx:1.17.6</code></strong></p>
+<p><strong>每一个 Transport 的实现都提供了 Name 方法，其名称即为 src 或 dest 镜像名称的前缀，例如 <code class="language-plaintext highlighter-rouge">docker://nginx:1.17.6</code></strong></p>
 
 <p><img src="https://cdn.oss.link/markdown/7fpap.png" alt="tp_docker" /></p>
 
-<p><strong>经过测试不同的 Transport 格式并不完全一致(具体看源码)，比如 <code class="highlighter-rouge">docker://nginx:1.17.6</code> 和 <code class="highlighter-rouge">dir:/tmp/nginx</code>；同时这些 Transport 并非完全都适用与 src 与 dest，比如 <code class="highlighter-rouge">tarball:/tmp/nginx.tar</code> 支持 src 而不支持 dest；</strong>其判断核心依据为 <code class="highlighter-rouge">ImageReference.NewImageSource</code> 和 <code class="highlighter-rouge">ImageReference.NewImageDestination</code> 方法实现是否返回 error</p>
+<p><strong>经过测试不同的 Transport 格式并不完全一致(具体看源码)，比如 <code class="language-plaintext highlighter-rouge">docker://nginx:1.17.6</code> 和 <code class="language-plaintext highlighter-rouge">dir:/tmp/nginx</code>；同时这些 Transport 并非完全都适用与 src 与 dest，比如 <code class="language-plaintext highlighter-rouge">tarball:/tmp/nginx.tar</code> 支持 src 而不支持 dest；</strong>其判断核心依据为 <code class="language-plaintext highlighter-rouge">ImageReference.NewImageSource</code> 和 <code class="language-plaintext highlighter-rouge">ImageReference.NewImageDestination</code> 方法实现是否返回 error</p>
 
 <p><img src="https://cdn.oss.link/markdown/jb087.png" alt="NewImageDestination" /></p>
 
@@ -289,18 +289,18 @@ COMMANDS:
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>skopeo <span class="nt">--insecure-policy</span> copy docker://nginx:1.17.6 docker-archive:/tmp/nginx.tar
 </code></pre></div></div>
 
-<p><code class="highlighter-rouge">--insecure-policy</code> 选项用于忽略安全策略配置文件，该命令将会直接通过 http 下载目标镜像并存储为 <code class="highlighter-rouge">/tmp/nginx.tar</code>，此文件可以直接通过 <code class="highlighter-rouge">docker load</code> 命令导入</p>
+<p><code class="language-plaintext highlighter-rouge">--insecure-policy</code> 选项用于忽略安全策略配置文件，该命令将会直接通过 http 下载目标镜像并存储为 <code class="language-plaintext highlighter-rouge">/tmp/nginx.tar</code>，此文件可以直接通过 <code class="language-plaintext highlighter-rouge">docker load</code> 命令导入</p>
 
 <h3 id="52从-docker-daemon-导出镜像">5.2、从 docker daemon 导出镜像</h3>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>skopeo <span class="nt">--insecure-policy</span> copy docker-daemon:nginx:1.17.6 docker-archive:/tmp/nginx.tar
 </code></pre></div></div>
 
-<p>该命令将会从 docker daemon 导出镜像到 <code class="highlighter-rouge">/tmp/nginx.tar</code>；为什么不用 <code class="highlighter-rouge">docker save</code>？因为我是偷懒 dest 也是 docker-archive，实际上 skopeo 可以导出为其他格式比如 <code class="highlighter-rouge">oci</code>、<code class="highlighter-rouge">oci-archive</code>、<code class="highlighter-rouge">ostree</code> 等</p>
+<p>该命令将会从 docker daemon 导出镜像到 <code class="language-plaintext highlighter-rouge">/tmp/nginx.tar</code>；为什么不用 <code class="language-plaintext highlighter-rouge">docker save</code>？因为我是偷懒 dest 也是 docker-archive，实际上 skopeo 可以导出为其他格式比如 <code class="language-plaintext highlighter-rouge">oci</code>、<code class="language-plaintext highlighter-rouge">oci-archive</code>、<code class="language-plaintext highlighter-rouge">ostree</code> 等</p>
 
 <h3 id="53其他命令">5.3、其他命令</h3>
 
-<p>skopeo 还有一些其他的实用命令，比如 <code class="highlighter-rouge">sync</code> 可以在两个位置之间同步镜像(😂早知道我还写个鸡儿 gcrsync)，<code class="highlighter-rouge">inspect</code> 可以查看镜像信息等，迫于本人太懒，剩下的请自行查阅文档、<code class="highlighter-rouge">--help</code> 以及源码(没错，整篇文章都没写 skopeo 怎么安装)。</p>
+<p>skopeo 还有一些其他的实用命令，比如 <code class="language-plaintext highlighter-rouge">sync</code> 可以在两个位置之间同步镜像(😂早知道我还写个鸡儿 gcrsync)，<code class="language-plaintext highlighter-rouge">inspect</code> 可以查看镜像信息等，迫于本人太懒，剩下的请自行查阅文档、<code class="language-plaintext highlighter-rouge">--help</code> 以及源码(没错，整篇文章都没写 skopeo 怎么安装)。</p>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -316,6 +316,13 @@ COMMANDS:
                         </a>
                     </li>
                     
+                    
+                    <li class="next">
+                        <a href="/2020/06/28/how-to-modify-filebeat-source-code-to-processing-logs/" data-toggle="tooltip" data-placement="top" title="如何在 Filebeat 端进行日志处理">
+                        Next<br>
+                        <span>如何在 Filebeat 端进行日志处理</span>
+                        </a>
+                    </li>
                     
                 </ul>
 
@@ -398,7 +405,7 @@ COMMANDS:
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             

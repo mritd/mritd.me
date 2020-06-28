@@ -215,7 +215,7 @@
 
 <h3 id="22插件注册">2.2、插件注册</h3>
 
-<p>在通常情况下，插件中应当包含一个 <code class="highlighter-rouge">setup.go</code> 文件，这个文件的 <code class="highlighter-rouge">init</code> 方法调用插件注册，类似这样</p>
+<p>在通常情况下，插件中应当包含一个 <code class="language-plaintext highlighter-rouge">setup.go</code> 文件，这个文件的 <code class="language-plaintext highlighter-rouge">init</code> 方法调用插件注册，类似这样</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span> 
     <span class="n">plugin</span><span class="o">.</span><span class="n">Register</span><span class="p">(</span><span class="s">"gdns"</span><span class="p">,</span> <span class="n">setup</span><span class="p">)</span> 
@@ -230,7 +230,7 @@
 <span class="k">type</span> <span class="n">SetupFunc</span> <span class="k">func</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span><span class="n">Controller</span><span class="p">)</span> <span class="kt">error</span>
 </code></pre></div></div>
 
-<p><strong>在这个 SetupFunc 中，插件编写者应当通过 <code class="highlighter-rouge">*Controller</code> 拿到 CoreDNS 的配置并解析它，从而完成自己插件的初始化配置；</strong>比如你的插件需要连接 Etcd，那么在这个方法里你要通过 <code class="highlighter-rouge">*Controller</code> 遍历配置，拿到 Etcd 的地址、证书、用户名密码配置等信息；</p>
+<p><strong>在这个 SetupFunc 中，插件编写者应当通过 <code class="language-plaintext highlighter-rouge">*Controller</code> 拿到 CoreDNS 的配置并解析它，从而完成自己插件的初始化配置；</strong>比如你的插件需要连接 Etcd，那么在这个方法里你要通过 <code class="language-plaintext highlighter-rouge">*Controller</code> 遍历配置，拿到 Etcd 的地址、证书、用户名密码配置等信息；</p>
 
 <p>如果配置信息没有问题，该插件应当初始化完成；如果有问题就报错退出，然后整个 CoreDNS 启动失败；如果插件初始化完成，最后不要忘记将自己的插件加入到整个插件链路中(CoreDNS 根据情况逐个调用)</p>
 
@@ -272,7 +272,7 @@
 
 <h3 id="24插件接口">2.4、插件接口</h3>
 
-<p>一个 Go 编写的 CoreDNS 插件实际上只需要实现一个 <code class="highlighter-rouge">Handler</code> 接口既可，接口定义如下</p>
+<p>一个 Go 编写的 CoreDNS 插件实际上只需要实现一个 <code class="language-plaintext highlighter-rouge">Handler</code> 接口既可，接口定义如下</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// Handler is like dns.Handler except ServeDNS may return an rcode</span>
 <span class="c">// and/or error.</span>
@@ -311,23 +311,23 @@
 </code></pre></div></div>
 
 <ul>
-  <li><code class="highlighter-rouge">ServeDNS</code> 方法是插件需要实现的主要逻辑方法，DNS 请求接受后会从这个方法传入，插件编写者需要实现查询并返回结果</li>
-  <li><code class="highlighter-rouge">Name</code> 方法只返回一个插件名称标识，具体作用记不太清楚，好像是为了判断插件命名唯一性然后做链式顺序调用的，原则只要你不跟系统插件重名就行</li>
+  <li><code class="language-plaintext highlighter-rouge">ServeDNS</code> 方法是插件需要实现的主要逻辑方法，DNS 请求接受后会从这个方法传入，插件编写者需要实现查询并返回结果</li>
+  <li><code class="language-plaintext highlighter-rouge">Name</code> 方法只返回一个插件名称标识，具体作用记不太清楚，好像是为了判断插件命名唯一性然后做链式顺序调用的，原则只要你不跟系统插件重名就行</li>
 </ul>
 
-<p><strong>基本逻辑就是在 setup 阶段通过配置文件创建你的插件结构体对象；然后插件结构体实现这个 <code class="highlighter-rouge">Handler</code> 接口，运行期 CoreDNS 会调用接口的 <code class="highlighter-rouge">ServeDNS</code> 方法来向插件查询 DNS 请求</strong></p>
+<p><strong>基本逻辑就是在 setup 阶段通过配置文件创建你的插件结构体对象；然后插件结构体实现这个 <code class="language-plaintext highlighter-rouge">Handler</code> 接口，运行期 CoreDNS 会调用接口的 <code class="language-plaintext highlighter-rouge">ServeDNS</code> 方法来向插件查询 DNS 请求</strong></p>
 
 <h3 id="25servedns-方法">2.5、ServeDNS 方法</h3>
 
 <p>ServeDNS 方法入参有 3 个:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">context.Context</code> 用来控制超时等情况的 context</li>
-  <li><code class="highlighter-rouge">dns.ResponseWriter</code> 插件通过这个对象写入对 Client DNS 请求的响应结果</li>
-  <li><code class="highlighter-rouge">*dns.Msg</code> 这个是 Client 发起的 DNS 请求，插件负责处理它，比如当你发现请求类型是 <code class="highlighter-rouge">AAAA</code> 而你的插件又不想去支持时要如何返回结果</li>
+  <li><code class="language-plaintext highlighter-rouge">context.Context</code> 用来控制超时等情况的 context</li>
+  <li><code class="language-plaintext highlighter-rouge">dns.ResponseWriter</code> 插件通过这个对象写入对 Client DNS 请求的响应结果</li>
+  <li><code class="language-plaintext highlighter-rouge">*dns.Msg</code> 这个是 Client 发起的 DNS 请求，插件负责处理它，比如当你发现请求类型是 <code class="language-plaintext highlighter-rouge">AAAA</code> 而你的插件又不想去支持时要如何返回结果</li>
 </ul>
 
-<p>对于返回结果，插件编写者应当通过 <code class="highlighter-rouge">dns.ResponseWriter.WriteMsg</code> 方法写入返回结果，基本代码如下</p>
+<p>对于返回结果，插件编写者应当通过 <code class="language-plaintext highlighter-rouge">dns.ResponseWriter.WriteMsg</code> 方法写入返回结果，基本代码如下</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// ServeDNS implements the plugin.Handler interface.</span>
 <span class="k">func</span> <span class="p">(</span><span class="n">gDNS</span> <span class="o">*</span><span class="n">GDNS</span><span class="p">)</span> <span class="n">ServeDNS</span><span class="p">(</span><span class="n">ctx</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span> <span class="n">w</span> <span class="n">dns</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">dns</span><span class="o">.</span><span class="n">Msg</span><span class="p">)</span> <span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
@@ -357,7 +357,7 @@
 
 <h3 id="26name-方法">2.6、Name 方法</h3>
 
-<p><code class="highlighter-rouge">Name</code> 方法非常简单，只需要返回当前插件名称既可；该方法的作用是为了其他插件判断本插件是否加载等情况</p>
+<p><code class="language-plaintext highlighter-rouge">Name</code> 方法非常简单，只需要返回当前插件名称既可；该方法的作用是为了其他插件判断本插件是否加载等情况</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// Name implements the Handler interface.</span>
 <span class="k">func</span> <span class="p">(</span><span class="n">gDNS</span> <span class="o">*</span><span class="n">GDNS</span><span class="p">)</span> <span class="n">Name</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span> <span class="k">return</span> <span class="s">"gdns"</span> <span class="p">}</span>
@@ -365,7 +365,7 @@
 
 <h2 id="三coredns-插件处理">三、CoreDNS 插件处理</h2>
 
-<p>对于实际的业务处理，可以通过 <code class="highlighter-rouge">case</code> 请求 <code class="highlighter-rouge">QType</code> 来做具体的业务实现</p>
+<p>对于实际的业务处理，可以通过 <code class="language-plaintext highlighter-rouge">case</code> 请求 <code class="language-plaintext highlighter-rouge">QType</code> 来做具体的业务实现</p>
 
 <div class="language-golang highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// ServeDNS implements the plugin.Handler interface.</span>
 <span class="k">func</span> <span class="p">(</span><span class="n">gDNS</span> <span class="o">*</span><span class="n">GDNS</span><span class="p">)</span> <span class="n">ServeDNS</span><span class="p">(</span><span class="n">ctx</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span> <span class="n">w</span> <span class="n">dns</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">dns</span><span class="o">.</span><span class="n">Msg</span><span class="p">)</span> <span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
@@ -401,41 +401,41 @@
 
 <h3 id="41官方标准操作">4.1、官方标准操作</h3>
 
-<p>根据官方文档的描述，当你编写好插件以后，<strong>你的插件应当提交到一个 Git 仓库中，可以使 Github 等(保证可以 <code class="highlighter-rouge">go get</code> 拉取就行)，然后修改 <code class="highlighter-rouge">plugin.cfg</code>，最后执行 <code class="highlighter-rouge">make</code> 既可</strong>；具体修改如下所示</p>
+<p>根据官方文档的描述，当你编写好插件以后，<strong>你的插件应当提交到一个 Git 仓库中，可以使 Github 等(保证可以 <code class="language-plaintext highlighter-rouge">go get</code> 拉取就行)，然后修改 <code class="language-plaintext highlighter-rouge">plugin.cfg</code>，最后执行 <code class="language-plaintext highlighter-rouge">make</code> 既可</strong>；具体修改如下所示</p>
 
 <p><img src="http://cdn.oss.link/markdown/vey4u.png" alt="plugin.cfg" /></p>
 
-<p><strong>值得注意的是: 插件配置在 <code class="highlighter-rouge">plugin.cfg</code> 内的顺序决定了插件的执行顺序；通俗的讲，如果 Client 的一个 DNS 请求进来，CoreDNS 根据你在 <code class="highlighter-rouge">plugin.cfg</code> 内书写的顺序依次调用，而并非 <code class="highlighter-rouge">Corefile</code> 内的配置顺序</strong></p>
+<p><strong>值得注意的是: 插件配置在 <code class="language-plaintext highlighter-rouge">plugin.cfg</code> 内的顺序决定了插件的执行顺序；通俗的讲，如果 Client 的一个 DNS 请求进来，CoreDNS 根据你在 <code class="language-plaintext highlighter-rouge">plugin.cfg</code> 内书写的顺序依次调用，而并非 <code class="language-plaintext highlighter-rouge">Corefile</code> 内的配置顺序</strong></p>
 
-<p>配置好以后直接执行 <code class="highlighter-rouge">make</code> 既可编译成功一个包含自定义插件的 CoreDNS 二进制文件(编译过程的 <code class="highlighter-rouge">go mod</code> 下载加速问题不在本文讨论范围内)；你可以直接通过这个二进制测试插件的处理情况，当然这种测试不够直观，而且频繁修改由于 <code class="highlighter-rouge">go mod</code> 缓存等原因并不一定能保证每次编译的都包含最新插件代码，所以另一种方式请看下一章节</p>
+<p>配置好以后直接执行 <code class="language-plaintext highlighter-rouge">make</code> 既可编译成功一个包含自定义插件的 CoreDNS 二进制文件(编译过程的 <code class="language-plaintext highlighter-rouge">go mod</code> 下载加速问题不在本文讨论范围内)；你可以直接通过这个二进制测试插件的处理情况，当然这种测试不够直观，而且频繁修改由于 <code class="language-plaintext highlighter-rouge">go mod</code> 缓存等原因并不一定能保证每次编译的都包含最新插件代码，所以另一种方式请看下一章节</p>
 
 <h3 id="42经验性的操作">4.2、经验性的操作</h3>
 
-<p>根据个人测试以及对源码的分析，在修改 <code class="highlighter-rouge">plugin.cfg</code> 然后执行 <code class="highlighter-rouge">make</code> 命令后，实际上是进行了代码生成；当你通过 git 命令查看相关修改文件时，整个插件加载体系便没什么秘密可言了；<strong>在整个插件体系中，插件加载是通过 <code class="highlighter-rouge">init</code> 方法注册的，那么既然用 go 写插件，那么应该清楚 <code class="highlighter-rouge">init</code> 方法只有在包引用之后才会执行，所以整个插件体系实际上是这样事儿的:</strong></p>
+<p>根据个人测试以及对源码的分析，在修改 <code class="language-plaintext highlighter-rouge">plugin.cfg</code> 然后执行 <code class="language-plaintext highlighter-rouge">make</code> 命令后，实际上是进行了代码生成；当你通过 git 命令查看相关修改文件时，整个插件加载体系便没什么秘密可言了；<strong>在整个插件体系中，插件加载是通过 <code class="language-plaintext highlighter-rouge">init</code> 方法注册的，那么既然用 go 写插件，那么应该清楚 <code class="language-plaintext highlighter-rouge">init</code> 方法只有在包引用之后才会执行，所以整个插件体系实际上是这样事儿的:</strong></p>
 
-<p>首先 <code class="highlighter-rouge">make</code> 以后会修改 <code class="highlighter-rouge">core/plugin/zplugin.go</code> 文件，这个文件啥也不干，就是 <code class="highlighter-rouge">import</code> 来实现调用对应包的 <code class="highlighter-rouge">init</code> 方法</p>
+<p>首先 <code class="language-plaintext highlighter-rouge">make</code> 以后会修改 <code class="language-plaintext highlighter-rouge">core/plugin/zplugin.go</code> 文件，这个文件啥也不干，就是 <code class="language-plaintext highlighter-rouge">import</code> 来实现调用对应包的 <code class="language-plaintext highlighter-rouge">init</code> 方法</p>
 
 <p><img src="http://cdn.oss.link/markdown/ny1rz.png" alt="zplugin.go" /></p>
 
-<p>当 <code class="highlighter-rouge">init</code> 执行后你去追源码，实际上就是 Caddy 维护了一个 <code class="highlighter-rouge">map[string]Plugin</code>，<code class="highlighter-rouge">init</code> 会把你的插件 func 塞进去然后后面再调用，实现一个懒加载或者说延迟初始化</p>
+<p>当 <code class="language-plaintext highlighter-rouge">init</code> 执行后你去追源码，实际上就是 Caddy 维护了一个 <code class="language-plaintext highlighter-rouge">map[string]Plugin</code>，<code class="language-plaintext highlighter-rouge">init</code> 会把你的插件 func 塞进去然后后面再调用，实现一个懒加载或者说延迟初始化</p>
 
 <p><img src="http://cdn.oss.link/markdown/idno4.png" alt="caddy_plugin" /></p>
 
-<p>接着修改了一下 <code class="highlighter-rouge">core/dnsserver/zdirectives.go</code>，这个里面也没啥，就是一个 <code class="highlighter-rouge">[]string</code>，<strong>但是 <code class="highlighter-rouge">[]string</code> 这玩意有顺序啊，这就是为什么你在 <code class="highlighter-rouge">plugin.cfg</code> 里写的顺序决定了插件处理顺序的原因(因为生成的这个切片有顺序)</strong></p>
+<p>接着修改了一下 <code class="language-plaintext highlighter-rouge">core/dnsserver/zdirectives.go</code>，这个里面也没啥，就是一个 <code class="language-plaintext highlighter-rouge">[]string</code>，<strong>但是 <code class="language-plaintext highlighter-rouge">[]string</code> 这玩意有顺序啊，这就是为什么你在 <code class="language-plaintext highlighter-rouge">plugin.cfg</code> 里写的顺序决定了插件处理顺序的原因(因为生成的这个切片有顺序)</strong></p>
 
 <p><img src="http://cdn.oss.link/markdown/bixos.png" alt="zdirectives.go" /></p>
 
-<p>综上所述，实际上 <code class="highlighter-rouge">make</code> 命令一共修改了两个文件，如果想在 IDE 内直接 debug CoreDNS + Plugin 源码，那么只需要这样做:</p>
+<p>综上所述，实际上 <code class="language-plaintext highlighter-rouge">make</code> 命令一共修改了两个文件，如果想在 IDE 内直接 debug CoreDNS + Plugin 源码，那么只需要这样做:</p>
 
-<p>复制自己编写的插件目录到 <code class="highlighter-rouge">plugin</code> 目录，类似这样</p>
+<p>复制自己编写的插件目录到 <code class="language-plaintext highlighter-rouge">plugin</code> 目录，类似这样</p>
 
 <p><img src="http://cdn.oss.link/markdown/whwuy.png" alt="gdns" /></p>
 
-<p>手动修改 <code class="highlighter-rouge">core/plugin/zplugin.go</code>，加入自己插件的 <code class="highlighter-rouge">import</code>(此时你直接复制系统其他插件，改一下目录名既可)</p>
+<p>手动修改 <code class="language-plaintext highlighter-rouge">core/plugin/zplugin.go</code>，加入自己插件的 <code class="language-plaintext highlighter-rouge">import</code>(此时你直接复制系统其他插件，改一下目录名既可)</p>
 
 <p><img src="http://cdn.oss.link/markdown/g7wp0.png" alt="update_zplugin" /></p>
 
-<p>手动修改 <code class="highlighter-rouge">core/dnsserver/zdirectives.go</code> 把自己插件名称写进去(自己控制顺序)，然后 debug 启动 <code class="highlighter-rouge">coredns.go</code> 里面的 main 方法测试既可</p>
+<p>手动修改 <code class="language-plaintext highlighter-rouge">core/dnsserver/zdirectives.go</code> 把自己插件名称写进去(自己控制顺序)，然后 debug 启动 <code class="language-plaintext highlighter-rouge">coredns.go</code> 里面的 main 方法测试既可</p>
 
 <p><img src="http://cdn.oss.link/markdown/4ucqg.png" alt="coredns.go" /></p>
 
@@ -550,7 +550,7 @@
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="42">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
                                     Kubernetes
                                 </a>
                             
