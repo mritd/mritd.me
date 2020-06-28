@@ -177,6 +177,45 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/01/02/Git-%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+        <h2 class="post-title">
+            Git 中文乱码解决方案
+        </h2>
+        
+        <div class="post-content-preview">
+            
+
+
+  今天在虚拟机中提交时 git status 了一下，发现中文文件名都变成了 \344\270\255\346\226\207 这种形式，记录一下解决方案。
+
+
+
+
+
+  没修改配置前的状态
+
+
+
+
+
+  更改 git 状态输出的编码显示方式
+
+
+# 设置 不会对0×80以上的字符进行quote
+git config --global core.quotepath false
+
+
+
+...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on January 2, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2015/12/31/Raspberry-Pi2-%E6%8A%98%E8%85%BE/">
         <h2 class="post-title">
             Raspberry Pi2 折腾
@@ -468,25 +507,6 @@ lnmp mysql stop
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2015/12/06/apt-get%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
-        <h2 class="post-title">
-            apt-get 常用命令
-        </h2>
-        
-        <div class="post-content-preview">
-            apt-cache search package    #搜索包（相当于yum list | grep pkg）
-apt-cache show package      #显示包的相关信息，如说明、大小、版本等
-apt-cache showpg package    #显示包的相关信息，如Reverse Depends（反向依赖）、依赖等
-apt-get install package   ...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on December 6, 2015
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -496,6 +516,10 @@ apt-get install package   ...
         <a href="/page14">&larr; Newer Posts</a>
     </li>
     
+    
+    <li class="next">
+        <a href="/page16">Older Posts &rarr;</a>
+    </li>
     
 </ul>
 
@@ -517,7 +541,7 @@ apt-get install package   ...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="83">
+                                <a href="/tags/#Linux" title="Linux" rel="84">
                                     Linux
                                 </a>
                             

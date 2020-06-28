@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
+        <h2 class="post-title">
+            Kubernetes 1.8 集群搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  目前 Kubernetes 1.8.0 已经发布，1.8.0增加了很多新特性，比如 kube-proxy 组建的 ipvs 模式等，同时 RBAC 授权也做了一些调整，国庆没事干，所以试了一下；以下记录了 Kubernetes 1.8.0 的搭建过程
+
+
+一、环境准备
+
+目前测试为 5 台虚拟机，etcd、kubernetes 全部采用 rpm 安装，使用 systemd 来做管理，网...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 9, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/09/27/alpine-3.6-openjdk-8-bug/">
         <h2 class="post-title">
             Alpine 3.6 OpenJDK 8 Bug
@@ -384,30 +406,6 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/05/30/ceph-note-2/">
-        <h2 class="post-title">
-            Ceph 笔记(二)
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  本篇文章主要简述了 Ceph 的存储对象名词解释及其含义，以及对 Ceph 集群内 CRUSH bucket 调整、PG/PGP 参数调整等设置；同时参考了一些书籍资料简单的概述一下 Ceph 集群硬件要求等
-
-
-一、Ceph 组件及定义
-
-1.1、对象
-
-对象是 Ceph 中最小的存储单元，对象是一个数据和一个元数据绑定的整体；元数据中存放了具体数据的相关属性描述信息等；Ceph 为...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on May 30, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -442,7 +440,7 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="83">
+                                <a href="/tags/#Linux" title="Linux" rel="84">
                                     Linux
                                 </a>
                             

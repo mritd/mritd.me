@@ -177,6 +177,36 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2018/03/30/set-up-drone-ci/">
+        <h2 class="post-title">
+            Drone CI 搭建
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近感觉 GitLab CI 稍有繁琐，所以尝试了一下 Drone CI，这里记录一下搭建过程；虽然 Drone CI 看似简单，但是坑还是有不少的
+
+
+一、环境准备
+
+基本环境如下:
+
+
+  Docker: 17.09.0-ce
+  GitLab: 10.4.3-ce.0
+  Drone: 0.8.5
+
+
+其中 GitLab 采用 TLS 链接，为了方便使用 git 协议 clone...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 30, 2018
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2018/03/28/unix-proxy-setting/">
         <h2 class="post-title">
             Unix 平台下各种加速配置
@@ -375,28 +405,6 @@ Kubernetes 运行深度学习应用实际上要解决的唯一问题就是 GPU �
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
-        <h2 class="post-title">
-            Kubernetes 1.8 集群搭建
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  目前 Kubernetes 1.8.0 已经发布，1.8.0增加了很多新特性，比如 kube-proxy 组建的 ipvs 模式等，同时 RBAC 授权也做了一些调整，国庆没事干，所以试了一下；以下记录了 Kubernetes 1.8.0 的搭建过程
-
-
-一、环境准备
-
-目前测试为 5 台虚拟机，etcd、kubernetes 全部采用 rpm 安装，使用 systemd 来做管理，网...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on October 9, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -431,7 +439,7 @@ Kubernetes 运行深度学习应用实际上要解决的唯一问题就是 GPU �
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="83">
+                                <a href="/tags/#Linux" title="Linux" rel="84">
                                     Linux
                                 </a>
                             

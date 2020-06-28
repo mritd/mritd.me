@@ -177,6 +177,31 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/04/17/List-%E7%9A%84-UnsupportedOperationException-%E5%BC%82%E5%B8%B8/">
+        <h2 class="post-title">
+            List 的 UnsupportedOperationException 异常
+        </h2>
+        
+        <div class="post-content-preview">
+            一、前言
+今天偶尔测试 List.remove() 和 List.add() 方法很奇怪的出现了 UnsupportedOperationException 异常，但是 “某些情况下” 调用则不会出现这个异常，由于只考虑了局部代码，所以让我很困惑，以下分析一下 “搞笑的 UnsupportedOperationException” 异常。
+
+
+
+二、测试代码
+
+首先一个正常的
+
+// 创建一...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on April 17, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/04/11/JDK8-%E6%96%B0%E7%89%B9%E6%80%A7/">
         <h2 class="post-title">
             JDK8 新特性
@@ -409,39 +434,6 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/14/SQL%E4%B8%AD-OR-%E5%85%B3%E9%94%AE%E5%AD%97%E4%BC%98%E5%85%88%E7%BA%A7%E9%97%AE%E9%A2%98/">
-        <h2 class="post-title">
-            SQL中 OR 关键字优先级问题
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  今天群里哥们偶尔问道一个问题，顺便查查找到了答案，记录一下。
-
-
-问题
-
-问题大致如下:
-
-SQL1
-
-SELECT * FROM TABLE WHERE NAME='ZHANGSAN' OR 1=1 OR '1'='1' AND AGE=10;
-
-
-
-
-SQL2
-
-SELECT * FROM TABLE WHERE NAME='ZAHNGSAN' OR 1=1 AND AGE=10;...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 14, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -476,7 +468,7 @@ SELECT * FROM TABLE WHERE NAME='ZAHNGSAN' OR 1=1 AND AGE=10;...
                     <div class="tags">
                         
                             
-                                <a href="/tags/#Linux" title="Linux" rel="83">
+                                <a href="/tags/#Linux" title="Linux" rel="84">
                                     Linux
                                 </a>
                             

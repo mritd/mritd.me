@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="GlusterFS 笔记">
-    <meta name="keywords"  content="Linux,GlusterFS">
+    <meta name="description" content="树莓派4 Manjaro 系统定制">
+    <meta name="keywords"  content="linux,raspberry4,manjaro">
     <meta name="theme-color" content="#000000">
     
-    <title>GlusterFS 笔记 - 漠然的博客 | mritd Blog</title>
+    <title>树莓派4 Manjaro 系统定制 - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2016/09/17/GlusterFS-%E7%AC%94%E8%AE%B0/">
+    <link rel="canonical" href="https://mritd.me/2020/06/28/make-a-custom-manjaro-image-for-rpi4/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -166,12 +166,12 @@
                         <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
                         
                     </div>
-                    <h1>GlusterFS 笔记</h1>
+                    <h1>树莓派4 Manjaro 系统定制</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on September 17, 2016</span>
+                    <span class="meta">Posted by 漠然 on June 28, 2020</span>
                 </div>
             </div>
         </div>
@@ -192,261 +192,126 @@
                 <!-- Multi-Lingual -->
                 
 
-                <h2 id="一简介">一、简介</h2>
+                <blockquote>
+  <p>最近入手了新玩具 “吹灰派4”，这一代性能提升真的很大，所以买回来是真的没办法 “吃灰” 了；但是由于目前 64bit 系统比较难产，所以只能自己定义一下 Manjaro 了。</p>
+</blockquote>
 
-<p>GlusterFS 是近年兴起的一个高性能开源分布式文件系统，其目标是全局命名空间、分布式前端的高性能文件系统，目前已被 RedHat 看中，GlusterFS 具有高扩展、高可性、高性能、可横向扩展等特点，并且 GlusterFS 没有元数据服务器的设计，使其没有单点故障问题。</p>
+<h2 id="一目前的系统现状">一、目前的系统现状</h2>
 
-<h2 id="二glusterfs-集群搭建">二、GlusterFS 集群搭建</h2>
+<p>截止本文编写时间，树莓派4 官方系统仍然不支持 64bit；但是当我在 3b+ 上使用 arch 64bit 以后我发现 32bit 系统和 64bit 系统装在同一个树莓派上在使用时那就是两个完全不一样的树莓派…所以对于这个新的 rpi4 那么必需要用 64bit 的系统；而当前我大致查看到支持 64bit 的系统只有 Ubuntu20、Manjaro 两个，Ubuntu 对我来说太重了(虽然服务器上我一直是 Ubuntu，但是 rpi 上我选择说 “不”)，Manjaro 基于 Arch 这种非常轻量的系统非常适合树莓派这种开发板，所以最终我选择了 Manjaro。但是万万没想到的是 Manjaro 都是带 KDE 什么的图形化的，而我的树莓派只想仍在角落里跑东西，所以说图形化这东西对我来说也没啥用，最后迫于无奈只能自己通过 Manjaro 的工具自己定制了。</p>
 
-<h3 id="21环境准备">2.1、环境准备</h3>
+<h2 id="二manjaro-arm-tools">二、manjaro-arm-tools</h2>
 
-<p>由于资源有限，所以以虚拟机测试，故性能上无法体现，毕竟是一块硬盘，搭建环境如下</p>
-
-<!--more-->
-
-<table>
-  <thead>
-    <tr>
-      <th>主机</th>
-      <th>域名</th>
-      <th>磁盘</th>
-      <th>大小</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>192.168.1.100</td>
-      <td>gfs-server1</td>
-      <td>/dev/sdb</td>
-      <td>50G</td>
-    </tr>
-    <tr>
-      <td>192.168.1.107</td>
-      <td>gfs-server2</td>
-      <td>/dev/sdb</td>
-      <td>50G</td>
-    </tr>
-    <tr>
-      <td>192.168.1.126</td>
-      <td>gfs-server3</td>
-      <td>/dev/sdb</td>
-      <td>50G</td>
-    </tr>
-    <tr>
-      <td>192.168.1.217</td>
-      <td>gfs-server4</td>
-      <td>/dev/sdb</td>
-      <td>50G</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3 id="22安装-glusterfs">2.2、安装 GlusterFS</h3>
-
-<p>CentOS7 默认官方 yum 源中有 GlusterFS 相关的 rpm 包，但是发现没有 server 端的，官方给出的安装命令如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 GlusterFS yum 源</span>
-yum <span class="nb">install</span> <span class="nt">-y</span> centos-release-gluster <span class="o">&amp;&amp;</span> yum update <span class="nt">-y</span>
-<span class="c"># 安装 GlusterFS 以及客户端</span>
-yum <span class="nb">install</span> <span class="nt">-y</span> glusterfs glusterfs-fuse glusterfs-cli glusterfs-server glusterfs-api
-</code></pre></div></div>
-
-<h3 id="23基础环境配置">2.3、基础环境配置</h3>
-
-<h4 id="231ntp-时钟同步">2.3.1、ntp 时钟同步</h4>
-
-<p>由于 GlusterFS 需要进行节点间同步，所以各节点时间要保证一致性，故需要安装 ntp 时钟同步工具</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 安装 ntp</span>
-yum <span class="nb">install</span> <span class="nt">-y</span> ntp
-</code></pre></div></div>
-
-<p>安装完成后应进行时钟同步，这里暂时使用 windows 的时钟授权服务器，也可以选择其他时钟授权服务器，安装时测试国内的清华大等全部超时……</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 同步时钟</span>
-ntpdate time.windows.com
-</code></pre></div></div>
-
-<p>同步完成后最好设置定时同步，以下为每天 0 时开始没 3 小时进行一次时钟同步</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 增加 当前用户 cron 任务</span>
-crontab <span class="nt">-e</span>
-<span class="c"># 写入如下任务</span>
-<span class="k">*</span> 0-23/3 <span class="k">*</span> <span class="k">*</span> <span class="k">*</span> root  /usr/sbin/ntpdate time.windows.com &amp;&gt; /dev/null<span class="p">;</span> /usr/sbin/clock <span class="nt">-w</span>
-</code></pre></div></div>
-
-<h4 id="232host-定义">2.3.2、host 定义</h4>
-
-<p>由于使用域名方式访问，所以需要修改本地 hosts 文件，也可以通过自建 dns 服务器来解决，不过据说 dns 服务器方式会有一点点延迟，所以推荐修改本地 hosts(没证明过)</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 修改 hosts</span>
-vim /etc/hosts
-<span class="c"># 增加如下</span>
-192.168.1.100 gfs-server1
-192.168.1.107 gfs-server2
-192.168.1.126 gfs-server3
-192.168.1.217 gfs-server4
-</code></pre></div></div>
-
-<h3 id="24启动并加入节点">2.4、启动并加入节点</h3>
-
-<p>GlusterFS 安装完成后可直接通过 systemd 启动</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable </span>glusterd
-systemctl start glusterd
-</code></pre></div></div>
-
-<p>启动完成后便可在任意节点上将其他节点加入进来，组建集群</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for </span>gfs_host <span class="k">in </span>gfs-server1 gfs-server2 gfs-server3 gfs-server4<span class="p">;</span><span class="k">do
-  </span>gluster peer probe <span class="nv">$gfs_host</span>
-<span class="k">done</span>
-</code></pre></div></div>
-
-<h3 id="25磁盘预处理">2.5、磁盘预处理</h3>
-
-<p>GlusterFS 集群服务启动并加入其他节点后，就需要为下一步创建卷(volume)准备磁盘，以下以一块 50G 的磁盘为例，在每个节点上执行如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 首先创建分区</span>
-fdisk /dev/sdb
-<span class="c"># 然后输入 n 创建新分区，再输入 p 选择主分区</span>
-<span class="c"># 最后输入 w 保存分区表，如下所示</span>
-
-欢迎使用 fdisk <span class="o">(</span>util-linux 2.23.2<span class="o">)</span>。
-
-更改将停留在内存中，直到您决定将更改写入磁盘。
-使用写入命令前请三思。
-
-Device does not contain a recognized partition table
-使用磁盘标识符 0x445cdbb5 创建新的 DOS 磁盘标签。
-
-命令<span class="o">(</span>输入 m 获取帮助<span class="o">)</span>：n
-Partition <span class="nb">type</span>:
-   p   primary <span class="o">(</span>0 primary, 0 extended, 4 free<span class="o">)</span>
-   e   extended
-Select <span class="o">(</span>default p<span class="o">)</span>: p
-分区号 <span class="o">(</span>1-4，默认 1<span class="o">)</span>：
-起始 扇区 <span class="o">(</span>2048-104857599，默认为 2048<span class="o">)</span>：
-将使用默认值 2048
-Last 扇区, +扇区 or +size<span class="o">{</span>K,M,G<span class="o">}</span> <span class="o">(</span>2048-104857599，默认为 104857599<span class="o">)</span>：
-将使用默认值 104857599
-分区 1 已设置为 Linux 类型，大小设为 50 GiB
-
-命令<span class="o">(</span>输入 m 获取帮助<span class="o">)</span>：w
-The partition table has been altered!
-
-Calling ioctl<span class="o">()</span> to re-read partition table.
-正在同步磁盘。
-</code></pre></div></div>
-
-<p>分区创建完成后需要对其进行格式化</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkfs.ext4 /dev/sdb
-</code></pre></div></div>
-
-<p>最后准备接下来要使用的相关挂载目录</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建磁盘挂载目录</span>
-<span class="nb">mkdir</span> <span class="nt">-p</span> /data/gfs
-<span class="c"># 挂载硬盘</span>
-mount <span class="nt">-t</span> ext4 /dev/sdb /data/gfs
-<span class="c"># 创建 GlusterFS 卷目录</span>
-<span class="nb">mkdir</span> <span class="nt">-p</span> /data/gfs/brick0
-</code></pre></div></div>
-
-<p>为了保证磁盘一直挂载，最好设置一下开机自动挂载</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 后面三个选项，defaults 表示使用默认挂载参数，</span>
-<span class="c"># 第一个 1 代表 允许 demp</span>
-<span class="c"># 第二个 1 代表 开机执行挂载分区检查</span>
-<span class="nb">echo</span> <span class="s2">"/dev/sdb /data/gfs ext4 defaults 1 1"</span> <span class="o">&gt;&gt;</span> /etc/fstab
-</code></pre></div></div>
-
-<p>到此集群基本部署完成</p>
-
-<h2 id="三glusterfs-存储卷设置">三、GlusterFS 存储卷设置</h2>
-
-<p>GlusterFS 集群搭建完成后，便需要创建存储卷(volume)来整合各个集群磁盘存储资源，以便后面进行挂载和使用</p>
-
-<h3 id="31创建分布式-hash-卷">3.1、创建分布式 Hash 卷</h3>
-
-<p>分布式 Hash 卷其原理是当向 GlusterFS 写入一个文件时，GlusterFS 通过弹性 Hash 算法对文件名进行计算，然后将其均匀的分布到各个节点上，<strong>因此分布式 Hash 卷没有数据冗余</strong>，创建分布式 Hash 卷命令如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gluster volume create gfs_disk<span class="se">\</span>
-  gfs-server1:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server2:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server3:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server4:/data/gfs/brick0
-</code></pre></div></div>
-
-<h3 id="32创建复制卷">3.2、创建复制卷</h3>
-
-<p>复制卷相当于 RAID1，在向 GlusterFS 中存储文件时，GlusterFS 将其拷贝到所有节点，并且是同步的，这会极大降低磁盘性能，并呈线性降低，<strong>但是复制卷随着节点数量增加，起数据冗余能力也在增加，因为每个节点上都有一份数据的完全拷贝</strong>，创建复制卷命令如下</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># replica 参数用于指定数据拷贝有多少份</span>
-<span class="c"># 注意: replica 数量必须与指定的 GlusterFS 集群 brick 数量保持一致</span>
-gluster volume create gfs_disk replica 4 transport tcp <span class="se">\</span>
-  gfs-server1:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server2:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server3:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server4:/data/gfs/brick0
-</code></pre></div></div>
-
-<h3 id="33创建分布式-hash-复制卷">3.3、创建分布式 Hash 复制卷</h3>
-
-<p>顾名思义，分布式 Hash 复制卷就是将 Hash 卷与复制卷整合一下，通过 replica 参数指定复制份数，以下例子为使用4个节点创建，每两个节点组成一个复制卷，然后两对节点再组成 Hash 卷</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建 分布式 Hash 复制卷时，只需要保证集群数量是 replica 数量的整数倍即可</span>
-gluster volume create gfs_disk replica 2 transport tcp <span class="se">\</span>
-  gfs-server1:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server2:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server3:/data/gfs/brick0 <span class="se">\</span>
-  gfs-server4:/data/gfs/brick0
-</code></pre></div></div>
-
-<h3 id="34其他卷">3.4、其他卷</h3>
+<p>经过几经查找各种 Google，发现了 Manjaro 官方提供了自定义创建 arm 镜像的工具 <a href="https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools">manjaro-arm-tools</a>，这个工具简单使用如下:</p>
 
 <ul>
-  <li>条带卷: 条带卷既将文件切分成块，分布存放在各个节点，将 <code class="language-plaintext highlighter-rouge">replica</code> 替换成 <code class="language-plaintext highlighter-rouge">stripe</code> 即可</li>
-  <li>分布式 Hash 条带卷: 同分布式 Hash 复制卷一样，保证节点数量是 <code class="language-plaintext highlighter-rouge">stripe</code> 的整数倍即可</li>
+  <li>首先准备一个 Manjaro 系统(虚拟机 x86 即可)</li>
+  <li>然后安装 manjaro-arm-tool 所需<a href="https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools#dependencies">依赖工具</a></li>
+  <li>添加 Manjaro 的<a href="https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools#git-version-from-manjaro-strit-repo">软件源</a></li>
+  <li>安装 manjaro-arm-tool <code class="language-plaintext highlighter-rouge">sudo pacman -Syyu manjaro-strit-keyring &amp;&amp; sudo pacman -S manjaro-arm-tools-git</code></li>
 </ul>
 
-<p>由于条带卷使用并不多，所以不做演示，一般条带卷适用于单个大文件超过磁盘大小时使用</p>
+<p>当工具都准备完成后，只需要执行 <code class="language-plaintext highlighter-rouge">sudo buildarmimg -d rpi4 -e minimal</code> 即可创建 manjaro 的 rpi4 最小镜像。</p>
 
-<h2 id="四glusterfs-挂载及测试">四、GlusterFS 挂载及测试</h2>
+<h2 id="三系统定制">三、系统定制</h2>
 
-<p>无论创建的哪种卷，最终创建完成后都可以通过如下命令查看</p>
+<p>在使用 manjaro-arm-tool 创建系统以后发现一些细微的东西需要自己调整，比如网络设置常用软件包等，而 manjaro-arm-tool 工具又没有提供太好的自定义处理的一些 hook，所以最后萌生了自己根据 manjaro-arm-tool 来创建自己的 rpi4 系统定制工具的想法。</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gluster volume info
+<h3 id="31常用软件包安装">3.1、常用软件包安装</h3>
+
+<p>在查看了 manjaro-arm-tool 的源码后可以看到实际上软件安装就是利用 systemd-nspawn 进入到 arm 系统执行 pacman 安装，自己依葫芦画瓢增加一些常用的软件包安装:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd-nspawn <span class="nt">-q</span> <span class="nt">--resolv-conf</span><span class="o">=</span>copy-host <span class="nt">--timezone</span><span class="o">=</span>off <span class="nt">-D</span> <span class="k">${</span><span class="nv">ROOTFS_DIR</span><span class="k">}</span> pacman <span class="nt">-Syyu</span> zsh htop vim wget which git make net-tools dnsutils inetutils iproute2 sysstat nload lsof <span class="nt">--noconfirm</span>
 </code></pre></div></div>
 
-<h3 id="41glusterfs-卷挂载">4.1、GlusterFS 卷挂载</h3>
+<h3 id="32pacman-镜像">3.2、pacman 镜像</h3>
 
-<p>卷创建完成后，只需要像正常磁盘一样挂载即可使用，<strong>不同的是文件系统类型指定为 <code class="language-plaintext highlighter-rouge">glusterfs</code> 而已</strong>，操作如下</p>
+<p>在安装软件包时发现安装速读奇慢，研究以后发现是没有使用国内的镜像源，故增加了国内镜像源的处理:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># mount 时指定任意一个节点即可</span>
-mount <span class="nt">-t</span> glusterfs gfs-server1:gfs_disk /mnt/gfs
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd-nspawn <span class="nt">-q</span> <span class="nt">--resolv-conf</span><span class="o">=</span>copy-host <span class="nt">--timezone</span><span class="o">=</span>off <span class="nt">-D</span> <span class="k">${</span><span class="nv">ROOTFS_DIR</span><span class="k">}</span> pacman-mirrors <span class="nt">-c</span> China
 </code></pre></div></div>
 
-<p>为保证一直可用，同样最好设置开机自动挂载</p>
+<h3 id="33网络处理">3.3、网络处理</h3>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"gfs-server1:gfs_disk /mnt/gfs glusterfs defaults 0 1"</span> <span class="o">&gt;&gt;</span> /etc/fstab
+<h4 id="331有线连接">3.3.1、有线连接</h4>
+
+<p>默认的 manjaro-arm-tool 创建的系统网络部分采用 dhspcd 做 dhcp 处理，但是我个人感觉一切尽量精简统一还是比较好的；所以准备网络部分完全由 systemd 接管处理，即直接使用 systemd-networkd 和 systemd-resolved；systemd-networkd 处理相对简单，编写一个配置文件然后 enable systemd-networkd 服务即可:</p>
+
+<p><strong>/etc/systemd/network/10-eth-dhcp.network</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Match]
+<span class="nv">Name</span><span class="o">=</span>eth<span class="k">*</span>
+
+<span class="o">[</span>Network]
+<span class="nv">DHCP</span><span class="o">=</span><span class="nb">yes</span>
 </code></pre></div></div>
 
-<h3 id="42测试-glusterfs">4.2、测试 GlusterFS</h3>
+<p><strong>让 systemd-networkd 开机自启动</strong></p>
 
-<p>以下以分布式 Hash 卷为例，由于准备了 4 各节点，并且 replica 为 2，所以理论上向 GlusterFS 写入一个文件应该会在任意两个节点上都有一份</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 在 gfs-server1 上执行</span>
-<span class="nb">cp </span>test.tar.gz /mnt.gfs
-<span class="c"># 最后可以在 gfs-server3、gfs-server4 的磁盘目录中看到</span>
-<span class="nb">ls</span> /data/gfs/brick0
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd-nspawn <span class="nt">-q</span> <span class="nt">--resolv-conf</span><span class="o">=</span>copy-host <span class="nt">--timezone</span><span class="o">=</span>off <span class="nt">-D</span> <span class="k">${</span><span class="nv">ROOTFS_DIR</span><span class="k">}</span> systemctl <span class="nb">enable </span>systemd-networkd.service
 </code></pre></div></div>
 
-<h2 id="五其他相关">五、其他相关</h2>
+<p>一开始以为 systemd-resolved 同样 enable 一下就行，后来发现每次开机初始化以后 systemd-resolved 都会被莫明其妙的 disable 掉；经过几经寻找和开 issue 问作者，发现这个操作是被 manjaro-arm-oem-install 包下的脚本执行的，作者的回复意思是大部分带有图形化的版本网络管理工具都会与 systemd-resolved 冲突，所以默认关闭了，这时候我们就要针对 manjaro-arm-oem-install 单独处理一下:</p>
 
-<p>没有任何通用的文件系统，通用意味着通通不能用，关于 GlusterFS 适用场景以及缺点可参考 <a href="http://blog.sae.sina.com.cn/archives/5141">换个角度看GlusterFS分布式文件系统</a> 文章，关于 GlusterFS 性能与监控可参考 <a href="https://github.com/jiobxn/one/wiki/00086_GlusterFS%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7&amp;%E9%85%8D%E9%A2%9D">GlusterFS性能监控&amp;配额</a>
-转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd-nspawn <span class="nt">-q</span> <span class="nt">--resolv-conf</span><span class="o">=</span>copy-host <span class="nt">--timezone</span><span class="o">=</span>off <span class="nt">-D</span> <span class="k">${</span><span class="nv">ROOTFS_DIR</span><span class="k">}</span> systemctl <span class="nb">enable </span>systemd-resolved.service
+<span class="nb">sed</span> <span class="nt">-i</span> <span class="s1">'s@systemctl disable systemd-resolved.service 1&gt; /dev/null 2&gt;&amp;1@@g'</span> <span class="k">${</span><span class="nv">ROOTFS_DIR</span><span class="k">}</span>/usr/share/manjaro-arm-oem-install/manjaro-arm-oem-install
+</code></pre></div></div>
+
+<h4 id="332无限连接">3.3.2、无限连接</h4>
+
+<p>有线连接只要 systemd-networkd 处理好就能很好的工作，而无线连接目前有很多方案，我一开始想用 <a href="https://wiki.archlinux.org/index.php/Netctl_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">netctl</a>，后来发现这东西虽然是 Arch 亲儿子，但是在系统定制时采用 systemd-nspawn 调用不兼容(因为里面调用了 systemd 的一些命令，这些命令一般只有在开机时才可用)，而且只用 netctl 来管理 wifi 还感觉怪怪的，后来我的想法是要么用就全都用，要么就纯手动不要用这些东西，所以最后的方案是 wpa_supplicant + systemd-networkd 一把梭:</p>
+
+<p><strong>/etc/systemd/network/10-wlan-dhcp.network.example</strong></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 1. Generate wifi configuration (don't modify the name of wpa_supplicant-wlan0.conf file)</span>
+<span class="c"># $ wpa_passphrase MyNetwork SuperSecretPassphrase &gt; /etc/wpa_supplicant/wpa_supplicant-wlan0.conf</span>
+<span class="c">#</span>
+<span class="c"># 2. Connect to wifi automatically after booting</span>
+<span class="c"># $ systemctl enable wpa_supplicant@wlan0</span>
+<span class="c">#</span>
+<span class="c"># 3.Systemd automatically makes dhcp request</span>
+<span class="c"># $ cp /etc/systemd/network/10-wlan-dhcp.network.example /etc/systemd/network/10-wlan-dhcp.network</span>
+
+<span class="o">[</span>Match]
+<span class="nv">Name</span><span class="o">=</span>wlan<span class="k">*</span>
+
+<span class="o">[</span>Network]
+<span class="nv">DHCP</span><span class="o">=</span><span class="nb">yes</span>
+</code></pre></div></div>
+
+<h3 id="34内核调整">3.4、内核调整</h3>
+
+<p>在上面的一些调整完成后我就启动系统实体机测试了，测试过程中发现安装 docker 以后会有两个警告，大致意思就是不支持 swap limit 和 cpu limit；查询资料以后发现是内核有两个参数没开启(<code class="language-plaintext highlighter-rouge">CONFIG_MEMCG_SWAP</code>、<code class="language-plaintext highlighter-rouge">CONFIG_CFS_BANDWIDTH</code>)…当然我这种强迫症是不能忍的，没办法就自己在 rpi4 上重新编译了内核(后来我想想还不如用 arch 32bit 然后自己编译 64bit 内核了):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/mritd/linux-rpi4.git
+<span class="nb">cd </span>linux-rpi4
+<span class="nv">MAKEFLAGS</span><span class="o">=</span><span class="s1">'-j4'</span> makepkg
+</code></pre></div></div>
+
+<h3 id="35外壳驱动">3.5、外壳驱动</h3>
+
+<p>由于我的 rpi4 配的是 ARGON ONE 的外壳，所以电源按钮还有风扇需要驱动才能完美工作，没办法我又编译了 ARGON ONE 外壳的驱动:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/mritd/argonone.git
+<span class="nb">cd </span>argonone
+makepkg
+</code></pre></div></div>
+
+<h2 id="四定制脚本">四、定制脚本</h2>
+
+<p>综合以上的各种修改以后，我从 manjaro-arm-tool 提取出了定制化的 rpi4 的编译脚本，该脚本目前存放在 <a href="https://github.com/mritd/manjaro-rpi4">mritd/manjaro-rpi4</a> 仓库中；目前使用此脚本编译的系统镜像默认进行了以下处理:</p>
+
+<ul>
+  <li>调整 pacman mirror 为中国</li>
+  <li>安装常用软件包(zsh htop vim wget which…)</li>
+  <li>有线网络完全的 systemd-networkd 接管，resolv.conf 由 systemd-resolved 接管</li>
+  <li>无线网络由 wpa_supplicant 和 systemd-networkd 接管</li>
+  <li>安装自行编译的内核以消除 docker 警告(<strong>自编译内核不影响升级，升级/覆盖安装后自动恢复</strong>)</li>
+</ul>
+
+<p>至于 ARGON ONE 的外壳驱动只在 resources 目录下提供了安装包，并未默认安装到系统。</p>
+
+<p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
 
                 <hr style="visibility: hidden;">
@@ -454,19 +319,12 @@ mount <span class="nt">-t</span> glusterfs gfs-server1:gfs_disk /mnt/gfs
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2016/09/15/Harbor-%E4%BC%81%E4%B8%9A%E7%BA%A7-Docker-Registry-%E7%AC%AC%E4%BA%8C%E5%BC%B9/" data-toggle="tooltip" data-placement="top" title="Harbor 企业级 Docker Registry 第二弹">
+                        <a href="/2020/06/28/how-to-modify-filebeat-source-code-to-processing-logs/" data-toggle="tooltip" data-placement="top" title="如何在 Filebeat 端进行日志处理">
                         Previous<br>
-                        <span>Harbor 企业级 Docker Registry 第二弹</span>
+                        <span>如何在 Filebeat 端进行日志处理</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2016/09/17/Minio-AWS-S3-%E5%AD%98%E5%82%A8%E5%BC%80%E6%BA%90%E5%AE%9E%E7%8E%B0/" data-toggle="tooltip" data-placement="top" title="Minio - AWS S3 存储开源实现">
-                        Next<br>
-                        <span>Minio - AWS S3 存储开源实现</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -622,8 +480,8 @@ mount <span class="nt">-t</span> glusterfs gfs-server1:gfs_disk /mnt/gfs
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2016/09/17/GlusterFS-笔记";
-    var disqus_url = "https://mritd.me/2016/09/17/GlusterFS-%E7%AC%94%E8%AE%B0/";
+    var disqus_identifier = "/2020/06/28/make-a-custom-manjaro-image-for-rpi4";
+    var disqus_url = "https://mritd.me/2020/06/28/make-a-custom-manjaro-image-for-rpi4/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

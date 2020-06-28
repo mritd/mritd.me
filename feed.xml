@@ -5,9 +5,143 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Sun, 28 Jun 2020 21:52:13 +0800</pubDate>
-    <lastBuildDate>Sun, 28 Jun 2020 21:52:13 +0800</lastBuildDate>
+    <pubDate>Sun, 28 Jun 2020 22:00:42 +0800</pubDate>
+    <lastBuildDate>Sun, 28 Jun 2020 22:00:42 +0800</lastBuildDate>
     <generator>Jekyll v4.1.0</generator>
+    
+      <item>
+        <title>树莓派4 Manjaro 系统定制</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;最近入手了新玩具 “吹灰派4”，这一代性能提升真的很大，所以买回来是真的没办法 “吃灰” 了；但是由于目前 64bit 系统比较难产，所以只能自己定义一下 Manjaro 了。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一目前的系统现状&quot;&gt;一、目前的系统现状&lt;/h2&gt;
+
+&lt;p&gt;截止本文编写时间，树莓派4 官方系统仍然不支持 64bit；但是当我在 3b+ 上使用 arch 64bit 以后我发现 32bit 系统和 64bit 系统装在同一个树莓派上在使用时那就是两个完全不一样的树莓派…所以对于这个新的 rpi4 那么必需要用 64bit 的系统；而当前我大致查看到支持 64bit 的系统只有 Ubuntu20、Manjaro 两个，Ubuntu 对我来说太重了(虽然服务器上我一直是 Ubuntu，但是 rpi 上我选择说 “不”)，Manjaro 基于 Arch 这种非常轻量的系统非常适合树莓派这种开发板，所以最终我选择了 Manjaro。但是万万没想到的是 Manjaro 都是带 KDE 什么的图形化的，而我的树莓派只想仍在角落里跑东西，所以说图形化这东西对我来说也没啥用，最后迫于无奈只能自己通过 Manjaro 的工具自己定制了。&lt;/p&gt;
+
+&lt;h2 id=&quot;二manjaro-arm-tools&quot;&gt;二、manjaro-arm-tools&lt;/h2&gt;
+
+&lt;p&gt;经过几经查找各种 Google，发现了 Manjaro 官方提供了自定义创建 arm 镜像的工具 &lt;a href=&quot;https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools&quot;&gt;manjaro-arm-tools&lt;/a&gt;，这个工具简单使用如下:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;首先准备一个 Manjaro 系统(虚拟机 x86 即可)&lt;/li&gt;
+  &lt;li&gt;然后安装 manjaro-arm-tool 所需&lt;a href=&quot;https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools#dependencies&quot;&gt;依赖工具&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;添加 Manjaro 的&lt;a href=&quot;https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools#git-version-from-manjaro-strit-repo&quot;&gt;软件源&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;安装 manjaro-arm-tool &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo pacman -Syyu manjaro-strit-keyring &amp;amp;&amp;amp; sudo pacman -S manjaro-arm-tools-git&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;当工具都准备完成后，只需要执行 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo buildarmimg -d rpi4 -e minimal&lt;/code&gt; 即可创建 manjaro 的 rpi4 最小镜像。&lt;/p&gt;
+
+&lt;h2 id=&quot;三系统定制&quot;&gt;三、系统定制&lt;/h2&gt;
+
+&lt;p&gt;在使用 manjaro-arm-tool 创建系统以后发现一些细微的东西需要自己调整，比如网络设置常用软件包等，而 manjaro-arm-tool 工具又没有提供太好的自定义处理的一些 hook，所以最后萌生了自己根据 manjaro-arm-tool 来创建自己的 rpi4 系统定制工具的想法。&lt;/p&gt;
+
+&lt;h3 id=&quot;31常用软件包安装&quot;&gt;3.1、常用软件包安装&lt;/h3&gt;
+
+&lt;p&gt;在查看了 manjaro-arm-tool 的源码后可以看到实际上软件安装就是利用 systemd-nspawn 进入到 arm 系统执行 pacman 安装，自己依葫芦画瓢增加一些常用的软件包安装:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd-nspawn &lt;span class=&quot;nt&quot;&gt;-q&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--resolv-conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;copy-host &lt;span class=&quot;nt&quot;&gt;--timezone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;off &lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ROOTFS_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; pacman &lt;span class=&quot;nt&quot;&gt;-Syyu&lt;/span&gt; zsh htop vim wget which git make net-tools dnsutils inetutils iproute2 sysstat nload lsof &lt;span class=&quot;nt&quot;&gt;--noconfirm&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;32pacman-镜像&quot;&gt;3.2、pacman 镜像&lt;/h3&gt;
+
+&lt;p&gt;在安装软件包时发现安装速读奇慢，研究以后发现是没有使用国内的镜像源，故增加了国内镜像源的处理:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd-nspawn &lt;span class=&quot;nt&quot;&gt;-q&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--resolv-conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;copy-host &lt;span class=&quot;nt&quot;&gt;--timezone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;off &lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ROOTFS_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; pacman-mirrors &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; China
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;33网络处理&quot;&gt;3.3、网络处理&lt;/h3&gt;
+
+&lt;h4 id=&quot;331有线连接&quot;&gt;3.3.1、有线连接&lt;/h4&gt;
+
+&lt;p&gt;默认的 manjaro-arm-tool 创建的系统网络部分采用 dhspcd 做 dhcp 处理，但是我个人感觉一切尽量精简统一还是比较好的；所以准备网络部分完全由 systemd 接管处理，即直接使用 systemd-networkd 和 systemd-resolved；systemd-networkd 处理相对简单，编写一个配置文件然后 enable systemd-networkd 服务即可:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;/etc/systemd/network/10-eth-dhcp.network&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Match]
+&lt;span class=&quot;nv&quot;&gt;Name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;eth&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Network]
+&lt;span class=&quot;nv&quot;&gt;DHCP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;yes&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;让 systemd-networkd 开机自启动&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd-nspawn &lt;span class=&quot;nt&quot;&gt;-q&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--resolv-conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;copy-host &lt;span class=&quot;nt&quot;&gt;--timezone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;off &lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ROOTFS_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;systemd-networkd.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;一开始以为 systemd-resolved 同样 enable 一下就行，后来发现每次开机初始化以后 systemd-resolved 都会被莫明其妙的 disable 掉；经过几经寻找和开 issue 问作者，发现这个操作是被 manjaro-arm-oem-install 包下的脚本执行的，作者的回复意思是大部分带有图形化的版本网络管理工具都会与 systemd-resolved 冲突，所以默认关闭了，这时候我们就要针对 manjaro-arm-oem-install 单独处理一下:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd-nspawn &lt;span class=&quot;nt&quot;&gt;-q&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--resolv-conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;copy-host &lt;span class=&quot;nt&quot;&gt;--timezone&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;off &lt;span class=&quot;nt&quot;&gt;-D&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ROOTFS_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;systemd-resolved.service
+&lt;span class=&quot;nb&quot;&gt;sed&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'s@systemctl disable systemd-resolved.service 1&amp;gt; /dev/null 2&amp;gt;&amp;amp;1@@g'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ROOTFS_DIR&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/usr/share/manjaro-arm-oem-install/manjaro-arm-oem-install
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;332无限连接&quot;&gt;3.3.2、无限连接&lt;/h4&gt;
+
+&lt;p&gt;有线连接只要 systemd-networkd 处理好就能很好的工作，而无线连接目前有很多方案，我一开始想用 &lt;a href=&quot;https://wiki.archlinux.org/index.php/Netctl_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)&quot;&gt;netctl&lt;/a&gt;，后来发现这东西虽然是 Arch 亲儿子，但是在系统定制时采用 systemd-nspawn 调用不兼容(因为里面调用了 systemd 的一些命令，这些命令一般只有在开机时才可用)，而且只用 netctl 来管理 wifi 还感觉怪怪的，后来我的想法是要么用就全都用，要么就纯手动不要用这些东西，所以最后的方案是 wpa_supplicant + systemd-networkd 一把梭:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;/etc/systemd/network/10-wlan-dhcp.network.example&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 1. Generate wifi configuration (don't modify the name of wpa_supplicant-wlan0.conf file)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# $ wpa_passphrase MyNetwork SuperSecretPassphrase &amp;gt; /etc/wpa_supplicant/wpa_supplicant-wlan0.conf&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 2. Connect to wifi automatically after booting&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# $ systemctl enable wpa_supplicant@wlan0&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 3.Systemd automatically makes dhcp request&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# $ cp /etc/systemd/network/10-wlan-dhcp.network.example /etc/systemd/network/10-wlan-dhcp.network&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Match]
+&lt;span class=&quot;nv&quot;&gt;Name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;wlan&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Network]
+&lt;span class=&quot;nv&quot;&gt;DHCP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;yes&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;34内核调整&quot;&gt;3.4、内核调整&lt;/h3&gt;
+
+&lt;p&gt;在上面的一些调整完成后我就启动系统实体机测试了，测试过程中发现安装 docker 以后会有两个警告，大致意思就是不支持 swap limit 和 cpu limit；查询资料以后发现是内核有两个参数没开启(&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CONFIG_MEMCG_SWAP&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CONFIG_CFS_BANDWIDTH&lt;/code&gt;)…当然我这种强迫症是不能忍的，没办法就自己在 rpi4 上重新编译了内核(后来我想想还不如用 arch 32bit 然后自己编译 64bit 内核了):&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/mritd/linux-rpi4.git
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;linux-rpi4
+&lt;span class=&quot;nv&quot;&gt;MAKEFLAGS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'-j4'&lt;/span&gt; makepkg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;35外壳驱动&quot;&gt;3.5、外壳驱动&lt;/h3&gt;
+
+&lt;p&gt;由于我的 rpi4 配的是 ARGON ONE 的外壳，所以电源按钮还有风扇需要驱动才能完美工作，没办法我又编译了 ARGON ONE 外壳的驱动:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/mritd/argonone.git
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;argonone
+makepkg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;四定制脚本&quot;&gt;四、定制脚本&lt;/h2&gt;
+
+&lt;p&gt;综合以上的各种修改以后，我从 manjaro-arm-tool 提取出了定制化的 rpi4 的编译脚本，该脚本目前存放在 &lt;a href=&quot;https://github.com/mritd/manjaro-rpi4&quot;&gt;mritd/manjaro-rpi4&lt;/a&gt; 仓库中；目前使用此脚本编译的系统镜像默认进行了以下处理:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;调整 pacman mirror 为中国&lt;/li&gt;
+  &lt;li&gt;安装常用软件包(zsh htop vim wget which…)&lt;/li&gt;
+  &lt;li&gt;有线网络完全的 systemd-networkd 接管，resolv.conf 由 systemd-resolved 接管&lt;/li&gt;
+  &lt;li&gt;无线网络由 wpa_supplicant 和 systemd-networkd 接管&lt;/li&gt;
+  &lt;li&gt;安装自行编译的内核以消除 docker 警告(&lt;strong&gt;自编译内核不影响升级，升级/覆盖安装后自动恢复&lt;/strong&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;至于 ARGON ONE 的外壳驱动只在 resources 目录下提供了安装包，并未默认安装到系统。&lt;/p&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Sun, 28 Jun 2020 21:59:15 +0800</pubDate>
+        <link>https://mritd.me/2020/06/28/make-a-custom-manjaro-image-for-rpi4/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/06/28/make-a-custom-manjaro-image-for-rpi4/</guid>
+        
+        <category>Linux</category>
+        
+        
+        <category>Linux</category>
+        
+      </item>
     
       <item>
         <title>如何在 Filebeat 端进行日志处理</title>
@@ -3113,67 +3247,6 @@ Enter password:
         
         
         <category>Golang</category>
-        
-      </item>
-    
-      <item>
-        <title>Podman 初试 - 容器发展史</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;这是一篇纯介绍性文章，本文不包含任何技术层面的操作，本文仅作为后续 Podman 文章铺垫；本文细节部份并未阐述，很多地方并不详实(一家只谈，不可轻信)。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;一缘起&quot;&gt;一、缘起&lt;/h2&gt;
-
-&lt;h3 id=&quot;11鸿蒙&quot;&gt;1.1、鸿蒙&lt;/h3&gt;
-
-&lt;p&gt;在上古时期，天地初开，一群称之为 “运维” 的人们每天在一种叫作 “服务器” 的神秘盒子中创造属于他们的世界；他们在这个世界中每日劳作，一遍又一遍的写入他们的历史，比如搭建一个 nginx、布署一个 java web 应用…&lt;/p&gt;
-
-&lt;p&gt;大多数人其实并没有那么聪明，他们所 “创造” 的事实上可能是有人已经创造过的东西，他们可能每天都在做着重复的劳动；久而久之，一些人厌倦了、疲惫了…又过了一段时间，一些功力深厚的老前辈创造了一些批量布署工具来帮助人们做一些重复性的劳动，这些工具被起名为 “Asible”、”Chef”、”Puppet” 等等…&lt;/p&gt;
-
-&lt;p&gt;而随着时代的发展，”世界” 变得越来越复杂，运维们需要处理的事情越来越多，比如各种网络、磁盘环境的隔离，各种应用服务的高可用…在时代的洪流下，运维们急需要一种简单高效的布署工具，既能有一定的隔离性，又能方便使用，并且最大程度降低重复劳动来提升效率。&lt;/p&gt;
-
-&lt;h3 id=&quot;12创世&quot;&gt;1.2、创世&lt;/h3&gt;
-
-&lt;p&gt;在时代洪流的冲击下，一位名为 “Solomon Hykes” 的人异军突起，他创造了一个称之为 Docker 的工具，Docker 被创造以后就以灭世之威向运维们展示了它的强大；一个战斗力只有 5 的运维只需要学习 Docker 很短时间就可以完成资深运维们才能完成的事情，在某些情况下以前需要 1 天才能完成的工作使用 Docker 后几分钟就可以完成；此时运维们已经意识到 “新的时代” 开启了，接下来 Docker 开源并被整个运维界人们使用，Docker 也不断地完善增加各种各样的功能，此后世界正式进入 “容器纪元”。&lt;/p&gt;
-
-&lt;h2 id=&quot;二纷争&quot;&gt;二、纷争&lt;/h2&gt;
-
-&lt;h3 id=&quot;21发展&quot;&gt;2.1、发展&lt;/h3&gt;
-
-&lt;p&gt;随着 Docker 的日益成熟，一些人开始在 Docker 之上创造更加强大的工具，一些人开始在 Docker 之下为其提供更稳定的运行环境…&lt;/p&gt;
-
-&lt;p&gt;其中一个叫作 Google 的公司在 Docker 之上创建了名为 “Kuberentes” 的工具，Kubernetes 操纵 Docker 完成更加复杂的任务；Kubernetes 的出现更加印证了 Docker 的强大，以及 “容器纪元” 的发展正确性。&lt;/p&gt;
-
-&lt;h3 id=&quot;22野心&quot;&gt;2.2、野心&lt;/h3&gt;
-
-&lt;p&gt;当然这是一个充满利益的世界，Google 公司创造 Kubernetes 是可以为他们带来利益的，比如他们可以让 Kubernetes 深度适配他们的云平台，以此来增加云平台的销量等；此时 Docker 创始人也成立了一个公司，提供 Docker 的付费服务以及深度定制等；不过值得一提的是 Docker 公司提供的付费服务始终没有 Kubernetes 为 Google 公司带来的利益高，所以在利益的驱使下，Docker 公司开始动起了歪心思: &lt;strong&gt;创造一个 Kubernetes 的替代品，利用用户粘度复制 Kubernetes 的成功，从 Google 嘴里抢下这块蛋糕！&lt;/strong&gt;此时 Docker 公司只想把蛋糕抢过来，但是他们根本没有在意到暗中一群人创造了一个叫 “rkt” 的东西也在妄图夺走他们嘴里的蛋糕。&lt;/p&gt;
-
-&lt;h3 id=&quot;23冲突&quot;&gt;2.3、冲突&lt;/h3&gt;
-
-&lt;p&gt;在一段时间的沉默后，Docker 公司又创造了 “Swarm” 这个工具，妄图夺走 Google 公司利用 Kubernetes 赢来的蛋糕；当然，Google 这个公司极其庞大，人数众多，而且在这个社会有很大的影响地位…&lt;/p&gt;
-
-&lt;p&gt;终于，巨人苏醒了，Google 联合了 Redhat、Microsoft、IBM、Intel、Cisco 等公司决定对这个爱动歪脑筋的 Docker 公司进行制裁；当然制裁的手段不能过于暴力，那样会让别人落下把柄，成为别人的笑料，被人所不耻；&lt;strong&gt;最总他们决定制订规范，成立组织，明确规定 Docker 的角色，以及它应当拥有的能力，这些规范包括但不限于 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CRI&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CNI&lt;/code&gt; 等；自此之后各大公司宣布他们容器相关的工具只兼容 CRI 等相关标准，无论是 Docker 还是 rkt 等工具，只要实现了这些标准，就可以配合这些容器工具进行使用&lt;/strong&gt;。&lt;/p&gt;
-
-&lt;h2 id=&quot;三成败&quot;&gt;三、成败&lt;/h2&gt;
-
-&lt;p&gt;自此之后，Docker 跌下神坛，各路大神纷纷创造满足 CRI 等规范的工具用来取代 Docker，Docker 丢失了往日一家独大的场面，最终为了顺应时代发展，拆分自己成为模块化组件；这些模块化组件被放置在 &lt;a href=&quot;https://mobyproject.org/&quot;&gt;mobyproject&lt;/a&gt; 中方便其他人重复利用。&lt;/p&gt;
-
-&lt;p&gt;时至今日，虽然 Docker 已经不负以前，但是仍然是容器化首选工具，因为 Docker 是一个完整的产品，它可以提供除了满足 CRI 等标准以外更加方便的功能；但是制裁并非没有结果，Google 公司借此创造了 cri-o 用来满足 CRI 标准，其他公司也相应创建了对应的 CRI 实现；&lt;strong&gt;为了进一步分化 Docker 势力，一个叫作 Podman 的工具被创建，它以 cri-o 为基础，兼容大部份 Docker 命令的方式开始抢夺 Dcoker 用户&lt;/strong&gt;；到目前为止 Podman 已经可以在大部份功能上替代 Docker。&lt;/p&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Wed, 26 Jun 2019 23:22:49 +0800</pubDate>
-        <link>https://mritd.me/2019/06/26/podman-history-of-container/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/06/26/podman-history-of-container/</guid>
-        
-        <category>Docker</category>
-        
-        <category>Podman</category>
-        
-        
-        <category>Docker</category>
-        
-        <category>Podman</category>
         
       </item>
     
