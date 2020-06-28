@@ -177,6 +177,37 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2019/10/16/golang-etcd-client-example/">
+        <h2 class="post-title">
+            Golang Etcd client example
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  准备开发点东西，需要用到 Etcd，由于生产 Etcd 全部开启了 TLS 加密，所以客户端需要相应修改，以下为 Golang 链接 Etcd 并且使用客户端证书验证的样例代码
+
+
+API V2
+
+package main
+
+import (
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"log"
+	"net"
+	"net...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 16, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2019/06/26/podman-history-of-container/">
         <h2 class="post-title">
             Podman 初试 - 容器发展史
@@ -416,32 +447,6 @@ Usage: hey [o...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2018/11/25/kubeadm-remote-debug/">
-        <h2 class="post-title">
-            远程 Debug kubeadm
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近在看 kubeadm 的源码，不过有些东西光看代码还是没法太清楚，还是需要实际运行才能看到具体代码怎么跑的，还得打断点 debug；无奈的是本机是 mac，debug 得在 Linux 下，so 研究了一下 remote debug
-
-
-一、环境准备
-
-
-  GoLand 2018.2.4
-  Golang 1.11.2
-  delve v1.1.0
-  Kubernetest m...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on November 25, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -512,7 +517,7 @@ Usage: hey [o...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
                                     Kubernetes
                                 </a>
                             

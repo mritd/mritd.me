@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/06/28/how-to-write-a-csi-driver-for-kubernetes/">
+        <h2 class="post-title">
+            如何编写 CSI 插件
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  本篇文章详细介绍 CSI 插件，同时涉及到的源码比较多，主要倾向于使用 go 来开发 CSI 驱动。
+
+
+一、为什么需要 CSI
+
+在 Kubernetes 以前的版本中，其所有受官方支持的存储驱动全部在 Kubernetes 的主干代码中，其他第三方开发的自定义插件通过 FlexVolume 插件的形势提供服务；相对于 kubernetes 的源码树来说，内置的存储我们称之为 “树内...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on June 28, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2020/06/28/make-a-custom-manjaro-image-for-rpi4/">
         <h2 class="post-title">
             树莓派4 Manjaro 系统定制
@@ -389,37 +411,6 @@ CoreDNS 目前是 CNCF 旗下的项目(已毕业...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/10/16/golang-etcd-client-example/">
-        <h2 class="post-title">
-            Golang Etcd client example
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  准备开发点东西，需要用到 Etcd，由于生产 Etcd 全部开启了 TLS 加密，所以客户端需要相应修改，以下为 Golang 链接 Etcd 并且使用客户端证书验证的样例代码
-
-
-API V2
-
-package main
-
-import (
-	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
-	"log"
-	"net"
-	"net...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on October 16, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -486,7 +477,7 @@ import (
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
                                     Kubernetes
                                 </a>
                             

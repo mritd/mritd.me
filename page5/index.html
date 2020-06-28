@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/">
+        <h2 class="post-title">
+            Kubernetes 1.8 kube-proxy 开启 ipvs
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  Kubernetes 1.8 发布已经好几天，1.8 对于 kube-proxy 组件增加了 ipvs 支持，以下记录一下 kube-proxy ipvs 开启教程
+
+
+一、环境准备
+
+目前测试为 5 台虚拟机，CentOS 系统，etcd、kubernetes 全部采用 rpm 安装，使用 systemd 来做管理，网络组件采用 calico，Master 实现了 HA；基本环境如下...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on October 10, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/10/09/set-up-kubernetes-1.8-ha-cluster/">
         <h2 class="post-title">
             Kubernetes 1.8 集群搭建
@@ -384,28 +406,6 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/06/03/use-ceph-storage-on-kubernetes/">
-        <h2 class="post-title">
-            Kubernetes 使用 Ceph 存储
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  本文主要记录一下 Kubernetes 使用 Ceph 存储的相关配置过程，Kubernetes 集群环境采用的 kargo 部署方式，并且所有组件以容器化运行
-
-
-一、基础环境准备
-
-Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采用 kargo 部署时确保配置中开启内核模块加载( kubelet_load_modules: true )；Kubern...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on June 3, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -476,7 +476,7 @@ Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，采�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
                                     Kubernetes
                                 </a>
                             

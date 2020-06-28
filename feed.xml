@@ -5,9 +5,449 @@
     <description>Nothing is impossible to a willing heart!</description>
     <link>https://mritd.me/</link>
     <atom:link href="https://mritd.me/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Sun, 28 Jun 2020 22:00:42 +0800</pubDate>
-    <lastBuildDate>Sun, 28 Jun 2020 22:00:42 +0800</lastBuildDate>
+    <pubDate>Sun, 28 Jun 2020 22:03:56 +0800</pubDate>
+    <lastBuildDate>Sun, 28 Jun 2020 22:03:56 +0800</lastBuildDate>
     <generator>Jekyll v4.1.0</generator>
+    
+      <item>
+        <title>如何编写 CSI 插件</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;本篇文章详细介绍 CSI 插件，同时涉及到的源码比较多，主要倾向于使用 go 来开发 CSI 驱动。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一为什么需要-csi&quot;&gt;一、为什么需要 CSI&lt;/h2&gt;
+
+&lt;p&gt;在 Kubernetes 以前的版本中，其所有受官方支持的存储驱动全部在 Kubernetes 的主干代码中，其他第三方开发的自定义插件通过 &lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/devel/sig-storage/flexvolume.md&quot;&gt;FlexVolume&lt;/a&gt; 插件的形势提供服务；&lt;strong&gt;相对于 kubernetes 的源码树来说，内置的存储我们称之为 “树内存储”，外部第三方实现我们称之为 “树外存储”；&lt;/strong&gt;在很长一段时间里树内存储和树外存储并行开发和使用，但是随着时间推移渐渐的就出现了很严重的问题:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;想要添加官方支持的存储必须在树内修改，这意味着需要 Kubernetes 发版&lt;/li&gt;
+  &lt;li&gt;如果树内存储出现问题则也必须等待 Kubernetes 发版才能修复&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;为了解决这种尴尬的问题，Kubernetes 必须抽象出一个合适的存储接口，并将所有存储驱动全部适配到这个接口上，存储驱动最好与 Kubernetes 之间进行 RPC 调用完成解耦，这样就造就了 CSI(Container Storage Interface)。&lt;/p&gt;
+
+&lt;h2 id=&quot;二csi-基础知识&quot;&gt;二、CSI 基础知识&lt;/h2&gt;
+
+&lt;h3 id=&quot;21csi-sidecar-containers&quot;&gt;2.1、CSI Sidecar Containers&lt;/h3&gt;
+
+&lt;p&gt;在开发 CSI 之前我们最好熟悉一下 CSI 开发中的一些常识；了解过 Kubernetes API 开发的朋友应该清楚，所有的资源定义(Deployment、Service…)在 Kubernetes 中其实就是一个 Object，此时可以将 Kubernetes 看作是一个 Database，无论是 Operator 还是 CSI 其核心本质都是不停的 Watch 特定的 Object，一但 kubectl 或者其他客户端 “动了” 这个 Object，我们的对应实现程序就 Watch 到变更然后作出相应的响应；&lt;strong&gt;对于 CSI 编写者来说，这些 Watch 动作已经不必自己实现 &lt;a href=&quot;https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers&quot;&gt;Custom Controller&lt;/a&gt;，官方为我们提供了 &lt;a href=&quot;https://kubernetes-csi.github.io/docs/sidecar-containers.html&quot;&gt;CSI Sidecar Containers&lt;/a&gt;；&lt;/strong&gt;并且在新版本中这些 Sidecar Containers 实现极其完善，比如自动的多节点 HA(Etcd 选举)等。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;所以到迄今为止，所谓的 CSI 插件开发事实上并非面向 Kubernetes API 开发，而是面向 Sidecar Containers 的 gRPC 开发，Sidecar Containers 一般会和我们自己开发的 CSI 驱动程序在同一个 Pod 中启动，然后 Sidecar Containers Watch API 中 CSI 相关 Object 的变动，接着通过本地 unix 套接字调用我们编写的 CSI 驱动：&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/10w5g.png&quot; alt=&quot;CSI_Sidecar_Containers&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;目前官方提供的 Sidecar Containers 如下:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/external-provisioner.html&quot;&gt;external-provisioner&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/external-attacher.html&quot;&gt;external-attacher&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/external-snapshotter.html&quot;&gt;external-snapshotter&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/external-resizer.html&quot;&gt;external-resizer&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/node-driver-registrar.html&quot;&gt;node-driver-registrar&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/cluster-driver-registrar.html&quot;&gt;cluster-driver-registrar (deprecated)&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes-csi.github.io/docs/livenessprobe.html&quot;&gt;livenessprobe&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;每个 Sidecar Container 的作用可以通过对应链接查看，需要注意的是 cluster-driver-registrar 已经停止维护，请改用 node-driver-registrar。&lt;/p&gt;
+
+&lt;h3 id=&quot;22csi-处理阶段&quot;&gt;2.2、CSI 处理阶段&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;在理解了 CSI Sidecar Containers 以后，我们仍需要大致的了解 CSI 挂载过程中的大致流程，以此来针对性的实现每个阶段所需要的功能；CSI 整个流程实际上大致分为以下三大阶段:&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;221provisioning-and-deleting&quot;&gt;2.2.1、Provisioning and Deleting&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#provisioning-and-deleting&quot;&gt;Provisioning and Deleting&lt;/a&gt; 阶段实现与外部存储供应商协调卷的创建/删除处理，简单地说就是需要实现 CreateVolume 和 DeleteVolume；假设外部存储供应商为阿里云存储那么此阶段应该完成在阿里云存储商创建一个指定大小的块设备，或者在用户删除 volume 时完成在阿里云存储上删除这个块设备；除此之外此阶段还应当响应存储拓扑分布从而保证 volume 分布在正确的集群拓扑上(此处描述不算清晰，推荐查看设计文档)。&lt;/p&gt;
+
+&lt;h4 id=&quot;222attaching-and-detaching&quot;&gt;2.2.2、Attaching and Detaching&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#attaching-and-detaching&quot;&gt;Attaching and Detaching&lt;/a&gt; 阶段实现将外部存储供应商提供好的卷设备挂载到本地或者从本地卸载，简单地说就是实现 ControllerPublishVolume 和 ControllerUnpublishVolume；同样以外部存储供应商为阿里云存储为例，在 Provisioning 阶段创建好的卷的块设备，在此阶段应该实现将其挂载到服务器本地或从本地卸载，在必要的情况下还需要进行格式化等操作。&lt;/p&gt;
+
+&lt;h4 id=&quot;223mount-and-umount&quot;&gt;2.2.3、Mount and Umount&lt;/h4&gt;
+
+&lt;p&gt;这个阶段在 CSI 设计文档中没有做详细描述，在前两个阶段完成后，当一个目标 Pod 在某个 Node 节点上调度时，kubelet 会根据前两个阶段返回的结果来创建这个 Pod；同样以外部存储供应商为阿里云存储为例，此阶段将会把已经 Attaching 的本地块设备以目录形式挂载到 Pod 中或者从 Pod 中卸载这个块设备。&lt;/p&gt;
+
+&lt;h3 id=&quot;23csi-grpc-server&quot;&gt;2.3、CSI gRPC Server&lt;/h3&gt;
+
+&lt;p&gt;CSI 的三大阶段实际上更细粒度的划分到 CSI Sidecar Containers 中，上面已经说过我们开发 CSI 实际上是面向 CSI Sidecar Containers 编程，针对于 CSI Sidecar Containers 我们主要需要实现以下三个 gRPC Server:&lt;/p&gt;
+
+&lt;h4 id=&quot;231identity-server&quot;&gt;2.3.1、Identity Server&lt;/h4&gt;
+
+&lt;p&gt;在当前 CSI Spec v1.3.0 中 IdentityServer 定义如下:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;// IdentityServer is the server API for Identity service.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IdentityServer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;GetPluginInfo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetPluginInfoRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetPluginInfoResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;GetPluginCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetPluginCapabilitiesRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetPluginCapabilitiesResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Probe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ProbeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ProbeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;从代码上可以看出 IdentityServer 主要负责像 Kubernetes 提供 CSI 插件名称可选功能等，所以此 Server 是必须实现的。&lt;/p&gt;
+
+&lt;h4 id=&quot;232node-server&quot;&gt;2.3.2、Node Server&lt;/h4&gt;
+
+&lt;p&gt;同样当前 CSI v1.3.0 Spec 中 NodeServer 定义如下:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;// NodeServer is the server API for Node service.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NodeServer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeStageVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeStageVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeStageVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeUnstageVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeUnstageVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeUnstageVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodePublishVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodePublishVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodePublishVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeUnpublishVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeUnpublishVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeUnpublishVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeGetVolumeStats&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetVolumeStatsRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetVolumeStatsResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeExpandVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeExpandVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeExpandVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeGetCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetCapabilitiesRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetCapabilitiesResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeGetInfo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetInfoRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NodeGetInfoResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在最小化的实现中，NodeServer 中仅仅需要实现 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodePublishVolume&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeUnpublishVolume&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeGetCapabilities&lt;/code&gt; 三个方法，在 Mount 阶段 kubelet 会通过 &lt;a href=&quot;https://kubernetes-csi.github.io/docs/node-driver-registrar.html&quot;&gt;node-driver-registrar&lt;/a&gt; 容器调用这三个方法。&lt;/p&gt;
+
+&lt;h4 id=&quot;233controller-server&quot;&gt;2.3.3、Controller Server&lt;/h4&gt;
+
+&lt;p&gt;在当前 CSI Spec v1.3.0 ControllerServer 定义如下:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;// ControllerServer is the server API for Controller service.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;CreateVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CreateVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CreateVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;DeleteVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeleteVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeleteVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerPublishVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerPublishVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerPublishVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerUnpublishVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerUnpublishVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerUnpublishVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ValidateVolumeCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ValidateVolumeCapabilitiesRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ValidateVolumeCapabilitiesResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ListVolumes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListVolumesRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListVolumesResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;GetCapacity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetCapacityRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetCapacityResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerGetCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerGetCapabilitiesRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerGetCapabilitiesResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;CreateSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CreateSnapshotRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CreateSnapshotResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;DeleteSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeleteSnapshotRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeleteSnapshotResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ListSnapshots&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListSnapshotsRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ListSnapshotsResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerExpandVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerExpandVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerExpandVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerGetVolume&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerGetVolumeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerGetVolumeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;从这些方法上可以看出，大部分的核心逻辑应该在 ControllerServer 中实现，比如创建/销毁 Volume，创建/销毁 Snapshot 等；在一般情况下我们自己编写的 CSI 都会实现 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateVolume&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DeleteVolume&lt;/code&gt;，至于其他方法根据业务需求以及外部存储供应商实际情况来决定是否进行实现。&lt;/p&gt;
+
+&lt;h4 id=&quot;234整体部署加构图&quot;&gt;2.3.4、整体部署加构图&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/vopox.jpg&quot; alt=&quot;CSI Deploy Mechanism&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;从这个部署架构图上可以看出在实际上 CSI 部署时，Mount and Umount 阶段(对应 Node Server 实现)以 Daemonset 方式保证其部署到每个节点，当 Volume 创建完成后由其挂载到 Pod 中；其他阶段(Provisioning and Deleting 和 Attaching and Detaching) 只要部署多个实例保证 HA 即可(最新版本的 Sidecar Containers 已经实现了多节点自动选举)；每次 PV 创建时首先由其他两个阶段的 Sidecar Containers 做处理，处理完成后信息返回给 Kubernetes 再传递到 Node Driver(Node Server) 上，然后 Node Driver 将其 Mount 到 Pod 中。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;三编写一个-nfs-csi-插件&quot;&gt;三、编写一个 NFS CSI 插件&lt;/h2&gt;
+
+&lt;h3 id=&quot;31前置准备及分析&quot;&gt;3.1、前置准备及分析&lt;/h3&gt;
+
+&lt;p&gt;根据以上文档的描述，针对于需要编写一个 NFS CSI 插件这个需求，大致我们可以作出如下分析:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;三大阶段中我们只需要实现 Provisioning and Deleting 和 Mount and Umount；因为以 NFS 作为外部存储供应商来说我们并非是块设备，所以也不需要挂载到宿主机(Attaching and Detaching)。&lt;/li&gt;
+  &lt;li&gt;Provisioning and Deleting 阶段我们需要实现 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateVolume&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DeleteVolume&lt;/code&gt; 逻辑，其核心逻辑应该是针对每个 PV 在 NFS Server 目录下执行 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mkdir&lt;/code&gt;，并将生成的目录名称等信息返回给 Kubernetes。&lt;/li&gt;
+  &lt;li&gt;Mount and Umount 阶段需要实现 Node Server 的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodePublishVolume&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeUnpublishVolume&lt;/code&gt; 方法，然后将上一阶段提供的目录名称等信息组合成挂载命令 Mount 到 Pod 即可。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;在明确了这个需求以后我们需要开始编写 gRPC Server，当然不能盲目的自己乱造轮子，&lt;strong&gt;因为这些 gRPC Server 需要是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NonBlocking&lt;/code&gt; 的，&lt;/strong&gt;所以最佳实践就是参考官方给出的样例项目 &lt;a href=&quot;https://github.com/kubernetes-csi/csi-driver-host-path&quot;&gt;csi-driver-host-path&lt;/a&gt;，这是一名合格的 CCE 必备的技能(CCE = Ctrl C + Ctrl V + Engineer)。&lt;/p&gt;
+
+&lt;h3 id=&quot;32hostpath-csi-源码分析&quot;&gt;3.2、Hostpath CSI 源码分析&lt;/h3&gt;
+
+&lt;p&gt;针对官方给出的 CSI 样例，首先把源码弄到本地，然后通过 IDE 打开；这里默认为读者熟悉 Go 语言相关语法以及 go mod 等依赖配置，开发 IDE 默认为 GoLand&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/jlsdg.png&quot; alt=&quot;source tree&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;从源码树上可以看到，hostpath 的 CSI 实现非常简单；首先是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包下的命令行部分，main 方法在这里定义，然后就是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pkg/hostpath&lt;/code&gt; 包的具体实现部分，CSI 需要实现的三大 gRPC Server 全部在此。&lt;/p&gt;
+
+&lt;h4 id=&quot;321命令行解析&quot;&gt;3.2.1、命令行解析&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包下主要代码就是一些命令行解析，方便从外部传入一些参数供 CSI 使用；针对于 NFS CSI 我们需要从外部传入 NFS Server 地址、挂载目录等参数，如果外部存储供应商为其他云存储可能就需要从命令行传入 AccessKey、AccessToken 等参数。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/t4mje.png&quot; alt=&quot;flag_parse&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;目前 go 原生的命令行解析非常弱鸡，所以更推荐使用 &lt;a href=&quot;https://github.com/spf13/cobra&quot;&gt;cobra&lt;/a&gt; 命令行库完成解析。&lt;/p&gt;
+
+&lt;h4 id=&quot;322hostpath-结构体&quot;&gt;3.2.2、Hostpath 结构体&lt;/h4&gt;
+
+&lt;p&gt;从上面命令行解析的图中可以看到，在完成命令行解析后交由 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;handle&lt;/code&gt; 方法处理；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;handle&lt;/code&gt; 方法很简单，通过命令行拿到的参数创建一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hostpath&lt;/code&gt; 结构体指针，然后 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Run&lt;/code&gt; 起来就行了，所以接下来要着重看一下这个结构体&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/0dc0j.png&quot; alt=&quot;hostpath_struct&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;从代码上可以看到，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hostpath&lt;/code&gt; 结构体内有一系列的字段用来存储命令行传入的特定参数，然后还有三个 gRPC Server 的引用；命令行参数解析完成后通过 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NewHostPathDriver&lt;/code&gt; 方法设置到 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hostpath&lt;/code&gt; 结构体内，然后通过调用结构体的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Run&lt;/code&gt; 方法创建三个 gRPC Server 并运行&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/wt4ha.png&quot; alt=&quot;hostpath_run&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;323代码分布&quot;&gt;3.2.3、代码分布&lt;/h4&gt;
+
+&lt;p&gt;经过这么简单的一看，基本上一个最小化的 CSI 代码分布已经可以出来了:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;首先需要做命令行解析，一般放在 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmd&lt;/code&gt; 包&lt;/li&gt;
+  &lt;li&gt;然后需要一个一般与 CSI 插件名称相同的结构体用来承载参数&lt;/li&gt;
+  &lt;li&gt;结构体内持有三个 gRPC Server 引用，并通过适当的方法使用内部参数还初始化这个三个 gRPC Server&lt;/li&gt;
+  &lt;li&gt;有了这些 gRPC Server 以后通过 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server.go&lt;/code&gt; 中的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NewNonBlockingGRPCServer&lt;/code&gt; 方法将其启动(这里也可以看出 server.go 里面的方法我们后面可以 copy 直接用)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;33创建-csi-插件骨架&quot;&gt;3.3、创建 CSI 插件骨架&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;项目骨架已经提交到 Github &lt;a href=&quot;https://github.com/mritd/csi-archetype&quot;&gt;mritd/csi-archetype&lt;/a&gt; 项目，可直接 clone 并使用。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;大致的研究完 Hostpath 的 CSI 源码，我们就可以根据其实现细节抽象出一个项目 CSI 骨架:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/7y8qu.png&quot; alt=&quot;csi_archetype&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;在这个骨架中我们采用 &lt;a href=&quot;https://github.com/spf13/cobra&quot;&gt;corba&lt;/a&gt; 完成命令行参数解析，同时使用 &lt;a href=&quot;github.com/sirupsen/logrus&quot;&gt;logrus&lt;/a&gt; 作为日志输出库，这两个库都是 Kubernetes 以及 docker 比较常用的库；我们创建了一个叫 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;archetype&lt;/code&gt; 的结构体作为 CSI 的主承载类，这个结构体需要定义一些参数(parameter1…)方便后面初始化相关 gRPC Server 实现相关调用。&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;archetype&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;     &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;nodeID&lt;/span&gt;   &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+
+	&lt;span class=&quot;c&quot;&gt;// Add CSI plugin parameters here&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;parameter1&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;parameter2&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;parameter3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Duration&lt;/span&gt;
+
+	&lt;span class=&quot;nb&quot;&gt;cap&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VolumeCapability_AccessMode&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;cscap&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;与 Hostpath CSI 实现相同，我们创建一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NewCSIDriver&lt;/code&gt; 方法来返回 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;archetype&lt;/code&gt; 结构体实例，在 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NewCSIDriver&lt;/code&gt; 方法中将命令行解析得到的相关参数设置进结构体中并添加一些 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AccessModes&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ServiceCapabilities&lt;/code&gt; 方便后面 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Identity Server&lt;/code&gt; 调用。&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NewCSIDriver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nodeID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter1&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter2&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Duration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;archetype&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Infof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Driver: %s version: %s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;driverName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+	&lt;span class=&quot;c&quot;&gt;// Add some check here&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;logrus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parameter1 is empty&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;archetype&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;driverName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;nodeID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;nodeID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+
+		&lt;span class=&quot;n&quot;&gt;parameter1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;parameter2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;parameter3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parameter3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;c&quot;&gt;// Add access modes for CSI here&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AddVolumeCapabilityAccessModes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VolumeCapability_AccessMode_Mode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+	&lt;span class=&quot;c&quot;&gt;// Add service capabilities for CSI here&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AddControllerServiceCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;整个骨架源码树中，命令行解析自己重构使用一些更加方便的命令行解析、日志输出库；结构体部分参考 Hostpath 结构体自己调整，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server.go&lt;/code&gt; 用来创建 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NonBlocking&lt;/code&gt; 的 gRPC Server(直接从 Hotspath 样例项目 copy 即可)；然后就是三大 gRPC Server 的实现，由于是 “项目骨架” 所以相关方法我们都返回未实现，后续我们主要来实现这些方法就能让自己写的这个 CSI 插件 work。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/876sk.png&quot; alt=&quot;Unimplemented_gRPC_Server&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;34创建-nfs-csi-插件骨架&quot;&gt;3.4、创建 NFS CSI 插件骨架&lt;/h3&gt;
+
+&lt;p&gt;有了 CSI 的项目骨架以后，我们只需要简单地修改名字将其重命名为 NFS CSI 插件即可；由于这篇文章是先实现好了 NFS CSI(已经 work) 再来写的，所以 NFS CSI 的源码可以直接参考 &lt;a href=&quot;https://github.com/Gozap/csi-nfs&quot;&gt;Gozap/csi-nfs&lt;/a&gt; 即可，下面的部分主要介绍三大 gRPC Server 的实现&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/kk42j.png&quot; alt=&quot;csi-nfs&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;35实现-identity-server&quot;&gt;3.5、实现 Identity Server&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/r8etm.png&quot; alt=&quot;Identity Server&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Identity Server 实现相对简单，总共就三个接口；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GetPluginInfo&lt;/code&gt; 接口返回插件名称版本即可(注意版本号好像只能是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1.1.1&lt;/code&gt; 这种，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v1.1.1&lt;/code&gt; 好像会报错)；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Probe&lt;/code&gt; 接口用来做健康检测可以直接返回空 response 即可，当然最理想的情况应该是做一些业务逻辑判活；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GetPluginCapabilities&lt;/code&gt; 接口看起来简单但是要清楚返回的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Capabilities&lt;/code&gt; 含义，由于我们的 NFS 插件必然需要响应 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateVolume&lt;/code&gt; 等请求(实现 Controller Server)，所以 cap 必须给予 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PluginCapability_Service_CONTROLLER_SERVICE&lt;/code&gt;，除此之外如果节点不支持均匀的创建外部存储供应商的 Volume，那么应当同时返回 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PluginCapability_Service_VOLUME_ACCESSIBILITY_CONSTRAINTS&lt;/code&gt; 以表示 CSI 处理时需要根据集群拓扑作调整；具体的可以查看 gRPC 注释:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;PluginCapability_Service_UNKNOWN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PluginCapability_Service_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// CONTROLLER_SERVICE indicates that the Plugin provides RPCs for&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// the ControllerService. Plugins SHOULD provide this capability.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// In rare cases certain plugins MAY wish to omit the&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// ControllerService entirely from their implementation, but such&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// SHOULD NOT be the common case.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// The presence of this capability determines whether the CO will&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// attempt to invoke the REQUIRED ControllerService RPCs, as well&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// as specific RPCs as indicated by ControllerGetCapabilities.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;PluginCapability_Service_CONTROLLER_SERVICE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PluginCapability_Service_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// VOLUME_ACCESSIBILITY_CONSTRAINTS indicates that the volumes for&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// this plugin MAY NOT be equally accessible by all nodes in the&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// cluster. The CO MUST use the topology information returned by&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// CreateVolumeRequest along with the topology information&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// returned by NodeGetInfo to ensure that a given volume is&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// accessible from a given node when scheduling workloads.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;PluginCapability_Service_VOLUME_ACCESSIBILITY_CONSTRAINTS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PluginCapability_Service_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;36实现-controller-server&quot;&gt;3.6、实现 Controller Server&lt;/h3&gt;
+
+&lt;p&gt;Controller Server 实际上对应着 Provisioning and Deleting 阶段；换句话说核心的创建/删除卷、快照等都应在此做实现，针对于本次编写的 NFS 插件仅做最小实现(创建/删除卷)；需要注意的是除了核心的创建删除卷要实现以外还需要实现 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ControllerGetCapabilities&lt;/code&gt; 方法，该方法返回 Controller Server 的 cap:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/pl0n3.png&quot; alt=&quot;ControllerGetCapabilities&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ControllerGetCapabilities&lt;/code&gt; 返回的实际上是在创建驱动时设置的 cscap:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AddControllerServiceCapabilities&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;csi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME&lt;/code&gt; 表示这个 Controller Server 支持创建/删除卷，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT&lt;/code&gt; 表示支持创建/删除快照(快照功能是后来闲的没事加的)；&lt;strong&gt;应该明确的是我们返回了特定的 cap 那就要针对特定方法做实现，因为你一旦声明了这些 cap Kubernetes 就认为有相应请求可以让你处理(你不能吹完牛逼然后关键时刻掉链子)。&lt;/strong&gt;针对于可以返回哪些 cscap 可以通过这些 gRPC 常量来查看:&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_UNKNOWN&lt;/span&gt;                  &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_LIST_VOLUMES&lt;/span&gt;             &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_GET_CAPACITY&lt;/span&gt;             &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Currently the only way to consume a snapshot is to create&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// a volume from it. Therefore plugins supporting&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// CREATE_DELETE_SNAPSHOT MUST support creating volume from&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// snapshot.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_LIST_SNAPSHOTS&lt;/span&gt;         &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Plugins supporting volume cloning at the storage level MAY&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// report this capability. The source volume MUST be managed by&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// the same plugin. Not all volume sources and parameters&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// combinations MAY work.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_CLONE_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Indicates the SP supports ControllerPublishVolume.readonly&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// field.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_PUBLISH_READONLY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// See VolumeExpansion for details.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_EXPAND_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Indicates the SP supports the&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// ListVolumesResponse.entry.published_nodes field&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_LIST_VOLUMES_PUBLISHED_NODES&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Indicates that the Controller service can report volume&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// conditions.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// An SP MAY implement `VolumeCondition` in only the Controller&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Plugin, only the Node Plugin, or both.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// If `VolumeCondition` is implemented in both the Controller and&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Node Plugins, it SHALL report from different perspectives.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// If for some reason Controller and Node Plugins report&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// misaligned volume conditions, CO SHALL assume the worst case&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// is the truth.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Note that, for alpha, `VolumeCondition` is intended be&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// informative for humans only, not for automation.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_VOLUME_CONDITION&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;11&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Indicates the SP supports the ControllerGetVolume RPC.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// This enables COs to, for example, fetch per volume&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// condition after a volume is provisioned.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_GET_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ControllerServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;12&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;当声明了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME&lt;/code&gt; 以后针对创建删除卷方法 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateVolume&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DeleteVolume&lt;/code&gt; 做实现即可；这两个方法实现就是常规的业务逻辑层面没什么技术含量，对于外部存储供应商是 NFS 来说无非就是接到一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CreateVolumeRequest&lt;/code&gt; ，然后根据 request 给的 volume name 啥的信息自己执行一下在 NFS Server 上 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mkdir&lt;/code&gt; ，删除卷处理就是反向的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rm -rf dir&lt;/code&gt;；在两个方法的处理中可能额外掺杂一些校验等其他的辅助实现。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/jkhb6.png&quot; alt=&quot;CreateVolume&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/96ij8.png&quot; alt=&quot;DeleteVolume&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;最后有几点需要注意的地方:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;幂等性: Kubernetes 可能由于一些其他原因会重复发出请求(比如超时重试)，此时一定要保证创建/删除卷实现的幂等性，简单地说 Kubernetes 连续两次调用同一个卷创建 CSI 插件应当实现自动去重过滤，不能调用两次返回两个新卷。&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;数据回写: 要明白的是 Controller Server 是 Provisioning and Deleting 阶段，此时还没有真正挂载到 Pod，所以就本地使用 NFS 作为存储后端来说 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mkdir&lt;/code&gt; 以后要把目录、NFS Server 地址等必要信息通过 VolumeContext 返回给 Kubernetes，Kubernetes 接下来会传递给 Node Driver(Mount/Umount)用。&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;预挂载: 当然这个问题目前只存在在 NFS 作为存储后端中，问题核心在于在创建卷进行 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mkdir&lt;/code&gt; 之前，NFS 应该已经确保 mount 到了 Controller Server 容器本地，所以目前的做法就是启动 Controller Server 时就执行 NFS 挂载；如果用其他的后端存储比如阿里云存储时也要考虑在创建卷之前相关的 API Client 是否可用。&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;37实现-node-server&quot;&gt;3.7、实现 Node Server&lt;/h3&gt;
+
+&lt;p&gt;Node Server 实际上就是 Node Driver，简单地说当 Controller Server 完成一个卷的创建，并且已经 Attach 到 Node 以后(当然这里的 NFS 不需要 Attach)，Node Server 就需要实现根据给定的信息将卷 Mount 到 Pod 或者从 Pod Umount 掉卷；同样的 Node Server 也许要返回一些信息来告诉 Kubernetes 自己的详细情况，这部份由两个方法完成 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeGetInfo&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeGetCapabilities&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.oss.link/markdown/ts3l9.png&quot; alt=&quot;NodeGetInfo_NodeGetCapabilities&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeGetInfo&lt;/code&gt; 中返回节点的常规信息，比如 Node ID、最大允许的 Volume 数量、集群拓扑信息等；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeGetCapabilities&lt;/code&gt; 返回这个 Node 的 cap，由于我们的 NFS 是真的啥也不支持，所以只好返回 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeServiceCapability_RPC_UNKNOWN&lt;/code&gt;，至于其他的 cap 如下(含义自己看注释):&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_UNKNOWN&lt;/span&gt;              &lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// If Plugin implements GET_VOLUME_STATS capability&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// then it MUST implement NodeGetVolumeStats RPC&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// call for fetching volume statistics.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_GET_VOLUME_STATS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// See VolumeExpansion for details.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_EXPAND_VOLUME&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Indicates that the Node service can report volume conditions.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// An SP MAY implement `VolumeCondition` in only the Node&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Plugin, only the Controller Plugin, or both.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// If `VolumeCondition` is implemented in both the Node and&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Controller Plugins, it SHALL report from different&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// perspectives.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// If for some reason Node and Controller Plugins report&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// misaligned volume conditions, CO SHALL assume the worst case&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// is the truth.&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Note that, for alpha, `VolumeCondition` is intended to be&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// informative for humans only, not for automation.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_VOLUME_CONDITION&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NodeServiceCapability_RPC_Type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;剩下的核心方法 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodePublishVolume&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeUnpublishVolume&lt;/code&gt; 挂载/卸载卷同 Controller Server 创建删除卷一样都是业务处理，没啥可说的，按步就班的调用一下 Mount 上就行；&lt;strong&gt;唯一需要注意的点就是这里也要保证幂等性，同时由于要操作 Pod 目录，所以要把宿主机的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/kubelet/pods&lt;/code&gt; 目录挂载到 Node Server 容器里。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;38部署测试-nfs-插件&quot;&gt;3.8、部署测试 NFS 插件&lt;/h3&gt;
+
+&lt;p&gt;NFS 插件写完以后就可以实体环境做测试了，测试方法不同插件可能并不相同，本 NFS 插件可以直接使用源码项目的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;deploy&lt;/code&gt; 目录创建相关容器做测试(需要根据自己的 NFS Server 修改一些参数)。针对于如何部署下面做一下简单说明:&lt;/p&gt;
+
+&lt;p&gt;三大阶段笼统的其实对应着三个 Sidecar Container:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Provisioning and Deleting: external-provisioner&lt;/li&gt;
+  &lt;li&gt;Attaching and Detaching: external-attacher&lt;/li&gt;
+  &lt;li&gt;Mount and Umount: node-driver-registrar&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;我们的 NFS CSI 插件不需要 Attach，所以 external-attacher 也不需要部署；external-provisioner 只响应创建删除卷请求，所以通过 Deployment 部署足够多的复本保证 HA 就行；由于 Pod 不一定会落到那个节点上，理论上任意 Node 都可能有 Mount/Umount 行为，所以 node-driver-registrar 要以 Daemonset 方式部署保证每个节点都有一个。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;四其他说明&quot;&gt;四、其他说明&lt;/h2&gt;
+
+&lt;h3 id=&quot;41前期调试&quot;&gt;4.1、前期调试&lt;/h3&gt;
+
+&lt;p&gt;在前期代码编写时一般都是 “盲狙”，就是按照自己的理解无脑实现，这时候可能离实际部署还很远，但是只是单纯的想知道某个 Request 里面到底是什么个东西，这时候你可以利用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mritd/socket2tcp&lt;/code&gt; 容器模拟监听 socket 文件，然后将请求转发到你的 IDE 监听端口上，然后再进行 Debug。&lt;/p&gt;
+
+&lt;p&gt;可能有人会问: “我直接在 Sidecar Containers 里写个 tcp 地址不就行了，还转发毛线，这不是脱裤子放屁多此一举么？”，但是这里我友情提醒一下，Sidecar Containers 指定 CSI 地址时填写非 socket 类型的地址是不好使的，会直接启动失败。&lt;/p&gt;
+
+&lt;h3 id=&quot;42后期调试&quot;&gt;4.2、后期调试&lt;/h3&gt;
+
+&lt;p&gt;等到代码编写到后期其实就开始 “真机” 调试了，这时候其实不必使用原始的打日志调试方法，NFS CSI 的项目源码中的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dockerfile.debug&lt;/code&gt; 提供了使用 dlv 做远程调试的样例；具体怎么配合 IDE 做远程调试请自行 Google。&lt;/p&gt;
+
+&lt;h3 id=&quot;43其他功能实现&quot;&gt;4.3、其他功能实现&lt;/h3&gt;
+
+&lt;p&gt;其他功能根据需要可以自己酌情实现，比如创建/删除快照功能；对于 NFS 插件来说 NFS Server 又没有 API，所以最简单最 low 的办法当然是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tar -zcvf&lt;/code&gt; 了(哈哈哈(超大声))，当然性能么就不要提了。&lt;/p&gt;
+
+&lt;h2 id=&quot;五总结&quot;&gt;五、总结&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;CSI 开发其实是针对 Kubernetes CSI Sidecar Containers 的 gRPC 开发，根据自己需求实现三大阶段中对应三大 gRPC Server 相应方法即可；相关功能要保证幂等性，cap 要看文档根据实际情况返回。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;六参考文档&quot;&gt;六、参考文档&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;https://kubernetes-csi.github.io/docs/introduction.html&lt;/li&gt;
+  &lt;li&gt;https://github.com/container-storage-interface/spec&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
+</description>
+        <pubDate>Sun, 28 Jun 2020 22:02:12 +0800</pubDate>
+        <link>https://mritd.me/2020/06/28/how-to-write-a-csi-driver-for-kubernetes/</link>
+        <guid isPermaLink="true">https://mritd.me/2020/06/28/how-to-write-a-csi-driver-for-kubernetes/</guid>
+        
+        <category>Kubernetes</category>
+        
+        
+        <category>Kubernetes</category>
+        
+      </item>
     
       <item>
         <title>树莓派4 Manjaro 系统定制</title>
@@ -3063,185 +3503,6 @@ Enter password:
         <pubDate>Tue, 05 Nov 2019 20:55:53 +0800</pubDate>
         <link>https://mritd.me/2019/11/05/writing-plugin-for-coredns/</link>
         <guid isPermaLink="true">https://mritd.me/2019/11/05/writing-plugin-for-coredns/</guid>
-        
-        <category>Golang</category>
-        
-        
-        <category>Golang</category>
-        
-      </item>
-    
-      <item>
-        <title>Golang Etcd client example</title>
-        <description>&lt;blockquote&gt;
-  &lt;p&gt;准备开发点东西，需要用到 Etcd，由于生产 Etcd 全部开启了 TLS 加密，所以客户端需要相应修改，以下为 Golang 链接 Etcd 并且使用客户端证书验证的样例代码&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;api-v2&quot;&gt;API V2&lt;/h2&gt;
-
-&lt;div class=&quot;language-golang highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;package&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;context&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;crypto/tls&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;crypto/x509&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;io/ioutil&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;log&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;net&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;net/http&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;time&quot;&lt;/span&gt;
-
-	&lt;span class=&quot;s&quot;&gt;&quot;go.etcd.io/etcd/client&quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// 为了保证 HTTPS 链接可信，需要预先加载目标证书签发机构的 CA 根证书&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;etcdCA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ioutil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ReadFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd-root-ca.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// etcd 启用了双向 TLS 认证，所以客户端证书同样需要加载&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;etcdClientCert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LoadX509KeyPair&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd-key.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// 创建一个空的 CA Pool&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 因为后续只会链接 Etcd 的 api 端点，所以此处选择使用空的 CA Pool，然后只加入 Etcd CA 既可&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 如果期望链接其他 TLS 端点，那么最好使用 x509.SystemCertPool() 方法先 copy 一份系统根 CA&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 然后再向这个 Pool 中添加自定义 CA&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x509&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NewCertPool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AppendCertsFromPEM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;etcdCA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;cfg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// Etcd HTTPS api 端点&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;Endpoints&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https://172.16.14.114:2379&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// 自定义 Transport 实现自签 CA 加载以及 Client Cert 加载&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// 其他参数最好从 client.DefaultTranspor copy，以保证与默认 client 相同的行为&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;Transport&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Transport&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;Proxy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ProxyFromEnvironment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-			&lt;span class=&quot;c&quot;&gt;// Dial 方法已被启用，采用新的 DialContext 设置超时&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;DialContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Dialer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-				&lt;span class=&quot;n&quot;&gt;KeepAlive&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;30&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-				&lt;span class=&quot;n&quot;&gt;Timeout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;m&quot;&gt;30&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-			&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DialContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-			&lt;span class=&quot;c&quot;&gt;// 自定义 CA 及 Client Cert 配置&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;TLSClientConfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-				&lt;span class=&quot;n&quot;&gt;RootCAs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-				&lt;span class=&quot;n&quot;&gt;Certificates&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Certificate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;etcdClientCert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-			&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;TLSHandshakeTimeout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-		&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// set timeout per request to fail fast when the target endpoint is unavailable&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;HeaderTimeoutPerRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;New&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cfg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;kapi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NewKeysAPI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// set &quot;/foo&quot; key with &quot;bar&quot; value&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Setting '/foo' key with 'bar' value&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kapi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/foo&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bar&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// print common key info&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Set is done. Metadata is %q&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// get &quot;/foo&quot; key's value&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Getting '/foo' key value&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kapi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/foo&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// print common key info&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Get is done. Metadata is %q&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// print value&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%q key has %q value&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Node&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;resp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Node&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;api-v3&quot;&gt;API V3&lt;/h2&gt;
-
-&lt;div class=&quot;language-golang highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;package&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;context&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;crypto/tls&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;crypto/x509&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;io/ioutil&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;log&quot;&lt;/span&gt;
-	&lt;span class=&quot;s&quot;&gt;&quot;time&quot;&lt;/span&gt;
-
-	&lt;span class=&quot;s&quot;&gt;&quot;go.etcd.io/etcd/clientv3&quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// 为了保证 HTTPS 链接可信，需要预先加载目标证书签发机构的 CA 根证书&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;etcdCA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ioutil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ReadFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd-root-ca.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// etcd 启用了双向 TLS 认证，所以客户端证书同样需要加载&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;etcdClientCert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LoadX509KeyPair&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/Users/mritd/tmp/etcd_ssl/etcd-key.pem&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// 创建一个空的 CA Pool&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 因为后续只会链接 Etcd 的 api 端点，所以此处选择使用空的 CA Pool，然后只加入 Etcd CA 既可&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 如果期望链接其他 TLS 端点，那么最好使用 x509.SystemCertPool() 方法先 copy 一份系统根 CA&lt;/span&gt;
-	&lt;span class=&quot;c&quot;&gt;// 然后再向这个 Pool 中添加自定义 CA&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x509&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;NewCertPool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AppendCertsFromPEM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;etcdCA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-	&lt;span class=&quot;c&quot;&gt;// 创建 api v3 的 client&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cli&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clientv3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;New&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clientv3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// etcd https api 端点&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;Endpoints&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https://172.16.14.114:2379&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;DialTimeout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-		&lt;span class=&quot;c&quot;&gt;// 自定义 CA 及 Client Cert 配置&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;TLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;RootCAs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;rootCertPool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-			&lt;span class=&quot;n&quot;&gt;Certificates&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tls&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Certificate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;etcdClientCert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-		&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;defer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cli&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}()&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;ctx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cancel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WithTimeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;putResp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cli&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Put&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ctx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;sample_key&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;sample_value&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;putResp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cancel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-	&lt;span class=&quot;n&quot;&gt;ctx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cancel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WithTimeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;delResp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cli&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ctx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;sample_key&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fatal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-		&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delResp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;cancel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;转载请注明出处，本文采用 &lt;a href=&quot;http://creativecommons.org/licenses/by-nc-nd/4.0/&quot;&gt;CC4.0&lt;/a&gt; 协议授权&lt;/p&gt;
-</description>
-        <pubDate>Wed, 16 Oct 2019 10:59:03 +0800</pubDate>
-        <link>https://mritd.me/2019/10/16/golang-etcd-client-example/</link>
-        <guid isPermaLink="true">https://mritd.me/2019/10/16/golang-etcd-client-example/</guid>
         
         <category>Golang</category>
         

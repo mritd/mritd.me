@@ -177,6 +177,25 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/04/22/WebLogic-request-getContextPath-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98/">
+        <h2 class="post-title">
+            WebLogic request.getContextPath() 为 null 问题
+        </h2>
+        
+        <div class="post-content-preview">
+            当使用 Weblogic 作为中间件，并且 Web 项目部署方式为 war 包部署时，jsp 页面request.getContextPath() 将返回 null，此时加入以下代码设置 webRoot 即可：
+
+String webRoot = request.getSession().getServletContext().getRealPath("/");
+if(webRoot == ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on April 22, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/04/17/List-%E7%9A%84-UnsupportedOperationException-%E5%BC%82%E5%B8%B8/">
         <h2 class="post-title">
             List 的 UnsupportedOperationException 异常
@@ -404,36 +423,6 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/03/20/Java-%E5%A4%9A%E7%BA%BF%E7%A8%8B-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98/">
-        <h2 class="post-title">
-            Java 多线程-可见性问题
-        </h2>
-        
-        <div class="post-content-preview">
-            一、相关定义
-
-1、可见性
-
-在多线程中，如果一个线程对某一 共享变量 的修改，能及时被其他线程所感知，这个特性或者说过程称之为线程可见性。
-
-2、共享变量
-
-当多线程同时操作一个变量时，该变量在多线程的 工作内存(私有内存) 中都存在一个副本，那么这个变量称之为这几个线程的共享变量。
-
-
-
-3、工作内存
-
-多线程工作时，每个线程都会复制主内存中的变量副本到自己的私有内存，这个私有内存称之为...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on March 20, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -504,7 +493,7 @@ GC Roots 枚举最大的困难点在于：检查范围比较大，并且必须�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
                                     Kubernetes
                                 </a>
                             

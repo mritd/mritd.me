@@ -177,6 +177,39 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2015/12/28/Linux%E4%B8%8BMySQL%E5%AF%86%E7%A0%81%E5%BC%BA%E5%88%B6%E4%BF%AE%E6%94%B9/">
+        <h2 class="post-title">
+            Linux 下 MySQL 密码强制修改
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  好吧好吧，这事不怨我，二逼同事打扰我，就输错了……
+
+
+一、停掉mysql服务
+
+#单独安装的mysql
+service mysqld stop
+#其他如lnmp脚本安装的
+lnmp mysql stop
+
+
+
+
+二、启动mysql，禁止权限验证
+
+#在mysql安装目录的bin目录下执行(&amp;后台执行)
+/usr/local/mysql/bin/mysqld_safe --sk...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on December 28, 2015
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2015/12/06/apt-get%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
         <h2 class="post-title">
             apt-get 常用命令
@@ -261,7 +294,7 @@ apt-get install package   ...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="43">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
                                     Kubernetes
                                 </a>
                             
