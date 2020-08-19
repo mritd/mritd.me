@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2018/05/24/kubernetes-traefik-service-exposure/">
+        <h2 class="post-title">
+            Traefik 另类的服务暴露方式
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  最近准备重新折腾一下 Kubernetes 的服务暴露方式，以前的方式是彻底剥离 Kubenretes 本身的服务发现，然后改动应用实现 应用+Consul+Fabio 的服务暴露方式；总感觉这种方式不算优雅，所以折腾了一下 Traefik，试了下效果还不错，以下记录了使用 Traefik 的新的服务暴露方式(本文仅针对 HTTP 协议)；
+
+
+一、Traefik 服务暴露方案
+
+1....
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on May 24, 2018
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2018/05/11/add-commit-message-style-check-to-your-gitlab/">
         <h2 class="post-title">
             为你的 GitLab 增加提交信息检测
@@ -380,28 +402,6 @@ ohmydocker 镜像基于 docker:dind，也就是所谓的 Dcoker in Docker 俄罗
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/11/09/set-up-teleport/">
-        <h2 class="post-title">
-            Teleport 跳板机部署
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  由于业务需求，以前账号管理混乱，所以很多人有生产服务器的 root 权限；所以目前需要一个能 ssh 登录线上服务器的工具，同时具有简单的审计功能；找了好久找到了这个小工具，以下记录一下搭建教程
-
-
-一、环境准备
-
-目前准备了 3 台虚拟机，两台位于内网 NAT 之后，一台位于公网可以直接链接；使用时客户端通过工具连接到公网跳板机上，然后实现自动跳转到内网任意主机；并且具有相应的操作回...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on November 9, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -472,7 +472,7 @@ ohmydocker 镜像基于 docker:dind，也就是所谓的 Dcoker in Docker 俄罗
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="46">
                                     Kubernetes
                                 </a>
                             

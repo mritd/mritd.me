@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2018/11/30/kubectl-plugin-new-solution-on-kubernetes-1.12/">
+        <h2 class="post-title">
+            Kubernetes 1.12 新的插件机制
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  在很久以前的版本研究过 kubernetes 的插件机制，当时弄了一个快速切换 namespace 的小插件；最近把自己本机的 kubectl 升级到了 1.12，突然发现插件不能用了；撸了一下文档发现插件机制彻底改了…
+
+
+一、插件编写语言
+
+kubernetes 1.12 新的插件机制在编写语言上同以前一样，可以以任意语言编写，只要能弄一个可执行的文件出来就行，插件可以是一个 ba...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 30, 2018
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2018/11/27/simple-tool-written-in-golang/">
         <h2 class="post-title">
             Go 编写的一些常用小工具
@@ -390,28 +412,6 @@ kube...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2018/05/24/kubernetes-traefik-service-exposure/">
-        <h2 class="post-title">
-            Traefik 另类的服务暴露方式
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  最近准备重新折腾一下 Kubernetes 的服务暴露方式，以前的方式是彻底剥离 Kubenretes 本身的服务发现，然后改动应用实现 应用+Consul+Fabio 的服务暴露方式；总感觉这种方式不算优雅，所以折腾了一下 Traefik，试了下效果还不错，以下记录了使用 Traefik 的新的服务暴露方式(本文仅针对 HTTP 协议)；
-
-
-一、Traefik 服务暴露方案
-
-1....
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on May 24, 2018
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -482,7 +482,7 @@ kube...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="46">
                                     Kubernetes
                                 </a>
                             

@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Kubernetes 使用 Ceph 存储">
-    <meta name="keywords"  content="Kubernetes,Docker,Ceph">
+    <meta name="description" content="使用 etcdadm 三分钟搭建 etcd 集群">
+    <meta name="keywords"  content="etcd,etcdadm">
     <meta name="theme-color" content="#000000">
     
-    <title>Kubernetes 使用 Ceph 存储 - 漠然的博客 | mritd Blog</title>
+    <title>使用 etcdadm 三分钟搭建 etcd 集群 - 漠然的博客 | mritd Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://mritd.me/2017/06/03/use-ceph-storage-on-kubernetes/">
+    <link rel="canonical" href="https://mritd.me/2020/08/19/use-etcdadm-to-build-etcd-cluster-in-3-minutes/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -163,19 +163,15 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
-                        
-                        <a class="tag" href="/tags/#Docker" title="Docker">Docker</a>
-                        
                         <a class="tag" href="/tags/#Kubernetes" title="Kubernetes">Kubernetes</a>
                         
                     </div>
-                    <h1>Kubernetes 使用 Ceph 存储</h1>
+                    <h1>使用 etcdadm 三分钟搭建 etcd 集群</h1>
                     
                     
                     <h2 class="subheading"></h2>
                     
-                    <span class="meta">Posted by 漠然 on June 3, 2017</span>
+                    <span class="meta">Posted by 漠然 on August 19, 2020</span>
                 </div>
             </div>
         </div>
@@ -197,284 +193,163 @@
                 
 
                 <blockquote>
-  <p>本文主要记录一下 Kubernetes 使用 Ceph 存储的相关配置过程，Kubernetes 集群环境采用的 kargo 部署方式，并且所有组件以容器化运行</p>
+  <p>本文介绍一下 etcd 宿主机部署的新玩具 etcdadm，类似 kubeadm 一样可以快速的在宿主机搭建 Etcd 集群。</p>
 </blockquote>
 
-<h3 id="一基础环境准备">一、基础环境准备</h3>
+<h2 id="一介绍">一、介绍</h2>
 
-<p>Kubernetes 集群总共有 5 台，部署方式为 kargo 容器化部署，<strong>采用 kargo 部署时确保配置中开启内核模块加载( <code class="language-plaintext highlighter-rouge">kubelet_load_modules: true</code> )</strong>；Kubernetes 版本为 1.6.4，Ceph 采用最新的稳定版 Jewel</p>
+<p>在搭建 Kubernetes 集群的过程中首先要搞定 Etcd 集群，虽然说 kubeadm 工具已经提供了默认和 master 节点绑定的 Etcd 集群自动搭建方式，但是我个人一直是手动将 Etcd 集群搭建在宿主机；<strong>因为这个玩意太重要了，毫不夸张的说 kubernetes 所有组件崩溃我们都能在一定时间以后排查问题恢复，但是一旦 Etcd 集群没了那么 Kubernetes 集群也就真没了。</strong></p>
 
-<table>
-  <thead>
-    <tr>
-      <th>节点</th>
-      <th>IP</th>
-      <th>部署</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>docker1</td>
-      <td>192.168.1.11</td>
-      <td>master、monitor、osd</td>
-    </tr>
-    <tr>
-      <td>docker2</td>
-      <td>192.168.1.12</td>
-      <td>master、monitor、osd</td>
-    </tr>
-    <tr>
-      <td>docker3</td>
-      <td>192.168.1.13</td>
-      <td>node、monitor、osd</td>
-    </tr>
-    <tr>
-      <td>docker4</td>
-      <td>192.168.1.14</td>
-      <td>node、osd</td>
-    </tr>
-    <tr>
-      <td>docker5</td>
-      <td>192.168.1.15</td>
-      <td>node、osd</td>
-    </tr>
-  </tbody>
-</table>
+<p>在很久以前我创建了 <a href="https://github.com/Gozap/edep">edep</a> 工具来实现 Etcd 集群的辅助部署，再后来由于我们的底层系统偶合了 Ubuntu，所以创建了 <a href="https://github.com/mritd/etcd-deb">etcd-deb</a> 项目来自动打 deb 包来直接安装；最近逛了一下 Kubernetes 的相关项目，发现跟我的 edep 差不多的项目 <a href="https://github.com/kubernetes-sigs/etcdadm">etcdadm</a>，试了一下 “真香”。</p>
 
-<h3 id="二部署-ceph-集群">二、部署 Ceph 集群</h3>
+<h2 id="二安装">二、安装</h2>
 
-<p>具体安装请参考 <a href="https://mritd.me/2017/05/27/ceph-note-1/">Ceph 笔记(一)</a>、<a href="https://mritd.me/2017/05/30/ceph-note-2/">Ceph 笔记(二)</a>，以下直接上命令</p>
+<p><a href="https://github.com/kubernetes-sigs/etcdadm">etcdadm</a> 项目是使用 go 编写的，所以很明显只有一个二进制下载下来就能用:</p>
 
-<h4 id="21部署集群">2.1、部署集群</h4>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建集群配置目录</span>
-<span class="nb">mkdir </span>ceph-cluster <span class="o">&amp;&amp;</span> <span class="nb">cd </span>ceph-cluster
-<span class="c"># 创建 monitor-node</span>
-ceph-deploy new docker1 docker2 docker3
-<span class="c"># 追加 OSD 副本数量</span>
-<span class="nb">echo</span> <span class="s2">"osd pool default size = 5"</span> <span class="o">&gt;&gt;</span> ceph.conf
-<span class="c"># 安装 ceph</span>
-ceph-deploy <span class="nb">install </span>docker1 docker2 docker3 docker4 docker5
-<span class="c"># init monitor node</span>
-ceph-deploy mon create-initial
-<span class="c"># 初始化 ods</span>
-ceph-deploy osd prepare docker1:/dev/sda docker2:/dev/sda docker3:/dev/sda docker4:/dev/sda docker5:/dev/sda
-<span class="c"># 激活 osd</span>
-ceph-deploy osd activate docker1:/dev/sda1:/dev/sda2 docker2:/dev/sda1:/dev/sda2 docker3:/dev/sda1:/dev/sda2 docker4:/dev/sda1:/dev/sda2 docker5:/dev/sda1:/dev/sda2
-<span class="c"># 部署 ceph cli 工具和秘钥文件</span>
-ceph-deploy admin docker1 docker2 docker3 docker4 docker5
-<span class="c"># 确保秘钥有读取权限</span>
-<span class="nb">chmod</span> +r /etc/ceph/ceph.client.admin.keyring
-<span class="c"># 检测集群状态</span>
-ceph health
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://github.com/kubernetes-sigs/etcdadm/releases/download/v0.1.3/etcdadm-linux-amd64
+<span class="nb">chmod</span> +x etcdadm-linux-amd64
 </code></pre></div></div>
 
-<h4 id="22创建块设备">2.2、创建块设备</h4>
+<h2 id="三使用">三、使用</h2>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建存储池</span>
-rados mkpool data
-<span class="c"># 创建 image</span>
-rbd create data <span class="nt">--size</span> 10240 <span class="nt">-p</span> data
-<span class="c"># 关闭不支持特性</span>
-rbd feature disable data exclusive-lock, object-map, fast-diff, deep-flatten <span class="nt">-p</span> data
-<span class="c"># 映射(每个节点都要映射)</span>
-rbd map data <span class="nt">--name</span> client.admin <span class="nt">-p</span> data
-<span class="c"># 格式化块设备(单节点即可)</span>
-mkfs.xfs /dev/rbd0
+<h3 id="31启动引导节点">3.1、启动引导节点</h3>
+
+<p>类似 kubeadm 一样，etcdadm 也是先启动第一个节点，然后后续节点直接 join 即可；第一个节点启动只需要执行 <code class="language-plaintext highlighter-rouge">etcdadm init</code> 命令即可:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k1.node ➜  ~ ./etcdadm-linux-amd64 init
+INFO[0000] <span class="o">[</span><span class="nb">install</span><span class="o">]</span> extracting etcd archive /var/cache/etcdadm/etcd/v3.3.8/etcd-v3.3.8-linux-amd64.tar.gz to /tmp/etcd664686683
+INFO[0001] <span class="o">[</span><span class="nb">install</span><span class="o">]</span> verifying etcd 3.3.8 is installed <span class="k">in</span> /opt/bin/
+INFO[0001] <span class="o">[</span>certificates] creating PKI assets
+INFO[0001] creating a self signed etcd CA certificate and key files
+<span class="o">[</span>certificates] Generated ca certificate and key.
+INFO[0001] creating a new server certificate and key files <span class="k">for </span>etcd
+<span class="o">[</span>certificates] Generated server certificate and key.
+<span class="o">[</span>certificates] server serving cert is signed <span class="k">for </span>DNS names <span class="o">[</span>k1.node] and IPs <span class="o">[</span>127.0.0.1 172.16.10.21]
+INFO[0002] creating a new certificate and key files <span class="k">for </span>etcd peering
+<span class="o">[</span>certificates] Generated peer certificate and key.
+<span class="o">[</span>certificates] peer serving cert is signed <span class="k">for </span>DNS names <span class="o">[</span>k1.node] and IPs <span class="o">[</span>172.16.10.21]
+INFO[0002] creating a new client certificate <span class="k">for </span>the etcdctl
+<span class="o">[</span>certificates] Generated etcdctl-etcd-client certificate and key.
+INFO[0002] creating a new client certificate <span class="k">for </span>the apiserver calling etcd
+<span class="o">[</span>certificates] Generated apiserver-etcd-client certificate and key.
+<span class="o">[</span>certificates] valid certificates and keys now exist <span class="k">in</span> <span class="s2">"/etc/etcd/pki"</span>
+INFO[0006] <span class="o">[</span>health] Checking <span class="nb">local </span>etcd endpoint health
+INFO[0006] <span class="o">[</span>health] Local etcd endpoint is healthy
+INFO[0006] To add another member to the cluster, copy the CA cert/key to its certificate <span class="nb">dir </span>and run:
+INFO[0006]      etcdadm <span class="nb">join </span>https://172.16.10.21:2379
 </code></pre></div></div>
 
-<h3 id="三kubernetes-使用-ceph">三、kubernetes 使用 Ceph</h3>
+<p>从命令行输出可以看到不同阶段 etcdadm 的相关日志输出；在 <code class="language-plaintext highlighter-rouge">init</code> 命令时可以指定一些特定参数来覆盖默认行为，比如版本号、安装目录等:</p>
 
-<h4 id="31pv--pvc-方式">3.1、PV &amp; PVC 方式</h4>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>k1.node ➜  ~ ./etcdadm-linux-amd64 init <span class="nt">--help</span>
+Initialize a new etcd cluster
 
-<p>传统的使用分布式存储的方案一般为 <code class="language-plaintext highlighter-rouge">PV &amp; PVC</code> 方式，也就是说管理员预先创建好相关 PV 和 PVC，然后对应的 deployment 或者 replication 挂载 PVC 来使用</p>
+Usage:
+  etcdadm init <span class="o">[</span>flags]
 
-<p><strong>创建 Secret</strong></p>
+Flags:
+      <span class="nt">--certs-dir</span> string                    certificates directory <span class="o">(</span>default <span class="s2">"/etc/etcd/pki"</span><span class="o">)</span>
+      <span class="nt">--disk-priorities</span> stringArray         Setting etcd disk priority <span class="o">(</span>default <span class="o">[</span><span class="nv">Nice</span><span class="o">=</span><span class="nt">-10</span>,IOSchedulingClass<span class="o">=</span>best-effort,IOSchedulingPriority<span class="o">=</span>2]<span class="o">)</span>
+      <span class="nt">--download-connect-timeout</span> duration   Maximum <span class="nb">time </span><span class="k">in </span>seconds that you allow the connection to the server to take. <span class="o">(</span>default 10s<span class="o">)</span>
+  <span class="nt">-h</span>, <span class="nt">--help</span>                                <span class="nb">help </span><span class="k">for </span>init
+      <span class="nt">--install-dir</span> string                  <span class="nb">install </span>directory <span class="o">(</span>default <span class="s2">"/opt/bin/"</span><span class="o">)</span>
+      <span class="nt">--name</span> string                         etcd member name
+      <span class="nt">--release-url</span> string                  URL used to download etcd <span class="o">(</span>default <span class="s2">"https://github.com/coreos/etcd/releases/download"</span><span class="o">)</span>
+      <span class="nt">--server-cert-extra-sans</span> strings      optional extra Subject Alternative Names <span class="k">for </span>the etcd server signing cert, can be multiple comma separated DNS names or IPs
+      <span class="nt">--skip-hash-check</span>                     Ignore snapshot integrity <span class="nb">hash </span>value <span class="o">(</span>required <span class="k">if </span>copied from data directory<span class="o">)</span>
+      <span class="nt">--snapshot</span> string                     Etcd v3 snapshot file used to initialize member
+      <span class="nt">--version</span> string                      etcd version <span class="o">(</span>default <span class="s2">"3.3.8"</span><span class="o">)</span>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 获取管理 key 并进行 base64 编码</span>
-ceph auth get-key client.admin | <span class="nb">base64</span>
-
-<span class="c"># 创建一个 secret 配置(key 为上条命令生成的)</span>
-<span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; ceph-secret.yml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ceph-secret
-data:
-  key: QVFDaWtERlpzODcwQWhBQTdxMWRGODBWOFZxMWNGNnZtNmJHVGc9PQo=
-</span><span class="no">EOF
-</span>kubectl create <span class="nt">-f</span> ceph-secret.yml
+Global Flags:
+  <span class="nt">-l</span>, <span class="nt">--log-level</span> string   <span class="nb">set </span>log level <span class="k">for </span>output, permitted values debug, info, warn, error, fatal and panic <span class="o">(</span>default <span class="s2">"info"</span><span class="o">)</span>
 </code></pre></div></div>
 
-<p><strong>创建 PV</strong></p>
+<h3 id="32其他节点加入">3.2、其他节点加入</h3>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># monitor 需要多个，pool 和 image 填写上面创建的</span>
-<span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.pv.yml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: test-pv
-spec:
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce 
-  rbd:
-    monitors:
-      - 192.168.1.11:6789
-      - 192.168.1.12:6789
-      - 192.168.1.13:6789
-    pool: data
-    image: data
-    user: admin
-    secretRef:
-      name: ceph-secret
-    fsType: xfs
-    readOnly: false
-  persistentVolumeReclaimPolicy: Recycle
-</span><span class="no">EOF
+<p>在首个节点启动完成后，将集群 ca 证书复制到其他节点然后执行 <code class="language-plaintext highlighter-rouge">etcdadm join ENDPOINT_ADDRESS</code> 即可:</p>
 
-</span>kubectl create <span class="nt">-f</span> test.pv.yml
-</code></pre></div></div>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 复制 ca 证书</span>
+k1.node ➜  ~ rsync <span class="nt">-avR</span> /etc/etcd/pki/ca.<span class="k">*</span> 172.16.10.22:/
+root@172.16.10.22<span class="s1">'s password:
+sending incremental file list
+/etc/etcd/
+/etc/etcd/pki/
+/etc/etcd/pki/ca.crt
+/etc/etcd/pki/ca.key
 
-<p><strong>创建 PVC</strong></p>
+sent 2,932 bytes  received 67 bytes  856.86 bytes/sec
+total size is 2,684  speedup is 0.89
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.pvc.yml
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: test-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi
-</span><span class="no">EOF
+# 执行 join
+k2.node ➜  ~ ./etcdadm-linux-amd64 join https://172.16.10.21:2379
+INFO[0000] [certificates] creating PKI assets
+INFO[0000] creating a self signed etcd CA certificate and key files
+[certificates] Using the existing ca certificate and key.
+INFO[0000] creating a new server certificate and key files for etcd
+[certificates] Generated server certificate and key.
+[certificates] server serving cert is signed for DNS names [k2.node] and IPs [172.16.10.22 127.0.0.1]
+INFO[0000] creating a new certificate and key files for etcd peering
+[certificates] Generated peer certificate and key.
+[certificates] peer serving cert is signed for DNS names [k2.node] and IPs [172.16.10.22]
+INFO[0000] creating a new client certificate for the etcdctl
+[certificates] Generated etcdctl-etcd-client certificate and key.
+INFO[0001] creating a new client certificate for the apiserver calling etcd
+[certificates] Generated apiserver-etcd-client certificate and key.
+[certificates] valid certificates and keys now exist in "/etc/etcd/pki"
+INFO[0001] [membership] Checking if this member was added
+INFO[0001] [membership] Member was not added
+INFO[0001] Removing existing data dir "/var/lib/etcd"
+INFO[0001] [membership] Adding member
+INFO[0001] [membership] Checking if member was started
+INFO[0001] [membership] Member was not started
+INFO[0001] [membership] Removing existing data dir "/var/lib/etcd"
+INFO[0001] [install] extracting etcd archive /var/cache/etcdadm/etcd/v3.3.8/etcd-v3.3.8-linux-amd64.tar.gz to /tmp/etcd315786364
+INFO[0003] [install] verifying etcd 3.3.8 is installed in /opt/bin/
+INFO[0006] [health] Checking local etcd endpoint health
+INFO[0006] [health] Local etcd endpoint is healthy
+</span></code></pre></div></div>
 
-</span>kubectl create <span class="nt">-f</span> test.pvc.yml
-</code></pre></div></div>
+<h2 id="四细节分析">四、细节分析</h2>
 
-<p><strong>创建 Deployment并挂载</strong></p>
+<h3 id="41默认配置">4.1、默认配置</h3>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.deploy.yml
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: demo
-spec:
-  replicas: 3
-  template:
-    metadata:
-      labels:
-        app: demo
-    spec:
-      containers:
-      - name: demo
-        image: mritd/demo
-        ports:
-        - containerPort: 80
-        volumeMounts:
-          - mountPath: "/data"
-            name: data
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: test-pvc
-</span><span class="no">EOF
+<p>在目前 etcdadm 尚未支持配置文件，目前所有默认配置存放在 <a href="https://github.com/kubernetes-sigs/etcdadm/blob/master/constants/constants.go#L22">constants.go</a> 中，这里面包含了默认安装位置、systemd 配置、环境变量配置等，限于篇幅请自行查看代码；下面简单介绍一些一些刚须的配置:</p>
 
-</span>kubectl create <span class="nt">-f</span> test.deploy.yml
-</code></pre></div></div>
+<h4 id="411etcdctl">4.1.1、etcdctl</h4>
 
-<h4 id="32storagaclass-方式">3.2、StoragaClass 方式</h4>
+<p>etcdctl 默认安装在 <code class="language-plaintext highlighter-rouge">/opt/bin</code> 目录下，同时你会发现该目录下还存在一个 <code class="language-plaintext highlighter-rouge">etcdctl.sh</code> 脚本，<strong>这个脚本将会自动读取 etcdctl 配置文件(<code class="language-plaintext highlighter-rouge">/etc/etcd/etcdctl.env</code>)，所以推荐使用这个脚本来替代 etcdctl 命令。</strong></p>
 
-<p>在 1.4 以后，kubernetes 提供了一种更加方便的动态创建 PV 的方式；也就是说使用 StoragaClass 时无需预先创建固定大小的 PV，等待使用者创建 PVC 来使用；而是直接创建 PVC 即可分配使用</p>
+<h4 id="412数据目录">4.1.2、数据目录</h4>
 
-<p><strong>创建系统级 Secret</strong></p>
+<p>默认的数据目录存储在 <code class="language-plaintext highlighter-rouge">/var/lib/etcd</code> 目录，目前 etcdadm 尚未提供任何可配置方式，当然你可以自己改源码。</p>
 
-<p><strong>注意: 由于 StorageClass 要求 Ceph 的 Secret type 必须为 <code class="language-plaintext highlighter-rouge">kubernetes.io/rbd</code>，所以上一步创建的 <code class="language-plaintext highlighter-rouge">ceph-secret</code> 需要先被删除，然后使用如下命令重新创建；此时的 key 并没有经过 base64</strong></p>
+<h4 id="423配置文件">4.2.3、配置文件</h4>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 这个 secret type 必须为 kubernetes.io/rbd，否则会造成 PVC 无法使用</span>
-kubectl create secret generic ceph-secret <span class="nt">--type</span><span class="o">=</span><span class="s2">"kubernetes.io/rbd"</span> <span class="nt">--from-literal</span><span class="o">=</span><span class="nv">key</span><span class="o">=</span><span class="s1">'AQCikDFZs870AhAA7q1dF80V8Vq1cF6vm6bGTg=='</span> <span class="nt">--namespace</span><span class="o">=</span>kube-system
-kubectl create secret generic ceph-secret <span class="nt">--type</span><span class="o">=</span><span class="s2">"kubernetes.io/rbd"</span> <span class="nt">--from-literal</span><span class="o">=</span><span class="nv">key</span><span class="o">=</span><span class="s1">'AQCikDFZs870AhAA7q1dF80V8Vq1cF6vm6bGTg=='</span> <span class="nt">--namespace</span><span class="o">=</span>default
-</code></pre></div></div>
+<p>配置文件总共有两个，一个是 <code class="language-plaintext highlighter-rouge">/etc/etcd/etcdctl.env</code> 用于 <code class="language-plaintext highlighter-rouge">/opt/bin/etcdctl.sh</code> 读取；另一个是 <code class="language-plaintext highlighter-rouge">/etc/etcd/etcd.env</code> 用于 systemd 读取并启动 etcd server。</p>
 
-<p><strong>创建 StorageClass</strong></p>
+<h3 id="42join-流程">4.2、Join 流程</h3>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.storageclass.yml
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: test-storageclass
-provisioner: kubernetes.io/rbd
-parameters:
-  monitors: 192.168.1.11:6789,192.168.1.12:6789,192.168.1.13:6789
-  # Ceph 客户端用户 ID(非 k8s 的)
-  adminId: admin
-  adminSecretName: ceph-secret
-  adminSecretNamespace: kube-system
-  pool: data
-  userId: admin
-  userSecretName: ceph-secret
-</span><span class="no">EOF
+<blockquote>
+  <p>其实很久以前由于我自己部署方式导致了我一直以来理解的一个错误，我一直以为 etcd server 证书要包含所有 server 地址，当然这个想法是怎么来的我也不知道，但是当我看了以下 Join 操作源码以后突然意识到 “为什么要包含所有？包含当前 server 不就行了么。”；当然对于 HTTPS 证书的理解一直是明白的，但是很奇怪就是不知道怎么就产生了这个想法(哈哈，我自己都觉的不可思议)…</p>
+</blockquote>
 
-</span>kubectl create <span class="nt">-f</span> test.storageclass.yml
-</code></pre></div></div>
+<ul>
+  <li>由于预先拷贝了 ca 证书，所以 join 开始前 etcdadm 使用这个 ca 证书会签发自己需要的所有证书。</li>
+  <li>接下来 etcdadmin 通过 etcdctl-etcd-client 证书创建 client，然后调用 <code class="language-plaintext highlighter-rouge">MemberAdd</code> 添加新集群</li>
+  <li>最后老套路下载安装+启动就完成了</li>
+</ul>
 
-<p><strong>关于上面的 adminId 等字段具体含义请参考这里 <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#ceph-rbd">Ceph RBD</a></strong></p>
+<h3 id="43目前不足">4.3、目前不足</h3>
 
-<p><strong>创建 PVC</strong></p>
+<p>目前 etcdadm 虽然已经基本生产可用，但是仍有些不足的地方:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.sc.pvc.yml
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: test-sc-pvc
-  annotations: 
-    volume.beta.kubernetes.io/storage-class: test-storageclass
-spec:
-  accessModes:
-    - ReadWriteOnce 
-  resources:
-    requests:
-      storage: 2Gi
-</span><span class="no">EOF
-
-</span>kubectl create <span class="nt">-f</span> test.sc.pvc.yml
-</code></pre></div></div>
-
-<p><strong>创建 Deployment</strong></p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> &gt;&gt; test.sc.deploy.yml
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: demo-sc
-spec:
-  replicas: 3
-  template:
-    metadata:
-      labels:
-        app: demo-sc
-    spec:
-      containers:
-      - name: demo-sc
-        image: mritd/demo
-        ports:
-        - containerPort: 80
-        volumeMounts:
-          - mountPath: "/data"
-            name: data
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: test-sc-pvc
-</span><span class="no">EOF
-
-</span>kubectl create <span class="nt">-f</span> test.sc.deploy.yml
-</code></pre></div></div>
-
-<p>到此完成，检测是否成功最简单的方式就是看相关 pod 是否正常运行</p>
+<ul>
+  <li>不支持配置文件，很多东西无法定制</li>
+  <li>join 加入集群是在内部 api 完成，并未持久化到物理配置文件，后续重建可能忘记节点 ip</li>
+  <li>集群证书目前不支持自动续期，默认证书为 1 年很容易过期</li>
+  <li>下载动作调用了系统命令(curl)依赖性有点强</li>
+  <li>日志格式有点不友好，比如 level 和日期</li>
+</ul>
 
 <p>转载请注明出处，本文采用 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">CC4.0</a> 协议授权</p>
 
@@ -484,19 +359,12 @@ spec:
                 <ul class="pager">
                     
                     <li class="previous">
-                        <a href="/2017/05/30/ceph-note-2/" data-toggle="tooltip" data-placement="top" title="Ceph 笔记(二)">
+                        <a href="/2020/08/19/write-a-dynamic-admission-control-webhook/" data-toggle="tooltip" data-placement="top" title="编写一个动态准入控制来实现自动化">
                         Previous<br>
-                        <span>Ceph 笔记(二)</span>
+                        <span>编写一个动态准入控制来实现自动化</span>
                         </a>
                     </li>
                     
-                    
-                    <li class="next">
-                        <a href="/2017/07/12/how-to-build-kubernetes-rpm/" data-toggle="tooltip" data-placement="top" title="How to build Kubernetes RPM">
-                        Next<br>
-                        <span>How to build Kubernetes RPM</span>
-                        </a>
-                    </li>
                     
                 </ul>
 
@@ -652,8 +520,8 @@ spec:
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "mritd";
-    var disqus_identifier = "/2017/06/03/use-ceph-storage-on-kubernetes";
-    var disqus_url = "https://mritd.me/2017/06/03/use-ceph-storage-on-kubernetes/";
+    var disqus_identifier = "/2020/08/19/use-etcdadm-to-build-etcd-cluster-in-3-minutes";
+    var disqus_url = "https://mritd.me/2020/08/19/use-etcdadm-to-build-etcd-cluster-in-3-minutes/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
