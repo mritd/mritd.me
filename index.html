@@ -177,6 +177,28 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2020/08/19/write-a-dynamic-admission-control-webhook/">
+        <h2 class="post-title">
+            编写一个动态准入控制来实现自动化
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  前段时间弄了一个 imgsync 的工具把 gcr.io 的镜像搬运到了 Docker Hub，但是即使这样我每次还是需要编辑 yaml 配置手动改镜像名称；所以我萌生了一个想法: 能不能自动化这个过程？
+
+
+一、准入控制介绍
+
+在 Kubernetes 整个请求链路中，请求通过认证和授权之后、对象被持久化之前需要通过一连串的 “准入控制拦截器”；这些准入控制器负载验证请求的合法性，必...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on August 19, 2020
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2020/06/28/how-to-write-a-csi-driver-for-kubernetes/">
         <h2 class="post-title">
             如何编写 CSI 插件
@@ -389,28 +411,6 @@ Netflix DNS 分流实际上我目前的方案是通过 CoreDNS 作为主 DNS Ser
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2019/11/05/writing-plugin-for-coredns/">
-        <h2 class="post-title">
-            如何编写一个 CoreDNS 插件
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  目前测试环境中有很多个 DNS 服务器，不同项目组使用的 DNS 服务器不同，但是不可避免的他们会访问一些公共域名；老的 DNS 服务器都是 dnsmasq，改起来很麻烦，最近研究了一下 CoreDNS，通过编写插件的方式可以实现让多个 CoreDNS 实例实现分布式的统一控制，以下记录了插件编写过程
-
-
-一、CoreDNS 简介
-
-CoreDNS 目前是 CNCF 旗下的项目(已毕业...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on November 5, 2019
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -477,7 +477,7 @@ CoreDNS 目前是 CNCF 旗下的项目(已毕业...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
                                     Kubernetes
                                 </a>
                             
@@ -489,7 +489,7 @@ CoreDNS 目前是 CNCF 旗下的项目(已毕业...
                             
                         
                             
-                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                <a href="/tags/#Golang" title="Golang" rel="7">
                                     Golang
                                 </a>
                             

@@ -177,6 +177,30 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2016/03/21/Java-%E5%86%85%E5%AD%98%E4%B9%8B-Java-%E5%A0%86/">
+        <h2 class="post-title">
+            Java 内存之 Java 堆
+        </h2>
+        
+        <div class="post-content-preview">
+            一、基本概念和特性
+
+
+  Java 堆内存是全局共享的
+  Java 堆通常是 JVM 中最大的一块内存区域
+  Java 堆得主要作用是用于存放创建的对象实例
+  JVMS 明确要求，此区域必须实现内存自动管理，即 GC；但不要求具体的 GC 实现，包括实现算法和技术
+  Java 堆可以在物理上不连续空间分配，只要逻辑上连续即可
+  Java 堆可能出现 OutOfMemoryErro...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 21, 2016
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2016/03/20/Java-%E5%A4%9A%E7%BA%BF%E7%A8%8B-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98/">
         <h2 class="post-title">
             Java 多线程-可见性问题
@@ -473,40 +497,6 @@ public boolean equals(Object obj) {
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2016/01/24/Redis-Key-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
-        <h2 class="post-title">
-            Redis Key 常用命令
-        </h2>
-        
-        <div class="post-content-preview">
-            
-
-
-  参考自 Redis官方文档(中文版)
-
-
-KEYS
-
-
-  加入版本 1.0.0。
-时间复杂度： O(N)，N 为数据库中 key 的数量。
-
-  查找所有符合给定模式 pattern 的 key。特殊符号用 \ 隔开。
-
-
-
-
-KEYS *          # 匹配数据库中所有 key 。
-KEYS h?llo      # 匹配 hello ， hallo 和 hxllo 等...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 24, 2016
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -577,7 +567,7 @@ KEYS h?llo      # 匹配 hello ， hallo 和 hxllo 等...
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
                                     Kubernetes
                                 </a>
                             
@@ -589,7 +579,7 @@ KEYS h?llo      # 匹配 hello ， hallo 和 hxllo 等...
                             
                         
                             
-                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                <a href="/tags/#Golang" title="Golang" rel="7">
                                     Golang
                                 </a>
                             

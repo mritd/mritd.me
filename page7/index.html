@@ -177,6 +177,30 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/03/10/kargo-cluster-expansion-and-fine-grained-configuration/">
+        <h2 class="post-title">
+            kargo 集群扩展及细粒度配置
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  上一篇写了一下一下使用 kargo 快速部署 Kubernetes 高可用集群，但是一些细节部分不算完善，这里准备补一下，详细说明一下一些问题；比如后期如何扩展、一些配置如何自定义等
+
+
+一、集群扩展
+
+如果已经有了一个 kargo 搭建的集群，那么扩展其极其容易；只需要修改集群 inventory 配置，加入新节点重新运行命令价格参数即可，如下新增一个 node6 节点
+
+vim i...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on March 10, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/03/04/how-to-use-nginx-ingress/">
         <h2 class="post-title">
             Kubernetes Nginx Ingress 教程
@@ -381,28 +405,6 @@ LVM 技术依据底层内核的 device mapper 机制，聚合底层硬件存...
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/01/12/git-uses-the-socks5-proxy/">
-        <h2 class="post-title">
-            Git 使用 socks5 代理
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  Fuck GFW! 最近伟大的墙又开始搞事情，导致 gayhub 访问奇慢，没办法研究一下 socks5 代理 git，效果还不错
-
-
-一、Mac &amp; Ubuntu 下代理 git
-
-git 目前支持 4 种协议: https、ssh、git、本地文件；其中 git协议与 ssh 协议及其类似，暂不清楚底层实现，不过目前发现只需要成功代理 ssh 协议就可以实现代理 git；不...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on January 12, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -473,7 +475,7 @@ git 目前支持 4 种协议: https、ssh、git、本地文件；其中 git协�
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
                                     Kubernetes
                                 </a>
                             
@@ -485,7 +487,7 @@ git 目前支持 4 种协议: https、ssh、git、本地文件；其中 git协�
                             
                         
                             
-                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                <a href="/tags/#Golang" title="Golang" rel="7">
                                     Golang
                                 </a>
                             

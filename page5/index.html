@@ -177,6 +177,32 @@
             ">
     			
 <div class="post-preview">
+    <a href="/2017/11/03/deep-learning-on-kubernetes/">
+        <h2 class="post-title">
+            Kubernetes 深度学习笔记
+        </h2>
+        
+        <div class="post-content-preview">
+            
+  本文主要记录下 Kubernetes 下运行深度学习框架如 Tensorflow、Caffe2 等一些坑，纯总结性文档
+
+
+一、先决条件
+
+Kubernetes 运行深度学习应用实际上要解决的唯一问题就是 GPU 调用，以下只描述 Nvidia 相关的问题以及解决方法；要想完成 Kubernetes 对 GPU 调用，首先要满足以下条件:
+
+
+  Nvidia 显卡驱动安装正确
+  C...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by 漠然 on November 3, 2017
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
     <a href="/2017/10/10/kube-proxy-use-ipvs-on-kubernetes-1.8/">
         <h2 class="post-title">
             Kubernetes 1.8 kube-proxy 开启 ipvs
@@ -384,28 +410,6 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
 </div>
 <hr>
 
-<div class="post-preview">
-    <a href="/2017/07/12/how-to-build-kubernetes-rpm/">
-        <h2 class="post-title">
-            How to build Kubernetes RPM
-        </h2>
-        
-        <div class="post-content-preview">
-            
-  一直使用 Centos 运行 Kubernetes,有些时候基于二进制部署的情况下,手动复制二进制文件和创建 Systemd service 配置略显繁琐;最近找了一下 Kubernetes RPM 的 build 方式,以下记录一下 build 过程
-
-
-一、RPM build 方式选择
-
-目前我所知道的 build kubernetes RPM 的方式(测试过)总共 3 种,大致分...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by 漠然 on July 12, 2017
-    </p>
-</div>
-<hr>
-
 
 <!-- Pager -->
 
@@ -476,7 +480,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
                             
                         
                             
-                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="44">
+                                <a href="/tags/#Kubernetes" title="Kubernetes" rel="45">
                                     Kubernetes
                                 </a>
                             
@@ -488,7 +492,7 @@ Git Flow 定义了一个围绕项目开发发布的严格 git 分支模型，用
                             
                         
                             
-                                <a href="/tags/#Golang" title="Golang" rel="6">
+                                <a href="/tags/#Golang" title="Golang" rel="7">
                                     Golang
                                 </a>
                             
